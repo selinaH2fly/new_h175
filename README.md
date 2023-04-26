@@ -1,2 +1,2 @@
 # h175_model_stack
-Model for the stack subsystem of H175
+Model of the stack subsystem of H175
