@@ -1,2 +1,2 @@
 # h175_model_thermal
-Model for the thermal subsystem of H175
+Model of the thermal subsystem of H175
