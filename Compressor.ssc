@@ -1,0 +1,304 @@
+component Compressor
+% Compressor : 2
+% This block models a compressor in a gas network whose characteristics are
+% described by a tabulated compressor map. The corrected mass flow rate and
+% the isentropic efficiency are specified as 2D arrays in which the rows
+% correspond to the corrected shaft speed and the columns correspond to the
+% surge margin. The surge margin is defined as the distance between the
+% surge pressure ratio and the operating pressure ratio along a constant
+% speed line divided by the surge pressure ratio.
+%
+% Ports A and B are the gas conserving ports associated with the compressor
+% inlet and outlet, respectively. Ports R and C are the mechanical
+% rotational conserving ports associated with the shaft and casing,
+% respectively. A positive rotation of port R relative to port C drives gas
+% flow from port A to port B. The behavior of the block for reversed flow
+% is undefined. The physical signal port SM reports the surge margin.
+
+% Copyright 2016-2019 The MathWorks, Inc.
+
+nodes
+    A = foundation.gas.gas;                          % A:left
+    B = foundation.gas.gas;                          % B:right
+    R = foundation.mechanical.rotational.rotational; % R:right
+    C = foundation.mechanical.rotational.rotational; % C:left
+end
+
+outputs
+    % Surge margin
+    SM = {1, '1'}; % SM:right
+end
+
+parameters
+    omega_surge_TLU = {500:2000:6500, 'rpm'}; % Surge line data, corrected shaft speed vector, N
+    pr_surge_TLU    = {1:10:31,       '1'  }; % Surge line data, pressure ratio vector, pr(N)
+
+    omega_mdot_TLU = {500:2000:6500, 'rpm' }; % Flow rate data, corrected shaft speed vector, N
+    sm_mdot_TLU    = {0:4:12,        '1'   }; % Flow rate data, surge margin vector, SM
+    mdot_TLU       = {ones(4, 4),    'kg/s'}; % Flow rate data, corrected mass flow rate table, mdot(N,SM)
+
+    omega_eta_TLU = {500:2000:6500, 'rpm'}; % Efficiency data, corrected shaft speed vector, N
+    sm_eta_TLU    = {0:4:12,        '1'  }; % Efficiency data, surge margin vector, SM
+    eta_TLU       = {ones(4,4),     '1'  }; % Efficiency data, isentropic efficiency table, eta(N,SM)
+
+    p_corrected           = {0.1,  'MPa'}; % Reference pressure for corrected flow
+    T_corrected           = {300,  'K'  }; % Reference temperature for corrected flow
+    mechanical_efficiency = {0.9,  '1'  }; % Mechanical efficiency
+    area_A                = {0.01, 'm^2'}; % Inlet gas flow area (port A)
+    area_B                = {0.01, 'm^2'}; % Outlet gas flow area (port B)
+end
+
+parameters (Access = private)
+    omega_corrected_threshold = omega_mdot_TLU(1); % Corrected shaft speed near zero speed
+    mdot_omega_TLU_threshold  = mdot_TLU(1,:)'/omega_corrected_threshold; % Ratio of corrected flow to corrected speed near zero speed
+
+    % Make vectors vertical
+    omega_surge_TLU_vertical = omega_surge_TLU(:);
+    pr_surge_TLU_vertical    = pr_surge_TLU(:);
+    omega_mdot_TLU_vertical  = omega_mdot_TLU(:);
+    omega_eta_TLU_vertical   = omega_eta_TLU(:);
+
+    % Extend tables to negative shaft speed
+    % However, behavior is not expected to be valid for reversed flow
+    % Assume zero mass flow rate at zero shaft speed
+    omega_mdot_TLU_used = [-omega_mdot_TLU_vertical(end:-1:1); {0, 'rpm'}; omega_mdot_TLU_vertical];
+    mdot_TLU_used = [-mdot_TLU(end:-1:1,:); {zeros(1, length(sm_mdot_TLU)), 'kg/s'}; mdot_TLU];
+
+    omega_eta_TLU_used = [-omega_eta_TLU_vertical(end); omega_eta_TLU_vertical];
+    eta_TLU_used = [eta_TLU(1,:); eta_TLU];
+
+    omega_surge_TLU_used = [-omega_surge_TLU_vertical(end); omega_surge_TLU_vertical];
+    pr_surge_TLU_used = [pr_surge_TLU(1); pr_surge_TLU_vertical];
+end
+
+% Parameter checks
+equations
+    % Check table size
+    assert(length(omega_surge_TLU) >= 2)
+    assert(length(pr_surge_TLU) == length(omega_surge_TLU))
+    assert(length(omega_mdot_TLU) >= 2)
+    assert(length(sm_mdot_TLU) >= 2)
+    assert(all(size(mdot_TLU) == [length(omega_mdot_TLU), length(sm_mdot_TLU)]))
+    assert(length(omega_eta_TLU) >= 2)
+    assert(length(sm_eta_TLU) >= 2)
+    assert(all(size(eta_TLU) == [length(omega_eta_TLU), length(sm_eta_TLU)]))
+    % Check table grid order
+    assert(all(diff(omega_surge_TLU) > 0))
+    assert(all(diff(pr_surge_TLU) > 0))
+    assert(all(diff(omega_mdot_TLU) > 0))
+    assert(all(diff(sm_mdot_TLU) > 0))
+    assert(all(diff(omega_eta_TLU) > 0))
+    assert(all(diff(sm_eta_TLU) > 0))
+    % Check values
+    assert(all(omega_surge_TLU(:) >= 0))
+    assert(all(pr_surge_TLU(:) >= 1))
+    assert(all(omega_mdot_TLU(:) > 0))
+    assert(all(mdot_TLU(:) > 0))
+    assert(all(eta_TLU(:) > 0))
+    assert(p_corrected > 0)
+    assert(T_corrected > 0)
+    assert(mechanical_efficiency > 0)
+    assert(area_A > 0)
+    assert(area_B > 0)
+end
+
+variables (Access = protected)
+    mdot_A = {0, 'kg/s'}; % Mass flow rate into port A
+    mdot_B = {0, 'kg/s'}; % Mass flow rate into port B
+    Phi_A  = {0, 'kW'  }; % Energy flow rate into port A
+    Phi_B  = {0, 'kW'  }; % Energy flow rate into port B
+    torque = {0, 'N*m' }; % Shaft torque
+end
+
+variables (Access = protected, ExternalAccess = none)
+    T_A      = {300, 'K'}; % Temperature at port A
+    T_B      = {300, 'K'}; % Temperature at port B
+    T_B_isen = {300, 'K'}; % Isentropic temperature at port B
+end
+
+branches
+    mdot_A : A.mdot -> *;
+    mdot_B : B.mdot -> *;
+    Phi_A  : A.Phi  -> *;
+    Phi_B  : B.Phi  -> *;
+    torque : R.t    -> C.t;
+end
+
+intermediates (Access = private, ExternalAccess = none)
+    % Port pressure
+    p_A = A.p;
+    p_B = B.p;
+
+    % Log temperature
+    log_T_A      = simscape.function.logProtected(T_A     /A.T_unit, 1);
+    log_T_B      = simscape.function.logProtected(T_B     /A.T_unit, 1);
+    log_T_B_isen = simscape.function.logProtected(T_B_isen/A.T_unit, 1);
+
+    % Log pressure
+    log_p_A = simscape.function.logProtected(p_A/A.p_unit, 1);
+    log_p_B = simscape.function.logProtected(p_B/A.p_unit, 1);
+
+    % Thermal equation of state
+    % Use log-space to improve accuracy
+    [rho_A, rho_B, rho_B_isen] = ...
+        if A.gas_spec ~= foundation.enum.gas_spec.real_gas, ...
+            exp(log_p_A - A.log_ZR - log_T_A     ) * A.rho_unit; ...
+            exp(log_p_B - A.log_ZR - log_T_B     ) * A.rho_unit; ...
+            exp(log_p_B - A.log_ZR - log_T_B_isen) * A.rho_unit ...
+        else ...
+            exp(tablelookup(A.log_T_TLU2, A.log_p_TLU2, A.log_rho_TLU2, log_T_A,      log_p_A, interpolation = linear, extrapolation = linear)) * A.rho_unit; ...
+            exp(tablelookup(A.log_T_TLU2, A.log_p_TLU2, A.log_rho_TLU2, log_T_B,      log_p_B, interpolation = linear, extrapolation = linear)) * A.rho_unit; ...
+            exp(tablelookup(A.log_T_TLU2, A.log_p_TLU2, A.log_rho_TLU2, log_T_B_isen, log_p_B, interpolation = linear, extrapolation = linear)) * A.rho_unit ...
+        end;
+
+    % Caloric equation of state
+    [h_A, h_B, h_B_isen] = ...
+        if A.gas_spec == foundation.enum.gas_spec.perfect_gas, ...
+            A.h_ref + A.cp_ref*(T_A      - A.T_ref); ...
+            A.h_ref + A.cp_ref*(T_B      - A.T_ref); ...
+            A.h_ref + A.cp_ref*(T_B_isen - A.T_ref) ...
+        elseif A.gas_spec == foundation.enum.gas_spec.semiperfect_gas, ...
+            tablelookup(A.T_TLU1, A.h_TLU1, T_A,      interpolation = linear, extrapolation = linear); ...
+            tablelookup(A.T_TLU1, A.h_TLU1, T_B,      interpolation = linear, extrapolation = linear); ...
+            tablelookup(A.T_TLU1, A.h_TLU1, T_B_isen, interpolation = linear, extrapolation = linear) ...
+        else ... % A.gas_spec == foundation.enum.gas_spec.real_gas
+            tablelookup(A.T_TLU2, A.p_TLU2, A.h_TLU2, T_A,      p_A, interpolation = linear, extrapolation = linear); ...
+            tablelookup(A.T_TLU2, A.p_TLU2, A.h_TLU2, T_B,      p_B, interpolation = linear, extrapolation = linear); ...
+            tablelookup(A.T_TLU2, A.p_TLU2, A.h_TLU2, T_B_isen, p_B, interpolation = linear, extrapolation = linear) ...
+        end;
+
+    % Specific total enthalpy
+    ht_A      = h_A      + (mdot_A/area_A/rho_A     )^2/2;
+    ht_B      = h_B      + (mdot_B/area_B/rho_B     )^2/2;
+    ht_B_isen = h_B_isen + (mdot_B/area_B/rho_B_isen)^2/2;
+
+    % Integral of dh/T table lookup (for semiperfect gas only)
+    [int_dh_T_A, int_dh_T_B_isen] = ...
+        if A.gas_spec == foundation.enum.gas_spec.semiperfect_gas, ...
+            tablelookup(A.log_T_TLU1, A.int_dh_T_TLU1, log_T_A,      interpolation = linear, extrapolation = linear); ...
+            tablelookup(A.log_T_TLU1, A.int_dh_T_TLU1, log_T_B_isen, interpolation = linear, extrapolation = linear) ...
+        else ...
+            {1, 'kJ/(kg*K)'}; ...
+            {1, 'kJ/(kg*K)'} ...
+        end;
+
+    % Specific entropy table lookup (for real gas only)
+    [s_A, s_B_isen] = ...
+        if A.gas_spec == foundation.enum.gas_spec.real_gas, ...
+            tablelookup(A.log_T_TLU2, A.log_p_TLU2, A.s_TLU2, log_T_A,      log_p_A, interpolation = linear, extrapolation = linear); ...
+            tablelookup(A.log_T_TLU2, A.log_p_TLU2, A.s_TLU2, log_T_B_isen, log_p_B, interpolation = linear, extrapolation = linear) ...
+        else ...
+            {1, 'kJ/(kg*K)'}; ...
+            {1, 'kJ/(kg*K)'} ...
+        end;
+
+    % Corrected shaft speed
+    omega = R.w - C.w;
+    omega_corrected = omega / sqrt(T_A/T_corrected);
+
+    % Pressure ratio
+    pressure_ratio = p_B/p_A;
+    surge_pressure_ratio = tablelookup(omega_surge_TLU_used, pr_surge_TLU_used, omega_corrected, interpolation = linear, extrapolation = linear);
+
+    % Corrected mass flow rate table lookup
+    mdot_corrected = tablelookup(omega_mdot_TLU_used, sm_mdot_TLU, mdot_TLU_used, omega_corrected, SM, interpolation = linear, extrapolation = linear);
+
+    % Ratio of mass flow rate to shaft speed in the limit of zero shaft speed
+    mdot_omega_corrected_threshold = tablelookup(sm_mdot_TLU, mdot_omega_TLU_threshold, SM, interpolation = linear, extrapolation = linear);
+    mdot_omega_threshold = mdot_omega_corrected_threshold * (p_A/p_corrected) / (T_A/T_corrected);
+
+    % Ratio of mass flow rate to shaft speed
+    mdot_omega = ...
+        if ge(omega_corrected, omega_corrected_threshold), ...
+            mdot_A / omega ...
+        else ...
+            mdot_omega_threshold ...
+        end;
+end
+
+% For logging
+intermediates (Access = private)
+    mechanical_power      = torque * omega; % Shaft power
+    fluid_power           = mdot_A * delta_ht; % Power added to the gas flow
+    isentropic_efficiency = tablelookup(omega_eta_TLU_used, sm_eta_TLU, eta_TLU_used, omega_corrected, SM, interpolation = linear, extrapolation = nearest); % Isentropic efficiency
+    delta_ht              = ht_B      - ht_A; % Actual change in specific total enthalpy
+    delta_ht_isen         = ht_B_isen - ht_A; % Isentropic change in specific total enthalpy
+    inlet_velocity        = mdot_A / rho_A / area_A; % Inlet flow velocity
+    outlet_velocity       = mdot_B / rho_B / area_B; % Outlet flow velocity
+end
+
+equations
+    % Mass balance
+    mdot_A + mdot_B == 0;
+
+    % Energy balance
+    Phi_A + Phi_B + fluid_power == 0;
+
+    % Corrected mass flow rate
+    mdot_A * sqrt(T_A/T_corrected) == mdot_corrected * (p_A/p_corrected);
+
+    % Surge margin based on pressure ratio at constant corrected shaft speed
+    pressure_ratio * (SM + 1) == surge_pressure_ratio;
+
+    % Power balance
+    mechanical_efficiency * torque == mdot_omega * delta_ht;
+
+    % Isentropic efficiency
+    isentropic_efficiency * delta_ht == delta_ht_isen;
+
+    % Isentropic relation
+    if A.gas_spec == foundation.enum.gas_spec.perfect_gas
+        A.cp_ref*log_T_A - A.Z*A.R*log_p_A == A.cp_ref*log_T_B_isen - A.Z*A.R*log_p_B;
+    elseif A.gas_spec == foundation.enum.gas_spec.semiperfect_gas
+        int_dh_T_A - A.Z*A.R*log_p_A == int_dh_T_B_isen - A.Z*A.R*log_p_B;
+    else % A.gas_spec == foundation.enum.gas_spec.real_gas
+        s_A  == s_B_isen;
+    end
+
+    let
+        % Indicator variables for the valid region of the property tables
+        [indicator_pT_A, indicator_pT_B] = ...
+            if (A.gas_spec == foundation.enum.gas_spec.real_gas) && (A.pT_region_flag == foundation.enum.pT_region_G.validity_matrix), ...
+                tablelookup(A.T_TLU2, A.p_TLU2, A.pT_validity_TLU2, A.T, A.p, interpolation = linear, extrapolation = linear); ...
+                tablelookup(A.T_TLU2, A.p_TLU2, A.pT_validity_TLU2, B.T, B.p, interpolation = linear, extrapolation = linear) ...
+            else ...
+                1; ...
+                1 ...
+            end;
+    in
+        % Pressure and temperature must be within the valid region
+        assert(indicator_pT_A > 0, message('physmod:simscape:library:gas:PressureTemperaturePortValidRegion', 'A'))
+        assert(A.p >= A.p_min, message('physmod:simscape:library:gas:PressureMinValid', 'A'))
+        assert(A.p <= A.p_max, message('physmod:simscape:library:gas:PressureMaxValid', 'A'))
+        assert(A.T >= A.T_min, message('physmod:simscape:library:gas:TemperatureMinValid', 'A'))
+        assert(A.T <= A.T_max, message('physmod:simscape:library:gas:TemperatureMaxValid', 'A'))
+        assert(indicator_pT_B > 0, message('physmod:simscape:library:gas:PressureTemperaturePortValidRegion', 'B'))
+        assert(B.p >= A.p_min, message('physmod:simscape:library:gas:PressureMinValid', 'B'))
+        assert(B.p <= A.p_max, message('physmod:simscape:library:gas:PressureMaxValid', 'B'))
+        assert(B.T >= A.T_min, message('physmod:simscape:library:gas:TemperatureMinValid', 'B'))
+        assert(B.T <= A.T_max, message('physmod:simscape:library:gas:TemperatureMaxValid', 'B'))
+    end
+end
+
+% Internal components that calculate energy convection at ports A and B
+components (ExternalAccess = none)
+    convection_A = foundation.gas.port_convection(flow_area = area_A);
+    convection_B = foundation.gas.port_convection(flow_area = area_B);
+end
+connections
+    connect(A, convection_A.port)
+    connect(B, convection_B.port)
+end
+
+% Equate variables for internal components that calculate energy convection at ports A and B
+equations
+    convection_A.mdot == mdot_A;
+    convection_A.Phi  == Phi_A;
+    convection_B.mdot == mdot_B;
+    convection_B.Phi  == Phi_B;
+
+    convection_A.ht_I == convection_B.ht_I;
+    convection_B.ht_I == ht_B;
+end
+
+end
