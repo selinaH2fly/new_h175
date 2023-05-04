@@ -1,0 +1,76 @@
+function [mc, P, T2, P2] = compressor_flow_model(Nc, Pi_c, T01, P01, gamma, cp, mc_max, C1, C2, mdot_c_max, Pi_c_max, C)
+% Inputs:
+% - Nc: compressor rotational speed [RPM]
+% - Pi_c: pressure ratio [-]
+% - T01: inlet temperature [K]
+% - P01: inlet pressure [Pa]
+% - gamma: specific heat ratio [-]
+% - cp: specific heat at constant pressure [J/(kg*K)]
+% - mc_max: maximum mass flow rate [kg/s]
+% - C1, C2: model parameters [-]
+% - mdot_c_max: Maximum Compressor Mass Flow Rate [kg/s]
+% - Pi_c_max: Maximum Compressor Pressure Ratio
+% - C: Array of Coefficients for the Ellipse Model
+% Outputs:
+% - mc: mass flow rate [kg/s]
+% - P: compressor power [W]
+% - T2: outlet temperature [K]
+% - P2: outlet pressure [Pa]
+
+% Compressor Flow Models
+
+% Normalized Compressor Rotational Speed
+N_c_n = Nc / C(6);
+
+% Compute mdot_ChL and Pi_ChL
+mdot_ChL = mdot_c_max * (C(1,1) + C(1,2) * atan(C(1,3) * N_c_n - C(1,4)));
+Pi_ChL = Pi_c_max * (C(2,1) + C(2,2) * N_c_n ^ C(2,3));
+
+% Compute mdot_ZSL and Pi_ZSL
+mdot_ZSL = mdot_c_max * (C(3,1) * N_c_n ^ C(3,2));
+Pi_ZSL = 1 + (1 - Pi_c_max) * C(4,1) * N_c_n ^ C(4,2);
+
+% Compute CUR
+CUR = C(5,1) + C(5,2) * N_c_n ^ C(5,3);
+
+function [mc, P, T2, P2] = compressor_flow_model(Nc, Pi_c, T01, P01, gamma, cp, mc_max, C1, C2, mdot_c_max, Pi_c_max, C)
+
+% Ideal outlet temperature for isentropic process
+T02_ideal = T01 * (Pi_c)^((gamma-1)/gamma);
+
+% Ideal shaft power
+Pc_ideal = mc_max * cp * T01 * ((Pi_c)^((gamma-1)/gamma) - 1);
+
+% Isentropic efficiency
+eta_c_ideal = ((Pi_c)^((gamma-1)/gamma) - 1) / (T02_ideal/T01 - 1);
+
+% Compute the parameters for the expanded ellipse model
+N_c_n = Nc / C(6);
+mdot_ChL = mdot_c_max * (C(1,1) + C(1,2) * atan(C(1,3) * N_c_n - C(1,4)));
+Pi_ChL = Pi_c_max * (C(2,1) + C(2,2) * N_c_n ^ C(2,3));
+mdot_ZSL = mdot_c_max * (C(3,1) * N_c_n ^ C(3,2));
+Pi_ZSL = 1 + (1 - Pi_c_max) * C(4,1) * N_c_n ^ C(4,2);
+CUR = C(5,1) + C(5,2) * N_c_n ^ C(5,3);
+
+% Compute the actual enthalpy rise
+b = C1(1) * N_c_n ^ 2 + C1(2) * N_c_n ^ 3;
+a = C1(3) * N_c_n / (1 + C1(4) * N_c_n ^ 2);
+k_loss = C2(1) * N_c_n ^ C2(2);
+Delta_h_act_max = eta_c_ideal * (mc_max * cp * T01) * ((Pi_c_max)^((gamma-1)/gamma) - 1);
+Delta_h_act = (1 + k_loss * mdot_ZSL / mdot_c_max) * (b - a * mc_max * (Pi_c / Pi_c_max) ^ ((gamma-1)/gamma));
+eta_c = Delta_h_act / Delta_h_act_max;
+
+% Compressor power
+P = Pc_ideal * eta_c;
+
+% Compute mass flow rate and pressure ratio using the ellipse model
+mc = mdot_ZSL + (mdot_ChL - mdot_ZSL) * (1 - ((Pi_c - Pi_ChL) / (Pi_ZSL - Pi_ChL)) ^ CUR) ^ (1 / CUR);
+Pi_c = Pi_ChL + (Pi_ZSL - Pi_ChL) * (1 - ((mc - mdot_ZSL) / (mdot_ChL - mdot_ZSL)) ^ CUR) ^ (1 / CUR);
+
+% Outlet temperature
+T2 = T01 * (1/eta_c * (Pi_c^((gamma-1)/gamma) - 1) + 1);
+
+% Outlet pressure
+P2 = Pi_c * P01;
+
+end
