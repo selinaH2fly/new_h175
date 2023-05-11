@@ -26,9 +26,10 @@ fprintf(2,"---------------------------------------------------------------------
 %% scripts for project initialization
 
 fprintf("\n\n")
-fprintf(2,"Running scripts for initialization\n")
+fprintf(2,"Running scripts for subsystem paramterization\n")
 fprintf(2,"------------------------------------------------\n")
 
+stack_model_parameters
 
 fprintf("\n")
 fprintf("Project succesfully initialized!")

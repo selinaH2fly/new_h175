@@ -1,9 +1,4 @@
-%% Code to define parameters for ssc_fuel_cell
-% Open Model Workspace in the Model Explorer to view and modify parameter
-% values. Click 'Reinitialize from Source' to reset to the parameter values
-% in this script.
-
-% Copyright 2020 The MathWorks, Inc.
+%% Definition of parameters for FCS peripherals
 
 load ssc_fuel_cell_drive_cycle.mat
 
@@ -18,30 +13,14 @@ tank_p = 70; % [MPa] Fuel tank pressure
 tank_yH2 = 1 - 3e-4; % [-] Hydrogen mole fraction
 tank_V = 120; % [l] Fuel tank volume
 
-% Fuel cell stack
-stack_num_cells = 400; % [-] Number cells
-stack_area = 280; % [cm^2] Cell area
-stack_t_membrane = 125; % [um] Membrane thickness
-stack_t_gdl = 250; % [um] Gas diffusion layer thickness
-stack_w_channels = 1; % [cm] Gas channel width/height
-stack_num_channels = 8; % [-] Number of gas channels per cell
-stack_io = 1e-04; % [A/cm^2] Exchange current density
-stack_iL = 1.4; % [A/cm^2] Limiting current density
-stack_alpha = 0.7; % [-] Charge transfer coefficient
-stack_D_gdl = 0.07; % [cm^2/s] Water diffusivity in GDL
-stack_membrane_rho = 2000; % [kg/m^3] Density of dry membrane
-stack_membrane_MW = 1.1; % [kg/mol] Equivalent weight of dry membrane
-stack_mea_rho = 1800; % [kg/s] Overall density of membrane electrode assembly
-stack_mea_cp = 870; % [J/(kg*K)] Overall specific heat of membrane electrode assembly
-
-anode_tube_D = 0.01; % [m] Hydrogen tube diameter
-cathode_tube_D = 0.05; % [m] Air tube diameter
-
 % Coolant system
 coolant_w_channels = 1; % [cm] Coolant channel width/height
 coolant_num_passes = 12; % [-] Number of coolant channel passes per layer
 coolant_num_layers = 20; % [-] Number of coolant layers in stack
 coolant_tube_D = 0.05; % [m] Coolant tube diameter
+
+anode_tube_D = 0.01; % [m] Hydrogen tube diameter
+cathode_tube_D = 0.05; % [m] Air tube diameter
 
 % Radiator dimensions
 radiator_L = 1; % [m] Overall radiator length
