@@ -15,6 +15,3 @@ stack_membrane_rho = 2000; % [kg/m^3] Density of dry membrane
 stack_membrane_MW = 1.1; % [kg/mol] Equivalent weight of dry membrane
 stack_mea_rho = 1800; % [kg/s] Overall density of membrane electrode assembly
 stack_mea_cp = 870; % [J/(kg*K)] Overall specific heat of membrane electrode assembly
-
-anode_tube_D = 0.01; % [m] Hydrogen tube diameter
-cathode_tube_D = 0.05; % [m] Air tube diameter

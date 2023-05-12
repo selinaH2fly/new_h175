@@ -13,6 +13,9 @@ tank_p = 70; % [MPa] Fuel tank pressure
 tank_yH2 = 1 - 3e-4; % [-] Hydrogen mole fraction
 tank_V = 120; % [l] Fuel tank volume
 
+anode_tube_D = 0.01; % [m] Hydrogen tube diameter
+cathode_tube_D = 0.05; % [m] Air tube diameter
+
 % Coolant system
 coolant_w_channels = 1; % [cm] Coolant channel width/height
 coolant_num_passes = 12; % [-] Number of coolant channel passes per layer
