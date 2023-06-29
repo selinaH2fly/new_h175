@@ -7,7 +7,7 @@ env_T = 293.15; % [K] Temperature
 % env_yO2 = 0.21; % [-] Oxygen mole fraction
 
 % Fuel cell stack
-stack_num_cells = 400; % [-] Number cells
+stack_num_cells = 455; % [-] Number cells
 stack_area = 280; % [cm^2] Cell area
 stack_t_membrane = 125; % [um] Membrane thickness
 stack_t_gdl = 250; % [um] Gas diffusion layer thickness
@@ -22,7 +22,7 @@ stack_mea_cp = 870; % [J/(kg*K)] Overall specific heat of membrane electrode ass
 
 % Stack coolant system
 coolant_w_channels = 1; % [cm] Coolant channel width/height
-coolant_num_passes = 12; % [-] Number of coolant channel passes per layer
+coolant_num_passes = 20; % [-] Number of coolant channel passes per layer
 coolant_num_layers = 20; % [-] Number of coolant layers in stack
 coolant_tube_D = 0.05; % [m] Coolant tube diameter
 
