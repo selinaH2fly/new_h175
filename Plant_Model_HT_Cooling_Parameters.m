@@ -3,12 +3,10 @@
 % Environment conditions
 env_p = 0.101325; % [MPa] Pressure
 env_T = 293.15; % [K] Temperature
-% env_RH = 0.5; % [-] Relative humidity
-% env_yO2 = 0.21; % [-] Oxygen mole fraction
 
 % Fuel cell stack
 stack_area = 280; % [cm^2] Cell area
-stack_thermal_mass = 15; % [kg] Stack thermal mass
+stack_thermal_mass = 30; % [kg] Stack thermal mass
 stack_specific_heat = 870; % [J/(kg*K)] Overall specific heat of membrane electrode assembly
 
 % Stack coolant system
