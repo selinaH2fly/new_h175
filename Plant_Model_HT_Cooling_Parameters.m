@@ -37,7 +37,7 @@ radiator_tube_Leq = 2*(radiator_H + 20*radiator_tube_H*radiator_N_tubes); % [m] 
 tcv_orifice_diameter = 0.045; % [m] TCV max. orifice diameter (note: the valve model (3-way linear valve) does not meed the design of the actual TCV)
 tcv_rate_limit = 45; % [1/s] percentage opening per second
 tcv_time_constant = .2; % [s] time constant for PT1 dynamics
-tcv_leakage_area = 1e-5; % [m2] leakage area
+tcv_leakage_area = 2e-5; % [m2] leakage area
 
 % TCP parameters
 tcp_rate_limit = 1000; % [rpm/s] rpm rate limit per second
