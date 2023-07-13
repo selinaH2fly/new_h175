@@ -12,7 +12,7 @@ stack_specific_heat = 870; % [J/(kg*K)] Overall specific heat of membrane electr
 % Stack coolant system
 coolant_w_channels = 1; % [cm] Coolant channel width/height
 coolant_num_passes = 20; % [-] Number of coolant channel passes per layer
-coolant_num_layers = 20; % [-] Number of coolant layers in stack
+coolant_num_layers = 10; % [-] Number of coolant layers in stack
 coolant_tube_D = 0.05; % [m] Coolant tube diameter
 
 % Radiator dimensions
