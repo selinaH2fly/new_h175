@@ -2,3 +2,4 @@
 slprj/
 *.original
 *.autosave
+validation_data/
