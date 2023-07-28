@@ -12,7 +12,7 @@ stack_specific_heat = 870; % [J/(kg*K)] Overall specific heat of membrane electr
 % Stack coolant system
 coolant_w_channels = 1; % [cm] Coolant channel width/height
 coolant_num_passes = 20; % [-] Number of coolant channel passes per layer
-coolant_num_layers = 20; % [-] Number of coolant layers in stack
+coolant_num_layers = 10; % [-] Number of coolant layers in stack
 coolant_tube_D = 0.05; % [m] Coolant tube diameter
 
 % Radiator dimensions
@@ -37,6 +37,7 @@ radiator_tube_Leq = 2*(radiator_H + 20*radiator_tube_H*radiator_N_tubes); % [m] 
 tcv_orifice_diameter = 0.045; % [m] TCV max. orifice diameter (note: the valve model (3-way linear valve) does not meed the design of the actual TCV)
 tcv_rate_limit = 45; % [1/s] percentage opening per second
 tcv_time_constant = .2; % [s] time constant for PT1 dynamics
+tcv_leakage_area = 2e-5; % [m2] leakage area
 
 % TCP parameters
 tcp_rate_limit = 1000; % [rpm/s] rpm rate limit per second
