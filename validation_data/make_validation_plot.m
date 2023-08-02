@@ -66,7 +66,7 @@ xlim_gca = get(gca,'XLim');
 width_gca = xlim_gca(2) - xlim_gca(1);
 annotation('rectangle',gca().Position.*[1, 1, 4*60/width_gca, 1]+[gca().Position(3)*46*60/width_gca,-0.002,0,0], ...
     'FaceColor', '#D95319', 'EdgeColor','none','FaceAlpha',.4);
-text(47.5*60,60,'External Cooling Colapse','FontWeight','bold','HorizontalAlignment','center','Rotation',90,'Color','#D95319');
+text(47.5*60,60,'External Cooling Collapse','FontWeight','bold','HorizontalAlignment','center','Rotation',90,'Color','#D95319');
 
 press_real = nexttile(5);
 hold on
@@ -120,7 +120,7 @@ xlim_gca = get(gca,'XLim');
 width_gca = xlim_gca(2) - xlim_gca(1);
 annotation('Rectangle',gca().Position.*[1, 1, 4*60/width_gca, 1]+[gca().Position(3)*46*60/width_gca,-0.002,0,0], ...
     'FaceColor', '#D95319', 'EdgeColor','none','FaceAlpha',.4);
-text(47.7*60,60,'External Cooling Colapse','FontWeight','bold','HorizontalAlignment','center','Rotation',90,'Color','#D95319');
+text(47.7*60,60,'External Cooling Collapse','FontWeight','bold','HorizontalAlignment','center','Rotation',90,'Color','#D95319');
 
 press_sim = nexttile(6);
 hold on
