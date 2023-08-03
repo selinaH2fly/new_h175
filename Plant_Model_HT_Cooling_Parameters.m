@@ -2,7 +2,7 @@
 
 % Coolant initial conditions
 coolant_initial_pressure = 0.111325; % [MPa] Pressure
-coolant_initial_temperature = 313.15; % [K] Temperature
+coolant_initial_temperature = 293.15; % [K] Temperature
 
 % Fuel cell stack
 stack_area = 280; % [cm^2] Cell area
