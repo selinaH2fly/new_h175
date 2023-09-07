@@ -1,8 +1,8 @@
 %% Definition of parameters for stack model
 
 % Fuel cell stack
-stack_num_cells = 400; % [-] Number cells
-stack_area = 280; % [cm^2] Cell area
+stack_num_cells = 455; % [-] Number cells
+stack_area = 300; % [cm^2] Cell area
 stack_t_membrane = 125; % [um] Membrane thickness
 stack_t_gdl = 250; % [um] Gas diffusion layer thickness
 stack_w_channels = 1; % [cm] Gas channel width/height
