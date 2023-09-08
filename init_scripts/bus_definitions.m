@@ -5,7 +5,7 @@
 anode_supply = Simulink.Bus;
 
 anode_supply_elements(1) = Simulink.BusElement;
-anode_supply_elements(1).Name = 'h2_concentration';
+anode_supply_elements(1).Name = 'h2_molar_concentration';
 
 anode_supply_elements(2) = Simulink.BusElement;
 anode_supply_elements(2).Name = 'stoichiometry';
