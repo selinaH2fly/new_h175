@@ -29,7 +29,9 @@ fprintf("\n\n")
 fprintf(2,"Running scripts for subsystem paramterization\n")
 fprintf(2,"------------------------------------------------\n")
 
-stack_model_parameters
+% stack_model_parameters
+load('All_Properties.mat')
+run('stack_model_parameters.m')
 
 fprintf("\n")
 fprintf("Project succesfully initialized!")
