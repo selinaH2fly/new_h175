@@ -1,3 +1,21 @@
+%% Definition of parameters for stack model
+
+% Fuel cell stack
+stack_num_cells = 455; % [-] Number cells
+stack_area = 300; % [cm^2] Cell area
+stack_t_membrane = 125; % [um] Membrane thickness
+stack_t_gdl = 250; % [um] Gas diffusion layer thickness
+stack_w_channels = 1; % [cm] Gas channel width/height
+stack_num_channels = 8; % [-] Number of gas channels per cell
+stack_io = 1e-04; % [A/cm^2] Exchange current density
+stack_iL = 1.4; % [A/cm^2] Limiting current density
+stack_alpha = 0.7; % [-] Charge transfer coefficient
+stack_D_gdl = 0.07; % [cm^2/s] Water diffusivity in GDL
+stack_membrane_rho = 2000; % [kg/m^3] Density of dry membrane
+stack_membrane_MW = 1.1; % [kg/mol] Equivalent weight of dry membrane
+stack_mea_rho = 1800; % [kg/s] Overall density of membrane electrode assembly
+stack_mea_cp = 870; % [J/(kg*K)] Overall specific heat of membrane electrode assembly
+
 %% Definition of physical parameters
 % Parameter definition adopted from Marlene Euchenhofer.
 
@@ -67,21 +85,4 @@ oxygen.specific_gas_constant = ...
     oxygen.molar_mass;                          % specific gas constant oxygen [J/(kg*K)]
 oxygen.n_electrons = 4;                         % number of electrons per mol O2
 
-%=============================
-% Reference Values
-%=============================
-% p_atm = 1.01325;                    % atmospheric pressure [bar]
-% p_reference = 1.01325;              % reference pressure [bar] (used for SLMP to LMP conversion among others)
-% p_comp_reference = 1.0;             % reference pressure [bar] (for Fisher compressor)
-% 
-% T_abs_zero = -273.15;               % absolute zero temperature [°C]
-% T_reference = 273.15;               % reference temperature [K] (for Fisher compressor)
-% T_comp_reference = 298;
-% 
-% H_0 = 0;                            % reference altitude for ISA standard atmosphere
-% p_0 = 1.01325;                      % reference pressure [bar] for ISA standard atmosphere
-% rho_0 = 1.225;                      % reference densty [kg/m^3] for ISA standard atmosphere
-% T_0 = 288.15;                       % reference temperature [K] for ISA standard atmosphere
-% 
-% n_atm = 1.235;                      % polytropic index [-] for ISA standard atmosphere
 
