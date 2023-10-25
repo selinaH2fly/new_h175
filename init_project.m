@@ -30,8 +30,12 @@ fprintf(2,"Running scripts for subsystem paramterization\n")
 fprintf(2,"------------------------------------------------\n")
 
 % stack_model_parameters
-load('All_Properties.mat')
-run('stack_model_parameters.m')
+% load('All_Properties.mat')
+run('stack_subsystem_parameters.m')
+run('stack_subsystem_supply_bus_definitions.m')
+run('thermal_subsystem_parameters.m')
+run('cathode_subsystem_parameters.m')
+run('anode_subsystem_parameters.m')
 
 fprintf("\n")
 fprintf("Project succesfully initialized!")
