@@ -3,16 +3,6 @@
 % Coolant initial conditions
 coolant_initial_pressure = 0.111325; % [MPa] Pressure
 coolant_initial_temperature = 293.15; % [K] Temperature
-
-% Fuel cell stack
-stack_area = 280; % [cm^2] Cell area
-stack_thermal_mass = 30; % [kg] Stack thermal mass
-stack_specific_heat = 870; % [J/(kg*K)] Overall specific heat of membrane electrode assembly
-
-% Stack coolant system
-coolant_w_channels = 1; % [cm] Coolant channel width/height
-coolant_num_passes = 20; % [-] Number of coolant channel passes per layer
-coolant_num_layers = 15; % [-] Number of coolant layers in stack
 coolant_tube_D = 0.05; % [m] Coolant tube diameter
 
 % Radiator parameters
@@ -56,8 +46,7 @@ tcp_rate_limit = 1000; % [rpm/s] rpm rate limit per second
 tcp_time_constant = 2; % [s] time constant for PT1 dynamics
 
 %% coolant supply
-
-                                                
+% TODO: Don't these bus definition refer to the stack model!?
 
 coolant_supply = Simulink.Bus;
 coolant_supply.Description = '';
