@@ -16,6 +16,16 @@ stack_membrane_MW = 1.1; % [kg/mol] Equivalent weight of dry membrane
 stack_mea_rho = 1800; % [kg/s] Overall density of membrane electrode assembly
 stack_mea_cp = 870; % [J/(kg*K)] Overall specific heat of membrane electrode assembly
 
+% Fuel cell stack
+stack.area = 280; % [cm^2] Cell area
+stack.thermal_mass = 30; % [kg] Stack thermal mass
+stack.specific_heat = 870; % [J/(kg*K)] Overall specific heat of membrane electrode assembly
+
+% Stack coolant system
+stack.coolant_w_channels = 1; % [cm] Coolant channel width/height
+stack.coolant_num_passes = 20; % [-] Number of coolant channel passes per layer
+stack.coolant_num_layers = 15; % [-] Number of coolant layers in stack
+
 %% Definition of physical parameters
 % Parameter definition adopted from Marlene Euchenhofer.
 
