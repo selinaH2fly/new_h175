@@ -1,0 +1,5 @@
+# List of untracked files to ignore
+slprj/
+*.slxc
+*.autosave
+*.original
