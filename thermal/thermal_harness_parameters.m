@@ -15,6 +15,7 @@ stack.coolant_num_layers = 15; % [-] Number of coolant layers in stack
 %% Radiator parameters
 % These are only relevant when engaging the physical radiator model (cf.
 % *variant_config.m).
+% TODO: make those structs!
 
 % Basic radator parameters
 radiator_n_tubes = 20; % Number of tubes [-]

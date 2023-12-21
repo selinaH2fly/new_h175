@@ -1,5 +1,7 @@
 %% Definition of Parameters for HT-Cooling Plant Model
 
+% TODO: Make those structs
+
 % Coolant initial conditions
 coolant_initial_pressure = 0.111325; % [MPa] Pressure
 coolant_initial_temperature = 293.15; % [K] Temperature
