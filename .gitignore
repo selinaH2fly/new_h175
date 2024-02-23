@@ -6,3 +6,4 @@
 *.autosave
 *.original
 *.asv
+stack/p10_doe_ann_emulation/__pycache__/
