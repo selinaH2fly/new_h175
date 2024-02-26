@@ -47,6 +47,25 @@ index_temp_12       = find(coolant_delta_temp_degC > 11.5 & coolant_delta_temp_d
 % mean_80 = mean(drop_80);
 % mean_85 = mean(drop_85);
 
+%% find correlated data (according to "P10 Power Layout")
+index_at_100 = intersect(index_current_100, index_temp_06);
+index_at_200 = intersect(index_current_200, index_temp_08);
+index_at_300 = intersect(index_current_300, index_temp_10);
+index_at_400 = intersect(index_current_400, index_temp_10);
+index_at_500 = intersect(index_current_500, index_temp_11);
+index_at_600 = intersect(index_current_600, index_temp_12);
+
+%% compute mean flows (for "P10 Power Layout")
+for current = 100:100:600
+    index = eval(strcat('index_at_', string(current)));
+    if ~isempty(index)
+        flow = mean(coolant_flow_lpm(index));
+        disp('Avg. flow at ' + string(current) + ' A for specified dT: ' + string(flow))
+    else
+         disp('No data at ' + string(current) + ' A for specified dT')
+    end
+end
+
 %% make 2D plot: dT vs. flow (current clustered)
 fig_flow_vs_dT = figure;
 hold on
@@ -64,7 +83,7 @@ ylabel('Coolant Flow (l/min)')
 xlim([0,20])
 ylim([100,300])
 
-lgd = legend('DoE Raw Data (50 A < I \leq 250 A)', ...
+lgd = legend('DoE Raw Data (50 A < I \leq 150 A)', ...
         'DoE Raw Data (150 A < I \leq 250 A)', ...
         'DoE Raw Data (250 A < I \leq 350 A)', ...
         'DoE Raw Data (350 A < I \leq 450 A)', ...
