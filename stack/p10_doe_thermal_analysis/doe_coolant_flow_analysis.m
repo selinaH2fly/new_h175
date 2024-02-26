@@ -16,6 +16,8 @@ stack_current_A = cell2mat({doe_raw_data_struct.current}');
 coolant_delta_temp_degC = cell2mat({doe_raw_data_struct.temp_coolant_outlet}') ...
     - cell2mat({doe_raw_data_struct.temp_coolant_inlet}');
 coolant_flow_lpm = cell2mat({doe_raw_data_struct.flow_coolant}');
+coolant_pressure_drop_mbar = 1000*(cell2mat({doe_raw_data_struct.pressure_coolant_inlet}') ...
+    - cell2mat({doe_raw_data_struct.pressure_coolant_outlet}'));
 
 %% separate data by stack current
 index_current_100   = find(stack_current_A > 050 & stack_current_A <= 150);
@@ -35,17 +37,6 @@ index_temp_10       = find(coolant_delta_temp_degC > 09.5 & coolant_delta_temp_d
 index_temp_11       = find(coolant_delta_temp_degC > 10.5 & coolant_delta_temp_degC <= 11.5);
 index_temp_12       = find(coolant_delta_temp_degC > 11.5 & coolant_delta_temp_degC <= 12.5);
 
-%% compute means
-% mean_40 = mean(drop_40);
-% mean_45 = mean(drop_45);
-% mean_50 = mean(drop_50);
-% mean_55 = mean(drop_55);
-% mean_60 = mean(drop_60);
-% mean_65 = mean(drop_65);
-% mean_70 = mean(drop_70);
-% mean_75 = mean(drop_75);
-% mean_80 = mean(drop_80);
-% mean_85 = mean(drop_85);
 
 %% find correlated data (according to "P10 Power Layout")
 index_at_100 = intersect(index_current_100, index_temp_06);
@@ -56,13 +47,24 @@ index_at_500 = intersect(index_current_500, index_temp_11);
 index_at_600 = intersect(index_current_600, index_temp_12);
 
 %% compute mean flows (for "P10 Power Layout")
+flow_mean = zeros(6, 1);
 for current = 100:100:600
     index = eval(strcat('index_at_', string(current)));
     if ~isempty(index)
-        flow = mean(coolant_flow_lpm(index));
-        disp('Avg. flow at ' + string(current) + ' A for specified dT: ' + string(flow))
-    else
-         disp('No data at ' + string(current) + ' A for specified dT')
+        flow_mean(current/100) = mean(coolant_flow_lpm(index));
+        % disp('Avg. flow at ' + string(current) + ' A for specified dT: ' + string(flow_mean(current/100)))
+    % else
+         % disp('No data at ' + string(current) + ' A for specified dT')
+    end
+end
+
+%% find mean pressure drops for mean flows
+pressure_drop_mean = zeros(6, 1);
+for current = 100:100:600
+    index = eval(strcat('index_at_', string(current)));
+    if ~isempty(index)
+        index_flow = find(coolant_flow_lpm > (flow_mean(current/100) - 5) &  coolant_flow_lpm <= (flow_mean(current/100) + 5));
+        pressure_drop_mean(current/100) = mean(coolant_pressure_drop_mbar(index_flow));
     end
 end
 
@@ -128,7 +130,6 @@ hold on
 grid on
 
 scatter3(stack_current_A, coolant_delta_temp_degC, coolant_flow_lpm, 'o')
-
 
 xlabel('Stack Current (A)')
 ylabel('Coolant \Delta-Temp. (°C)')
