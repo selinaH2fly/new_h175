@@ -6,6 +6,11 @@ clc
 addpath('vendor_provision')
 load('doe_raw_data_struct.mat')
 
+%% create results folder (if it does not exist, already)
+if ~isfolder('results')
+    mkdir('results')
+end
+
 %% extract variables of interest and write to vector
 stack_current_A = cell2mat({doe_raw_data_struct.current}');
 coolant_delta_temp_degC = cell2mat({doe_raw_data_struct.temp_coolant_outlet}') ...
@@ -104,13 +109,7 @@ hold on
 grid on
 
 scatter3(stack_current_A, coolant_delta_temp_degC, coolant_flow_lpm, 'o')
-% plot(stack_current_A(index_temp_06), coolant_flow_lpm(index_temp_06), 'o')
-% plot(stack_current_A(index_temp_07), coolant_flow_lpm(index_temp_07), 'o')
-% plot(stack_current_A(index_temp_08), coolant_flow_lpm(index_temp_08), 'o')
-% plot(stack_current_A(index_temp_09), coolant_flow_lpm(index_temp_09), 'o')
-% plot(stack_current_A(index_temp_10), coolant_flow_lpm(index_temp_10), 'o')
-% plot(stack_current_A(index_temp_11), coolant_flow_lpm(index_temp_11), 'o')
-% plot(stack_current_A(index_temp_12), coolant_flow_lpm(index_temp_12), 'o')
+
 
 xlabel('Stack Current (A)')
 ylabel('Coolant \Delta-Temp. (°C)')
@@ -119,20 +118,14 @@ xlim([0, 600])
 ylim([0,20])
 zlim([100,300])
 
-% lgd = legend('DoE Raw Data (4.5°C < T_{CLSti} \leq 5.5°C )', ...
-%         'DoE Raw Data (5.5°C < T_{CLSti} \leq 6.5°C)', ...
-%         'DoE Raw Data (6.5°C < T_{CLSti} \leq 7.5°C', ...
-%         'DoE Raw Data (7.5°C < T_{CLSti} \leq 8.5°C)', ...
-%         'DoE Raw Data (8.5°C < T_{CLSti} \leq 9.5°C)', ...
-%         'DoE Raw Data (9.5°C < T_{CLSti} \leq 10.5°C)', ...
-%         'DoE Raw Data (10.5°C < T_{CLSti} \leq 11.5°C)', ...
-%         'DoE Raw Data (11.5°C < T_{CLSti} \leq 12.5°C)');
-
-% lgd.Location = 'northwest';
+view(130,35)
 
 %% save plots
-saveas(fig_flow_vs_dT,'coolant_deltaT_vs_flow_current_clustered.fig')
-saveas(fig_flow_vs_dT,'coolant_deltaT_vs_flow_current_clustered.png')
+saveas(fig_flow_vs_dT,fullfile('results','coolant_deltaT_vs_flow_current_clustered.fig'))
+saveas(fig_flow_vs_dT,fullfile('results','coolant_deltaT_vs_flow_current_clustered.png'))
 
-saveas(fig_flow_vs_current,'coolant_current_vs_flow_current_clustered.fig')
-saveas(fig_flow_vs_current,'coolant_current_vs_flow_current_clustered.png')
+saveas(fig_flow_vs_current,fullfile('results','coolant_current_vs_flow_current_clustered.fig'))
+saveas(fig_flow_vs_current,fullfile('results','coolant_current_vs_flow_current_clustered.png'))
+
+saveas(fig_3D_scatter,fullfile('results','coolant_deltaT_and_current_vs_flow_3d.fig'))
+saveas(fig_3D_scatter,fullfile('results','coolant_deltaT_and_current_vs_flow_3d.png'))
