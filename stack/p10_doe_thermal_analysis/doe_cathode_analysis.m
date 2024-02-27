@@ -15,6 +15,7 @@ end
 stack_current_A = cell2mat({doe_raw_data_struct.current}');
 cathode_pressure_drop_mbar = cell2mat({doe_raw_data_struct.dp_Cathode}');
 cathode_pressure_inlet_bar = cell2mat({doe_raw_data_struct.pressure_cathode_inlet}');
+cathode_stoich = cell2mat({doe_raw_data_struct.cathode_stoich}');
 
 
 %% separate data by stack current
@@ -30,6 +31,13 @@ index_pressure_050  = find(cathode_pressure_inlet_bar <= 0.5);
 index_pressure_075  = find(cathode_pressure_inlet_bar > 0.5 & cathode_pressure_inlet_bar <= 1.0);
 index_pressure_100  = find(cathode_pressure_inlet_bar > 1.0 & cathode_pressure_inlet_bar <= 1.5);
 index_pressure_150  = find(cathode_pressure_inlet_bar > 1.5);
+
+%% separate data by cathode stoichiometry
+index_stoich_15     = find(cathode_stoich <= 1.5);
+index_stoich_20     = find(cathode_stoich > 1.5 & cathode_stoich <= 2.0);
+index_stoich_25     = find(cathode_stoich > 2.0 & cathode_stoich <= 2.5);
+index_stoich_30     = find(cathode_stoich > 2.5 & cathode_stoich <= 3.0);
+index_stoich_35     = find(cathode_stoich > 3.0);
 
 %% find correlated data (according to "P10 Power Layout")
 % index_at_100 = intersect(index_current_100, index_temp_06);
@@ -61,8 +69,8 @@ index_pressure_150  = find(cathode_pressure_inlet_bar > 1.5);
 %     end
 % end
 
-%% make 2D plot: dT vs. flow (current clustered)
-fig_dp_vs_I = figure;
+%% make 2D plot: dp vs. current (inlet pressure clustered)
+fig_dp_vs_I_pin = figure;
 hold on
 grid on
 
@@ -77,59 +85,41 @@ ylabel('Cathode Pressure Drop (mbar)')
 xlim([0,600])
 ylim([0,0.5])
 
-lgd = legend('DoE Raw Data (p_{in} \leq 0.5 barg)', ...
+lgd = legend('DoE Raw Data (\lamba \leq 0.5 barg)', ...
         'DoE Raw Data (0.5 barg < p_{in} \leq 1.0 barg)', ...
         'DoE Raw Data (1.0 barg < p_{in} \leq 1.5 barg)', ...
         'DoE Raw Data (p_{in} > 1.5 barg)');
 
 % lgd.Location = 'northwest';
 
-%% make 2D plot: current vs. flow (dT clustered)
-% fig_flow_vs_current = figure;
-% hold on
-% grid on
-% 
-% plot(stack_current_A(index_temp_05), coolant_flow_lpm(index_temp_05), 'o')
-% plot(stack_current_A(index_temp_06), coolant_flow_lpm(index_temp_06), 'o')
-% plot(stack_current_A(index_temp_07), coolant_flow_lpm(index_temp_07), 'o')
-% plot(stack_current_A(index_temp_08), coolant_flow_lpm(index_temp_08), 'o')
-% plot(stack_current_A(index_temp_09), coolant_flow_lpm(index_temp_09), 'o')
-% plot(stack_current_A(index_temp_10), coolant_flow_lpm(index_temp_10), 'o')
-% plot(stack_current_A(index_temp_11), coolant_flow_lpm(index_temp_11), 'o')
-% plot(stack_current_A(index_temp_12), coolant_flow_lpm(index_temp_12), 'o')
-% 
-% xlabel('Stack Current (A)')
-% ylabel('Coolant Flow (l/min)')
-% ylim([100,300])
-% xlim([0, 600])
-% 
-% lgd = legend('DoE Raw Data (4.5°C < T_{CLSti} \leq 5.5°C )', ...
-%         'DoE Raw Data (5.5°C < T_{CLSti} \leq 6.5°C)', ...
-%         'DoE Raw Data (6.5°C < T_{CLSti} \leq 7.5°C', ...
-%         'DoE Raw Data (7.5°C < T_{CLSti} \leq 8.5°C)', ...
-%         'DoE Raw Data (8.5°C < T_{CLSti} \leq 9.5°C)', ...
-%         'DoE Raw Data (9.5°C < T_{CLSti} \leq 10.5°C)', ...
-%         'DoE Raw Data (10.5°C < T_{CLSti} \leq 11.5°C)', ...
-%         'DoE Raw Data (11.5°C < T_{CLSti} \leq 12.5°C)');
-% 
+%% make 2D plot: dp vs. current (stoichiometry clustered)
+fig_dp_vs_I_stoich = figure;
+hold on
+grid on
+
+plot(stack_current_A(index_stoich_15), cathode_pressure_drop_mbar(index_stoich_15), 'o')
+plot(stack_current_A(index_stoich_20), cathode_pressure_drop_mbar(index_stoich_20), 'o')
+plot(stack_current_A(index_stoich_25), cathode_pressure_drop_mbar(index_stoich_25), 'o')
+plot(stack_current_A(index_stoich_30), cathode_pressure_drop_mbar(index_stoich_30), 'o')
+plot(stack_current_A(index_stoich_35), cathode_pressure_drop_mbar(index_stoich_35), 'o')
+
+
+xlabel('Stack Current (A)')
+ylabel('Cathode Pressure Drop (mbar)')
+xlim([0,600])
+ylim([0,0.5])
+
+lgd = legend('DoE Raw Data (\lambda \leq 1.5)', ...
+        'DoE Raw Data (1.5 < \lambda \leq 2.0)', ...
+        'DoE Raw Data (2.0 < \lambda \leq 2.5)', ...
+        'DoE Raw Data (2.5 < \lambda \leq 3.0)', ...
+        'DoE Raw Data (\lambda > 3.0)');
+
 % lgd.Location = 'northwest';
-% 
-% %% make 3D plot: current & dT vs. flow
-% fig_3D_scatter = figure;
-% hold on
-% grid on
-% 
-% scatter3(stack_current_A, coolant_delta_temp_degC, coolant_flow_lpm, 'o')
-% 
-% xlabel('Stack Current (A)')
-% ylabel('Coolant \Delta-Temp. (°C)')
-% zlabel('Coolant Flow (l/min)')
-% xlim([0, 600])
-% ylim([0,20])
-% zlim([100,300])
-% 
-% view(130,35)
 
 %% save plots
-saveas(fig_dp_vs_I, fullfile('results','cathode_pressure_drop_vs_current_inlet_pressure_clustered.fig'))
-saveas(fig_dp_vs_I, fullfile('results','cathode_pressure_drop_vs_current_inlet_pressure_clustered.png'))
+saveas(fig_dp_vs_I_pin, fullfile('results','cathode_pressure_drop_vs_current_inlet_pressure_clustered.fig'))
+saveas(fig_dp_vs_I_pin, fullfile('results','cathode_pressure_drop_vs_current_inlet_pressure_clustered.png'))
+
+saveas(fig_dp_vs_I_stoich, fullfile('results','cathode_pressure_drop_vs_current_stoich_clustered.fig'))
+saveas(fig_dp_vs_I_stoich, fullfile('results','cathode_pressure_drop_vs_current_stoich_clustered.png'))
