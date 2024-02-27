@@ -13,9 +13,9 @@ end
 
 %% extract variables of interest and write to vector
 stack_current_A = cell2mat({doe_raw_data_struct.current}');
-cathode_pressure_drop_mbar = 1000.*cell2mat({doe_raw_data_struct.dp_Cathode}');
-cathode_pressure_inlet_bar = cell2mat({doe_raw_data_struct.pressure_cathode_inlet}');
-cathode_stoich = cell2mat({doe_raw_data_struct.cathode_stoich}');
+anode_pressure_drop_mbar = 1000.*cell2mat({doe_raw_data_struct.dp_Anode}');
+anode_pressure_inlet_bar = cell2mat({doe_raw_data_struct.pressure_anode_inlet}');
+anode_stoich = cell2mat({doe_raw_data_struct.anode_stoich}');
 
 
 %% separate data by stack current
@@ -26,18 +26,18 @@ index_current_400   = find(stack_current_A > 350 & stack_current_A <= 450);
 index_current_500   = find(stack_current_A > 450 & stack_current_A <= 550);
 index_current_600   = find(stack_current_A > 550 & stack_current_A <= 650);
 
-%% separate data by cathode inlet pressure
-index_pressure_050  = find(cathode_pressure_inlet_bar <= 0.5);
-index_pressure_075  = find(cathode_pressure_inlet_bar > 0.5 & cathode_pressure_inlet_bar <= 1.0);
-index_pressure_100  = find(cathode_pressure_inlet_bar > 1.0 & cathode_pressure_inlet_bar <= 1.5);
-index_pressure_150  = find(cathode_pressure_inlet_bar > 1.5);
+%% separate data by anode inlet pressure
+index_pressure_050  = find(anode_pressure_inlet_bar <= 0.5);
+index_pressure_075  = find(anode_pressure_inlet_bar > 0.5 & anode_pressure_inlet_bar <= 1.0);
+index_pressure_100  = find(anode_pressure_inlet_bar > 1.0 & anode_pressure_inlet_bar <= 1.5);
+index_pressure_150  = find(anode_pressure_inlet_bar > 1.5);
 
-%% separate data by cathode stoichiometry
-index_stoich_15     = find(cathode_stoich <= 1.5);
-index_stoich_20     = find(cathode_stoich > 1.5 & cathode_stoich <= 2.0);
-index_stoich_25     = find(cathode_stoich > 2.0 & cathode_stoich <= 2.5);
-index_stoich_30     = find(cathode_stoich > 2.5 & cathode_stoich <= 3.0);
-index_stoich_35     = find(cathode_stoich > 3.0);
+%% separate data by anode stoichiometry
+index_stoich_15     = find(anode_stoich <= 1.5);
+index_stoich_20     = find(anode_stoich > 1.5 & anode_stoich <= 2.0);
+index_stoich_25     = find(anode_stoich > 2.0 & anode_stoich <= 2.5);
+index_stoich_30     = find(anode_stoich > 2.5 & anode_stoich <= 3.0);
+index_stoich_35     = find(anode_stoich > 3.0);
 
 %% find correlated data (according to "P10 Power Layout")
 % index_at_100 = intersect(index_current_100, index_temp_06);
@@ -74,14 +74,14 @@ fig_dp_vs_I_pin = figure;
 hold on
 grid on
 
-plot(stack_current_A(index_pressure_050), cathode_pressure_drop_mbar(index_pressure_050), 'o')
-plot(stack_current_A(index_pressure_075), cathode_pressure_drop_mbar(index_pressure_075), 'o')
-plot(stack_current_A(index_pressure_100), cathode_pressure_drop_mbar(index_pressure_100), 'o')
-plot(stack_current_A(index_pressure_150), cathode_pressure_drop_mbar(index_pressure_150), 'o')
+plot(stack_current_A(index_pressure_050), anode_pressure_drop_mbar(index_pressure_050), 'o')
+plot(stack_current_A(index_pressure_075), anode_pressure_drop_mbar(index_pressure_075), 'o')
+plot(stack_current_A(index_pressure_100), anode_pressure_drop_mbar(index_pressure_100), 'o')
+plot(stack_current_A(index_pressure_150), anode_pressure_drop_mbar(index_pressure_150), 'o')
 
 
 xlabel('Stack Current (A)')
-ylabel('Cathode Pressure Drop (mbar)')
+ylabel('Anode Pressure Drop (mbar)')
 xlim([0,600])
 ylim([0,500])
 
@@ -97,15 +97,15 @@ fig_dp_vs_I_stoich = figure;
 hold on
 grid on
 
-plot(stack_current_A(index_stoich_15), cathode_pressure_drop_mbar(index_stoich_15), 'o')
-plot(stack_current_A(index_stoich_20), cathode_pressure_drop_mbar(index_stoich_20), 'o')
-plot(stack_current_A(index_stoich_25), cathode_pressure_drop_mbar(index_stoich_25), 'o')
-plot(stack_current_A(index_stoich_30), cathode_pressure_drop_mbar(index_stoich_30), 'o')
-plot(stack_current_A(index_stoich_35), cathode_pressure_drop_mbar(index_stoich_35), 'o')
+plot(stack_current_A(index_stoich_15), anode_pressure_drop_mbar(index_stoich_15), 'o')
+plot(stack_current_A(index_stoich_20), anode_pressure_drop_mbar(index_stoich_20), 'o')
+plot(stack_current_A(index_stoich_25), anode_pressure_drop_mbar(index_stoich_25), 'o')
+plot(stack_current_A(index_stoich_30), anode_pressure_drop_mbar(index_stoich_30), 'o')
+plot(stack_current_A(index_stoich_35), anode_pressure_drop_mbar(index_stoich_35), 'o')
 
 
 xlabel('Stack Current (A)')
-ylabel('Cathode Pressure Drop (mbar)')
+ylabel('Anode Pressure Drop (mbar)')
 xlim([0,600])
 ylim([0,500])
 
@@ -118,8 +118,8 @@ lgd = legend('DoE Raw Data (\lambda \leq 1.5)', ...
 % lgd.Location = 'northwest';
 
 %% save plots
-saveas(fig_dp_vs_I_pin, fullfile('results','cathode_pressure_drop_vs_current_inlet_pressure_clustered.fig'))
-saveas(fig_dp_vs_I_pin, fullfile('results','cathode_pressure_drop_vs_current_inlet_pressure_clustered.png'))
+saveas(fig_dp_vs_I_pin, fullfile('results','anode_pressure_drop_vs_current_inlet_pressure_clustered.fig'))
+saveas(fig_dp_vs_I_pin, fullfile('results','anode_pressure_drop_vs_current_inlet_pressure_clustered.png'))
 
-saveas(fig_dp_vs_I_stoich, fullfile('results','cathode_pressure_drop_vs_current_stoich_clustered.fig'))
-saveas(fig_dp_vs_I_stoich, fullfile('results','cathode_pressure_drop_vs_current_stoich_clustered.png'))
+saveas(fig_dp_vs_I_stoich, fullfile('results','anode_pressure_drop_vs_current_stoich_clustered.fig'))
+saveas(fig_dp_vs_I_stoich, fullfile('results','anode_pressure_drop_vs_current_stoich_clustered.png'))
