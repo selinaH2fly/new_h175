@@ -83,38 +83,12 @@ for current = currents
     end
 end
 
-%% find mean pressure drops for mean flows
-% pressure_drop_mean = zeros(6, 1);
-% for current = 100:100:600
-%     index = eval(strcat('index_at_', string(current)));
-%     if ~isempty(index)
-%         index_flow = find(coolant_flow_lpm > (flow_mean(current/100) - 5) &  coolant_flow_lpm <= (flow_mean(current/100) + 5));
-%         pressure_drop_mean(current/100) = mean(coolant_pressure_drop_mbar(index_flow));
-%     end
-% end
+%% polynomial fit
+% Regression done in Excel, for the moment.
 
-%% make 2D plot: dp vs. current (inlet pressure clustered)
-% fig_dp_vs_I_pin = figure;
-% hold on
-% grid on
-% 
-% plot(stack_current_A(index_pressure_050), cathode_pressure_drop_mbar(index_pressure_050), 'o')
-% plot(stack_current_A(index_pressure_075), cathode_pressure_drop_mbar(index_pressure_075), 'o')
-% plot(stack_current_A(index_pressure_100), cathode_pressure_drop_mbar(index_pressure_100), 'o')
-% plot(stack_current_A(index_pressure_150), cathode_pressure_drop_mbar(index_pressure_150), 'o')
-% 
-% 
-% xlabel('Stack Current (A)')
-% ylabel('Cathode Pressure Drop (mbar)')
-% xlim([0,600])
-% ylim([0,500])
-% 
-% lgd = legend('DoE Raw Data (\lamba \leq 0.5 barg)', ...
-%         'DoE Raw Data (0.5 barg < p_{in} \leq 1.0 barg)', ...
-%         'DoE Raw Data (1.0 barg < p_{in} \leq 1.5 barg)', ...
-%         'DoE Raw Data (p_{in} > 1.5 barg)');
-
-% lgd.Location = 'northwest';
+coefficents = [3e-4, 0.20, 28.6];
+current_reg = linspace(0,600,100);
+dp_mean_reg = coefficents*[current_reg.^2; current_reg; ones(1, length(current_reg))];
 
 %% make 2D plot: dp vs. current (stoichiometry clustered)
 if make_plot
@@ -129,6 +103,7 @@ if make_plot
     plot(stack_current_A(index_stoich_35), cathode_pressure_drop_mbar(index_stoich_35), 'o')
 
     plot(currents, dp_mean, 'k-x')
+    plot(current_reg, dp_mean_reg, 'b-', 'LineWidth', 2)
     
     xlabel('Stack Current (A)')
     ylabel('Cathode Pressure Drop (mbar)')
@@ -140,7 +115,9 @@ if make_plot
             'DoE Raw Data (2.0 < \lambda \leq 2.5)', ...
             'DoE Raw Data (2.5 < \lambda \leq 3.0)', ...
             'DoE Raw Data (\lambda > 3.0)', ...
-            'Avg. Values for specified \lambda');
+            'Avg. Values for specified \lambda',...
+            strcat('2nd Order Regression:', ...
+            string(newline), 'a_2 = ', string(coefficents(1)), ', a_1 = ', string(coefficents(2)), ', a_0 = ', string(coefficents(3))));
     % lgd.Location = 'northwest';
 
     saveas(fig_dp_vs_I_stoich, fullfile('results','cathode_pressure_drop_vs_current_stoich_clustered.fig'))
