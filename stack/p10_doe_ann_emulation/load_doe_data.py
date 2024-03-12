@@ -178,4 +178,4 @@ def plot_doe_data(model_in_dict, model_out_dict):
     plt.tight_layout()
     plt.draw()
 
-    return None
+    return plt
