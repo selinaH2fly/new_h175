@@ -9,10 +9,11 @@ import argparse
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import threading
-from sklearn.decomposition import PCA
+# import threading
+# from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
 import pandas as pd
 
 
@@ -30,18 +31,26 @@ def analyze_feature_importance(target='dp_anode_mbar'):
     # plt = plot_doe_data(model_in_dict, model_out_dict)
     # plt.show()
 
-   # Create a dataframe from the input data and the target data
+    # Create a dataframe from the input data and the target data
     df_input = pd.DataFrame(model_in_dict)
     df_target = pd.DataFrame(model_out_dict[target])
 
     # Normalize the  data
     scaler = StandardScaler()
     input_scaled = scaler.fit_transform(df_input)
-    # target_scaled = scaler.fit_transform(df_target)
+    target_scaled = scaler.fit_transform(df_target)
 
-   # Train a Random Forest model
-    model = RandomForestRegressor(n_estimators=100, random_state=42)
-    model.fit(input_scaled, df_target.values.ravel())
+    # Split the data into training and test sets
+    X_train, X_test, y_train, y_test = train_test_split(input_scaled, target_scaled, test_size=0.2,
+                                                        shuffle=True, random_state=42)
+
+    # Train a Random Forest model
+    model = RandomForestRegressor(n_estimators=200, random_state=42, min_samples_leaf = 10)
+    model.fit(X_train, y_train.ravel())
+
+    # Print trained model accuracy
+    print(f"RF train accuracy: {model.score(X_train, y_train):.3f}")
+    print(f"RF test accuracy: {model.score(X_test, y_test):.3f}")
 
     # Get feature importances
     importances = model.feature_importances_
