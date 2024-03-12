@@ -31,7 +31,7 @@ def analyze_feature_importance(target='dp_anode_mbar'):
     # plt = plot_doe_data(model_in_dict, model_out_dict)
     # plt.show()
 
-   # Create a dataframe from the input data and the target data
+    # Create a dataframe from the input data and the target data
     df_input = pd.DataFrame(model_in_dict)
     df_target = pd.DataFrame(model_out_dict[target])
 
@@ -41,11 +41,12 @@ def analyze_feature_importance(target='dp_anode_mbar'):
     target_scaled = scaler.fit_transform(df_target)
 
     # Split the data into training and test sets
-    X_train, X_test, y_train, y_test = train_test_split(input_scaled, target_scaled, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(input_scaled, target_scaled, test_size=0.2,
+                                                        shuffle=True, random_state=42)
 
-   # Train a Random Forest model
-    model = RandomForestRegressor(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
+    # Train a Random Forest model
+    model = RandomForestRegressor(n_estimators=200, random_state=42, min_samples_leaf = 10)
+    model.fit(X_train, y_train.ravel())
 
     # Print trained model accuracy
     print(f"RF train accuracy: {model.score(X_train, y_train):.3f}")
