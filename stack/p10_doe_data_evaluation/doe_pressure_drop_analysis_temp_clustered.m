@@ -1,9 +1,15 @@
 clear
+close all
 clc
 
 %% load data
 addpath('vendor_provision')
 load('doe_raw_data_mat.mat')
+
+%% create results folder (if it does not exist, already)
+if ~isfolder('results')
+    mkdir('results')
+end
 
 %% separate data by coolant inlet temperature
 index_40    = find(doe_raw_data_mat(:,69) > 39 & doe_raw_data_mat(:,69) <= 41);
@@ -76,5 +82,5 @@ lgd = legend('DoE Raw Data (T_{CLSti} \approx 40°C)', ...
 lgd.Location = 'northwest';
 
 %% save plot
-saveas(fig,'coolant_pressure_drop_estimation_temp_clustered.fig')
-saveas(fig,'coolant_pressure_drop_estimation_temp_clustered.png')
+saveas(fig,fullfile('results','coolant_pressure_drop_estimation_temp_clustered.fig'))
+saveas(fig,fullfile('results','coolant_pressure_drop_estimation_temp_clustered.png'))
