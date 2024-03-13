@@ -33,7 +33,7 @@ fprintf(2,"------------------------------------------------\n")
 % load('All_Properties.mat')
 run('stack_subsystem_parameters.m')
 run('stack_subsystem_supply_bus_definitions.m')
-run('thermal_subsystem_parameters.m')
+run('thermal_model_parameters.m')
 run('cathode_subsystem_parameters.m')
 run('anode_subsystem_parameters.m')
 
