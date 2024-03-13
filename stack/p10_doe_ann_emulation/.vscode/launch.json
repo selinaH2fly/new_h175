@@ -12,7 +12,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["9_ann_doe_model_experiment"]
+            // "args": ["9_ann_doe_model_experiment"]
         }
     ]
 }
