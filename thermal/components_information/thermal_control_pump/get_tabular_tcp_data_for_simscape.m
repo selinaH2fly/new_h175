@@ -31,5 +31,5 @@ function [capacity_vector_lpm, shaft_speed_vector_rpm, head_table_m] = ...
     
     end
     
-    head_table_m = head_table_kPa*100/(reference_density*9.81);
+    head_table_m = head_table_kPa*1000/(reference_density*9.81);
 end
