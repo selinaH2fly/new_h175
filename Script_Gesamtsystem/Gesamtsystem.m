@@ -1,5 +1,9 @@
 %% Matlab script for the fuel cell system (Anode, Cathode, Stack and Thermal) as a stationary calculating tool. 
+%
+%% Click Run, enter the input in the dialog box and press "OK"
 
+%
+%
 clear
 clc
 
