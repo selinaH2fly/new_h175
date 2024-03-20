@@ -1,4 +1,4 @@
-%% Constants and parameters 
+% Constants and parameters 
 
 %%=============================
 % Standard Parameters
