@@ -1,6 +1,11 @@
-%% Matlab script for the fuel cell system (Anode, Cathode, Stack and Thermal) as a stationary calculating tool. 
-%
-%% Click Run, enter the input in the dialog box and press "OK"
+%% Matlab script for the fuel cell system (Anode, Cathode, Stack and Thermal for PS100) as a stationary calculating tool. 
+% 
+% Minimum required files to run it: Initialization.m
+
+%% Click Run, enter the inputs in the dialog box and press "OK"
+
+
+%Note: Still debugging and updating, may contain error!
 
 %
 %
@@ -151,7 +156,7 @@ m_dot_Drain = m_dot_ADV * valve_opening_Drain ;
 
 m_dot_H2_Stoich = M_Hydrogen * ((n_cell * I) / (2 * F)) * 1000;
 
-m_dot_H2_0 = I*Lambda_C_0*V_dot_H2_const.*n_cell/(c_H2_0/100*1000)/1000*60*rho_H2_std*10/3600;
+m_dot_H2_0 = I*Lambda_A_0*V_dot_H2_const.*n_cell/(c_H2_0/100*1000)/1000*60*rho_H2_std*10/3600;
 m_dot_H2_1 = I*Lambda_A_1*V_dot_H2_const.*n_cell/(c_H2_0/100*1000)/1000*60*rho_H2_std*10/3600;
 m_dot_H2_2 = m_dot_H2_1-m_dot_H2_Stoich;
 
@@ -163,9 +168,6 @@ lambda_A = m_dot_H2 / m_dot_H2_Stoich;
 
 m_dot_H2_11 = I*lambda_A*V_dot_H2_const.*n_cell/(c_H2_0/100*1000)/1000*60*rho_H2_std*10/3600;
 
-% Calculation for APRV VL6112
-
-[V_dot_APRV, m_dot_APRV, m_dot_H2_APRV] =  Valveflow(p_H2_0,T_H2_0,c_H2_0,Kv_APRV,p_PT6114,p_std,T_std,rho_H2_std,0);
 
 % Calculation of required Kv
 
@@ -174,13 +176,19 @@ Kv_APRV_min = kv_prv_min(m_dot_H2,rho_H2_std,T_H2_0,p_H2_0,p_PT6114);
 Opening_APRV1 = (Kv_APRV_min/Kv_APRV)*100;
 Opening_APRV = find_max_opening(Opening_APRV1, 100);
 
+
+% Calculation for APRV VL6112
+
+[V_dot_APRV, m_dot_APRV, m_dot_H2_APRV] =  Valveflow(p_H2_0,T_H2_0,c_H2_0,Kv_APRV_min,p_PT6114,p_std,T_std,rho_H2_std,0);
+
+
 % % Pressure drop in ASV"
 % 	p_H2_SOV=p_H2_0-DELTA_p_H2_calc_SOV
 % 	0=(DELTA_p_H2_calc_SOV*convert(kPa; kg/(m*s^2)))^2 - p_H2_0*...
 %  convert(kPa; kg/(m*s^2))* DELTA_p_H2_calc_SOV*convert(kPa; kg/(m*s^2))...
 % +(Q_N_H2_0/(514*Kv_SOV))^2*10^10*density(Hydrogen;T=T_N;P=P_N)*converttemp(C; K; T_H2_0)
 % 
-%   % Pressure drop in ASV"
+%   % Pressure drop in APRV"
 % 
 %   p_H2_PRV=p_H2_SOV-DELTA_p_H2_calc_PRV
 % 	0=(DELTA_p_H2_calc_PRV*convert(kPa; kg/(m*s^2)))^2 - p_H2_SOV...
@@ -254,16 +262,16 @@ else
 end
 
 V_dot_cmph = V_dot_std_cmph*(p_std/p1)*(T1/T_std);       % volumetric flow rate [m^3/h] at operating conditions
-m_dot = V_dot_std_cmph*rho_std;             % purged mass flow rate [kg/h]
-m_dot_H2 = V_dot_std_cmph*rho_H2_std*C_H2;  % purged hydrogenmass flow rate [kg/h]
+m_dot = V_dot_std_cmph*rho_std;             % total mass flow rate [kg/h]
+m_dot_H2 = V_dot_std_cmph*rho_H2_std*C_H2;  % hydrogen mass flow rate [kg/h]
 
 
 % unit conversions
 cmph_to_lpm = 1000/60;
 V_dot = V_dot_cmph * cmph_to_lpm;   % volumetric flow rate [LPM]
 kgph_to_gps = 1000/3600;
-m_dot = m_dot*kgph_to_gps;          % purged mass flow rate [g/s]
-m_dot_H2 = m_dot_H2*kgph_to_gps;    % purged hydrogen mass flow rate [g/s]
+m_dot = m_dot*kgph_to_gps;          % total mass flow rate [g/s]
+m_dot_H2 = m_dot_H2*kgph_to_gps;    % hydrogen mass flow rate [g/s]
 end
 
 

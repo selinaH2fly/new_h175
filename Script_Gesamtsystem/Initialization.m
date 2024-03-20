@@ -29,13 +29,13 @@ U_stack = [1.23 0.9681 0.8977 0.8681 0.8393 0.8216 1.6 0.8033 0.7908 0.7783 0.75
 %=============================
 Lambda_A_0 = 1.05;
 Lambda_A_1 = 1.5;
-c_H2_0 = 1;           % concentration of hydrogen
-c_H2_1 = 0.7;
+c_H2_0 = 1;           % concentration of hydrogen at tank
+c_H2_1 = 0.7;         % concentration of hydrogen anode outlet
 V_dot_H2_const=6.97;  %[ml/cell*A*min],H2 Volumetric flow rate 
-Kv_ASV=0.8 	;	      %  
-Kv_APRV=0.8;         %	
-Kv_APV=0.64 	;	
-Kv_ADV=0.64;         %0.64;
+Kv_ASV=0.8 	;	      %  Kv value of shut-off valve
+Kv_APRV=0.8;          %  Kv value of proportional control valve	
+Kv_APV=0.64;	      %  Kv value of purge valve	  
+Kv_ADV=0.64;          %  Kv value of drain valve	
 valve_opening_Purge = 1;       % If Purge valve is on/off, on=1, off=0
 valve_opening_Drain = 1;       % If Drain valve is on/off, on=1, off=0
 M_Hydrogen = 2.016*10^(-3);     % molar mass hydrogen [mol*kg^(-1)]
