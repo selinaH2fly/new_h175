@@ -20,7 +20,7 @@ coolant_flow_lpm = cell2mat({doe_raw_data_struct.flow_coolant}');
 coolant_pressure_drop_mbar = 1000*(cell2mat({doe_raw_data_struct.pressure_coolant_inlet}') ...
     - cell2mat({doe_raw_data_struct.pressure_coolant_outlet}'));
 
-%% separate data by coolant inlet temperature
+%% separate data by coolant inlet temperature%% define temperatures for which
 index_temp_40   = find(coolant_inlet_temp_degC > 39 & coolant_inlet_temp_degC <= 41);
 index_temp_45   = find(coolant_inlet_temp_degC > 44 & coolant_inlet_temp_degC <= 46);
 index_temp_50   = find(coolant_inlet_temp_degC > 49 & coolant_inlet_temp_degC <= 51);
@@ -59,41 +59,6 @@ flow_temp_75    = coolant_flow_lpm(index_temp_75);
 flow_temp_80    = coolant_flow_lpm(index_temp_80);
 flow_temp_85    = coolant_flow_lpm(index_temp_85);
 
-%% make plot
-fig = figure;
-hold on
-grid on
-
-% plot(flow_temp_40, drop_temp_40, 'o')
-% plot(flow_temp_45, drop_temp_45, 'o')
-% plot(flow_temp_50, drop_temp_50, 'o')
-% plot(flow_temp_55, drop_temp_55, 'o')
-% plot(flow_temp_60, drop_temp_60, 'o')
-% plot(flow_temp_65, drop_temp_65, 'o')
-% plot(flow_temp_70, drop_temp_70, 'o')
-% plot(flow_temp_75, drop_temp_75, 'o')
-% plot(flow_temp_80, drop_temp_80, 'o')
-% plot(flow_temp_85, drop_temp_85, 'o')
-
-xlabel('Coolant Flow (l/min)')
-ylabel('Pressure Drop (mbar)')
-xlim([0,350])
-ylim([0, 1000])
-
-% lgd = legend('DoE Raw Data (T_{CLSti} \approx 40°C)', ...
-%         'DoE Raw Data (T_{CLSti} \approx 45°C)', ...
-%         'DoE Raw Data (T_{CLSti} \approx 50°C)', ...
-%         'DoE Raw Data (T_{CLSti} \approx 55°C)', ...
-%         'DoE Raw Data (T_{CLSti} \approx 60°C)', ...
-%         'DoE Raw Data (T_{CLSti} \approx 65°C)', ...
-%         'DoE Raw Data (T_{CLSti} \approx 70°C)', ...
-%         'DoE Raw Data (T_{CLSti} \approx 75°C)', ...
-%         'DoE Raw Data (T_{CLSti} \approx 80°C)', ...
-%         'DoE Raw Data (T_{CLSti} \approx 85°C)', ...
-%         'AutoUpdate', 'off');
-% 
-% lgd.Location = 'northwest';
-
 %% polynomial fit (MATLAB)
 % TODO: https://blogs.mathworks.com/pick/2015/12/11/polynomial-fit-passing-through-specified-points/
 
@@ -125,21 +90,24 @@ ylim([0, 1000])
 % Excel allows for a polynomial fit + a equality constraint (without the
 % need for an extra toolbox).
 
+temps = 40:10:80;
+
 % write to Excel
 if ~isfolder('generated_csv')
     mkdir('generated_csv')
 end
 
-temps = 40:5:85;
-
-for temp = temps
-    flows = eval(strcat('flow_temp_', string(temp)));
-    drops = eval(strcat('drop_temp_', string(temp)));
-    if ~isempty(flows)
-        filename = fullfile('generated_csv', strcat('coolant_dp_vs_flow_temp_', string(temp), '.xls'));
-        writematrix([flows drops], filename)
-    end
-end
+% filename = fullfile('generated_csv', 'coolant_dp_vs_flow_temp_all.xls');
+% writematrix([coolant_flow_lpm coolant_pressure_drop_mbar], filename)
+% 
+% for temp = temps
+%     flows = eval(strcat('flow_temp_', string(temp)));
+%     drops = eval(strcat('drop_temp_', string(temp)));
+%     if ~isempty(flows)
+%         filename = fullfile('generated_csv', strcat('coolant_dp_vs_flow_temp_', string(temp), '.xls'));
+%         writematrix([flows drops], filename)
+%     end
+% end
 
 % from Excel
 flow_vec = linspace(0, 350, 100);
@@ -159,20 +127,44 @@ dp_reg_70 = coeff_temp_70*[flow_vec.^2; flow_vec; ones(1, length(flow_vec))];
 coeff_temp_80 = [7.5e-3, 0.181, 0];
 dp_reg_80 = coeff_temp_80*[flow_vec.^2; flow_vec; ones(1, length(flow_vec))];
 
-% plot
-plot(flow_vec, dp_reg_40, '-', 'LineWidth', 1)
-plot(flow_vec, dp_reg_50, '-', 'LineWidth', 1)
-plot(flow_vec, dp_reg_60, '-', 'LineWidth', 1)
-plot(flow_vec, dp_reg_70, '-', 'LineWidth', 1)
-plot(flow_vec, dp_reg_80, '-', 'LineWidth', 1)
+coeff_temp_all = [6.5e-3, 0.477, 0];
+dp_reg_all = coeff_temp_all*[flow_vec.^2; flow_vec; ones(1, length(flow_vec))];
 
-lgd2 = legend('2nd Order Reg. @ T_{CLSti} \approx 40°C (a_2 = 8.3e-3, a_1 = 0.207)', ...
-        '2nd Order Reg. @ T_{CLSti} \approx 50°C (a_2 = 7.3e-3, a_1 = 0.380)', ...
-        '2nd Order Reg. @ T_{CLSti} \approx 60°C (a_2 = 6.7e-3, a_1 = 0.448)', ...
-        '2nd Order Reg. @ T_{CLSti} \approx 70°C (a_2 = 6.7e-3, a_1 = 0.395)', ...
-        '2nd Order Reg. @ T_{CLSti} \approx 80°C (a_2 = 7.5e-3, a_1 = 0.181)');
+%% make plot
+fig = figure;
+hold on
+grid on
 
-lgd2.Location = 'northwest';
+
+for temp = temps
+    flows = eval(strcat('flow_temp_', string(temp)));
+    drops = eval(strcat('drop_temp_', string(temp)));
+    
+    legend_entry = 'DoE Raw Data @ T_{CLSti} \approx ' + string(temp) + '°C';
+    my_plots{temp} = plot(flows, drops, 'o', 'DisplayName', legend_entry); % TODO: Ugly. Improve this!
+end 
+
+xlabel('Coolant Flow (l/min)')
+ylabel('Coolant Pressure Drop (mbar)')
+xlim([0,350])
+ylim([0, 1000])
+
+% plot(flow_vec, dp_reg_40, '-', 'LineWidth', 1, 'Color', my_plots{40}.Color, 'DisplayName', ...
+%     '2nd Order Reg. @ T_{CLSti} \approx 40°C (a_2 = 8.3e-3, a_1 = 0.207)')
+% plot(flow_vec, dp_reg_50, '-', 'LineWidth', 1, 'Color', my_plots{50}.Color, 'DisplayName', ...
+%     '2nd Order Reg. @ T_{CLSti} \approx 50°C (a_2 = 7.3e-3, a_1 = 0.380)')
+% plot(flow_vec, dp_reg_60, '-', 'LineWidth', 1, 'Color', my_plots{60}.Color, 'DisplayName', ...
+%     '2nd Order Reg. @ T_{CLSti} \approx 60°C (a_2 = 6.7e-3, a_1 = 0.448)')
+% plot(flow_vec, dp_reg_70, '-', 'LineWidth', 1, 'Color', my_plots{70}.Color, 'DisplayName', ...
+%     '2nd Order Reg. @ T_{CLSti} \approx 70°C (a_2 = 6.7e-3, a_1 = 0.395)')
+% plot(flow_vec, dp_reg_80, '-', 'LineWidth', 1, 'Color', my_plots{80}.Color, 'DisplayName', ...
+%     '2nd Order Reg. @ T_{CLSti} \approx 80°C (a_2 = 7.5e-3, a_1 = 0.181)')
+plot(flow_vec, dp_reg_all, 'b-', 'LineWidth', 2, 'DisplayName', ...
+    '2nd Order Regression (a_2 = 6.5e-3, a_1 = 0.477)')
+
+lgd = legend;
+lgd.Location = 'northwest';
+lgd.NumColumns = 1;
 
 
 %% save plot
