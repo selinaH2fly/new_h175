@@ -70,13 +70,13 @@ index_at_550    = intersect(index_current_550, index_stoich_18);
 %% compute pressure drops (for "P10 Power Layout")
 % TODO: Make this less ugly :-(
 
-dp_mean = zeros(11, 1);
+dp_mean = zeros(11, 2);
 currents = linspace(50,550,11);
 
 for current = currents
     index = eval(strcat('index_at_', string(current)));
     if ~isempty(index)
-        dp_mean(current/50) = mean(cathode_pressure_drop_mbar(index));
+        dp_mean(current/50, :) = [mean(cathode_pressure_drop_mbar(index)) var(cathode_pressure_drop_mbar(index))];
         % disp('Avg. flow at ' + string(current) + ' A for specified dT: ' + string(flow_mean(current/100)))
     % else
          % disp('No data at ' + string(current) + ' A for specified dT')
@@ -102,7 +102,7 @@ if make_plot
     plot(stack_current_A(index_stoich_30), cathode_pressure_drop_mbar(index_stoich_30), 'o')
     plot(stack_current_A(index_stoich_35), cathode_pressure_drop_mbar(index_stoich_35), 'o')
 
-    plot(currents, dp_mean, 'k-x')
+    plot(currents, dp_mean(:,1), 'kx-' , 'LineWidth', 1)
     plot(current_reg, dp_mean_reg, 'b-', 'LineWidth', 2)
     
     xlabel('Stack Current (A)')
@@ -118,10 +118,17 @@ if make_plot
             'Avg. Values for specified \lambda',...
             strcat('2nd Order Regression:', ...
             string(newline), 'a_2 = ', string(coefficents(1)), ', a_1 = ', string(coefficents(2)), ', a_0 = ', string(coefficents(3))));
+
+    % lgd = legend('Avg. Values for specified \lambda',...
+    %         strcat('2nd Order Regression:', ...
+    %         string(newline), 'a_2 = ', string(coefficents(1)), ', a_1 = ', string(coefficents(2)), ', a_0 = ', string(coefficents(3))));
     % lgd.Location = 'northwest';
 
     saveas(fig_dp_vs_I_stoich, fullfile('results','cathode_pressure_drop_vs_current_stoich_clustered.fig'))
     saveas(fig_dp_vs_I_stoich, fullfile('results','cathode_pressure_drop_vs_current_stoich_clustered.png'))
+
+    % saveas(fig_dp_vs_I_stoich, fullfile('results','cathode_pressure_drop_vs_current_joby.fig'))
+    % saveas(fig_dp_vs_I_stoich, fullfile('results','cathode_pressure_drop_vs_current_joby.png'))
 end
 
 %% save plots
