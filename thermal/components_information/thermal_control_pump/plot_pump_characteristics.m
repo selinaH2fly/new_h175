@@ -1,13 +1,13 @@
 close all
 
-run('pump_data_picked_from_datasheet.m')
+[pump_info_datasheet, ~] = get_pump_data();
 
 figure
 hold on
 grid on
 
 for rpm = 1:6
-    plot(squeeze(Pump_info(1,rpm,:,1)), squeeze(Pump_info(1,rpm,:,2)))
+    plot(squeeze(pump_info_datasheet(1,rpm,:,1)), squeeze(pump_info_datasheet(1,rpm,:,2)))
 end
 
 xlim([0 450])
