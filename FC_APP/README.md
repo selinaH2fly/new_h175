@@ -1,3 +1,0 @@
-The app provides a user-friendly interface for the assesment of the H2F-175 S2 fuel cell system, considering basic thermodynamic equations. The underlying model is based on existing EES models.
-
-Please refer to [Confluence](https://h2fly.atlassian.net/wiki/pages/resumedraft.action?draftId=174161979&draftShareId=54ff61c3-cc75-46ca-83f7-39f144a7b4b0 "Model Documentation on H2FLY Confluence") for further information.
