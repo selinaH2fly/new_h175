@@ -3,18 +3,19 @@
 % change between variant implementations.
 
 %% Thermal Subsystem Stage
-% Change between different stage models of the H2F-175 thermal subsystem.
+% Change between different stage models of the H2F-175 thermal subsystem
 
 % Definition
 THERMALMODEL_VARIANT_STAGE_TWO = Simulink.Variant('THERMALMODEL_VARIANT_STAGE==2');
 THERMALMODEL_VARIANT_STAGE_THREE = Simulink.Variant('THERMALMODEL_VARIANT_STAGE==3');
+THERMALMODEL_VARIANT_STAGE_TWO_MOD = Simulink.Variant('THERMALMODEL_VARIANT_STAGE==4');
 
 % Actual Choice
-THERMALMODEL_VARIANT_STAGE = 2;
+THERMALMODEL_VARIANT_STAGE = 4;
 
 %% Heat Exchanger
 % Change between different variants of modeling the external heat exchanger
-% (not considered part of H2F-175).
+% (not considered part of H2F-175)
 
 % Definition
 HEATEXCHANGER_VARIANT_PHYSICAL = Simulink.Variant('HEATEXCHANGER_VARIANT_MODE==1');
