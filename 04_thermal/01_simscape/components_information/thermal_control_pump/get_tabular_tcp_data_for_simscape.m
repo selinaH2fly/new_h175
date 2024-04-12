@@ -14,12 +14,12 @@ function [capacity_vector_lpm, shaft_speed_vector_rpm, head_table_m] = ...
         length(shaft_speed_vector_rpm));
     
     if make_plot == true
-        run('plot_pump_characteristics.m')
+        plot_pump_characteristics(20)
         hold on
         legend('AutoUpdate','off')
     end
 
-    % interpolation of datasheet values and assignment to lookup table
+    % interpolation of datasheet values (for coolant temp. = 20°C) and assignment to lookup table
     for shaft_speed = 1:6
         datasheet_head_samples = squeeze(pump_info_datasheet(1,shaft_speed,:,2));
         datasheet_head_samples = datasheet_head_samples(~isnan(datasheet_head_samples));

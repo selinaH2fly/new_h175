@@ -1,3 +1,5 @@
+function plot_pump_characteristics(temperature)
+
 close all
 
 [pump_info_datasheet, ~] = get_pump_data();
@@ -6,14 +8,26 @@ figure
 hold on
 grid on
 
+switch temperature
+    case 20
+        temp_index = 1;
+    case 60
+        temp_index = 2;
+    case 85
+        temp_index = 3;
+    otherwise
+        disp('Please pass a temperature value {20, 60, 85} °C.')
+        return
+end
+
 for rpm = 1:6
-    plot(squeeze(pump_info_datasheet(1,rpm,:,1)), squeeze(pump_info_datasheet(1,rpm,:,2)))
+    plot(squeeze(pump_info_datasheet(temp_index,rpm,:,1)), squeeze(pump_info_datasheet(temp_index,rpm,:,2)))
 end
 
 xlim([0 450])
 ylim([0 200])
 
-title('Pump Characteristics at 20°C')
+title("Pump Characteristics at " + temperature + "°C")
 xlabel('Volumetric Flow Rate (lpm)')
 ylabel('Normalized Static Pressure Rise (kPa)')
 
