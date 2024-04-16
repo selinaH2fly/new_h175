@@ -28,7 +28,7 @@ xlim([0 450])
 ylim([0 200])
 
 title("Pump Characteristics at " + eval_temp_degC + "°C")
-xlabel('Volumetric Flow Rate (lpm)')
+xlabel('Volumetric Flow Rate (l/min.)')
 ylabel('Normalized Static Pressure Rise (kPa)')
 
 legend('2000 rpm', '2500 rpm', '3000 rpm', '3500 rpm', '4000 rpm', '4200 rpm')
