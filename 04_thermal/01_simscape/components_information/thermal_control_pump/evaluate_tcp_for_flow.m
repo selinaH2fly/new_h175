@@ -1,53 +1,89 @@
-function coolant_flow = evaluate_tcp_for_flow(rpm, pressure_in, pressure_out, make_plot)
+function flow_prediction_lpm = evaluate_tcp_for_flow(pressure_in_bar, ...
+    pressure_out_bar, shaft_speed_rpm, eval_temp_degC, make_plot)
+    % This function evaluates the EMP TCP datasheet values for creating a
+    % 2D lookup-table for coolant volumetric flow vs. pressure rise and
+    % pump shaft speed. This lookup-table is then evaluated for the
+    % specific arguments passed to the function.
+
+    %% Initial Variable Assignment
+
+    % instantiate return value
+    flow_prediction_lpm = -99;
+
+    % assign optional arguments
+    switch nargin
+        case 4
+            make_plot = false;
+    end
+
+    % evaluate eval_temp argument passed to function
+    % TODO: evaluate for all temperatures in the datasheet and do a 3d
+    % interpolation
+    switch eval_temp_degC
+        case 20
+            temp_index = 1;
+        case 60
+            temp_index = 2;
+        case 85
+            temp_index = 3;
+        otherwise
+            disp('Please pass a temperature value {20, 60, 85} °C.')
+            return
+    end
+
+
+    %% Datasheet Values to 2D Lookup-Table
 
     % [pump_info_datasheet, pump_info_ann_prediction] = get_pump_data();
     [pump_info_datasheet, ~] = get_pump_data();
 
-    
-    pressure_rise_vector_kPa = 10:10:180;
+    % define discretization and instantiate lookup-table
+    head_vector_kPa = 20:10:180;
     shaft_speed_vector_rpm = [2000, 2500, 3000, 3500, 4000, 4200];
-
-    
-    head_table_kPa = nan(length(capacity_vector_lpm), ...
+    flow_table_lpm = nan(length(head_vector_kPa), ...
         length(shaft_speed_vector_rpm));
+
+    % interpolation of datasheet values and assignment to lookup-table
+    % TODO: get rid of ugly for-loop(s)
+    for shaft_speed_index = 1:size(flow_table_lpm, 2)
+        % evaluate data picked from datasheet
+        head_samples_kPa = squeeze(pump_info_datasheet(temp_index,shaft_speed_index,:,2));
+        head_samples_kPa = head_samples_kPa(~isnan(head_samples_kPa));
+        flow_samples_lpm = squeeze(pump_info_datasheet(temp_index,shaft_speed_index,:,1));
+        flow_samples_lpm = flow_samples_lpm(~isnan(flow_samples_lpm));
     
+        % assign 2D lookup-table
+        flow_table_lpm(:, shaft_speed_index) = interp1(head_samples_kPa, ...
+            flow_samples_lpm, head_vector_kPa);
+    end
+
+    %% Flow Prediction
+
+    % compute pressure rise
+    head_kPa = (pressure_out_bar - pressure_in_bar)*100;
+
+    % evaluate lookup-table
+    [head_grid_kPa, shaft_speed_grid_rpm] = meshgrid(head_vector_kPa, shaft_speed_vector_rpm);
+    flow_prediction_lpm = interp2(head_grid_kPa, shaft_speed_grid_rpm, ...
+        flow_table_lpm', head_kPa, shaft_speed_rpm);
+
+    if isnan(flow_prediction_lpm)
+        % flow_prediction_lpm = interp2(head_grid_kPa, shaft_speed_grid_rpm, ...
+        % flow_table_lpm', head_kPa, shaft_speed_rpm, 'spline');
+        % TODO: Make extrapolation work.
+        disp('Vendor pump characteristics not covering domain passed to the function.')
+    end
+
+    %% Plotting
+
     if make_plot == true
-        plot_pump_characteristics(60)
-        hold on
-        legend('AutoUpdate','off')
+            figure
+            hold on
+            plot_pump_characteristics(eval_temp_degC)
+            legend('AutoUpdate','off')
+            plot(flow_table_lpm, head_vector_kPa, 'x')
+            plot(flow_prediction_lpm, head_kPa, 'o', 'MarkerSize', 5, ...
+                'MarkerEdgeColor', 'black', 'MarkerFaceColor', 'black')
     end
 
-    % interpolation of datasheet values and assignment to lookup table
-    for shaft_speed = 1:6
-        datasheet_head_samples = squeeze(pump_info_datasheet(1,shaft_speed,:,2));
-        datasheet_head_samples = datasheet_head_samples(~isnan(datasheet_head_samples));
-        datasheet_capacity_samples = squeeze(pump_info_datasheet(1,shaft_speed,:,1));
-        datasheet_capacity_samples = datasheet_capacity_samples(~isnan(datasheet_capacity_samples));
-    
-        % head_table_kPa(:, shaft_speed+1) = interp1(datasheet_capacity_samples, ...
-        %     datasheet_head_samples, capacity_vector_lpm);
-
-        head_table_kPa(:, shaft_speed) = interp1(datasheet_capacity_samples, ...
-            datasheet_head_samples, capacity_vector_lpm);
-
-        if make_plot == true    
-            % plot(capacity_vector_lpm, head_table_kPa(:, shaft_speed+1), 'x')
-            plot(capacity_vector_lpm, head_table_kPa(:, shaft_speed), 'x')
-
-        end
-    
-    end
-
-    % % interpolation of ann prediction values and assignment to lookup table
-    % ann_head_samples = pump_info_ann_prediction.rpm1400_degC60(:, 2);
-    % ann_capacity_samples = pump_info_ann_prediction.rpm1400_degC60(:, 1);
-    % head_table_kPa(:, 1) = interp1(ann_capacity_samples, ...
-    %         ann_head_samples, capacity_vector_lpm);
-    % 
-    % if make_plot == true    
-    %         plot(capacity_vector_lpm, head_table_kPa(:, 1), 'x')
-    % end
-
-    % conversion to head in terms of meters
-    head_table_m = head_table_kPa*1000/(reference_density*9.81);
 end

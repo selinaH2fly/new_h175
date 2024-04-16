@@ -1,4 +1,4 @@
-function plot_pump_characteristics(temperature)
+function plot_pump_characteristics(eval_temp_degC)
 
 close all
 
@@ -8,7 +8,7 @@ figure
 hold on
 grid on
 
-switch temperature
+switch eval_temp_degC
     case 20
         temp_index = 1;
     case 60
@@ -27,7 +27,7 @@ end
 xlim([0 450])
 ylim([0 200])
 
-title("Pump Characteristics at " + temperature + "°C")
+title("Pump Characteristics at " + eval_temp_degC + "°C")
 xlabel('Volumetric Flow Rate (lpm)')
 ylabel('Normalized Static Pressure Rise (kPa)')
 
