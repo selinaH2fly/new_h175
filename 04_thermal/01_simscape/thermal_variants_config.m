@@ -8,10 +8,10 @@
 % Definition
 THERMALMODEL_VARIANT_STAGE_TWO = Simulink.Variant('THERMALMODEL_VARIANT_STAGE==2');
 THERMALMODEL_VARIANT_STAGE_THREE = Simulink.Variant('THERMALMODEL_VARIANT_STAGE==3');
-THERMALMODEL_VARIANT_STAGE_TWO_MOD = Simulink.Variant('THERMALMODEL_VARIANT_STAGE==4');
+THERMALMODEL_VARIANT_STAGE_TWO_MOD = Simulink.Variant('THERMALMODEL_VARIANT_STAGE==4'); % TCV as split valve (cf. Shy4)
 
 % Actual Choice
-THERMALMODEL_VARIANT_STAGE = 2;
+THERMALMODEL_VARIANT_STAGE = 4;
 
 %% Heat Exchanger
 % Change between different variants of modeling the external heat exchanger
