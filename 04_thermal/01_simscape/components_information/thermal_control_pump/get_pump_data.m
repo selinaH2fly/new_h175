@@ -1,4 +1,4 @@
-function [pump_info_datasheet, pump_info_ann_prediction] = get_pump_data()
+function [pump_info_datasheet, pump_info_ann_prediction, pump_info_test] = get_pump_data()
 
     %% pump values from info sheet
     pump_info_datasheet = nan(3,6,37,2); %[Temp,N,V_dot,p]
@@ -503,5 +503,38 @@ function [pump_info_datasheet, pump_info_ann_prediction] = get_pump_data()
                 80.2885 4
                 84.1157 3
                 87.9150 2];
+
+    %% pump data acquired in-house on testbanch for low rpm regime
+    % Data acquired without stack power production; therefore, coolant at
+    % ambieten temperature of roughly 20°C.
+
+    pump_info_test = nan(3, 6, 2);    % [N, p, V_dot]
+
+    pump_info_test(1,:,:) = [...        % 20°C, 500 rpm
+         4.0,   14.2;
+         4.0,   14.8;
+         4.0,   14.8;
+         4.0,   13.5;
+         4.0,   11.9;
+         4.0,   10.6;
+         ];
+
+     pump_info_test(2,:,:) = [...       % 20°C, 1000 rpm
+         13.0,  44.1;
+         14.0,  43.8;
+         13.0,  43.3;
+         14.0,  39.1;
+         14.0,  32.5;
+         14.0,  28.5;
+         ];
+
+     pump_info_test(3,:,:)= [...        % 20°C, 1500 rpm
+         23.0,  70.7;
+         23.0,  71.2;
+         25.0,  69.7;
+         25.0,  62.6;
+         26.0,  53.6;
+         25.0,  46.6;
+         ];
 
 end

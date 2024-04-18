@@ -32,8 +32,8 @@ function flow_prediction_lpm = evaluate_tcp_for_flow(pressure_in_bar, ...
             return
     end
 
-    % as of Apr. 16, 2024, only for 60°C to keep it simple
-    eval_temp_degC = 60;
+    % as of Apr. 16, 2024, only for 20°C to keep it simple
+    eval_temp_degC = 20;
 
     % evaluate eval_temp argument (passed to function, for future versions)
     % TODO: evaluate for all temperatures in the datasheet and do a 3d
@@ -54,22 +54,30 @@ function flow_prediction_lpm = evaluate_tcp_for_flow(pressure_in_bar, ...
     %% Datasheet Values to 2D Lookup-Table
 
     % [pump_info_datasheet, pump_info_ann_prediction] = get_pump_data();
-    [pump_info_datasheet, ~] = get_pump_data();
+    [pump_info_datasheet, ~, pump_info_test] = get_pump_data();
 
     % define discretization and instantiate lookup-table
-    head_vector_kPa = 20:10:180;
-    shaft_speed_vector_rpm = [2000, 2500, 3000, 3500, 4000, 4200];
+    head_vector_kPa = [4, 13, 14, 20, 23, 24, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180];
+    shaft_speed_vector_rpm = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4200];
     % temp_vector_degC = [20, 60, 85];
     flow_table_lpm = nan(length(head_vector_kPa), length(shaft_speed_vector_rpm));
 
     % interpolation of datasheet values and assignment to lookup-table
     % TODO: get rid of ugly for-loop(s)
     for shaft_speed_index = 1:size(flow_table_lpm, 2)
-        % evaluate data picked from datasheet
-        head_samples_kPa = squeeze(pump_info_datasheet(temp_index,shaft_speed_index,:,2));
-        head_samples_kPa = head_samples_kPa(~isnan(head_samples_kPa));
-        flow_samples_lpm = squeeze(pump_info_datasheet(temp_index,shaft_speed_index,:,1));
-        flow_samples_lpm = flow_samples_lpm(~isnan(flow_samples_lpm));
+        if shaft_speed_index <= 3
+            % evaluate in-house measurement data
+            head_samples_kPa = squeeze(pump_info_test(shaft_speed_index,:,1));
+            head_samples_kPa = head_samples_kPa(~isnan(head_samples_kPa));
+            flow_samples_lpm = squeeze(pump_info_test(shaft_speed_index,:,2));
+            flow_samples_lpm = flow_samples_lpm(~isnan(flow_samples_lpm));
+        else
+            % evaluate data picked from datasheet
+            head_samples_kPa = squeeze(pump_info_datasheet(temp_index,(shaft_speed_index-3),:,2));
+            head_samples_kPa = head_samples_kPa(~isnan(head_samples_kPa));
+            flow_samples_lpm = squeeze(pump_info_datasheet(temp_index,(shaft_speed_index-3),:,1));
+            flow_samples_lpm = flow_samples_lpm(~isnan(flow_samples_lpm));
+        end
     
         % assign 2D lookup-table
         flow_table_lpm(:, shaft_speed_index) = interp1(head_samples_kPa, ...
