@@ -105,9 +105,18 @@ fprintf("\t done! \n")
 %init_persistentValues
 %fprintf("\t done! \n")
 
+sim_data_bus_definitions;
+
 %load config
 fprintf("-->configure variant ...")
 variant_config
+
+sim_data_bus_definitions
+init_sim_data_clean
+
+thermal_plant_h2f175_parameters
+thermal_plant_peripherals_parameters
+thermal_sim_elements
 
 % Generate Parameter List xlsx
 % Parameters_BusDef.ExportParameterList("ParameterList.xlsx");
