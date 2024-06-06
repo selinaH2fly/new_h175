@@ -42,20 +42,51 @@ def plot_columns(df, y_columns, units_df, regression=False):
         unit = units_df[col]
         x = df['current']
         y = df[col]
-        plt.scatter(x, y, label=f"{col} [{unit}]")
+        # plt.scatter(x, y, label=f"{col} [{unit}]")
+        plt.scatter(x, y, label="DoE Raw Data", zorder=2)
 
         if regression:
+            # 3rd order regression
             coeffs = np.polyfit(x.to_list(), y.to_list(), 3)
             poly = np.poly1d(coeffs)
             x_samples = np.linspace(0, 760, 100)
-            plt.plot(x_samples, poly(x_samples), color='orange', linewidth=1.5, label="3rd order LSE regression")
+            plt.plot(x_samples, poly(x_samples), color='orange', linewidth=1.5, label="3rd Order LSE Regression", zorder=2)
 
-    plt.xlabel(f"current [{units['current']}]")
-    plt.ylabel(f"[{unit}]")
+            # plot markers to specific values on regression line
+            specific_current_samples = [600, 750]
+            specific_values = poly(specific_current_samples)
+            plt.scatter(specific_current_samples, specific_values, color='orange', label="Expected Values at 600 A & 750 A", zorder=2)
+
+            # print specific values
+            for i, txt in enumerate(specific_values):
+                plt.annotate(f"{txt:.2f}" + " V", (specific_current_samples[i], specific_values[i]), textcoords="offset points",
+                             xytext=(0, 10), ha='center', zorder=2)
+                
+            # find data point whose x values are within an interval of +/- 10 A around specific_current_samples
+            for i, current in enumerate(specific_current_samples):
+                interval = 10
+                mask = (x >= current - interval) & (x <= current + interval)
+                x_interval = x[mask]
+                y_interval = y[mask]
+                # get datapoint with max y-value
+                max_y = y_interval.idxmax()
+                # plot max y-value
+                label = f"Max. Values within +/-{interval} A Interval" if i == 0 else None
+                plt.scatter(x_interval.loc[max_y], y_interval.loc[max_y], label=label, color="red", zorder=2)
+                # create annotation
+                plt.annotate(f"{y_interval.loc[max_y]:.2f}" + " V", (x_interval.loc[max_y], y_interval.loc[max_y]), textcoords="offset points",
+                             xytext=(0, 10), ha='center', zorder=2)
+
+
+    plt.xlabel(f"Current [{units['current']}]")
+    # plt.ylabel(f"[{unit}]")
+    plt.ylabel(f"Cell Voltage [{unit}]")
     plt.xlim([0, 760])
     plt.xticks([50 * n for n in range(16)])
+    plt.grid(True, zorder=1)
     plt.legend()
-    plt.title(f"current vs {col}")
+    # plt.title(f"current vs {col}")
+    plt.title("Polarization Curve")
     plt.savefig(f'{col}.png', dpi=300, bbox_inches='tight')
     plt.show()
 
