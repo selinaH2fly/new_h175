@@ -4,11 +4,17 @@ Created on Wed May 22 08:24:32 2024
 
 @author: wenzel.gassner
 """
+import os
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
-path = r"C:\Users\wenzel.gassner\Downloads\FC-P10-275C-H0C-SN0014 - H2Fly DOE averaged.xlsx"
+# path = r"C:\Git-Repositories\hctrl_mil\h175_model\03_stack\02_doe_data\01_p10_doe_basic_files\02_TV500106_750A\FC-P10-275C-H0C-SN0014 - H2Fly DOE averaged.xlsx"
+# path = os.chdir()
+
+# Browse to path where data is stored
+path = "FC-P10-275C-H0C-SN0014 - H2Fly DOE averaged.xlsx"
 
 xls = pd.ExcelFile(path)
 
@@ -29,12 +35,20 @@ df = df.loc[:, ~df.columns.duplicated()]
 
 # %% Plot that shit:
     
-def plot_columns(df, y_columns, units_df):
+def plot_columns(df, y_columns, units_df, regression = False):
     plt.figure(figsize=(10, 6))
 
     for col in y_columns:
         unit = units_df[col]
-        plt.scatter(df['current'], df[col], label=f"{col} [{unit}]")
+        x = df['current']
+        y = df[col]
+        plt.scatter(x, y, label=f"{col} [{unit}]")
+
+        if regression:
+            coeffs = np.polyfit(x.to_list(), y.to_list(), 3)
+            poly = np.poly1d(coeffs)
+            x_samples = np.linspace(0, 760, 100)
+            plt.plot(x_samples, poly(x_samples), color='orange', linewidth=1.5, label="3rd order LSE regression")
 
     plt.xlabel(f"current [{units['current']}]")
     plt.ylabel(f"[{unit}]")
@@ -47,7 +61,8 @@ def plot_columns(df, y_columns, units_df):
     
 # Example usage
 
-y_columns = ["pressure_coolant_inlet","pressure_anode_inlet"]
+y_columns = ["metis_CVM_Cell_Voltage_Mean"]
+# y_columns = ["pressure_coolant_inlet","pressure_anode_inlet"]
 # y_columns = ["Anode_H2_Concentration"]
 # y_columns = ["temp_anode_inlet"]
 # y_columns = ["temp_anode_dewpoint_gas"]
@@ -55,7 +70,7 @@ y_columns = ["pressure_coolant_inlet","pressure_anode_inlet"]
 # y_columns = ["pressure_coolant_inlet"]
 # y_columns = ["temp_cathode_dewpoint_gas"]  # List of columns to plot on y-axis
 
-plot_columns(df, y_columns, units) 
+plot_columns(df, y_columns, units, regression=True)
 
 
 
