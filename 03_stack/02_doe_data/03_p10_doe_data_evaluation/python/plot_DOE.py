@@ -2,20 +2,21 @@
 """
 Created on Wed May 22 08:24:32 2024
 
-@author: wenzel.gassner
+@author: wenzel.gassner, SteNo
 """
 import os
+from pathlib import Path
 
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-# path = r"C:\Git-Repositories\hctrl_mil\h175_model\03_stack\02_doe_data\01_p10_doe_basic_files\02_TV500106_750A\FC-P10-275C-H0C-SN0014 - H2Fly DOE averaged.xlsx"
-# path = os.chdir()
+# Get path to data file
+my_dir = os.getcwd()
+filename = "FC-P10-275C-H0C-SN0014 - H2Fly DOE averaged.xlsx"
+path = os.path.join(Path(my_dir).parents[1], '01_p10_doe_basic_files', '02_TV500106_750A', filename)
 
-# Browse to path where data is stored
-path = "FC-P10-275C-H0C-SN0014 - H2Fly DOE averaged.xlsx"
-
+# Load data file
 xls = pd.ExcelFile(path)
 
 # Get the name of the second sheet
@@ -23,7 +24,6 @@ second_sheet_name = xls.sheet_names[1]
 
 # Load the second sheet into a DataFrame, skipping the first row
 df = pd.read_excel(path, sheet_name=second_sheet_name)
-
 
 # Extract the units row and set it as the DataFrame column names
 units = df.iloc[0]
@@ -33,9 +33,9 @@ df = df.drop(0)
 df = df[df['Point successfully run'] == 1]
 df = df.loc[:, ~df.columns.duplicated()]
 
-# %% Plot that shit:
-    
-def plot_columns(df, y_columns, units_df, regression = False):
+
+# Plot the data
+def plot_columns(df, y_columns, units_df, regression=False):
     plt.figure(figsize=(10, 6))
 
     for col in y_columns:
@@ -52,15 +52,15 @@ def plot_columns(df, y_columns, units_df, regression = False):
 
     plt.xlabel(f"current [{units['current']}]")
     plt.ylabel(f"[{unit}]")
-    plt.xlim([0,760])
+    plt.xlim([0, 760])
     plt.xticks([50 * n for n in range(16)])
     plt.legend()
     plt.title(f"current vs {col}")
     plt.savefig(f'{col}.png', dpi=300, bbox_inches='tight')
     plt.show()
-    
-# Example usage
 
+
+# Example usage
 y_columns = ["metis_CVM_Cell_Voltage_Mean"]
 # y_columns = ["pressure_coolant_inlet","pressure_anode_inlet"]
 # y_columns = ["Anode_H2_Concentration"]
@@ -71,20 +71,3 @@ y_columns = ["metis_CVM_Cell_Voltage_Mean"]
 # y_columns = ["temp_cathode_dewpoint_gas"]  # List of columns to plot on y-axis
 
 plot_columns(df, y_columns, units, regression=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
