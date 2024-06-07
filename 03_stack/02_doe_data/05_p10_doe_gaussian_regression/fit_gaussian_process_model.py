@@ -126,9 +126,15 @@ def train_gpr_model_on_doe_data(plot=False):
     # Load and assign the data
     pd_dataframe = load_high_amp_doe_data()
 
-   # Training data
-    train_x = torch.linspace(0, 1, 10)
-    train_y = torch.sin(train_x * (2 * torch.pi)) + torch.randn(train_x.size()) * 0.2
+   # Extract input training data (current) and output training data (cell voltage)
+    train_x = pd_dataframe['current']
+    train_y = pd_dataframe['voltage']
+    # train_y = pd_dataframe['metis_CVM_Cell_Voltage_Mean']
+
+    # Convert the data to PyTorch tensors
+    train_x = torch.tensor(pd.to_numeric(train_x.values), dtype=torch.float32)
+    train_y = torch.tensor(pd.to_numeric(train_y.values), dtype=torch.float32)
+
 
     # Likelihood and model
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
@@ -141,21 +147,30 @@ def train_gpr_model_on_doe_data(plot=False):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
     mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
-    training_iterations = 50
+    # List to store the loss values
+    loss_list = []
+
+    # Training loop
+    training_iterations = int(20e3)
     for i in range(training_iterations):
         optimizer.zero_grad()
         output = model(train_x)
         loss = -mll(output, train_y)
+        if i % 100 == 0:
+            print(f'Iteration {i}/{training_iterations} - Loss: {loss.item()}')
+            loss_list.append(loss.item())
         loss.backward()
-        print(f'Iteration {i + 1}/{training_iterations} - Loss: {loss.item()}')
         optimizer.step()
+
+    # Save the model
+    torch.save(model.state_dict(), 'model_current_to_voltage.pth')
 
     # Making predictions
     model.eval()
     likelihood.eval()
 
-    # Test points are regularly spaced along [0,1]
-    test_x = torch.linspace(0, 2, 100)
+    # Test points are regularly spaced along [0,800] Amps
+    test_x = torch.linspace(0, 1000, 10000)
     with torch.no_grad(), gpytorch.settings.fast_pred_var():
         observed_pred = likelihood(model(test_x))
 
@@ -165,14 +180,28 @@ def train_gpr_model_on_doe_data(plot=False):
         # Get upper and lower confidence bounds
         lower, upper = observed_pred.confidence_region()
         # Plot training data as black stars
-        ax.plot(train_x.numpy(), train_y.numpy(), 'k*')
+        ax.plot(train_x.numpy(), train_y.numpy(), 'k*', zorder=2)
         # Plot predictive means as blue line
-        ax.plot(test_x.numpy(), observed_pred.mean.numpy(), 'b')
+        ax.plot(test_x.numpy(), observed_pred.mean.numpy(), 'b', zorder=2)
         # Shade between the lower and upper confidence bounds
         ax.fill_between(test_x.numpy(), lower.numpy(), upper.numpy(), alpha=0.5)
-        ax.set_ylim([-3, 3])
+        ax.set_ylim([100, 300])
+        ax.set_xlim([0, 1000])
         ax.legend(['Observed Data', 'Mean', 'Confidence'])
+        ax.set_xlabel('Current [A]')
+        ax.set_ylabel('Voltage [V]')
+        ax.set_title('First Shot Gaussian Regression Model: Voltage vs Current')
+        plt.savefig('first_shot_gpr_model.png', dpi=300, bbox_inches='tight')
+        ax.grid(True, zorder=1)
         plt.show()
+
+    # Plot the loss
+    plt.plot(loss_list)
+    plt.xlabel('Iteration')
+    plt.ylabel('Loss')
+    plt.title('Loss during training')
+    plt.savefig('loss.png', dpi=300, bbox_inches='tight')
+    plt.show()
 
 
 # Entry point of the script
