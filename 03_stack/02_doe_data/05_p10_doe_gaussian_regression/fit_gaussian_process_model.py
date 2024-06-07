@@ -6,10 +6,10 @@ Date: June 2024
 
 # Import libraries
 import os
+from pathlib import Path
 import sys
 import shutil
 import argparse
-import mariadb
 import csv
 import numpy as np
 import torch
@@ -40,91 +40,8 @@ class ExactGPModel(gpytorch.models.ExactGP):
         covar_x = self.covar_module(x)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
-
-def plot_model_performance(model, dataset, data_sampler, denormalize_min, denormalize_max, epoch=0, test=False):
-
-    dataloader=torch.utils.data.DataLoader(dataset, batch_size=1, sampler=data_sampler)
-
-    # Evaluate the model
-    (predictions, observations) = evaluate_model(model, dataloader)
-
-    # Denormalize the data
-    predictions = ((0.5 * (predictions + 1)) * (denormalize_max - denormalize_min)) + denormalize_min
-    observations = ((0.5 * (observations + 1)) * (denormalize_max - denormalize_min)) + denormalize_min
-    
-    # Convert list of tensors to a simple numpy array
-    predictions = [tensor.numpy() for tensor in predictions]
-    predictions_array = np.stack(predictions, axis=0)
-    observations = [tensor.numpy() for tensor in observations]
-    observations_array = np.stack(observations, axis=0)
-
-    # Plot predictions vs. observations
-    fig, axs = plt.subplots(2, 2)
-    mgr = plt.get_current_fig_manager()
-    mgr.resize(1280, 720)
-
-    if test:
-        fig.suptitle('Model Performance on Test Data')
-    else:
-        fig.suptitle('Model Performance on Training Data')
-
-    voltage_predictions = predictions_array[:, 0]
-    voltage_observations = observations_array[:, 0]
-    axs[0, 0].grid(True, zorder=1)
-    axs[0, 0].set_title('Voltage (V)')
-    axs[0, 0].set_xlim([250, 450])
-    axs[0, 0].set_ylim([250, 450])
-    axs[0, 0].plot(np.linspace(250, 450, 100), np.linspace(250, 450, 100), color='blue', zorder=2)
-    axs[0, 0].scatter(voltage_observations, voltage_predictions, color='orange', zorder=2)
-    axs[0, 0].xaxis.set_label_text('Observations')
-    axs[0, 0].yaxis.set_label_text('Predictions')
-
-    pressure_drop_anode_predictions = predictions_array[:, 6]
-    pressure_drop_anode_observations = observations_array[:, 6]
-    axs[0, 1].grid(True, zorder=1)
-    axs[0, 1].set_title('Anode Pressure Drop (mbar)')
-    axs[0, 1].set_xlim([0, 500])
-    axs[0, 1].set_ylim([0, 500])
-    axs[0, 1].plot(np.linspace(0, 500, 100), np.linspace(0, 500, 100), color='blue', zorder=2)
-    axs[0, 1].scatter(pressure_drop_anode_observations, pressure_drop_anode_predictions, color='orange', zorder=2)
-    axs[0, 1].xaxis.set_label_text('Observations')
-    axs[0, 1].yaxis.set_label_text('Predictions')
-
-    pressure_drop_cathode_predictions = predictions_array[:, 7]
-    pressure_drop_cathode_observations = observations_array[:, 7]
-    axs[1, 0].grid(True, zorder=1)
-    axs[1, 0].set_title('Cathode Pressure Drop (mbar)')
-    axs[1, 0].set_xlim([0, 500])
-    axs[1, 0].set_ylim([0, 500])
-    axs[1, 0].plot(np.linspace(0, 500, 100), np.linspace(0, 500, 100), color='blue', zorder=2)
-    axs[1, 0].scatter(pressure_drop_cathode_observations, pressure_drop_cathode_predictions, color='orange', zorder=2)
-    axs[1, 0].xaxis.set_label_text('Observations')
-    axs[1, 0].yaxis.set_label_text('Predictions')
-
-    pressure_drop_coolant_predictions = predictions_array[:, 8]
-    pressure_drop_coolant_observations = observations_array[:, 8]
-    axs[1, 1].grid(True, zorder=1)
-    axs[1, 1].set_title('Coolant Pressure Drop (mbar)')
-    axs[1, 1].set_xlim([0, 1000])
-    axs[1, 1].set_ylim([0, 1000])
-    axs[1, 1].plot(np.linspace(0, 1000, 100), np.linspace(0, 1000, 100), color='blue', zorder=2)
-    axs[1, 1].scatter(pressure_drop_coolant_observations, pressure_drop_coolant_predictions, color='orange', zorder=2)
-    axs[1, 1].xaxis.set_label_text('Observations')
-    axs[1, 1].yaxis.set_label_text('Predictions')
-
-    plt.tight_layout()
-
-    if test:
-        plt.savefig("model_performance_test_{}".format((epoch + 1)) + ".png")
-    else:
-        plt.savefig("model_performance_train_{}".format((epoch + 1)) + ".png")
-
-    # Close the figure
-    plt.close(fig)
-
-    return None
-
-def create_experiment_folder(_params_model, _params_training, _params_logging):
+# Create and browse to folder for storing experiment results
+def create_experiment_folder(_params_model=None, _params_training=None, _params_logging=None):
     """ Creates new folder to store training results
 
     Parameters
@@ -146,7 +63,7 @@ def create_experiment_folder(_params_model, _params_training, _params_logging):
 
     # create folder to store data for the experiment running
     experimentID = 1
-    dirName = "{}_ann_doe_model_experiment".format(experimentID)
+    dirName = "{}_gpr_doe_model_experiment".format(experimentID)
     while os.path.exists(dirName):
         experimentID += 1
         dirName = "{}_".format(experimentID) + dirName.split('_', 1)[1]
@@ -162,16 +79,52 @@ def create_experiment_folder(_params_model, _params_training, _params_logging):
 
     # save parameters to file
     parameterFile = open("parameterFile.txt", "w")
-    parameterFile.write(
-        format(vars(_params_model)) + "\n" +
-        format(vars(_params_training)) + "\n" +
-        format(vars(_params_logging)))
+    # write paramters to file if they are not None
+    if _params_model is not None:
+        parameterFile.write(format(vars(_params_model)) + "\n")
+    if _params_training is not None:
+        parameterFile.write(format(vars(_params_training)) + "\n")
+    if _params_logging is not None:
+        parameterFile.write(format(vars(_params_logging)))
     parameterFile.close()
 
     return None
 
+# Load the high amp DoE data
+def load_high_amp_doe_data():
+    # Get path to data file
+    my_dir = os.getcwd()
+    filename = "FC-P10-275C-H0C-SN0014 - H2Fly DOE averaged.xlsx"
+    path = os.path.join(Path(my_dir).parents[1], '01_p10_doe_basic_files', '02_TV500106_750A', filename)
+
+    # Load data file
+    xls = pd.ExcelFile(path)
+
+    # Get the name of the second sheet
+    second_sheet_name = xls.sheet_names[1]
+
+    # Load the second sheet into a DataFrame, skipping the first row
+    df = pd.read_excel(path, sheet_name=second_sheet_name)
+
+    # Extract the units row and set it as the DataFrame column names
+    units = df.iloc[0]
+    df.columns = df.iloc[1]
+    df = df.drop([0, 1]).reset_index(drop=True)
+    df = df.drop(0)
+    df = df[df['Point successfully run'] == 1]
+    df = df.loc[:, ~df.columns.duplicated()]
+
+    return df
+
+
 # Main function
 def train_gpr_model_on_doe_data(plot=False):
+
+    # Create a folder to store the training results
+    create_experiment_folder()
+
+    # Load and assign the data
+    pd_dataframe = load_high_amp_doe_data()
 
    # Training data
     train_x = torch.linspace(0, 1, 10)
