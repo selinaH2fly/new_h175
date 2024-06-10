@@ -116,9 +116,8 @@ def load_high_amp_doe_data():
 
     return df
 
-
 # Main function
-def train_gpr_model_on_doe_data(plot=False):
+def train_gpr_model_on_doe_data(target='metis_CVM_Cell_Voltage_Mean', plot=False):
 
     # Create a folder to store the training results
     create_experiment_folder()
@@ -209,9 +208,11 @@ if __name__ == '__main__':
 
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Train a Gaussian process regression model on Powercell DoE data")
-    parser.add_argument("-p", "--plot", type=int, help="Plot the input/output data", default=False)
+    parser.add_argument("-t", "--target", type=str, help="Target variable for Gaussia process regression", default=False)
+    parser.add_argument("-p", "--plot", type=bool, help="Plot the input/output data", default=False)
+
 
     args = parser.parse_args()
 
     # Call the main function                        
-    train_gpr_model_on_doe_data(args.plot)
+    train_gpr_model_on_doe_data(args.target, args.plot)
