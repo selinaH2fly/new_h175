@@ -126,14 +126,31 @@ def train_gpr_model_on_doe_data(target='metis_CVM_Cell_Voltage_Mean', plot=False
     pd_dataframe = load_high_amp_doe_data()
 
    # Extract input training data (current) and output training data (cell voltage)
-    train_x = pd_dataframe['current']
-    train_y = pd_dataframe['voltage']
+    # train_x = pd_dataframe['current']
+    # train_y = pd_dataframe['voltage']
     # train_y = pd_dataframe['metis_CVM_Cell_Voltage_Mean']
 
-    # Convert the data to PyTorch tensors
-    train_x = torch.tensor(pd.to_numeric(train_x.values), dtype=torch.float32)
-    train_y = torch.tensor(pd.to_numeric(train_y.values), dtype=torch.float32)
+    # Extract input training data:
+    # current, anode stoichiometry, anode inlet temperature, anode inlet pressure, anode inlet dewpoint, ...
+    # cathode stoichiometry, cathode inlet temperature, cathode inlet pressure, cathode inlet dewpoint, coolant inlet temperature, coolant flow
+    # train_x = pd_dataframe[['current'], ['anode_stoich'], ['temp_anode_inlet'], ['pressure_anode_inlet'], ['temp_anode_dewpoint_gas'],
+    #                        ['cathode_stoich'], ['temp_cathode_inlet'], ['pressure_cathode_inlet'], ['temp_cathode_dewpoint_gas'],
+    #                        ['temp_coolant_inlet'], ['flow_coolant']]
+    train_x = pd_dataframe[['current', 'anode_stoich', 'temp_anode_inlet', 'pressure_anode_inlet', 'temp_anode_dewpoint_gas',
+                            'cathode_stoich', 'temp_cathode_inlet', 'pressure_cathode_inlet', 'temp_cathode_dewpoint_gas',
+                            'temp_coolant_inlet', 'flow_coolant']]
+    
+    train_y = pd_dataframe[[target]]
 
+    # assign the data to a PyTorch tensor
+    for column in train_x.columns:
+        train_x[column] = pd.to_numeric(train_x[column].values, errors='coerce', downcast='float')
+    for column in train_y.columns:
+        train_y[column] = pd.to_numeric(train_y[column].values, errors='coerce', downcast='float')
+
+    # Convert the data to PyTorch tensors
+    train_x = torch.tensor(train_x.values, dtype=torch.float32)
+    train_y = torch.tensor(train_y.values, dtype=torch.float32)
 
     # Likelihood and model
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
