@@ -117,7 +117,7 @@ def load_high_amp_doe_data():
     return df
 
 # Main function
-def train_gpr_model_on_doe_data(target='metis_CVM_Cell_Voltage_Mean', plot=False):
+def train_gpr_model_on_doe_data(target='voltage', plot=False):
 
     # Create a folder to store the training results
     create_experiment_folder()
@@ -152,6 +152,10 @@ def train_gpr_model_on_doe_data(target='metis_CVM_Cell_Voltage_Mean', plot=False
     train_x = torch.tensor(train_x.values, dtype=torch.float32)
     train_y = torch.tensor(train_y.values, dtype=torch.float32)
 
+    # Transpose the data
+    # train_x = train_x.t()
+    train_y = train_y.flatten()
+
     # Likelihood and model
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
     model = ExactGPModel(train_x, train_y, likelihood)
@@ -163,7 +167,7 @@ def train_gpr_model_on_doe_data(target='metis_CVM_Cell_Voltage_Mean', plot=False
     optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
     mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
-    # List to store the loss values
+    # List to store the loss values and iterations
     loss_list = []
 
     # Training loop
@@ -186,39 +190,45 @@ def train_gpr_model_on_doe_data(target='metis_CVM_Cell_Voltage_Mean', plot=False
     likelihood.eval()
 
     # Test points are regularly spaced along [0,800] Amps
-    test_x = torch.linspace(0, 1000, 10000)
-    with torch.no_grad(), gpytorch.settings.fast_pred_var():
-        observed_pred = likelihood(model(test_x))
+    # test_x = torch.linspace(0, 1000, 10000)
+    # with torch.no_grad(), gpytorch.settings.fast_pred_var():
+    #     observed_pred = likelihood(model(test_x))
 
-    # Plotting
-    with torch.no_grad():
-        f, ax = plt.subplots(1, 1, figsize=(8, 6))
-        # Get upper and lower confidence bounds
-        lower, upper = observed_pred.confidence_region()
-        # Plot training data as black stars
-        ax.plot(train_x.numpy(), train_y.numpy(), 'k*', zorder=2)
-        # Plot predictive means as blue line
-        ax.plot(test_x.numpy(), observed_pred.mean.numpy(), 'b', zorder=2)
-        # Shade between the lower and upper confidence bounds
-        ax.fill_between(test_x.numpy(), lower.numpy(), upper.numpy(), alpha=0.5)
-        ax.set_ylim([100, 300])
-        ax.set_xlim([0, 1000])
-        ax.legend(['Observed Data', 'Mean', 'Confidence'])
-        ax.set_xlabel('Current [A]')
-        ax.set_ylabel('Voltage [V]')
-        ax.set_title('First Shot Gaussian Regression Model: Voltage vs Current')
-        plt.savefig('first_shot_gpr_model.png', dpi=300, bbox_inches='tight')
-        ax.grid(True, zorder=1)
-        plt.show()
+    # # Plotting
+    # with torch.no_grad():
+    #     f, ax = plt.subplots(1, 1, figsize=(8, 6))
+    #     # Get upper and lower confidence bounds
+    #     lower, upper = observed_pred.confidence_region()
+    #     # Plot training data as black stars
+    #     ax.plot(train_x.numpy(), train_y.numpy(), 'k*', zorder=2)
+    #     # Plot predictive means as blue line
+    #     ax.plot(test_x.numpy(), observed_pred.mean.numpy(), 'b', zorder=2)
+    #     # Shade between the lower and upper confidence bounds
+    #     ax.fill_between(test_x.numpy(), lower.numpy(), upper.numpy(), alpha=0.5)
+    #     ax.set_ylim([100, 300])
+    #     ax.set_xlim([0, 1000])
+    #     ax.legend(['Observed Data', 'Mean', 'Confidence'])
+    #     ax.set_xlabel('Current [A]')
+    #     ax.set_ylabel('Voltage [V]')
+    #     ax.set_title('First Shot Gaussian Regression Model: Voltage vs Current')
+    #     plt.savefig('first_shot_gpr_model.png', dpi=300, bbox_inches='tight')
+    #     ax.grid(True, zorder=1)
+    #     plt.show()
 
     # Plot the loss
     plt.plot(loss_list)
-    plt.xlabel('Iteration')
+    plt.xlabel('Iterations (x100)')
     plt.ylabel('Loss')
+    plt.yscale('log')
+    plt.grid(True, zorder=1)
     plt.title('Loss during training')
     plt.savefig('loss.png', dpi=300, bbox_inches='tight')
     plt.show()
 
+    # Save the loss values to a dat file
+    with open('loss_values.dat', 'w') as file:
+        for loss in loss_list:
+            file.write(str(loss) + '\n')
 
 # Entry point of the script
 if __name__ == '__main__':
