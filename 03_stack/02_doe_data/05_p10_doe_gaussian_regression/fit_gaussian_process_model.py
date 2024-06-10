@@ -114,7 +114,46 @@ def load_high_amp_doe_data():
     df = df[df['Point successfully run'] == 1]
     df = df.loc[:, ~df.columns.duplicated()]
 
-    return df
+    return df, units
+
+def partial_dependence(model, X, feature, grid_resolution=100):
+    """
+    Calculate partial dependence for a given feature.
+    
+    Parameters:
+    - model: The trained gpytorch model.
+    - X: The input data as a numpy array or pandas DataFrame.
+    - feature: The index of the feature to vary.
+    - grid_resolution: The number of points to evaluate.
+
+    Returns:
+    - grid: The values of the feature.
+    - pdp: The partial dependence values.
+    """
+    # Determine the range of the feature
+    feature_min, feature_max = X[:, feature].min(), X[:, feature].max()
+    
+    # Create a grid of values for the feature
+    grid = np.linspace(feature_min, feature_max, grid_resolution)
+    
+    # Create a copy of the input data
+    X_temp = np.tile(X, (grid_resolution, 1))
+    
+    # Replace the values of the feature with the grid values
+    X_temp[:, feature] = np.repeat(grid, X.shape[0])
+    
+    # Convert the data to a torch tensor
+    X_temp = torch.tensor(X_temp, dtype=torch.float)
+    
+    # Compute the predictions
+    model.eval()
+    with torch.no_grad(), gpytorch.settings.fast_pred_var():
+        predictions = model(X_temp).mean.numpy()
+    
+    # Average the predictions across the samples
+    pdp = predictions.reshape(grid_resolution, X.shape[0]).mean(axis=1)
+    
+    return grid, pdp
 
 # Main function
 def train_gpr_model_on_doe_data(target='voltage', plot=False):
@@ -123,23 +162,11 @@ def train_gpr_model_on_doe_data(target='voltage', plot=False):
     create_experiment_folder()
 
     # Load and assign the data
-    pd_dataframe = load_high_amp_doe_data()
-
-   # Extract input training data (current) and output training data (cell voltage)
-    # train_x = pd_dataframe['current']
-    # train_y = pd_dataframe['voltage']
-    # train_y = pd_dataframe['metis_CVM_Cell_Voltage_Mean']
-
-    # Extract input training data:
-    # current, anode stoichiometry, anode inlet temperature, anode inlet pressure, anode inlet dewpoint, ...
-    # cathode stoichiometry, cathode inlet temperature, cathode inlet pressure, cathode inlet dewpoint, coolant inlet temperature, coolant flow
-    # train_x = pd_dataframe[['current'], ['anode_stoich'], ['temp_anode_inlet'], ['pressure_anode_inlet'], ['temp_anode_dewpoint_gas'],
-    #                        ['cathode_stoich'], ['temp_cathode_inlet'], ['pressure_cathode_inlet'], ['temp_cathode_dewpoint_gas'],
-    #                        ['temp_coolant_inlet'], ['flow_coolant']]
+    pd_dataframe, units = load_high_amp_doe_data()
     train_x = pd_dataframe[['current', 'anode_stoich', 'temp_anode_inlet', 'pressure_anode_inlet', 'temp_anode_dewpoint_gas',
                             'cathode_stoich', 'temp_cathode_inlet', 'pressure_cathode_inlet', 'temp_cathode_dewpoint_gas',
                             'temp_coolant_inlet', 'flow_coolant']]
-    
+    feature_names = train_x.columns
     train_y = pd_dataframe[[target]]
 
     # assign the data to a PyTorch tensor
@@ -149,16 +176,13 @@ def train_gpr_model_on_doe_data(target='voltage', plot=False):
         train_y[column] = pd.to_numeric(train_y[column].values, errors='coerce', downcast='float')
 
     # Convert the data to PyTorch tensors
-    train_x = torch.tensor(train_x.values, dtype=torch.float32)
-    train_y = torch.tensor(train_y.values, dtype=torch.float32)
-
-    # Transpose the data
-    # train_x = train_x.t()
-    train_y = train_y.flatten()
+    train_x_tensor = torch.tensor(train_x.values, dtype=torch.float32)
+    train_y_tensor = torch.tensor(train_y.values, dtype=torch.float32)
+    train_y_tensor = train_y_tensor.flatten()
 
     # Likelihood and model
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
-    model = ExactGPModel(train_x, train_y, likelihood)
+    model = ExactGPModel(train_x_tensor, train_y_tensor, likelihood)
 
     # Training the model
     model.train()
@@ -174,8 +198,8 @@ def train_gpr_model_on_doe_data(target='voltage', plot=False):
     training_iterations = int(20e3)
     for i in range(training_iterations):
         optimizer.zero_grad()
-        output = model(train_x)
-        loss = -mll(output, train_y)
+        output = model(train_x_tensor)
+        loss = -mll(output, train_y_tensor)
         if i % 100 == 0:
             print(f'Iteration {i}/{training_iterations} - Loss: {loss.item()}')
             loss_list.append(loss.item())
@@ -189,31 +213,47 @@ def train_gpr_model_on_doe_data(target='voltage', plot=False):
     model.eval()
     likelihood.eval()
 
-    # Test points are regularly spaced along [0,800] Amps
-    # test_x = torch.linspace(0, 1000, 10000)
-    # with torch.no_grad(), gpytorch.settings.fast_pred_var():
-    #     observed_pred = likelihood(model(test_x))
+    # Convert the training data to a numpy array for easier manipulation
+    train_x_np = train_x_tensor.numpy()
 
-    # # Plotting
-    # with torch.no_grad():
-    #     f, ax = plt.subplots(1, 1, figsize=(8, 6))
-    #     # Get upper and lower confidence bounds
-    #     lower, upper = observed_pred.confidence_region()
-    #     # Plot training data as black stars
-    #     ax.plot(train_x.numpy(), train_y.numpy(), 'k*', zorder=2)
-    #     # Plot predictive means as blue line
-    #     ax.plot(test_x.numpy(), observed_pred.mean.numpy(), 'b', zorder=2)
-    #     # Shade between the lower and upper confidence bounds
-    #     ax.fill_between(test_x.numpy(), lower.numpy(), upper.numpy(), alpha=0.5)
-    #     ax.set_ylim([100, 300])
-    #     ax.set_xlim([0, 1000])
-    #     ax.legend(['Observed Data', 'Mean', 'Confidence'])
-    #     ax.set_xlabel('Current [A]')
-    #     ax.set_ylabel('Voltage [V]')
-    #     ax.set_title('First Shot Gaussian Regression Model: Voltage vs Current')
-    #     plt.savefig('first_shot_gpr_model.png', dpi=300, bbox_inches='tight')
-    #     ax.grid(True, zorder=1)
-    #     plt.show()
+    # Create subplots
+    fig, axes = plt.subplots(4, 3, figsize=(18, 12))  # 4 rows, 3 columns of subplots
+
+    # Adjust the layout
+    fig.subplots_adjust(hspace=0.5)
+
+    # Create figure title
+    fig.suptitle(f'Gaussian Process Regression Model - Partial Dependence Plots', fontsize=16)
+
+    # Loop through each feature and plot its partial dependence
+    for i in range(11):
+        grid, pdp = partial_dependence(model, train_x_np, i)
+        ax = axes[i // 3, i % 3]  # Determine subplot location
+        ax.plot(grid, pdp)
+        ax.set_ylim([0, 300])
+        ax.set_ylabel(f'{target}')
+        # assign unit if it is not none
+        if not pd.isna(units[feature_names[i]]):
+            ax.set_xlabel(f'{feature_names[i]} ({units[feature_names[i]]})')
+        else:
+            ax.set_xlabel(f'{feature_names[i]} (-)')
+        ax.grid(True, zorder=1)
+
+    # Remove empty subplot (if any)
+    if len(axes.flatten()) > 11:
+        fig.delaxes(axes.flatten()[-1])
+
+   # Finalize the layout
+    plt.tight_layout()
+
+    # Draw the canvas
+    fig.canvas.draw()
+
+    # Save the figure
+    plt.savefig('partial_dependence_plots.png', bbox_inches='tight')
+
+    # Display the figure
+    plt.show()
 
     # Plot the loss
     plt.plot(loss_list)
@@ -221,7 +261,7 @@ def train_gpr_model_on_doe_data(target='voltage', plot=False):
     plt.ylabel('Loss')
     plt.yscale('log')
     plt.grid(True, zorder=1)
-    plt.title('Loss during training')
+    plt.title('Loss During Training')
     plt.savefig('loss.png', dpi=300, bbox_inches='tight')
     plt.show()
 
@@ -235,7 +275,7 @@ if __name__ == '__main__':
 
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Train a Gaussian process regression model on Powercell DoE data")
-    parser.add_argument("-t", "--target", type=str, help="Target variable for Gaussia process regression", default=False)
+    parser.add_argument("-t", "--target", type=str, help="Target variable for Gaussia process regression", default="voltage")
     parser.add_argument("-p", "--plot", type=bool, help="Plot the input/output data", default=False)
 
 
