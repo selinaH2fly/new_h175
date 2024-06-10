@@ -155,8 +155,55 @@ def partial_dependence(model, X, feature, grid_resolution=100):
     
     return grid, pdp
 
+def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units, target='voltage'):
+
+    # Making predictions
+    model.eval()
+
+    # Convert the training data to a numpy array for easier manipulation
+    train_x_np = train_x_tensor.numpy()
+
+    # Create subplots
+    fig, axes = plt.subplots(4, 3, figsize=(18, 12))  # 4 rows, 3 columns of subplots
+
+    # Adjust the layout
+    fig.subplots_adjust(hspace=1)
+
+    # Create figure title
+    fig.suptitle(f'Gaussian Process Regression Model - Partial Dependence Plots', fontsize=16)
+
+    # Loop through each feature and plot its partial dependence
+    for i in range(11):
+        grid, pdp = partial_dependence(model, train_x_np, i)
+        ax = axes[i // 3, i % 3]  # Determine subplot location
+        ax.plot(grid, pdp)
+        # ax.set_ylim([0, 300])
+        ax.set_ylabel(f'{target}')
+        # assign unit if it is not none
+        if not pd.isna(feature_units[feature_names[i]]):
+            ax.set_xlabel(f'{feature_names[i]} ({feature_units[feature_names[i]]})')
+        else:
+            ax.set_xlabel(f'{feature_names[i]} (-)')
+        ax.grid(True, zorder=1)
+
+    # Remove empty subplot (if any)
+    if len(axes.flatten()) > 11:
+        fig.delaxes(axes.flatten()[-1])
+
+    # Finalize the layout
+    plt.tight_layout()
+
+    # Draw the canvas
+    fig.canvas.draw()
+
+    # Save the figure
+    plt.savefig('partial_dependence_plots.png', bbox_inches='tight')
+
+    # Display the figure
+    plt.show()
+
 # Main function
-def train_gpr_model_on_doe_data(target='voltage', plot=False):
+def train_gpr_model_on_doe_data(target='voltage', plot=True):
 
     # Create a folder to store the training results
     create_experiment_folder()
@@ -195,7 +242,7 @@ def train_gpr_model_on_doe_data(target='voltage', plot=False):
     loss_list = []
 
     # Training loop
-    training_iterations = int(20e3)
+    training_iterations = int(200)
     for i in range(training_iterations):
         optimizer.zero_grad()
         output = model(train_x_tensor)
@@ -209,61 +256,21 @@ def train_gpr_model_on_doe_data(target='voltage', plot=False):
     # Save the model
     torch.save(model.state_dict(), 'model_current_to_voltage.pth')
 
-    # Making predictions
-    model.eval()
-    likelihood.eval()
+    # Plot the partial dependence plots
+    if plot:
+        # Plot the partial dependence plots
+        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage')
 
-    # Convert the training data to a numpy array for easier manipulation
-    train_x_np = train_x_tensor.numpy()
-
-    # Create subplots
-    fig, axes = plt.subplots(4, 3, figsize=(18, 12))  # 4 rows, 3 columns of subplots
-
-    # Adjust the layout
-    fig.subplots_adjust(hspace=0.5)
-
-    # Create figure title
-    fig.suptitle(f'Gaussian Process Regression Model - Partial Dependence Plots', fontsize=16)
-
-    # Loop through each feature and plot its partial dependence
-    for i in range(11):
-        grid, pdp = partial_dependence(model, train_x_np, i)
-        ax = axes[i // 3, i % 3]  # Determine subplot location
-        ax.plot(grid, pdp)
-        ax.set_ylim([0, 300])
-        ax.set_ylabel(f'{target}')
-        # assign unit if it is not none
-        if not pd.isna(units[feature_names[i]]):
-            ax.set_xlabel(f'{feature_names[i]} ({units[feature_names[i]]})')
-        else:
-            ax.set_xlabel(f'{feature_names[i]} (-)')
-        ax.grid(True, zorder=1)
-
-    # Remove empty subplot (if any)
-    if len(axes.flatten()) > 11:
-        fig.delaxes(axes.flatten()[-1])
-
-   # Finalize the layout
-    plt.tight_layout()
-
-    # Draw the canvas
-    fig.canvas.draw()
-
-    # Save the figure
-    plt.savefig('partial_dependence_plots.png', bbox_inches='tight')
-
-    # Display the figure
-    plt.show()
-
-    # Plot the loss
-    plt.plot(loss_list)
-    plt.xlabel('Iterations (x100)')
-    plt.ylabel('Loss')
-    plt.yscale('log')
-    plt.grid(True, zorder=1)
-    plt.title('Loss During Training')
-    plt.savefig('loss.png', dpi=300, bbox_inches='tight')
-    plt.show()
+        # Plot the loss to a new figure
+        fig = plt.figure(figsize=(8, 6))
+        plt.plot(loss_list)
+        plt.xlabel('Iterations (x100)')
+        plt.ylabel('Loss')
+        plt.yscale('log')
+        plt.grid(True, zorder=1)
+        plt.title('Loss During Training')
+        plt.savefig('loss.png', dpi=300, bbox_inches='tight')
+        plt.show()
 
     # Save the loss values to a dat file
     with open('loss_values.dat', 'w') as file:
@@ -276,7 +283,7 @@ if __name__ == '__main__':
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Train a Gaussian process regression model on Powercell DoE data")
     parser.add_argument("-t", "--target", type=str, help="Target variable for Gaussia process regression", default="voltage")
-    parser.add_argument("-p", "--plot", type=bool, help="Plot the input/output data", default=False)
+    parser.add_argument("-p", "--plot", type=bool, help="Plot the input/output data", default=True)
 
 
     args = parser.parse_args()
