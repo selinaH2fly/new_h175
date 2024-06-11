@@ -211,7 +211,7 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units,
     # y_min = min([ax.get_ylim()[0] for ax in axes.flatten() if ax.get_ylim()[0] != np.nan])
     # y_max = max([ax.get_ylim()[1] for ax in axes.flatten() if ax.get_ylim()[1] != np.nan])
     for ax in axes.flatten():
-        ax.set_ylim([160, 180]) 
+        ax.set_ylim([140, 180]) 
 
     # Finalize the layout
     plt.tight_layout()
@@ -229,7 +229,7 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units,
     plt.show()
 
 # Main function
-def train_gpr_model_on_doe_data(target='voltage', plot=True):
+def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True):
 
     # Create a folder to store the training results
     create_experiment_folder()
@@ -241,6 +241,11 @@ def train_gpr_model_on_doe_data(target='voltage', plot=True):
                             'temp_coolant_inlet', 'flow_coolant']]
     feature_names = train_x.columns
     train_y = pd_dataframe[[target]]
+
+    # Remove current values below the cutoff value
+    indices = train_x[train_x['current'] <= cutoff_current].index
+    train_x = train_x.drop(indices)
+    train_y = train_y.drop(indices)
 
     # assign the data to a PyTorch tensor
     for column in train_x.columns:
@@ -268,7 +273,7 @@ def train_gpr_model_on_doe_data(target='voltage', plot=True):
     loss_list = []
 
     # Training loop
-    training_iterations = int(200e3)
+    training_iterations = int(20e3)
     for i in range(training_iterations):
         optimizer.zero_grad()
         output = model(train_x_tensor)
@@ -286,7 +291,9 @@ def train_gpr_model_on_doe_data(target='voltage', plot=True):
     if plot:
         # Plot the partial dependence plots
         plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=400)
+        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=500)
         plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=600)
+        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=700)
 
 
         # Plot the loss to a new figure
@@ -311,9 +318,10 @@ if __name__ == '__main__':
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Train a Gaussian process regression model on Powercell DoE data")
     parser.add_argument("-t", "--target", type=str, help="Target variable for Gaussia process regression", default="voltage")
+    parser.add_argument("-c", "--cutoff", type=float, help="Datapoints below cutoff current are removed from training data", default=0.0)
     parser.add_argument("-p", "--plot", type=bool, help="Plot the input/output data", default=True)
 
     args = parser.parse_args()
 
     # Call the main function                        
-    train_gpr_model_on_doe_data(args.target, args.plot)
+    train_gpr_model_on_doe_data(args.target, args.cutoff, args.plot)

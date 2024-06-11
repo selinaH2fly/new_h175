@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--target", "metis_CVM_Cell_Voltage_Mean", "--plot", "True"],
+            "args": ["--target", "voltage", "--cutoff", "100", "--plot", "True"],
         }
     ]
 }
