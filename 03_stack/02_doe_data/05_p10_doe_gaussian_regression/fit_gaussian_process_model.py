@@ -190,8 +190,15 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units,
             ax = axes[i // 3, i % 3]  # Determine subplot location
             ax.plot(grid, pdp)
             # ax.set_ylim([0, 300])
-            ax.set_ylabel(f'{target}')
-            # assign unit if it is not none
+            # extract target unit and check for lower and upper case
+            if (target[0].lower() + target[1:]) in feature_units:
+                ax.set_ylabel(f'{target} ({feature_units[target[0].lower() + target[1:]]})')
+            elif (target[0].upper() + target[1:]) in feature_units:
+                ax.set_ylabel(f'{target} ({feature_units[target[0].upper() + target[1:]]})')
+            else:
+                ax.set_ylabel(f'{target} (-)')
+
+            # assign xlabel unit if it is not none
             if not pd.isna(feature_units[feature_names[i]]):
                 ax.set_xlabel(f'{feature_names[i]} ({feature_units[feature_names[i]]})')
             else:
@@ -207,11 +214,11 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units,
     if len(axes.flatten()) > 11:
         fig.delaxes(axes.flatten()[-1])
 
-    # Unify the y-axis limits to min and max values of the subplots
-    # y_min = min([ax.get_ylim()[0] for ax in axes.flatten() if ax.get_ylim()[0] != np.nan])
-    # y_max = max([ax.get_ylim()[1] for ax in axes.flatten() if ax.get_ylim()[1] != np.nan])
+    # Unify the y-axis limits to min and max values of the subplots (excluding the fixed feature subplot!)
+    y_min = np.floor(np.min([ax.get_ylim()[0] for ax in axes.flatten() if ax.get_ylim()[0] != 0]))
+    y_max = np.ceil(np.max([ax.get_ylim()[1] for ax in axes.flatten() if ax.get_ylim()[1] != 0]))    
     for ax in axes.flatten():
-        ax.set_ylim([140, 180]) 
+        ax.set_ylim([y_min, y_max])
 
     # Finalize the layout
     plt.tight_layout()
@@ -229,10 +236,15 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units,
     plt.show()
 
 # Main function
-def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True):
+def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, pretrained_model=None):
 
     # Create a folder to store the training results
     create_experiment_folder()
+
+    # Set the random seed for reproducibility
+    # random.seed(42)
+    # np.random.seed(42)
+    # torch.manual_seed(42)
 
     # Load and assign the data
     pd_dataframe, units = load_high_amp_doe_data()
@@ -262,6 +274,12 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True):
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
     model = ExactGPModel(train_x_tensor, train_y_tensor, likelihood)
 
+    # Load the pretrained model if provided
+    if pretrained_model is not None:
+        my_dir = os.getcwd()
+        pretrained_model_path = os.path.join(Path(my_dir).parents[0], pretrained_model)
+        model.load_state_dict(torch.load(pretrained_model_path))
+
     # Training the model
     model.train()
     likelihood.train()
@@ -273,7 +291,8 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True):
     loss_list = []
 
     # Training loop
-    training_iterations = int(20e3)
+    training_iterations = int(100e3)
+    # training_iterations = int(0)
     for i in range(training_iterations):
         optimizer.zero_grad()
         output = model(train_x_tensor)
@@ -290,11 +309,12 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True):
     # Plot the partial dependence plots
     if plot:
         # Plot the partial dependence plots
+        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=200)
+        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=300)
         plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=400)
         plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=500)
         plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=600)
         plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=700)
-
 
         # Plot the loss to a new figure
         fig = plt.figure(figsize=(8, 6))
@@ -320,8 +340,9 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--target", type=str, help="Target variable for Gaussia process regression", default="voltage")
     parser.add_argument("-c", "--cutoff", type=float, help="Datapoints below cutoff current are removed from training data", default=0.0)
     parser.add_argument("-p", "--plot", type=bool, help="Plot the input/output data", default=True)
+    parser.add_argument("-m", "--model", type=str, help="Load a pretrained GPR model", default=None)
 
     args = parser.parse_args()
 
     # Call the main function                        
-    train_gpr_model_on_doe_data(args.target, args.cutoff, args.plot)
+    train_gpr_model_on_doe_data(args.target, args.cutoff, args.plot, args.model)
