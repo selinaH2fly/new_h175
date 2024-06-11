@@ -116,33 +116,34 @@ def load_high_amp_doe_data():
 
     return df, units
 
-def partial_dependence(model, X, feature, grid_resolution=100):
+def partial_dependence(model, X, feature_index, fixed_feature_index=None, fixed_value=None, grid_resolution=100):
     """
-    Calculate partial dependence for a given feature.
+    Calculate partial dependence for a given feature with one feature fixed.
     
     Parameters:
     - model: The trained gpytorch model.
     - X: The input data as a numpy array or pandas DataFrame.
-    - feature: The index of the feature to vary.
+    - feature_index: The index of the feature to vary.
+    - fixed_feature_index: The index of the feature to fix.
+    - fixed_value: The value to fix the specified feature at.
     - grid_resolution: The number of points to evaluate.
 
     Returns:
     - grid: The values of the feature.
     - pdp: The partial dependence values.
     """
-    # Determine the range of the feature
-    feature_min, feature_max = X[:, feature].min(), X[:, feature].max()
-    
-    # Create a grid of values for the feature
+    feature_min, feature_max = X[:, feature_index].min(), X[:, feature_index].max()
     grid = np.linspace(feature_min, feature_max, grid_resolution)
-    
-    # Create a copy of the input data
     X_temp = np.tile(X, (grid_resolution, 1))
-    
+
     # Replace the values of the feature with the grid values
-    X_temp[:, feature] = np.repeat(grid, X.shape[0])
+    for i, value in enumerate(grid):
+        X_temp[i * X.shape[0]:(i + 1) * X.shape[0], feature_index] = value
     
-    # Convert the data to a torch tensor
+    # Fix the specific feature value if provided
+    if fixed_feature_index is not None and fixed_value is not None:
+        X_temp[:, fixed_feature_index] = fixed_value
+    
     X_temp = torch.tensor(X_temp, dtype=torch.float)
     
     # Compute the predictions
@@ -150,15 +151,22 @@ def partial_dependence(model, X, feature, grid_resolution=100):
     with torch.no_grad(), gpytorch.settings.fast_pred_var():
         predictions = model(X_temp).mean.numpy()
     
-    # Average the predictions across the samples
+    # Average the predictions across the samples for each grid value
     pdp = predictions.reshape(grid_resolution, X.shape[0]).mean(axis=1)
     
     return grid, pdp
 
-def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units, target='voltage'):
+def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units, target='voltage', fixed_feature=None, fixed_value=400):
 
     # Making predictions
     model.eval()
+
+    # Get the index of the fixed feature
+    if fixed_feature is not None:
+        feature_names_list = list(feature_names)
+        fixed_feature_index = feature_names_list.index(fixed_feature)
+    else:
+        fixed_feature_index = None
 
     # Convert the training data to a numpy array for easier manipulation
     train_x_np = train_x_tensor.numpy()
@@ -167,28 +175,43 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units,
     fig, axes = plt.subplots(4, 3, figsize=(18, 12))  # 4 rows, 3 columns of subplots
 
     # Adjust the layout
-    fig.subplots_adjust(hspace=1)
+    fig.subplots_adjust(hspace=2)
 
-    # Create figure title
-    fig.suptitle(f'Gaussian Process Regression Model - Partial Dependence Plots', fontsize=16)
+    # Create figure title (with fixed feature value if provided)
+    if fixed_feature is not None:
+        fig.suptitle(f'DoE-Data, Gaussian Process Rgression Model - Partial Dependence Analysis', fontsize=16)
+    else:
+        fig.suptitle(f'GPR Model - Partial Dependence Plots', fontsize=16)
 
     # Loop through each feature and plot its partial dependence
     for i in range(11):
-        grid, pdp = partial_dependence(model, train_x_np, i)
-        ax = axes[i // 3, i % 3]  # Determine subplot location
-        ax.plot(grid, pdp)
-        # ax.set_ylim([0, 300])
-        ax.set_ylabel(f'{target}')
-        # assign unit if it is not none
-        if not pd.isna(feature_units[feature_names[i]]):
-            ax.set_xlabel(f'{feature_names[i]} ({feature_units[feature_names[i]]})')
+        if i != fixed_feature_index:  # Skip the fixed feature
+            grid, pdp = partial_dependence(model, train_x_np, i, fixed_feature_index=fixed_feature_index, fixed_value=fixed_value)
+            ax = axes[i // 3, i % 3]  # Determine subplot location
+            ax.plot(grid, pdp)
+            # ax.set_ylim([0, 300])
+            ax.set_ylabel(f'{target}')
+            # assign unit if it is not none
+            if not pd.isna(feature_units[feature_names[i]]):
+                ax.set_xlabel(f'{feature_names[i]} ({feature_units[feature_names[i]]})')
+            else:
+                ax.set_xlabel(f'{feature_names[i]} (-)')
+            ax.grid(True, zorder=1)
         else:
-            ax.set_xlabel(f'{feature_names[i]} (-)')
-        ax.grid(True, zorder=1)
+            # Write the fixed feature value in the subplot in bold
+            ax = axes[i // 3, i % 3]
+            ax.text(0.5, 0.5, f'Fixed {fixed_feature} at {fixed_value} ({feature_units[feature_names[fixed_feature_index]]})', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12, fontweight='bold')
+
 
     # Remove empty subplot (if any)
     if len(axes.flatten()) > 11:
         fig.delaxes(axes.flatten()[-1])
+
+    # Unify the y-axis limits to min and max values of the subplots
+    # y_min = min([ax.get_ylim()[0] for ax in axes.flatten() if ax.get_ylim()[0] != np.nan])
+    # y_max = max([ax.get_ylim()[1] for ax in axes.flatten() if ax.get_ylim()[1] != np.nan])
+    for ax in axes.flatten():
+        ax.set_ylim([160, 180]) 
 
     # Finalize the layout
     plt.tight_layout()
@@ -196,8 +219,11 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units,
     # Draw the canvas
     fig.canvas.draw()
 
-    # Save the figure
-    plt.savefig('partial_dependence_plots.png', bbox_inches='tight')
+    # Save the figure with title according to the fixed feature value
+    if fixed_feature is not None:
+        plt.savefig(f'partial_dependence_plots_{fixed_feature}_{fixed_value}.png', bbox_inches='tight')
+    else: 
+        plt.savefig('partial_dependence_plots.png', bbox_inches='tight')
 
     # Display the figure
     plt.show()
@@ -242,7 +268,7 @@ def train_gpr_model_on_doe_data(target='voltage', plot=True):
     loss_list = []
 
     # Training loop
-    training_iterations = int(200)
+    training_iterations = int(200e3)
     for i in range(training_iterations):
         optimizer.zero_grad()
         output = model(train_x_tensor)
@@ -259,7 +285,9 @@ def train_gpr_model_on_doe_data(target='voltage', plot=True):
     # Plot the partial dependence plots
     if plot:
         # Plot the partial dependence plots
-        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage')
+        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=400)
+        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=600)
+
 
         # Plot the loss to a new figure
         fig = plt.figure(figsize=(8, 6))
@@ -284,7 +312,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train a Gaussian process regression model on Powercell DoE data")
     parser.add_argument("-t", "--target", type=str, help="Target variable for Gaussia process regression", default="voltage")
     parser.add_argument("-p", "--plot", type=bool, help="Plot the input/output data", default=True)
-
 
     args = parser.parse_args()
 
