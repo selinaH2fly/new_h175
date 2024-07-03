@@ -22,11 +22,7 @@ import pandas as pd
 import random
 
 # Import parameters
-# import parameters
-
-# Import functions to load and visualize the doe dataset
-# from load_doe_data import load_doe_data
-# from load_doe_data import plot_doe_data
+import parameters
 
 # Define a GP model
 class ExactGPModel(gpytorch.models.ExactGP):
@@ -116,6 +112,34 @@ def load_high_amp_doe_data():
 
     return df, units
 
+# Preprocess the data
+def preprocess_data(df, target, cutoff_current=0):
+
+    # Extract the input features and target variable
+    train_x = df[['current', 'anode_stoich', 'temp_anode_inlet', 'pressure_anode_inlet', 'temp_anode_dewpoint_gas',
+                  'cathode_stoich', 'temp_cathode_inlet', 'pressure_cathode_inlet', 'temp_cathode_dewpoint_gas',
+                  'temp_coolant_inlet', 'flow_coolant']]
+    train_y = df[[target]]
+
+    # Get the feature and target names
+    feature_names = train_x.columns
+
+    # Remove current values below the cutoff value
+    indices = train_x[train_x['current'] <= cutoff_current].index
+    train_x = train_x.drop(indices)
+    train_y = train_y.drop(indices)
+
+    # Convert the data to numeric
+    train_x = train_x.apply(pd.to_numeric, errors='coerce', downcast='float')
+    train_y = train_y.apply(pd.to_numeric, errors='coerce', downcast='float')
+
+    # Convert the data to PyTorch tensors
+    train_x_tensor = torch.tensor(train_x.values, dtype=torch.float32)
+    train_y_tensor = torch.tensor(train_y.values, dtype=torch.float32)
+    train_y_tensor = train_y_tensor.flatten()
+
+    return train_x_tensor, train_y_tensor, feature_names
+
 def partial_dependence(model, X, feature_index, fixed_feature_index=None, fixed_value=None, grid_resolution=100):
     """
     Calculate partial dependence for a given feature with one feature fixed.
@@ -177,11 +201,8 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units,
     # Adjust the layout
     fig.subplots_adjust(hspace=2)
 
-    # Create figure title (with fixed feature value if provided)
-    if fixed_feature is not None:
-        fig.suptitle(f'DoE-Data, Gaussian Process Rgression Model - Partial Dependence Analysis', fontsize=16)
-    else:
-        fig.suptitle(f'GPR Model - Partial Dependence Plots', fontsize=16)
+    # Create figure title
+    fig.suptitle(f'GPR Model - Partial Dependence Plots', fontsize=16)
 
     # Loop through each feature and plot its partial dependence
     for i in range(11):
@@ -238,37 +259,23 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units,
 # Main function
 def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, pretrained_model=None):
 
-    # Create a folder to store the training results
-    create_experiment_folder()
+    # Load parameters
+    _params_training = parameters.Training_Parameters()
+    # _params_model = parameters.Model_Parameters()
+    _params_logging = parameters.Logging_Parameters()
 
     # Set the random seed for reproducibility
-    # random.seed(42)
-    # np.random.seed(42)
-    # torch.manual_seed(42)
+    if _params_training.seed is not None:
+        random.seed(_params_training.seed)
+        np.random.seed(_params_training.seed)
+        torch.manual_seed(_params_training.seed)
+
+    # Create a folder to store the training results
+    create_experiment_folder(_params_training=_params_training, _params_logging=_params_logging)
 
     # Load and assign the data
     pd_dataframe, units = load_high_amp_doe_data()
-    train_x = pd_dataframe[['current', 'anode_stoich', 'temp_anode_inlet', 'pressure_anode_inlet', 'temp_anode_dewpoint_gas',
-                            'cathode_stoich', 'temp_cathode_inlet', 'pressure_cathode_inlet', 'temp_cathode_dewpoint_gas',
-                            'temp_coolant_inlet', 'flow_coolant']]
-    feature_names = train_x.columns
-    train_y = pd_dataframe[[target]]
-
-    # Remove current values below the cutoff value
-    indices = train_x[train_x['current'] <= cutoff_current].index
-    train_x = train_x.drop(indices)
-    train_y = train_y.drop(indices)
-
-    # assign the data to a PyTorch tensor
-    for column in train_x.columns:
-        train_x[column] = pd.to_numeric(train_x[column].values, errors='coerce', downcast='float')
-    for column in train_y.columns:
-        train_y[column] = pd.to_numeric(train_y[column].values, errors='coerce', downcast='float')
-
-    # Convert the data to PyTorch tensors
-    train_x_tensor = torch.tensor(train_x.values, dtype=torch.float32)
-    train_y_tensor = torch.tensor(train_y.values, dtype=torch.float32)
-    train_y_tensor = train_y_tensor.flatten()
+    train_x_tensor, train_y_tensor, feature_names = preprocess_data(pd_dataframe, target, cutoff_current)
 
     # Likelihood and model
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
@@ -284,37 +291,36 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
     model.train()
     likelihood.train()
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
+    optimizer = torch.optim.Adam(model.parameters(), lr=_params_training.learning_rate)
     mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
     # List to store the loss values and iterations
     loss_list = []
 
     # Training loop
-    training_iterations = int(100e3)
-    # training_iterations = int(0)
+    training_iterations = int(_params_training.iterations)
     for i in range(training_iterations):
         optimizer.zero_grad()
         output = model(train_x_tensor)
         loss = -mll(output, train_y_tensor)
-        if i % 100 == 0:
+        if i % _params_logging.log_interval == 0:
             print(f'Iteration {i}/{training_iterations} - Loss: {loss.item()}')
             loss_list.append(loss.item())
         loss.backward()
         optimizer.step()
 
-    # Save the model
-    torch.save(model.state_dict(), 'model_current_to_voltage.pth')
+    # Save the model refering to the target variable
+    torch.save(model.state_dict(), f'gpr_model_{target}.pth')
 
     # Plot the partial dependence plots
     if plot:
         # Plot the partial dependence plots
-        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=200)
-        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=300)
-        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=400)
-        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=500)
-        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=600)
-        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target='voltage', fixed_feature='current', fixed_value=700)
+        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=200)
+        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=300)
+        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=400)
+        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=500)
+        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=600)
+        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=700)
 
         # Plot the loss to a new figure
         fig = plt.figure(figsize=(8, 6))
