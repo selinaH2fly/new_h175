@@ -179,6 +179,7 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
 
     return train_x_tensor, train_y_tensor, feature_names
 
+# Helper function for calculating the relative humidity
 def calculate_relative_humidity(dewpoint_degC, air_temp_degC):
     """
     Calculate the relative humidity using the PowerCell formula from dewpoint temperature and actual temperature.
@@ -195,6 +196,7 @@ def calculate_relative_humidity(dewpoint_degC, air_temp_degC):
     
     return rh_perc
 
+# Computation of partial dependence
 def partial_dependence(model, X, feature_index, fixed_feature_index=None, fixed_value=None, grid_resolution=100):
     """
     Calculate partial dependence for a given feature with one feature fixed.
@@ -235,6 +237,34 @@ def partial_dependence(model, X, feature_index, fixed_feature_index=None, fixed_
     
     return grid, pdp
 
+# Plot the model performance
+def plot_model_performance(model, likelihood, input_tensor, target_tensor, target, iteration):
+
+    # Evaluate the model on the training data
+    with torch.no_grad(), gpytorch.settings.fast_pred_var():
+        predictions = model(input_tensor).mean.numpy()
+
+    # Initialize plot
+    f, ax = plt.subplots(1, 1)
+
+    # Set the title
+    ax.set_title(f'Model Performance Snapshot - Iteration: {iteration}')
+
+    # Set the labels
+    ax.set_xlabel('Normalized Targets')
+    ax.set_ylabel('Normalized Predictions')
+
+    # Plot target vs. predictions
+    ax.plot(target_tensor.numpy(), predictions, 'o', label='Training Data', color='blue')
+
+    # Plot the diagonal line
+    ax.plot([target_tensor.min(), target_tensor.max()], [target_tensor.min(), target_tensor.max()], 'k--', lw=2)
+
+    # Save and close the figure
+    plt.savefig(f'gpr_model_performance_{target}_{iteration}.png', dpi=300, bbox_inches='tight')
+    plt.close()
+
+# Partial dependence plots
 def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units, target='voltage', fixed_feature=None, fixed_value=400):
 
     # Making predictions
@@ -342,7 +372,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
         pretrained_model_path = os.path.join(Path(my_dir).parents[0], pretrained_model)
         model.load_state_dict(torch.load(pretrained_model_path))
 
-    # Training the model
+    # Set the model to training mode
     model.train()
     likelihood.train()
 
@@ -363,13 +393,15 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
             print(f'Iteration {i}/{training_iterations} - Loss: {loss.item()}')
             loss_list.append(loss.item())
             iterations.append(i)
+            plot_model_performance(model, likelihood, train_x_tensor, train_y_tensor, target, i)
         loss.backward()
-        optimizer.step()
+        optimizer.step() # the actual update step!
 
     if (i+1) % _params_logging.log_interval == 0:
         print(f'Iteration {(i+1)}/{training_iterations} - Loss: {loss.item()}')
         loss_list.append(loss.item())
         iterations.append((i+1))
+        plot_model_performance(model, likelihood, train_x_tensor, train_y_tensor, target, (i+1))
 
     # Save the model refering to the target variable
     torch.save(model.state_dict(), f'gpr_model_{target}.pth')
