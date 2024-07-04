@@ -147,6 +147,10 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
     train_x_tensor = torch.tensor(list(training_input_data_dict.values()), dtype=torch.float32).T
     train_y_tensor = torch.tensor(training_output_data, dtype=torch.float32)
 
+    # Normalize the training data
+    train_x_tensor = (train_x_tensor - train_x_tensor.mean(dim=0)) / train_x_tensor.std(dim=0)
+    train_y_tensor = (train_y_tensor - train_y_tensor.mean()) / train_y_tensor.std()
+
     # Get the feature names
     feature_names = list(training_input_data_dict.keys())
 
