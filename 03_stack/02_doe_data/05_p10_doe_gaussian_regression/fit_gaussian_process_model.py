@@ -124,7 +124,7 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
     # Create a dictionary for processed training input data
     input_data_tensor = {}
     input_data_tensor['cell_power_W'] = [power / 275 * 1000 for power in df_dict['power']]
-    input_data_tensor['anode_rh_in_perc'] =  [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_anode_dewpoint_gas'], df_dict['temp_anode_inlet'])]
+    input_data_tensor['anode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_anode_dewpoint_gas'], df_dict['temp_anode_inlet'])]
     input_data_tensor['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
     input_data_tensor['cathode_stoich_'] = df_dict['cathode_stoich']
     input_data_tensor['cathode_pressure_in_barg'] = df_dict['pressure_cathode_inlet']
@@ -159,19 +159,20 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
     test_input_tensor = input_data_tensor[test_indices]
     test_target_tensor = target_data_tensor[test_indices]
 
-
     # Normalize the training data
-    # train_input_tensor = (train_input_tensor - train_input_tensor.mean(dim=0)) / train_input_tensor.std(dim=0)
-    # test_input_tensor = (test_input_tensor - train_input_tensor.mean(dim=0)) / train_input_tensor.std(dim=0)
+    train_input_mean = train_input_tensor.mean(dim=0)
+    train_input_std = train_input_tensor.std(dim=0)
+    train_input_tensor = (train_input_tensor - train_input_mean) / train_input_std
 
-    # # Normalize the target data
-    # train_target_tensor = (train_target_tensor - train_target_tensor.mean()) / train_target_tensor.std()
-    # test_target_tensor = (test_target_tensor - train_target_tensor.mean()) / train_target_tensor.std()
+    train_target_mean = train_target_tensor.mean()
+    train_target_std = train_target_tensor.std()
+    train_target_tensor = (train_target_tensor - train_target_mean) / train_target_std
 
-    # Get the feature names
-    # feature_names = list(input_data_tensor.keys())
+    # Normalize the test data using the training data statistics
+    test_input_tensor = (test_input_tensor - train_input_mean) / train_input_std
+    test_target_tensor = (test_target_tensor - train_target_mean) / train_target_std
 
-    return train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor
+    return train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, train_input_mean, train_input_std, train_target_mean, train_target_std
 
 # Helper function for calculating the relative humidity
 def calculate_relative_humidity(dewpoint_degC, air_temp_degC):
@@ -247,11 +248,11 @@ def plot_model_performance(model, likelihood, input_tensor, target_tensor, targe
     ax.set_title(f'Model Performance Snapshot - Iteration: {iteration}')
 
     # Set the labels
-    ax.set_xlabel('Targets')
-    ax.set_ylabel('Predictions')
+    ax.set_xlabel('Normalized Targets')
+    ax.set_ylabel('Normalized Predictions')
 
     # Set the aspect ratio to be equal
-    ax.set_aspect('equal', adjustable='box')
+    # ax.set_aspect('equal', adjustable='box')
     ax.grid(True, zorder=1)
 
     # Plot the diagonal line
@@ -363,7 +364,8 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
 
     # Load and assign the data
     pd_dataframe, _ = load_high_amp_doe_data()
-    train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor = preprocess_data(pd_dataframe, target, cutoff_current)
+    train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, _, _, _, _ = \
+        preprocess_data(pd_dataframe, target, cutoff_current)
 
     # Likelihood and model
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
@@ -422,13 +424,13 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
         # Plot the loss to a new figure
         fig = plt.figure(figsize=(8, 6))
         plt.plot(iterations, loss_list)
-        plt.xlabel('Iterations (x100)')
-        plt.ylabel('Loss')
-        # plt.yscale('log')
+        plt.xlabel('Iterations')
+        plt.ylabel('MLL Loss')
+        plt.yscale('log')
         plt.grid(True, zorder=1)
         plt.title('Loss During Training')
         plt.savefig('loss.png', dpi=300, bbox_inches='tight')
-        plt.show()
+        plt.close()
 
     # Save the loss values and the corresponding iteration values to a dat file
     with open('loss_values.dat', 'w') as file:

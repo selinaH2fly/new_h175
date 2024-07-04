@@ -5,7 +5,7 @@ class Training_Parameters:
     def __init__(self):
         self.iterations = 10e3
         # self.batch_size = 4
-        self.learning_rate = 0.1
+        self.learning_rate = 0.01
         # self.split_ratio = 0.8
         # self.momentum = 0.9
         # self.dropout_prob = 0.1
