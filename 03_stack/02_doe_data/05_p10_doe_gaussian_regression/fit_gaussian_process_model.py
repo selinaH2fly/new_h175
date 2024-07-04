@@ -122,62 +122,56 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
     df_dict = df.to_dict('list')
 
     # Create a dictionary for processed training input data
-    training_input_data_dict = {}
-    training_input_data_dict['cell_power_W'] = [power / 275 * 1000 for power in df_dict['power']]
-    training_input_data_dict['anode_rh_in_perc'] =  [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_anode_dewpoint_gas'], df_dict['temp_anode_inlet'])]
-    training_input_data_dict['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
-    training_input_data_dict['cathode_stoich_'] = df_dict['cathode_stoich']
-    training_input_data_dict['cathode_pressure_in_barg'] = df_dict['pressure_cathode_inlet']
-    training_input_data_dict['coolant_temp_in_degC'] = df_dict['temp_coolant_inlet']
-    training_input_data_dict['coolant_flow_in_lpm'] = df_dict['flow_coolant']
+    input_data_tensor = {}
+    input_data_tensor['cell_power_W'] = [power / 275 * 1000 for power in df_dict['power']]
+    input_data_tensor['anode_rh_in_perc'] =  [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_anode_dewpoint_gas'], df_dict['temp_anode_inlet'])]
+    input_data_tensor['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
+    input_data_tensor['cathode_stoich_'] = df_dict['cathode_stoich']
+    input_data_tensor['cathode_pressure_in_barg'] = df_dict['pressure_cathode_inlet']
+    input_data_tensor['coolant_temp_in_degC'] = df_dict['temp_coolant_inlet']
+    input_data_tensor['coolant_flow_in_lpm'] = df_dict['flow_coolant']
 
     # Try to find the target variable in the df_dict
     if target in df_dict:
-        training_output_data = df_dict[target]
+        target_data = df_dict[target]
     else:
         # Check for custom targets
         if target == 'eta_lhv':
-            training_output_data = [voltage / 275 / 1.253 for voltage in df_dict['voltage']]
+            target_data = [voltage / 275 / 1.253 for voltage in df_dict['voltage']]
         elif target == 'eta_hhv':
-            training_output_data = [voltage / 275 / 1.481 for voltage in df_dict['voltage']]
+            target_data = [voltage / 275 / 1.481 for voltage in df_dict['voltage']]
         else:
             raise ValueError(f'Target variable {target} not found in the dataframe!')
 
     # Convert to pytorch tensors
-    train_x_tensor = torch.tensor(list(training_input_data_dict.values()), dtype=torch.float32).T
-    train_y_tensor = torch.tensor(training_output_data, dtype=torch.float32)
+    input_data_tensor = torch.tensor(list(input_data_tensor.values()), dtype=torch.float32).T
+    target_data_tensor = torch.tensor(target_data, dtype=torch.float32)
+
+    # Randomly split the data into training and testing sets
+    train_size = int(0.8 * len(input_data_tensor))
+    indices = torch.randperm(len(input_data_tensor))
+    train_indices = indices[:train_size]
+    test_indices = indices[train_size:]
+
+    train_input_tensor = input_data_tensor[train_indices]
+    train_target_tensor = target_data_tensor[train_indices]
+
+    test_input_tensor = input_data_tensor[test_indices]
+    test_target_tensor = target_data_tensor[test_indices]
+
 
     # Normalize the training data
-    train_x_tensor = (train_x_tensor - train_x_tensor.mean(dim=0)) / train_x_tensor.std(dim=0)
-    train_y_tensor = (train_y_tensor - train_y_tensor.mean()) / train_y_tensor.std()
+    # train_input_tensor = (train_input_tensor - train_input_tensor.mean(dim=0)) / train_input_tensor.std(dim=0)
+    # test_input_tensor = (test_input_tensor - train_input_tensor.mean(dim=0)) / train_input_tensor.std(dim=0)
+
+    # # Normalize the target data
+    # train_target_tensor = (train_target_tensor - train_target_tensor.mean()) / train_target_tensor.std()
+    # test_target_tensor = (test_target_tensor - train_target_tensor.mean()) / train_target_tensor.std()
 
     # Get the feature names
-    feature_names = list(training_input_data_dict.keys())
+    # feature_names = list(input_data_tensor.keys())
 
-    # # Extract the input features and target variable
-    # train_x = df[['current', 'anode_stoich', 'temp_anode_inlet', 'pressure_anode_inlet', 'temp_anode_dewpoint_gas',
-    #               'cathode_stoich', 'temp_cathode_inlet', 'pressure_cathode_inlet', 'temp_cathode_dewpoint_gas',
-    #               'temp_coolant_inlet', 'flow_coolant']]
-    # train_y = df[[target]]
-
-    # # Get the feature and target names
-    # feature_names = train_x.columns
-
-    # # Remove current values below the cutoff value
-    # indices = train_x[train_x['current'] <= cutoff_current].index
-    # train_x = train_x.drop(indices)
-    # train_y = train_y.drop(indices)
-
-    # # Convert the data to numeric
-    # train_x = train_x.apply(pd.to_numeric, errors='coerce', downcast='float')
-    # train_y = train_y.apply(pd.to_numeric, errors='coerce', downcast='float')
-
-    # # Convert the data to PyTorch tensors
-    # train_x_tensor = torch.tensor(train_x.values, dtype=torch.float32)
-    # train_y_tensor = torch.tensor(train_y.values, dtype=torch.float32)
-    # train_y_tensor = train_y_tensor.flatten()
-
-    return train_x_tensor, train_y_tensor, feature_names
+    return train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor
 
 # Helper function for calculating the relative humidity
 def calculate_relative_humidity(dewpoint_degC, air_temp_degC):
@@ -241,8 +235,10 @@ def partial_dependence(model, X, feature_index, fixed_feature_index=None, fixed_
 def plot_model_performance(model, likelihood, input_tensor, target_tensor, target, iteration):
 
     # Evaluate the model on the training data
-    with torch.no_grad(), gpytorch.settings.fast_pred_var():
-        predictions = model(input_tensor).mean.numpy()
+    model.eval()
+    likelihood.eval()
+    with torch.no_grad():
+        predictions = likelihood(model(input_tensor)).mean.numpy()
 
     # Initialize plot
     f, ax = plt.subplots(1, 1)
@@ -251,18 +247,25 @@ def plot_model_performance(model, likelihood, input_tensor, target_tensor, targe
     ax.set_title(f'Model Performance Snapshot - Iteration: {iteration}')
 
     # Set the labels
-    ax.set_xlabel('Normalized Targets')
-    ax.set_ylabel('Normalized Predictions')
+    ax.set_xlabel('Targets')
+    ax.set_ylabel('Predictions')
 
-    # Plot target vs. predictions
-    ax.plot(target_tensor.numpy(), predictions, 'o', label='Training Data', color='blue')
+    # Set the aspect ratio to be equal
+    ax.set_aspect('equal', adjustable='box')
+    ax.grid(True, zorder=1)
 
     # Plot the diagonal line
     ax.plot([target_tensor.min(), target_tensor.max()], [target_tensor.min(), target_tensor.max()], 'k--', lw=2)
 
+    # Plot target vs. predictions
+    ax.plot(target_tensor.numpy(), predictions, 'o', label='Training Data', color='blue')
     # Save and close the figure
     plt.savefig(f'gpr_model_performance_{target}_{iteration}.png', dpi=300, bbox_inches='tight')
     plt.close()
+
+    # Reset the model to training mode
+    model.train()
+    likelihood.train()
 
 # Partial dependence plots
 def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units, target='voltage', fixed_feature=None, fixed_value=400):
@@ -359,12 +362,12 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
     create_experiment_folder(_params_training=_params_training, _params_logging=_params_logging)
 
     # Load and assign the data
-    pd_dataframe, units = load_high_amp_doe_data()
-    train_x_tensor, train_y_tensor, feature_names = preprocess_data(pd_dataframe, target, cutoff_current)
+    pd_dataframe, _ = load_high_amp_doe_data()
+    train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor = preprocess_data(pd_dataframe, target, cutoff_current)
 
     # Likelihood and model
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
-    model = ExactGPModel(train_x_tensor, train_y_tensor, likelihood)
+    model = ExactGPModel(train_input_tensor, train_target_tensor, likelihood)
 
     # Load the pretrained model if provided
     if pretrained_model is not None:
@@ -387,13 +390,13 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
     training_iterations = int(_params_training.iterations)
     for i in range(training_iterations):
         optimizer.zero_grad()
-        output = model(train_x_tensor)
-        loss = -mll(output, train_y_tensor)
+        output = model(train_input_tensor)
+        loss = -mll(output, train_target_tensor)
         if i % _params_logging.log_interval == 0:
             print(f'Iteration {i}/{training_iterations} - Loss: {loss.item()}')
             loss_list.append(loss.item())
             iterations.append(i)
-            plot_model_performance(model, likelihood, train_x_tensor, train_y_tensor, target, i)
+            plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, target, i)
         loss.backward()
         optimizer.step() # the actual update step!
 
@@ -401,7 +404,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
         print(f'Iteration {(i+1)}/{training_iterations} - Loss: {loss.item()}')
         loss_list.append(loss.item())
         iterations.append((i+1))
-        plot_model_performance(model, likelihood, train_x_tensor, train_y_tensor, target, (i+1))
+        plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, target, (i+1))
 
     # Save the model refering to the target variable
     torch.save(model.state_dict(), f'gpr_model_{target}.pth')
