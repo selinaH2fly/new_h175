@@ -347,6 +347,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
 
     # List to store the loss values and iterations
     loss_list = []
+    iterations = []
 
     # Training loop
     training_iterations = int(_params_training.iterations)
@@ -357,12 +358,14 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
         if i % _params_logging.log_interval == 0:
             print(f'Iteration {i}/{training_iterations} - Loss: {loss.item()}')
             loss_list.append(loss.item())
+            iterations.append(i)
         loss.backward()
         optimizer.step()
 
     if (i+1) % _params_logging.log_interval == 0:
-        print(f'Iteration {i}/{training_iterations} - Loss: {loss.item()}')
+        print(f'Iteration {(i+1)}/{training_iterations} - Loss: {loss.item()}')
         loss_list.append(loss.item())
+        iterations.append((i+1))
 
     # Save the model refering to the target variable
     torch.save(model.state_dict(), f'gpr_model_{target}.pth')
@@ -379,19 +382,19 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
 
         # Plot the loss to a new figure
         fig = plt.figure(figsize=(8, 6))
-        plt.plot(loss_list)
+        plt.plot(iterations, loss_list)
         plt.xlabel('Iterations (x100)')
         plt.ylabel('Loss')
-        plt.yscale('log')
+        # plt.yscale('log')
         plt.grid(True, zorder=1)
         plt.title('Loss During Training')
         plt.savefig('loss.png', dpi=300, bbox_inches='tight')
         plt.show()
 
-    # Save the loss values to a dat file
+    # Save the loss values and the corresponding iteration values to a dat file
     with open('loss_values.dat', 'w') as file:
-        for loss in loss_list:
-            file.write(str(loss) + '\n')
+        writer = csv.writer(file)
+        writer.writerows(zip(iterations, loss_list))
 
 # Entry point of the script
 if __name__ == '__main__':
