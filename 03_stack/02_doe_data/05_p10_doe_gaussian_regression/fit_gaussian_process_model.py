@@ -113,32 +113,83 @@ def load_high_amp_doe_data():
     return df, units
 
 # Preprocess the data
-def preprocess_data(df, target, cutoff_current=0):
+def preprocess_data(df, target='voltage', cutoff_current=0):
 
-    # Extract the input features and target variable
-    train_x = df[['current', 'anode_stoich', 'temp_anode_inlet', 'pressure_anode_inlet', 'temp_anode_dewpoint_gas',
-                  'cathode_stoich', 'temp_cathode_inlet', 'pressure_cathode_inlet', 'temp_cathode_dewpoint_gas',
-                  'temp_coolant_inlet', 'flow_coolant']]
-    train_y = df[[target]]
+    # Drop data points from the dataframe with current values below the cutoff value
+    df = df[df['current'] > cutoff_current]
 
-    # Get the feature and target names
-    feature_names = train_x.columns
+    # Convert the dataframes to dictionaries
+    df_dict = df.to_dict('list')
 
-    # Remove current values below the cutoff value
-    indices = train_x[train_x['current'] <= cutoff_current].index
-    train_x = train_x.drop(indices)
-    train_y = train_y.drop(indices)
+    # Create a dictionary for processed training input data
+    training_input_data_dict = {}
+    training_input_data_dict['cell_power_W'] = [power / 275 * 1000 for power in df_dict['power']]
+    training_input_data_dict['anode_rh_in_perc'] =  [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_anode_dewpoint_gas'], df_dict['temp_anode_inlet'])]
+    training_input_data_dict['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
+    training_input_data_dict['cathode_stoich_'] = df_dict['cathode_stoich']
+    training_input_data_dict['cathode_pressure_in_barg'] = df_dict['pressure_cathode_inlet']
+    training_input_data_dict['coolant_temp_in_degC'] = df_dict['temp_coolant_inlet']
+    training_input_data_dict['coolant_flow_in_lpm'] = df_dict['flow_coolant']
 
-    # Convert the data to numeric
-    train_x = train_x.apply(pd.to_numeric, errors='coerce', downcast='float')
-    train_y = train_y.apply(pd.to_numeric, errors='coerce', downcast='float')
+    # Try to find the target variable in the df_dict
+    if target in df_dict:
+        training_output_data = df_dict[target]
+    else:
+        # Check for custom targets
+        if target == 'eta_lhv':
+            training_output_data = [voltage / 275 / 1.253 for voltage in df_dict['voltage']]
+        elif target == 'eta_hhv':
+            training_output_data = [voltage / 275 / 1.481 for voltage in df_dict['voltage']]
+        else:
+            raise ValueError(f'Target variable {target} not found in the dataframe!')
 
-    # Convert the data to PyTorch tensors
-    train_x_tensor = torch.tensor(train_x.values, dtype=torch.float32)
-    train_y_tensor = torch.tensor(train_y.values, dtype=torch.float32)
-    train_y_tensor = train_y_tensor.flatten()
+    # Convert to pytorch tensors
+    train_x_tensor = torch.tensor(list(training_input_data_dict.values()), dtype=torch.float32).T
+    train_y_tensor = torch.tensor(training_output_data, dtype=torch.float32)
+
+    # Get the feature names
+    feature_names = list(training_input_data_dict.keys())
+
+    # # Extract the input features and target variable
+    # train_x = df[['current', 'anode_stoich', 'temp_anode_inlet', 'pressure_anode_inlet', 'temp_anode_dewpoint_gas',
+    #               'cathode_stoich', 'temp_cathode_inlet', 'pressure_cathode_inlet', 'temp_cathode_dewpoint_gas',
+    #               'temp_coolant_inlet', 'flow_coolant']]
+    # train_y = df[[target]]
+
+    # # Get the feature and target names
+    # feature_names = train_x.columns
+
+    # # Remove current values below the cutoff value
+    # indices = train_x[train_x['current'] <= cutoff_current].index
+    # train_x = train_x.drop(indices)
+    # train_y = train_y.drop(indices)
+
+    # # Convert the data to numeric
+    # train_x = train_x.apply(pd.to_numeric, errors='coerce', downcast='float')
+    # train_y = train_y.apply(pd.to_numeric, errors='coerce', downcast='float')
+
+    # # Convert the data to PyTorch tensors
+    # train_x_tensor = torch.tensor(train_x.values, dtype=torch.float32)
+    # train_y_tensor = torch.tensor(train_y.values, dtype=torch.float32)
+    # train_y_tensor = train_y_tensor.flatten()
 
     return train_x_tensor, train_y_tensor, feature_names
+
+def calculate_relative_humidity(dewpoint_degC, air_temp_degC):
+    """
+    Calculate the relative humidity using the PowerCell formula from dewpoint temperature and actual temperature.
+    TODO: Check if the formula is valid for h2/n2 mixtures (i.e., anode supply) as well.
+    
+    Returns:
+    float: Relative humidity in percentage.
+    """
+    constant1 = 7.337936
+    constant2 = 229.3975
+    
+    exponent = constant1 * ((dewpoint_degC / (dewpoint_degC + constant2)) - (air_temp_degC / (air_temp_degC + constant2)))
+    rh_perc = 100 * (10 ** exponent)
+    
+    return rh_perc
 
 def partial_dependence(model, X, feature_index, fixed_feature_index=None, fixed_value=None, grid_resolution=100):
     """
@@ -309,18 +360,22 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
         loss.backward()
         optimizer.step()
 
+    if (i+1) % _params_logging.log_interval == 0:
+        print(f'Iteration {i}/{training_iterations} - Loss: {loss.item()}')
+        loss_list.append(loss.item())
+
     # Save the model refering to the target variable
     torch.save(model.state_dict(), f'gpr_model_{target}.pth')
 
     # Plot the partial dependence plots
     if plot:
         # Plot the partial dependence plots
-        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=200)
-        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=300)
-        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=400)
-        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=500)
-        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=600)
-        plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=700)
+        # plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=200)
+        # plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=300)
+        # plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=400)
+        # plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=500)
+        # plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=600)
+        # plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=700)
 
         # Plot the loss to a new figure
         fig = plt.figure(figsize=(8, 6))
