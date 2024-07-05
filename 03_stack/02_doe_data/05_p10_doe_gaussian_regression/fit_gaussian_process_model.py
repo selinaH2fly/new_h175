@@ -126,7 +126,7 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
     df_dict = df.to_dict('list')
 
     # Create a dictionary for processed training input data
-    input_data_tensor = {}
+    input_data_dict = {}
 
     # New features (idea as of July 05, 2024)
     # input_data_tensor['cell_power_W'] = [power / 275 * 1000 for power in df_dict['power']]
@@ -151,11 +151,11 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
     # input_data_tensor['flow_coolant_lpm'] = df_dict['flow_coolant']
 
     # "Best" features from the feature selection process for the voltage prediction (as of July 05, 2024)
-    input_data_tensor['current'] = df_dict['current']
-    input_data_tensor['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
-    input_data_tensor['stoich_cathode'] = df_dict['cathode_stoich']
-    input_data_tensor['pressure_cathode_in_barg'] = df_dict['pressure_cathode_inlet']
-    input_data_tensor['temp_coolant_avg_degC'] = [(temp_in + temp_out) / 2 for temp_in, temp_out in zip(df_dict['temp_coolant_inlet'], df_dict['temp_coolant_outlet'])]
+    input_data_dict['current'] = df_dict['current']
+    input_data_dict['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
+    input_data_dict['stoich_cathode'] = df_dict['cathode_stoich']
+    input_data_dict['pressure_cathode_in_barg'] = df_dict['pressure_cathode_inlet']
+    input_data_dict['temp_coolant_avg_degC'] = [(temp_in + temp_out) / 2 for temp_in, temp_out in zip(df_dict['temp_coolant_inlet'], df_dict['temp_coolant_outlet'])]
 
     # Try to find the target variable in the df_dict
     if target in df_dict:
@@ -170,7 +170,7 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
             raise ValueError(f'Target variable {target} not found in the dataframe!')
 
     # Convert to pytorch tensors
-    input_data_tensor = torch.tensor(list(input_data_tensor.values()), dtype=torch.float32).T
+    input_data_tensor = torch.tensor(list(input_data_dict.values()), dtype=torch.float32).T
     target_data_tensor = torch.tensor(target_data, dtype=torch.float32)
 
     # Randomly split the data into training and testing sets
@@ -185,20 +185,19 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
     test_input_tensor = input_data_tensor[test_indices]
     test_target_tensor = target_data_tensor[test_indices]
 
-    # Normalize the training data
-    train_input_mean = train_input_tensor.mean(dim=0)
-    train_input_std = train_input_tensor.std(dim=0)
-    train_input_tensor = (train_input_tensor - train_input_mean) / train_input_std
+    # Get means and standard deviations for normalization
+    input_data_mean = input_data_tensor.mean(dim=0)
+    input_data_std = input_data_tensor.std(dim=0)
+    target_data_mean = target_data_tensor.mean()
+    target_data_std = target_data_tensor.std()
 
-    train_target_mean = train_target_tensor.mean()
-    train_target_std = train_target_tensor.std()
-    train_target_tensor = (train_target_tensor - train_target_mean) / train_target_std
+    # Normalize the training and test data
+    train_input_tensor = (train_input_tensor - input_data_mean) / input_data_std
+    train_target_tensor = (train_target_tensor - target_data_mean) / target_data_std
+    test_input_tensor = (test_input_tensor - input_data_mean) / input_data_std
+    test_target_tensor = (test_target_tensor - target_data_mean) / target_data_std
 
-    # Normalize the test data using the training data statistics
-    test_input_tensor = (test_input_tensor - train_input_mean) / train_input_std
-    test_target_tensor = (test_target_tensor - train_target_mean) / train_target_std
-
-    return train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, train_input_mean, train_input_std, train_target_mean, train_target_std
+    return train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, input_data_mean, input_data_std, target_data_mean, target_data_std
 
 # Helper function for calculating the relative humidity
 def calculate_relative_humidity(dewpoint_degC, air_temp_degC):
@@ -353,7 +352,7 @@ def create_video_from_snapshots():
 
 
 # Partial dependence plots
-def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units, target='voltage', fixed_feature=None, fixed_value=400):
+def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltage', fixed_feature=None, fixed_value=400):
 
     # Making predictions
     model.eval()
@@ -368,44 +367,44 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units,
     # Convert the training data to a numpy array for easier manipulation
     train_x_np = train_x_tensor.numpy()
 
-    # Create subplots
-    fig, axes = plt.subplots(4, 3, figsize=(18, 12))  # 4 rows, 3 columns of subplots
+    # Create subplots TODO: Extract Layout from the number of features
+    fig, axes = plt.subplots(3, 2, figsize=(18, 12))  # 3 rows, 2 columns of subplots
 
     # Adjust the layout
     fig.subplots_adjust(hspace=2)
 
     # Create figure title
-    fig.suptitle(f'GPR Model - Partial Dependence Plots', fontsize=16)
+    fig.suptitle(f'GPR DoE Model - Partial Dependence Plots')
 
-    # Loop through each feature and plot its partial dependence
-    for i in range(11):
+    # Loop through each feature and plot its partial dependence TODO: Make agnostic to the number of features
+    for i in range(5):
         if i != fixed_feature_index:  # Skip the fixed feature
             grid, pdp = partial_dependence(model, train_x_np, i, fixed_feature_index=fixed_feature_index, fixed_value=fixed_value)
-            ax = axes[i // 3, i % 3]  # Determine subplot location
+            ax = axes[i // 2, i % 2]  # Determine subplot location
             ax.plot(grid, pdp)
             # ax.set_ylim([0, 300])
             # extract target unit and check for lower and upper case
-            if (target[0].lower() + target[1:]) in feature_units:
-                ax.set_ylabel(f'{target} ({feature_units[target[0].lower() + target[1:]]})')
-            elif (target[0].upper() + target[1:]) in feature_units:
-                ax.set_ylabel(f'{target} ({feature_units[target[0].upper() + target[1:]]})')
-            else:
-                ax.set_ylabel(f'{target} (-)')
+            # if (target[0].lower() + target[1:]) in feature_units:
+            #     ax.set_ylabel(f'{target} ({feature_units[target[0].lower() + target[1:]]})')
+            # elif (target[0].upper() + target[1:]) in feature_units:
+            #     ax.set_ylabel(f'{target} ({feature_units[target[0].upper() + target[1:]]})')
+            # else:
+            #     ax.set_ylabel(f'{target} (-)')
 
             # assign xlabel unit if it is not none
-            if not pd.isna(feature_units[feature_names[i]]):
-                ax.set_xlabel(f'{feature_names[i]} ({feature_units[feature_names[i]]})')
-            else:
-                ax.set_xlabel(f'{feature_names[i]} (-)')
-            ax.grid(True, zorder=1)
+            # if not pd.isna(feature_units[feature_names[i]]):
+            #     ax.set_xlabel(f'{feature_names[i]} ({feature_units[feature_names[i]]})')
+            # else:
+            #     ax.set_xlabel(f'{feature_names[i]} (-)')
+            # ax.grid(True, zorder=1)
         else:
             # Write the fixed feature value in the subplot in bold
-            ax = axes[i // 3, i % 3]
+            ax = axes[i // 2, i % 2]
             ax.text(0.5, 0.5, f'Fixed {fixed_feature} at {fixed_value} ({feature_units[feature_names[fixed_feature_index]]})', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12, fontweight='bold')
 
 
     # Remove empty subplot (if any)
-    if len(axes.flatten()) > 11:
+    if len(axes.flatten()) > 5:
         fig.delaxes(axes.flatten()[-1])
 
     # Unify the y-axis limits to min and max values of the subplots (excluding the fixed feature subplot!)
@@ -509,12 +508,9 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
     # Plot the partial dependence plots
     if plot:
         # Plot the partial dependence plots
-        # plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=200)
-        # plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=300)
-        # plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=400)
-        # plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=500)
-        # plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=600)
-        # plot_partial_dependence(model, train_x_tensor, feature_names, feature_units=units, target=target, fixed_feature='current', fixed_value=700)
+        # for current_value in [200, 300, 400, 500, 600, 700]:
+        #     plot_partial_dependence(model, train_input_tensor, pd_dataframe.columns, target=target, fixed_feature='current', fixed_value=current_value)
+    
 
         # Plot the loss to a new figure
         fig = plt.figure(figsize=(8, 6))
