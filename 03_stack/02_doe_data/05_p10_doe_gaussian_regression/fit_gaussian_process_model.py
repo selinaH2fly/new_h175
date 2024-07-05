@@ -239,18 +239,26 @@ def partial_dependence(model, X, feature_index, fixed_feature_index=None, fixed_
     - grid: The values of the feature.
     - pdp: The partial dependence values.
     """
+    # Ensure X is a numpy array
+    if isinstance(X, pd.DataFrame):
+        X = X.values
+
+    # Calculate the range of the feature
     feature_min, feature_max = X[:, feature_index].min(), X[:, feature_index].max()
     grid = np.linspace(feature_min, feature_max, grid_resolution)
+    
+    # Create a tiled array to hold the variations
     X_temp = np.tile(X, (grid_resolution, 1))
 
     # Replace the values of the feature with the grid values
     for i, value in enumerate(grid):
         X_temp[i * X.shape[0]:(i + 1) * X.shape[0], feature_index] = value
-    
+
     # Fix the specific feature value if provided
     if fixed_feature_index is not None and fixed_value is not None:
         X_temp[:, fixed_feature_index] = fixed_value
     
+    # Convert to torch tensor
     X_temp = torch.tensor(X_temp, dtype=torch.float)
     
     # Compute the predictions
@@ -355,8 +363,6 @@ def create_video_from_snapshots():
 
     return None
 
-
-
 # Partial dependence plots
 def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltage', fixed_feature=None, fixed_value=400):
 
@@ -364,29 +370,28 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltag
     model.eval()
 
     # Get the index of the fixed feature
-    if fixed_feature is not None:
-        feature_names_list = list(feature_names)
-        fixed_feature_index = feature_names_list.index(fixed_feature)
-    else:
-        fixed_feature_index = None
+    fixed_feature_index = feature_names.index(fixed_feature) if fixed_feature is not None else None
 
     # Convert the training data to a numpy array for easier manipulation
     train_x_np = train_x_tensor.numpy()
 
-    # Create subplots TODO: Extract Layout from the number of features
-    fig, axes = plt.subplots(3, 2, figsize=(18, 12))  # 3 rows, 2 columns of subplots
+    # Number of features
+    num_features = len(feature_names)
+
+    # Create subplots with 2 columns
+    fig, axes = plt.subplots(int(np.ceil(num_features / 2)), 2, figsize=(12, 12))
 
     # Adjust the layout
     fig.subplots_adjust(hspace=2)
 
     # Create figure title
-    fig.suptitle(f'GPR DoE Model - Partial Dependence Plots')
+    fig.suptitle('GPR DoE Model - Partial Dependence Plots')
 
     # Loop through each feature and plot its partial dependence TODO: Make agnostic to the number of features
-    for i in range(5):
+    for i in range(num_features):
         if i != fixed_feature_index:  # Skip the fixed feature
             grid, pdp = partial_dependence(model, train_x_np, i, fixed_feature_index=fixed_feature_index, fixed_value=fixed_value)
-            ax = axes[i // 2, i % 2]  # Determine subplot location
+            ax = axes[i // 2, i % 2]
             ax.plot(grid, pdp)
             # ax.set_ylim([0, 300])
             # extract target unit and check for lower and upper case
@@ -397,25 +402,24 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltag
             # else:
             #     ax.set_ylabel(f'{target} (-)')
 
-            # assign xlabel unit if it is not none
-            # if not pd.isna(feature_units[feature_names[i]]):
-            #     ax.set_xlabel(f'{feature_names[i]} ({feature_units[feature_names[i]]})')
-            # else:
-            #     ax.set_xlabel(f'{feature_names[i]} (-)')
-            # ax.grid(True, zorder=1)
+            # Set the axes labels
+            ax.set_ylabel(f'{target} (normalized)')
+            ax.set_xlabel(f'{feature_names[i]} (normalized)')
+
+            ax.grid(True, zorder=1)
         else:
             # Write the fixed feature value in the subplot in bold
             ax = axes[i // 2, i % 2]
-            ax.text(0.5, 0.5, f'Fixed {fixed_feature} at {fixed_value} ({feature_units[feature_names[fixed_feature_index]]})', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12, fontweight='bold')
+            ax.text(0.5, 0.5, f'{fixed_feature} fixed at {fixed_value}', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12, fontweight='bold')
 
 
     # Remove empty subplot (if any)
-    if len(axes.flatten()) > 5:
+    if len(axes.flatten()) > num_features:
         fig.delaxes(axes.flatten()[-1])
 
     # Unify the y-axis limits to min and max values of the subplots (excluding the fixed feature subplot!)
     y_min = np.floor(np.min([ax.get_ylim()[0] for ax in axes.flatten() if ax.get_ylim()[0] != 0]))
-    y_max = np.ceil(np.max([ax.get_ylim()[1] for ax in axes.flatten() if ax.get_ylim()[1] != 0]))    
+    y_max = np.ceil(np.max([ax.get_ylim()[1] for ax in axes.flatten() if ax.get_ylim()[1] != 1]))    
     for ax in axes.flatten():
         ax.set_ylim([y_min, y_max])
 
@@ -521,8 +525,8 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
         # Plot the partial dependence plots
         # for current_value in [200, 300, 400, 500, 600, 700]:
         #     plot_partial_dependence(model, train_input_tensor, pd_dataframe.columns, target=target, fixed_feature='current', fixed_value=current_value)
-    
-
+        plot_partial_dependence(model, train_input_tensor, feature_names=feature_names, target=target, fixed_feature='current_A', fixed_value=400)
+        
         # Plot the loss to a new figure
         fig = plt.figure(figsize=(8, 6))
         plt.plot(iterations, loss_list, label='Training Loss')
