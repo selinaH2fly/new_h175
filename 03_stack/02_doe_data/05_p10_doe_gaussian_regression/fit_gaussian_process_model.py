@@ -254,6 +254,20 @@ def partial_dependence(model, X, feature_index, fixed_feature_index=None, fixed_
     
     return grid, pdp
 
+# Evaluate the model performance
+def eval_model_performance(model, likelihood, mll, input_tensor, target_tensor, target, iteration):
+
+    model.eval()
+    likelihood.eval()
+
+    with torch.no_grad():
+        val_output = model(input_tensor)
+        val_loss = -mll(val_output, target_tensor)
+
+    plot_model_performance(model, likelihood, input_tensor, target_tensor, target, iteration)
+
+    return val_loss
+
 # Plot the model performance
 def plot_model_performance(model, likelihood, input_tensor, target_tensor, target, iteration):
 
@@ -399,36 +413,47 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
         pretrained_model_path = os.path.join(Path(my_dir).parents[0], pretrained_model)
         model.load_state_dict(torch.load(pretrained_model_path))
 
-    # Set the model to training mode
-    model.train()
-    likelihood.train()
-
     optimizer = torch.optim.Adam(model.parameters(), lr=_params_training.learning_rate)
     mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
     # List to store the loss values and iterations
     loss_list = []
+    val_loss_list = []
     iterations = []
 
     # Training loop
     training_iterations = int(_params_training.iterations)
     for i in range(training_iterations):
+
+        model.train()
+        likelihood.train()
+
         optimizer.zero_grad()
         output = model(train_input_tensor)
         loss = -mll(output, train_target_tensor)
+
         if i % _params_logging.log_interval == 0:
-            print(f'Iteration {i}/{training_iterations} - Loss: {loss.item()}')
+
+            val_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
+
+            print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Validation Loss: {val_loss.item()}')
             loss_list.append(loss.item())
+            val_loss_list.append(val_loss.item())
             iterations.append(i)
-            plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, target, i)
+
         loss.backward()
         optimizer.step() # the actual update step!
 
-    if (i+1) % _params_logging.log_interval == 0:
-        print(f'Iteration {(i+1)}/{training_iterations} - Loss: {loss.item()}')
-        loss_list.append(loss.item())
-        iterations.append((i+1))
-        plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, target, (i+1))
+    # Print and save the final loss values
+    i = i + 1
+    if i % _params_logging.log_interval == 0:
+
+            val_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
+
+            print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Validation Loss: {val_loss.item()}')
+            loss_list.append(loss.item())
+            val_loss_list.append(val_loss.item())
+            iterations.append(i)
 
     # Save the model refering to the target variable
     torch.save(model.state_dict(), f'gpr_model_{target}.pth')
@@ -445,10 +470,12 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
 
         # Plot the loss to a new figure
         fig = plt.figure(figsize=(8, 6))
-        plt.plot(iterations, loss_list)
+        plt.plot(iterations, loss_list, label='Training Loss')
+        plt.plot(iterations, val_loss_list, label='Validation Loss')    
         plt.xlabel('Iterations')
         plt.ylabel('MLL Loss')
         # plt.yscale('log')
+        plt.legend()
         plt.grid(True, zorder=1)
         plt.title('Loss During Training')
         plt.savefig('loss.png', dpi=300, bbox_inches='tight')
@@ -457,7 +484,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
     # Save the loss values and the corresponding iteration values to a dat file
     with open('loss_values.dat', 'w') as file:
         writer = csv.writer(file)
-        writer.writerows(zip(iterations, loss_list))
+        writer.writerows(zip(iterations, loss_list, val_loss_list))
 
 # Entry point of the script
 if __name__ == '__main__':
