@@ -127,24 +127,30 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
     # New features (idea as of July 05, 2024)
     # input_data_tensor['cell_power_W'] = [power / 275 * 1000 for power in df_dict['power']]
     # input_data_tensor['anode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_anode_dewpoint_gas'], df_dict['temp_anode_inlet'])]
-    input_data_tensor['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
+    # input_data_tensor['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
     # input_data_tensor['cathode_stoich_'] = df_dict['cathode_stoich']
     # input_data_tensor['cathode_pressure_in_barg'] = df_dict['pressure_cathode_inlet']
     # input_data_tensor['coolant_temp_in_degC'] = df_dict['temp_coolant_inlet']
     # input_data_tensor['coolant_flow_in_lpm'] = df_dict['flow_coolant']
 
     # Classic Powercell features
-    input_data_tensor['current'] = df_dict['current']
+    # input_data_tensor['current'] = df_dict['current']
     # input_data_tensor['stoich_anode'] = df_dict['anode_stoich']
-    input_data_tensor['stoich_cathode'] = df_dict['cathode_stoich']
+    # input_data_tensor['stoich_cathode'] = df_dict['cathode_stoich']
     # input_data_tensor['pressure_anode_in_barg'] = df_dict['pressure_anode_inlet']
-    input_data_tensor['pressure_cathode_in_barg'] = df_dict['pressure_cathode_inlet']
+    # input_data_tensor['pressure_cathode_in_barg'] = df['pressure_cathode_inlet']
     # input_data_tensor['temp_anode_inlet_degC'] = df_dict['temp_anode_inlet']
     # input_data_tensor['temp_cathode_inlet_degC'] = df_dict['temp_cathode_inlet']
     # input_data_tensor['dewpoint_anode_degC'] = df_dict['temp_anode_dewpoint_gas']
     # input_data_tensor['dewpoint_cathode_degC'] = df_dict['temp_cathode_dewpoint_gas']
     # input_data_tensor['temp_coolant_inlet_degC'] = df_dict['temp_coolant_inlet']
     # input_data_tensor['flow_coolant_lpm'] = df_dict['flow_coolant']
+
+    # "Best" features from the feature selection process for the voltage prediction (as of July 05, 2024)
+    input_data_tensor['current'] = df_dict['current']
+    input_data_tensor['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
+    input_data_tensor['stoich_cathode'] = df_dict['cathode_stoich']
+    input_data_tensor['pressure_cathode_in_barg'] = df_dict['pressure_cathode_inlet']
     input_data_tensor['temp_coolant_avg_degC'] = [(temp_in + temp_out) / 2 for temp_in, temp_out in zip(df_dict['temp_coolant_inlet'], df_dict['temp_coolant_outlet'])]
 
     # Try to find the target variable in the df_dict
