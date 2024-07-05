@@ -20,6 +20,7 @@ import gpytorch
 import matplotlib.pyplot as plt
 import pandas as pd
 import random
+import cv2
 
 # Import parameters
 import parameters
@@ -72,6 +73,9 @@ def create_experiment_folder(_params_model=None, _params_training=None, _params_
     shutil.make_archive("Sources", 'zip', "Sources_unzipped")
     shutil.rmtree("Sources_unzipped")
     print("Directory for running experiment no. {} created".format(experimentID))
+
+    # Create a folder for storing model performance snapshots
+    os.mkdir("model_performance_snapshots")
 
     # save parameters to file
     parameterFile = open("parameterFile.txt", "w")
@@ -279,6 +283,8 @@ def plot_model_performance(model, likelihood, input_tensor, target_tensor, targe
 
     # Initialize plot
     f, ax = plt.subplots(1, 1)
+    mgr = plt.get_current_fig_manager()
+    mgr.resize(720, 720)
 
     # Set the title
     ax.set_title(f'Model Performance Snapshot - Iteration: {iteration}')
@@ -286,6 +292,10 @@ def plot_model_performance(model, likelihood, input_tensor, target_tensor, targe
     # Set the labels
     ax.set_xlabel('Normalized Targets')
     ax.set_ylabel('Normalized Predictions')
+
+    # Set axis limits
+    ax.set_xlim([-2, 2])
+    ax.set_ylim([-2, 2])
 
     # Set the aspect ratio to be equal
     # ax.set_aspect('equal', adjustable='box')
@@ -296,13 +306,51 @@ def plot_model_performance(model, likelihood, input_tensor, target_tensor, targe
 
     # Plot target vs. predictions
     ax.plot(target_tensor.numpy(), predictions, 'o', label='Training Data', color='blue')
-    # Save and close the figure
-    plt.savefig(f'gpr_model_performance_{target}_{iteration}.png', dpi=300, bbox_inches='tight')
+
+    # Save the figure to the model performance snapshots folder
+    plt.savefig(f'model_performance_snapshots/model_performance_snapshot_{iteration}.png', dpi=300, bbox_inches='tight')
+
     plt.close()
 
-    # Reset the model to training mode
-    model.train()
-    likelihood.train()
+def create_video_from_snapshots():
+
+    # Change the current working directory to the experiment folder
+    os.chdir("model_performance_snapshots")
+
+    # Set the path to the folder containing your PNG frames and the output video file name
+    frame_folder = os.getcwd()
+
+    output_video = "model_performance_evolution.avi"
+
+    # Define the frame rate and frame size
+    frame_rate = 5  # Adjust as needed
+
+    # Get a list of the PNG files in the folder
+    frame_files = sorted([f for f in os.listdir(frame_folder) if f.startswith("model_performance_snapshot")], key=lambda x: int(''.join(filter(str.isdigit, os.path.splitext(x)[0]))))
+
+    # Extract frame size from first frame
+    frame_path = os.path.join(frame_folder, frame_files[0])
+    frame = cv2.imread(frame_path)
+    height, width, _ = frame.shape
+
+    # Initialize VideoWriter
+    fourcc = 0
+    out = cv2.VideoWriter(output_video, fourcc, frame_rate, (width, height))
+
+    # Loop through the PNG frames and add them to the video
+    for frame_file in frame_files:
+        frame_path = os.path.join(frame_folder, frame_file)
+        frame = cv2.imread(frame_path)
+        out.write(frame)
+
+    # Release the VideoWriter
+    out.release()
+
+    print("Video creation complete.")
+
+    return None
+
+
 
 # Partial dependence plots
 def plot_partial_dependence(model, train_x_tensor, feature_names, feature_units, target='voltage', fixed_feature=None, fixed_value=400):
@@ -478,8 +526,11 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
         plt.legend()
         plt.grid(True, zorder=1)
         plt.title('Loss During Training')
-        plt.savefig('loss.png', dpi=300, bbox_inches='tight')
+        plt.savefig('loss_evolution.png', dpi=300, bbox_inches='tight')
         plt.close()
+
+        # Create a video from the model performance snapshots
+        create_video_from_snapshots()
 
     # Save the loss values and the corresponding iteration values to a dat file
     with open('loss_values.dat', 'w') as file:
