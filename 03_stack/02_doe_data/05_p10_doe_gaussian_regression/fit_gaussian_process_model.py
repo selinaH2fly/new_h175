@@ -151,11 +151,17 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
     # input_data_tensor['flow_coolant_lpm'] = df_dict['flow_coolant']
 
     # "Best" features from the feature selection process for the voltage prediction (as of July 05, 2024)
-    input_data_dict['current'] = df_dict['current']
+    input_data_dict['current_A'] = df_dict['current']
     input_data_dict['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
     input_data_dict['stoich_cathode'] = df_dict['cathode_stoich']
     input_data_dict['pressure_cathode_in_barg'] = df_dict['pressure_cathode_inlet']
     input_data_dict['temp_coolant_avg_degC'] = [(temp_in + temp_out) / 2 for temp_in, temp_out in zip(df_dict['temp_coolant_inlet'], df_dict['temp_coolant_outlet'])]
+
+    # Extract feature names and write them to a file
+    feature_names = list(input_data_dict.keys())
+    with open('feature_names.txt', 'w') as file:
+        for feature in feature_names:
+            file.write(f'{feature}\n')
 
     # Try to find the target variable in the df_dict
     if target in df_dict:
@@ -197,7 +203,7 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
     test_input_tensor = (test_input_tensor - input_data_mean) / input_data_std
     test_target_tensor = (test_target_tensor - target_data_mean) / target_data_std
 
-    return train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, input_data_mean, input_data_std, target_data_mean, target_data_std
+    return train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, (input_data_mean, input_data_std), (target_data_mean, target_data_std), feature_names
 
 # Helper function for calculating the relative humidity
 def calculate_relative_humidity(dewpoint_degC, air_temp_degC):
@@ -447,7 +453,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
 
     # Load and assign the data
     pd_dataframe, _ = load_high_amp_doe_data()
-    train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, _, _, _, _ = \
+    train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, (_, _), (_, _), feature_names = \
         preprocess_data(pd_dataframe, target, cutoff_current)
 
     # Likelihood and model
@@ -505,6 +511,11 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
     # Save the model refering to the target variable
     torch.save(model.state_dict(), f'gpr_model_{target}.pth')
 
+    # Save the loss values and the corresponding iteration values to a dat file
+    with open('loss_values.dat', 'w') as file:
+        writer = csv.writer(file)
+        writer.writerows(zip(iterations, loss_list, val_loss_list))
+
     # Plot the partial dependence plots
     if plot:
         # Plot the partial dependence plots
@@ -527,11 +538,6 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
 
         # Create a video from the model performance snapshots
         create_video_from_snapshots()
-
-    # Save the loss values and the corresponding iteration values to a dat file
-    with open('loss_values.dat', 'w') as file:
-        writer = csv.writer(file)
-        writer.writerows(zip(iterations, loss_list, val_loss_list))
 
 # Entry point of the script
 if __name__ == '__main__':
