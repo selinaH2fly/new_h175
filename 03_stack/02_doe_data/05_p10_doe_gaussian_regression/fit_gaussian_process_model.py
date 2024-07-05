@@ -512,7 +512,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
     torch.save(model.state_dict(), f'gpr_model_{target}.pth')
 
     # Save the loss values and the corresponding iteration values to a dat file
-    with open('loss_values.dat', 'w') as file:
+    with open('loss_values.dat', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(zip(iterations, loss_list, val_loss_list))
 
