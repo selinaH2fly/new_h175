@@ -1,0 +1,26 @@
+/*
+ * Code generation for system system '<S48>/calculateTemperatureSetpoint'
+ *
+ * Model                      : thermal_closed_loop_model
+ * Model version              : 2.76
+ * Simulink Coder version : 9.9 (R2023a) 19-Nov-2022
+ * C++ source code generated on : Fri Jun 28 15:46:30 2024
+ *
+ * Note that the functions contained in this file are part of a Simulink
+ * model, and are not self-contained algorithms.
+ */
+
+#include "calculateTemperatureSetpoint.h"
+#include "thermal_closed_loop_model.h"
+#include "thermal_closed_loop_model_cal.h"
+#include "thermal_closed_loop_model_private.h"
+
+/* Output and update for atomic system: '<S48>/calculateTemperatureSetpoint' */
+void calculateTemperatureSetpoin(void)
+{
+  /* Lookup_n-D: '<S52>/1-D Lookup Table1' */
+  thermal_closed_loop_model_B.uDLookupTable1 = look1_binlcpw
+    (thermal_closed_loop_model_B.Sum_p[0],
+     thermal_closed_loop_model_cal->uDLookupTable1_bp01Data_i,
+     thermal_closed_loop_model_cal->uDLookupTable1_tableData_e, 12U);
+}
