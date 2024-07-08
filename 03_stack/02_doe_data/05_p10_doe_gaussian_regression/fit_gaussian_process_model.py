@@ -77,6 +77,9 @@ def create_experiment_folder(_params_model=None, _params_training=None, _params_
     # Create a folder for storing model performance snapshots
     os.mkdir("model_performance_snapshots")
 
+    # Create a folder for storing partial dependence plots
+    os.mkdir("partial_dependence_plots")
+
     # save parameters to file
     parameterFile = open("parameterFile.txt", "w")
     # write paramters to file if they are not None
@@ -229,7 +232,7 @@ def partial_dependence(model, X, feature_index, fixed_feature_index=None, fixed_
     
     Parameters:
     - model: The trained gpytorch model.
-    - X: The input data as a numpy array or pandas DataFrame.
+    - X: The input data as a numpy array or torch tensor.
     - feature_index: The index of the feature to vary.
     - fixed_feature_index: The index of the feature to fix.
     - fixed_value: The value to fix the specified feature at.
@@ -239,11 +242,7 @@ def partial_dependence(model, X, feature_index, fixed_feature_index=None, fixed_
     - grid: The values of the feature.
     - pdp: The partial dependence values.
     """
-    # Ensure X is a numpy array
-    if isinstance(X, pd.DataFrame):
-        X = X.values
-
-    # Calculate the range of the feature
+      # Calculate the range of the feature
     feature_min, feature_max = X[:, feature_index].min(), X[:, feature_index].max()
     grid = np.linspace(feature_min, feature_max, grid_resolution)
     
@@ -364,13 +363,19 @@ def create_video_from_snapshots():
     return None
 
 # Partial dependence plots
-def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltage', fixed_feature=None, fixed_value=400):
+def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltage', input_normalization=(0, 1), target_normalization=(0, 1), fixed_feature=None, fixed_value=400):
 
     # Making predictions
     model.eval()
 
     # Get the index of the fixed feature
-    fixed_feature_index = feature_names.index(fixed_feature) if fixed_feature is not None else None
+    if fixed_feature is not None:
+        fixed_feature_index = feature_names.index(fixed_feature)
+        fixed_value_norm = (fixed_value - input_normalization[0][fixed_feature_index]) / input_normalization[1][fixed_feature_index]
+
+    else:
+        fixed_feature_index = None
+        fixed_value_norm = None
 
     # Convert the training data to a numpy array for easier manipulation
     train_x_np = train_x_tensor.numpy()
@@ -390,9 +395,22 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltag
     # Loop through each feature and plot its partial dependence TODO: Make agnostic to the number of features
     for i in range(num_features):
         if i != fixed_feature_index:  # Skip the fixed feature
-            grid, pdp = partial_dependence(model, train_x_np, i, fixed_feature_index=fixed_feature_index, fixed_value=fixed_value)
+
+            # Calculate the partial dependence
+            grid, pdp = partial_dependence(model, train_x_np, i, fixed_feature_index=fixed_feature_index, fixed_value=fixed_value_norm)
+
+            # Denormalize the grid and pdp values
+            # Convert tensor to numpy array
+            input
+
+
+            grid = grid * np.array(input_normalization[1][i]) + np.array(input_normalization[0][i])
+            pdp = pdp * np.array(target_normalization[1]) + np.array(target_normalization[0])
+
+            # Plot the partial dependence
             ax = axes[i // 2, i % 2]
             ax.plot(grid, pdp)
+
             # ax.set_ylim([0, 300])
             # extract target unit and check for lower and upper case
             # if (target[0].lower() + target[1:]) in feature_units:
@@ -403,8 +421,8 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltag
             #     ax.set_ylabel(f'{target} (-)')
 
             # Set the axes labels
-            ax.set_ylabel(f'{target} (normalized)')
-            ax.set_xlabel(f'{feature_names[i]} (normalized)')
+            ax.set_ylabel(f'{target}')
+            ax.set_xlabel(f'{feature_names[i]}')
 
             ax.grid(True, zorder=1)
         else:
@@ -429,14 +447,14 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltag
     # Draw the canvas
     fig.canvas.draw()
 
-    # Save the figure with title according to the fixed feature value
+    # Save the figure with title according to the fixed feature value to the partial dependence plots folder
     if fixed_feature is not None:
-        plt.savefig(f'partial_dependence_plots_{fixed_feature}_{fixed_value}.png', bbox_inches='tight')
-    else: 
-        plt.savefig('partial_dependence_plots.png', bbox_inches='tight')
+        plt.savefig(f'partial_dependence_plots/partial_dependence_plot_{fixed_feature}_{fixed_value}.png', bbox_inches='tight')    
+    else:
+        plt.savefig(f'partial_dependence_plots/partial_dependence_plot.png', bbox_inches='tight')
 
-    # Display the figure
-    plt.show()
+    # Close the figure
+    plt.close()
 
 # Main function
 def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, pretrained_model=None):
@@ -457,7 +475,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
 
     # Load and assign the data
     pd_dataframe, _ = load_high_amp_doe_data()
-    train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, (_, _), (_, _), feature_names = \
+    train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, (input_data_mean, input_data_std), (target_data_mean, target_data_std), feature_names = \
         preprocess_data(pd_dataframe, target, cutoff_current)
 
     # Likelihood and model
@@ -523,10 +541,9 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
     # Plot the partial dependence plots
     if plot:
         # Plot the partial dependence plots
-        # for current_value in [200, 300, 400, 500, 600, 700]:
-        #     plot_partial_dependence(model, train_input_tensor, pd_dataframe.columns, target=target, fixed_feature='current', fixed_value=current_value)
-        plot_partial_dependence(model, train_input_tensor, feature_names=feature_names, target=target, fixed_feature='current_A', fixed_value=400)
-        
+        for current_value in [200, 300, 400, 500, 600, 700]:
+            plot_partial_dependence(model, train_input_tensor, feature_names=feature_names, target=target, input_normalization=(input_data_mean, input_data_std), target_normalization=(target_data_mean, target_data_std), fixed_feature='current_A', fixed_value=current_value)
+                
         # Plot the loss to a new figure
         fig = plt.figure(figsize=(8, 6))
         plt.plot(iterations, loss_list, label='Training Loss')
