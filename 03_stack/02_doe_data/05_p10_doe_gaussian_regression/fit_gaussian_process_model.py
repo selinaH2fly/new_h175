@@ -25,10 +25,13 @@ import cv2
 # Import parameters
 import parameters
 
+# Import input optimization function from input_optimization.py
+from input_optimization import optimize_for_inputs
+
 # Define a GP model
 class ExactGPModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood):
-        super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
+        super(ExactGPModel, self).__init__(train_x, train_y, likelihood=gpytorch.likelihoods.GaussianLikelihood())
         self.mean_module = gpytorch.means.ConstantMean()
         self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
 
@@ -457,12 +460,13 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltag
     plt.close()
 
 # Main function
-def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, pretrained_model=None):
+def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, optimize=True, pretrained_model=None):
 
     # Load parameters
     _params_training = parameters.Training_Parameters()
     # _params_model = parameters.Model_Parameters()
     _params_logging = parameters.Logging_Parameters()
+    _params_optimization = parameters.Optimization_Parameters()
 
     # Set the random seed for reproducibility
     if _params_training.seed is not None:
@@ -560,6 +564,18 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, p
         # Create a video from the model performance snapshots
         create_video_from_snapshots()
 
+    if optimize:
+        # Load and normalize the bounds
+        bounds = _params_optimization.bounds
+        normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in zip(bounds, input_data_mean.numpy(), input_data_std.numpy())]
+        
+        # Optimize the input variables
+        optimal_input = optimize_for_inputs(model, bounds=normalized_bounds)
+
+        # Denormalize the optimal input variables	
+        optimal_input = optimal_input * np.array(input_data_std) + np.array(input_data_mean)
+        print("Optimal Input Variables:", optimal_input)
+
 # Entry point of the script
 if __name__ == '__main__':
 
@@ -568,9 +584,10 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--target", type=str, help="Target variable for Gaussia process regression", default="voltage")
     parser.add_argument("-c", "--cutoff", type=float, help="Datapoints below cutoff current are removed from training data", default=0.0)
     parser.add_argument("-p", "--plot", type=bool, help="Plot the input/output data", default=True)
+    parser.add_argument("-o", "--optimize", type=bool, help="Optimize the input variables", default=True)
     parser.add_argument("-m", "--model", type=str, help="Load a pretrained GPR model", default=None)
 
     args = parser.parse_args()
 
     # Call the main function                        
-    train_gpr_model_on_doe_data(args.target, args.cutoff, args.plot, args.model)
+    train_gpr_model_on_doe_data(args.target, args.cutoff, args.plot, args.optimize, args.model)
