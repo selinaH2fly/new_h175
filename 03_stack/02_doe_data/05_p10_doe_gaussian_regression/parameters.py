@@ -29,6 +29,6 @@ class Optimization_Parameters:
             self.bounds = [(100, 700),      # current_A
                            (0, 100),        # cathode_rh_in_perc
                            (1, 5),          # stoich_cathode
-                           (0.5, 2),        # pressure_cathode_in_barg
+                           (1.5, 3),        # pressure_cathode_in_bara
                            (40, 90),]       # temp_coolant_avg_degC
         

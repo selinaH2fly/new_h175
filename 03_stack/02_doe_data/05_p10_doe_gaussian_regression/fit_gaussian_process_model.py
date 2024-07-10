@@ -160,7 +160,7 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
     input_data_dict['current_A'] = df_dict['current']
     input_data_dict['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
     input_data_dict['stoich_cathode'] = df_dict['cathode_stoich']
-    input_data_dict['pressure_cathode_in_barg'] = df_dict['pressure_cathode_inlet']
+    input_data_dict['pressure_cathode_in_bara'] = [pressure_barg + 1.01325 for pressure_barg in df_dict['pressure_cathode_inlet']]
     input_data_dict['temp_coolant_avg_degC'] = [(temp_in + temp_out) / 2 for temp_in, temp_out in zip(df_dict['temp_coolant_inlet'], df_dict['temp_coolant_outlet'])]
 
     # Extract feature names and write them to a file
