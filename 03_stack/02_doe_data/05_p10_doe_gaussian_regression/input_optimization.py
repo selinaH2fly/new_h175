@@ -23,7 +23,7 @@ def optimize_for_inputs(model, initial_guess=None, bounds=None, grid_resolution=
         model.eval()
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
             prediction = model(x_tensor).mean.numpy()
-        print(f"Evaluating at {x}, prediction: {-prediction}")  # Debug statement
+        # print(f"Evaluating at {x}, prediction: {-prediction}")  # Debug statement
         return -prediction  # We negate because we want to maximize
 
     # If no initial guess is provided, use the mean of bounds provided
@@ -33,17 +33,20 @@ def optimize_for_inputs(model, initial_guess=None, bounds=None, grid_resolution=
         else:
             raise ValueError("If no initial guess is provided, bounds must be specified.")
     
-    print(f"Initial guess: {initial_guess}")  # Debug statement
-    print(f"Bounds: {bounds}")  # Debug statement
+    # print(f"Initial guess: {initial_guess}")  # Debug statement
+    # print(f"Bounds: {bounds}")  # Debug statement
 
     # Perform the optimization
-    # result = minimize(objective_function, initial_guess, bounds=bounds, method='L-BFGS-B')
-    result = differential_evolution(objective_function, bounds)
+    # result = minimize(objective_function, initial_guess, bounds=bounds, method='L-BFGS-B') # gradient-based algorithm
+    result = differential_evolution(objective_function, bounds) # evolutionary algorithm
 
     # Get the optimal (normalized) input variables
     optimal_input_scaled = result.x
 
-    print(f"Optimization result: {result}")  # Debug statement
+    # print(f"Optimization result: {result}")  # Debug statement
 
-    return optimal_input_scaled
+    # Return the optimized prediction subject to the optimmal input
+    optimal_target_scaled = -result.fun
+
+    return optimal_input_scaled, optimal_target_scaled
 
