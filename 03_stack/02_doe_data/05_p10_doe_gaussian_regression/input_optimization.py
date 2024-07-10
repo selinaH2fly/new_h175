@@ -57,7 +57,7 @@ def optimize_inputs_gradient_based(model, initial_guess=None, bounds=None, power
 
     return optimal_input_scaled, optimal_target_scaled
 
-def optimize_inputs_evolutionary(model, initial_guess=None, bounds=None, power_constraint_value=None, penalty_weight=100):
+def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std, initial_guess=None, bounds=None, power_constraint_value=None, penalty_weight=100):
     """
     Optimize the voltage predicted by the GPyTorch model with a power constraint using differential evolution.
 
@@ -80,17 +80,22 @@ def optimize_inputs_evolutionary(model, initial_guess=None, bounds=None, power_c
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
             voltage = model(x_tensor).mean.item()
         current = x[0]
+
+        # Denormalize current and voltage
+        current = current * input_data_std[0] + input_data_mean[0]
+        voltage = voltage * target_data_std + target_data_mean
+
         power_constraint = voltage * current - power_constraint_value
         penalty = penalty_weight * (power_constraint**2)  # Squared term to ensure positive penalty
         result = -voltage + penalty  # Negate voltage to maximize and add penalty for constraint violation
 
         # Debug messages
-        print(f"Evaluating at {x}")
-        print(f"  Voltage: {voltage}")
-        print(f"  Current: {current}")
-        print(f"  Power constraint: {power_constraint}")
-        print(f"  Penalty: {penalty}")
-        print(f"  Objective function result: {result}")
+        # print(f"Evaluating at {x}")
+        # print(f"  Voltage: {voltage}")
+        # print(f"  Current: {current}")
+        # print(f"  Power constraint: {power_constraint}")
+        # print(f"  Penalty: {penalty}")
+        # print(f"  Objective function result: {result}")
 
         return result
 
