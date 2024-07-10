@@ -77,12 +77,6 @@ def create_experiment_folder(_params_model=None, _params_training=None, _params_
     shutil.rmtree("Sources_unzipped")
     print("Directory for running experiment no. {} created".format(experimentID))
 
-    # Create a folder for storing model performance snapshots
-    os.mkdir("model_performance_snapshots")
-
-    # Create a folder for storing partial dependence plots
-    os.mkdir("partial_dependence_plots")
-
     # save parameters to file
     parameterFile = open("parameterFile.txt", "w")
     # write paramters to file if they are not None
@@ -93,6 +87,9 @@ def create_experiment_folder(_params_model=None, _params_training=None, _params_
     if _params_logging is not None:
         parameterFile.write(format(vars(_params_logging)))
     parameterFile.close()
+
+    # create folder for storing model snapshots
+    os.mkdir("model_performance_snapshots")
 
     return None
 
@@ -283,8 +280,6 @@ def eval_model_performance(model, likelihood, mll, input_tensor, target_tensor, 
         val_output = model(input_tensor)
         val_loss = -mll(val_output, target_tensor)
 
-    plot_model_performance(model, likelihood, input_tensor, target_tensor, target, iteration)
-
     return val_loss
 
 # Plot the model performance
@@ -362,6 +357,9 @@ def create_video_from_snapshots():
     out.release()
 
     print("Video creation complete.")
+
+    # Change the current working directory back to the experiment folder
+    os.chdir("..")
 
     return None
 
@@ -514,6 +512,8 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
         if i % _params_logging.log_interval == 0:
 
             val_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
+            if plot:
+                    plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, target, i)
 
             print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Validation Loss: {val_loss.item()}')
             loss_list.append(loss.item())
@@ -528,6 +528,9 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
     if i % _params_logging.log_interval == 0:
 
             val_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
+            if plot:
+                    plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, target, i)
+
 
             print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Validation Loss: {val_loss.item()}')
             loss_list.append(loss.item())
@@ -544,6 +547,9 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
 
     # Plot the partial dependence plots
     if plot:
+        # Create a folder to store the partial dependence plots
+        os.mkdir('partial_dependence_plots')
+
         # Plot the partial dependence plots
         for current_value in [200, 300, 400, 500, 600, 700]:
             plot_partial_dependence(model, train_input_tensor, feature_names=feature_names, target=target, input_normalization=(input_data_mean, input_data_std), target_normalization=(target_data_mean, target_data_std), fixed_feature='current_A', fixed_value=current_value)
@@ -565,16 +571,42 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
         create_video_from_snapshots()
 
     if optimize:
-        # Load and normalize the bounds
-        bounds = _params_optimization.bounds
-        normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in zip(bounds, input_data_mean.numpy(), input_data_std.numpy())]
-        
-        # Optimize the input variables
-        optimal_input = optimize_for_inputs(model, bounds=normalized_bounds)
 
-        # Denormalize the optimal input variables	
-        optimal_input = optimal_input * np.array(input_data_std) + np.array(input_data_mean)
-        print("Optimal Input Variables:", optimal_input)
+        # Create a folder to store the optimization results
+        os.mkdir('optimization')
+
+        # Load the input bounds 
+        bounds = _params_optimization.bounds
+
+        # Loop over different current constrainsts
+        for current_value in [200, 300, 400, 500, 600, 700]:
+
+            # Overwrite the current value in the bounds
+            bounds[0] = (current_value-1, current_value+1)
+
+            # Normalize the bounds
+            normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in zip(bounds, input_data_mean.numpy(), input_data_std.numpy())]
+            
+            # Optimize the input variables
+            optimal_input_norm, optimal_target_norm = optimize_for_inputs(model, bounds=normalized_bounds)
+
+            # Denormalize the optimal input and target variables	
+            optimal_input = optimal_input_norm * np.array(input_data_std) + np.array(input_data_mean)
+            optimal_target = optimal_target_norm * target_data_std + target_data_mean
+
+            # Print the optimal input, target variables, and bounds including feature names and target variable
+            print("Optimal Input Variables:")
+            for name, value, bound in zip(feature_names, optimal_input, bounds):
+                print(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])")
+            print(f"\nMaximized Target (s.t. Optimal Input Variables:)  \t{target}: {optimal_target:.4f}")
+
+            # Save the optimal input, target variables, and bounds to a file
+            with open(f'optimization/optimized_input_current_A_{current_value}.txt', 'w') as file:
+                file.write("Optimal Input Variables:\n")
+                for name, value, bound in zip(feature_names, optimal_input, bounds):
+                    file.write(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])\n")
+                file.write(f"\nMaximized Target (s.t. Optimal Input Variables:)\n  {target}: {optimal_target:.4f}\n")
+
 
 # Entry point of the script
 if __name__ == '__main__':
