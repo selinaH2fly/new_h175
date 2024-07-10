@@ -26,7 +26,7 @@ import cv2
 import parameters
 
 # Import input optimization function from input_optimization.py
-from input_optimization import optimize_for_inputs
+from input_optimization import optimize_inputs_evolutionary, optimize_inputs_gradient_based, optimize_inputs_evolutionary_constraint
 
 # Define a GP model
 class ExactGPModel(gpytorch.models.ExactGP):
@@ -513,7 +513,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
 
             val_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
             if plot:
-                    plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, target, i)
+                plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, target, i)
 
             print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Validation Loss: {val_loss.item()}')
             loss_list.append(loss.item())
@@ -529,8 +529,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
 
             val_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
             if plot:
-                    plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, target, i)
-
+                plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, target, i)
 
             print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Validation Loss: {val_loss.item()}')
             loss_list.append(loss.item())
@@ -578,34 +577,46 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
         # Load the input bounds 
         bounds = _params_optimization.bounds
 
-        # Loop over different current constrainsts
-        for current_value in [200, 300, 400, 500, 600, 700]:
+        # # Loop over different current constrainsts
+        # for current_value in [200, 300, 400, 500, 600, 700]:
 
-            # Overwrite the current value in the bounds
-            bounds[0] = (current_value-1, current_value+1)
+        #     # Overwrite the current value in the bounds
+        #     bounds[0] = (current_value-1, current_value+1)
 
-            # Normalize the bounds
-            normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in zip(bounds, input_data_mean.numpy(), input_data_std.numpy())]
-            
-            # Optimize the input variables
-            optimal_input_norm, optimal_target_norm = optimize_for_inputs(model, bounds=normalized_bounds)
+        # Specify and normalize the power constraint
+        power_constraint = 75e3
+        power_constraint_norm = (power_constraint - target_data_mean.numpy() * input_data_mean[0].numpy()) / (target_data_std.numpy() * input_data_std[0].numpy())
 
-            # Denormalize the optimal input and target variables	
-            optimal_input = optimal_input_norm * np.array(input_data_std) + np.array(input_data_mean)
-            optimal_target = optimal_target_norm * target_data_std + target_data_mean
+        # Normalize the bounds
+        normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in zip(bounds, input_data_mean.numpy(), input_data_std.numpy())]
+        
+        # Optimize the input variables
+        # optimal_input_norm, optimal_target_norm = optimize_inputs_gradient_based(model, bounds=normalized_bounds, power_constraint_value=power_constraint, initial_guess=None)
+        optimal_input_norm, optimal_target_norm = optimize_inputs_evolutionary(model, bounds=normalized_bounds, power_constraint_value=power_constraint_norm, penalty_weight=100)
+        # optimal_input_norm, optimal_target_norm = optimize_inputs_evolutionary_constraint(model, bounds=normalized_bounds, power_constraint_value=power_constraint_norm, initial_guess=None)
 
-            # Print the optimal input, target variables, and bounds including feature names and target variable
-            print("Optimal Input Variables:")
+        # Denormalize the optimal input and target variables	
+        optimal_input = optimal_input_norm * np.array(input_data_std) + np.array(input_data_mean)
+        optimal_target = optimal_target_norm * target_data_std + target_data_mean
+
+        # Print the optimal input, target variables, and bounds including feature names and target variable
+        print("Optimal Input Variables:")
+        for name, value, bound in zip(feature_names, optimal_input, bounds):
+            print(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])")
+        print(f"\nMaximized Target (s.t. Optimal Input Variables:)\n  {target}: {optimal_target:.4f}\n")
+
+        # Print the power constraint alongside the power resulting from the optimal input
+        print(f"Power Constraint: {power_constraint:.0f} W")
+        print(f"Power Resulting from Optimal Input: {optimal_input[0] * optimal_target:.0f} W")
+
+        # Save the optimal input, target variables, and bounds to a file
+        with open(f'optimization/optimized_input_power_{power_constraint}.txt', 'w') as file:
+            file.write("Optimal Input Variables:\n")
             for name, value, bound in zip(feature_names, optimal_input, bounds):
-                print(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])")
-            print(f"\nMaximized Target (s.t. Optimal Input Variables:)  \t{target}: {optimal_target:.4f}")
-
-            # Save the optimal input, target variables, and bounds to a file
-            with open(f'optimization/optimized_input_current_A_{current_value}.txt', 'w') as file:
-                file.write("Optimal Input Variables:\n")
-                for name, value, bound in zip(feature_names, optimal_input, bounds):
-                    file.write(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])\n")
-                file.write(f"\nMaximized Target (s.t. Optimal Input Variables:)\n  {target}: {optimal_target:.4f}\n")
+                file.write(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])\n")
+            file.write(f"\nMaximized Target (s.t. Optimal Input Variables:)\n  {target}: {optimal_target:.4f}\n")
+            file.write(f"\nPower Constraint: {power_constraint:.0f} W\n")
+            file.write(f"Power Resulting from Optimal Input: {optimal_input[0] * optimal_target:.0f} W\n")
 
 
 # Entry point of the script

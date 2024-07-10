@@ -3,7 +3,7 @@ import numpy as np
 class Training_Parameters:
 
     def __init__(self):
-        self.iterations = 1e3
+        self.iterations = 100
         # self.iterations = 100
         self.learning_rate = 0.01
         # self.split_ratio = 0.8
@@ -25,8 +25,8 @@ class Logging_Parameters:
 class Optimization_Parameters:
     
         def __init__(self):
-            self.grid_resolution = 100
-            self.bounds = [(100, 700),      # current_A
+            # self.grid_resolution = 100
+            self.bounds = [(50, 700),      # current_A
                            (0, 100),        # cathode_rh_in_perc
                            (1, 5),          # stoich_cathode
                            (1.5, 3),        # pressure_cathode_in_bara
