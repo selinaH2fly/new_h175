@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--target", "voltage", "--cutoff", "100", "--plot", "True", "--model", "model_current_to_voltage.pth"],
+            "args": ["--target", "voltage", "--cutoff", "50", "--plot", "True", "--optimize", "True"],
         }
     ]
 }
