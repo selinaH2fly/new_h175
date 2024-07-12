@@ -283,7 +283,7 @@ def eval_model_performance(model, likelihood, mll, input_tensor, target_tensor, 
     return val_loss
 
 # Plot the model performance
-def plot_model_performance(model, likelihood, input_tensor, target_tensor, target, iteration):
+def plot_model_performance(model, likelihood, input_tensor, target_tensor, iteration, target="voltage", target_normalization=(0, 1), test=True):
 
     # Evaluate the model on the training data
     model.eval()
@@ -291,46 +291,71 @@ def plot_model_performance(model, likelihood, input_tensor, target_tensor, targe
     with torch.no_grad():
         predictions = likelihood(model(input_tensor)).mean.numpy()
 
+    # Denormalize the target tensor and the predictions
+    targets = target_tensor.numpy() * target_normalization[1].numpy() + target_normalization[0].numpy()
+    predictions = predictions * target_normalization[1].numpy() + target_normalization[0].numpy()
+
     # Initialize plot
     f, ax = plt.subplots(1, 1)
     mgr = plt.get_current_fig_manager()
     mgr.resize(720, 720)
 
     # Set the title
-    ax.set_title(f'Model Performance Snapshot - Iteration: {iteration}')
+    ax.set_title(f'Model Performance Snapshot Test Data - Iteration: {iteration}') if test else ax.set_title(f'Model Performance Snapshot Training Data - Iteration: {iteration}')
 
     # Set the labels
-    ax.set_xlabel('Normalized Targets')
-    ax.set_ylabel('Normalized Predictions')
+    ax.set_xlabel(f'{target} Targets')
+    ax.set_ylabel(f'{target} Predictions')
 
-    # Set axis limits
-    ax.set_xlim([-2, 2])
-    ax.set_ylim([-2, 2])
+    # Set axis limits to min and max values of the targets + 10%
+    y_min = np.floor(np.min(targets) * 0.9)
+    y_max = np.ceil(np.max(targets) * 1.1)
+    ax.set_xlim([y_min, y_max])
+    ax.set_ylim([y_min, y_max])
 
     # Set the aspect ratio to be equal
     # ax.set_aspect('equal', adjustable='box')
     ax.grid(True, zorder=1)
 
     # Plot the diagonal line
-    ax.plot([target_tensor.min(), target_tensor.max()], [target_tensor.min(), target_tensor.max()], 'k--', lw=2)
+    ax.plot([y_min, y_max], [y_min, y_max], 'k--', lw=2)
 
     # Plot target vs. predictions
-    ax.plot(target_tensor.numpy(), predictions, 'o', label='Training Data', color='blue')
+    ax.plot(targets, predictions, 'o', label='Training Data', color='blue')
+
+    # Compute the RMS error, R2 score, max error
+    rms_error = np.sqrt(np.mean((targets - predictions) ** 2))
+    r2_score = np.corrcoef(targets, predictions)[0, 1] ** 2
+    max_error = np.max(np.abs(targets - predictions))
+
+    # Add text to the plot
+    ax.text(
+        0.05, 0.95, 
+        f'RMS Error: {rms_error:.2f}\nMax Error: {max_error:.2f}\nR2 Score: {r2_score:.2f}', 
+        horizontalalignment='left', 
+        verticalalignment='top', 
+        transform=ax.transAxes, 
+        fontsize=10,
+        bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', pad=3.0)  # Add background color
+    )
 
     # Save the figure to the model performance snapshots folder
-    plt.savefig(f'model_performance_snapshots/model_performance_snapshot_{iteration}.png', dpi=300, bbox_inches='tight')
+    path = 'model_performance_snapshots/test' if test else 'model_performance_snapshots/train'
+    os.makedirs(path, exist_ok=True)
+    plt.savefig(f'{path}/model_performance_snapshot_{iteration}.png', dpi=300, bbox_inches='tight')
 
     plt.close()
 
-def create_video_from_snapshots():
+def create_video_from_snapshots(test=True):
 
-    # Change the current working directory to the experiment folder
-    os.chdir("model_performance_snapshots")
+    # Change the current working directory
+    path = 'model_performance_snapshots/test' if test else 'model_performance_snapshots/train'
+    os.chdir(path)
 
     # Set the path to the folder containing your PNG frames and the output video file name
     frame_folder = os.getcwd()
 
-    output_video = "model_performance_evolution.avi"
+    output_video = "model_performance_evolution_test.avi" if test else "model_performance_evolution_train.avi"
 
     # Define the frame rate and frame size
     frame_rate = 5  # Adjust as needed
@@ -356,10 +381,10 @@ def create_video_from_snapshots():
     # Release the VideoWriter
     out.release()
 
-    print("Video creation complete.")
+    print("\nVideo creation for test data complete.") if test else print("\nVideo creation for training data complete.")
 
     # Change the current working directory back to the experiment folder
-    os.chdir("..")
+    os.chdir("../..")
 
     return None
 
@@ -495,7 +520,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
 
     # List to store the loss values and iterations
     loss_list = []
-    val_loss_list = []
+    test_loss_list = []
     iterations = []
 
     # Training loop
@@ -511,13 +536,15 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
 
         if i % _params_logging.log_interval == 0:
 
-            val_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
-            if plot:
-                plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, target, i)
+            # Plot the model performance
+            plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, i, target=target, target_normalization=(target_data_mean, target_data_std), test=True) if plot else None
+            plot_model_performance(model, likelihood, train_input_tensor, train_target_tensor, i, target=target, target_normalization=(target_data_mean, target_data_std), test=False) if plot else None
 
-            print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Validation Loss: {val_loss.item()}')
+            # Compute the test loss
+            test_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
+            print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Test Loss: {test_loss.item()}')
             loss_list.append(loss.item())
-            val_loss_list.append(val_loss.item())
+            test_loss_list.append(test_loss.item())
             iterations.append(i)
 
         loss.backward()
@@ -527,14 +554,14 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
     i = i + 1
     if i % _params_logging.log_interval == 0:
 
-            val_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
-            if plot:
-                plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, target, i)
+        plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, i, target=target, target_normalization=(target_data_mean, target_data_std), test=True) if plot else None
+        plot_model_performance(model, likelihood, train_input_tensor, train_target_tensor, i, target=target, target_normalization=(target_data_mean, target_data_std), test=False) if plot else None
 
-            print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Validation Loss: {val_loss.item()}')
-            loss_list.append(loss.item())
-            val_loss_list.append(val_loss.item())
-            iterations.append(i)
+        test_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
+        print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Test Loss: {test_loss.item()}')
+        loss_list.append(loss.item())
+        test_loss_list.append(test_loss.item())
+        iterations.append(i)
 
     # Save the model refering to the target variable
     torch.save(model.state_dict(), f'gpr_model_{target}.pth')
@@ -542,7 +569,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
     # Save the loss values and the corresponding iteration values to a dat file
     with open('loss_values.dat', 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerows(zip(iterations, loss_list, val_loss_list))
+        writer.writerows(zip(iterations, loss_list, test_loss_list))
 
     # Plot the partial dependence plots
     if plot:
@@ -556,7 +583,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
         # Plot the loss to a new figure
         fig = plt.figure(figsize=(8, 6))
         plt.plot(iterations, loss_list, label='Training Loss')
-        plt.plot(iterations, val_loss_list, label='Validation Loss')    
+        plt.plot(iterations, test_loss_list, label='Validation Loss')    
         plt.xlabel('Iterations')
         plt.ylabel('MLL Loss')
         # plt.yscale('log')
@@ -567,7 +594,8 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
         plt.close()
 
         # Create a video from the model performance snapshots
-        create_video_from_snapshots()
+        create_video_from_snapshots(test=True)
+        create_video_from_snapshots(test=False)
 
     if optimize:
 
@@ -585,7 +613,6 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
 
         # Specify and normalize the power constraint
         power_constraint = 75e3
-        # power_constraint_norm = (power_constraint - target_data_mean.numpy() * input_data_mean[0].numpy()) / (target_data_std.numpy() * input_data_std[0].numpy())
 
         # Normalize the bounds
         normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in zip(bounds, input_data_mean.numpy(), input_data_std.numpy())]
@@ -600,7 +627,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
         optimal_target = optimal_target_norm * target_data_std + target_data_mean
 
         # Print the optimal input, target variables, and bounds including feature names and target variable
-        print(f"Power Constraint: {power_constraint:.0f} W\n")
+        print(f"\nPower Constraint: {power_constraint:.0f} W\n")
 
         print("Optimal Input Variables:")
         for name, value, bound in zip(feature_names, optimal_input, bounds):
@@ -610,13 +637,13 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
         print(f"Validation: Power s.t. Optimal Input: {optimal_input[0] * optimal_target:.0f} W")
 
         # Save the optimal input, target variables, and bounds to a file
-        with open(f'optimization/optimized_input_power_{power_constraint}.txt', 'w') as file:
+        with open(f'optimization/optimized_input_power_{int(power_constraint)}.txt', 'w') as file:
             file.write("Optimal Input Variables:\n")
             for name, value, bound in zip(feature_names, optimal_input, bounds):
                 file.write(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])\n")
             file.write(f"\nMaximized Target (s.t. Optimal Input Variables:)\n  {target}: {optimal_target:.4f}\n")
             file.write(f"\nPower Constraint: {power_constraint:.0f} W\n")
-            file.write(f"Power Resulting from Optimal Input: {optimal_input[0] * optimal_target:.0f} W\n")
+            file.write(f"(Check: Power Resulting from Optimal Input: {optimal_input[0] * optimal_target:.0f} W)\n")
 
 
 # Entry point of the script
