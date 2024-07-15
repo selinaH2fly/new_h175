@@ -24,11 +24,18 @@ class Logging_Parameters:
 
 class Optimization_Parameters:
     
-        def __init__(self):
-            # self.grid_resolution = 100
-            self.bounds = [(50, 700),      # current_A
-                           (0, 100),        # cathode_rh_in_perc
-                           (1, 5),          # stoich_cathode
-                           (1.5, 3),        # pressure_cathode_in_bara
-                           (40, 90),]       # temp_coolant_avg_degC
+    def __init__(self):
+        # self.grid_resolution = 100
+        self.bounds = [(50, 700),      # current_A
+                        (0, 100),        # cathode_rh_in_perc
+                        (1, 5),          # stoich_cathode
+                        (1.5, 3),        # pressure_cathode_in_bara
+                        (40, 90),]       # temp_coolant_outlet_degC
         
+class Physical_Parameters:
+     
+    def __init__(self):
+         self.hydrogen_lhv_voltage_equivalent = 1.253
+         self.hydrogen_hhv_voltage_equivalent = 1.481
+         self.std_ambient_pressure_bar = 1.01325
+          
