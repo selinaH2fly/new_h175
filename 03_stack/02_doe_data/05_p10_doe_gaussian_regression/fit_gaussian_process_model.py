@@ -26,7 +26,7 @@ import cv2
 import parameters
 
 # Import input optimization function from input_optimization.py
-from input_optimization import optimize_inputs_evolutionary, optimize_inputs_gradient_based, optimize_inputs_evolutionary_constraint
+from input_optimization import optimize_inputs_evolutionary, optimize_inputs_gradient_based
 
 # Define a GP model
 class ExactGPModel(gpytorch.models.ExactGP):
@@ -381,7 +381,7 @@ def create_video_from_snapshots(test=True):
     # Release the VideoWriter
     out.release()
 
-    print("\nVideo creation for test data complete.") if test else print("\nVideo creation for training data complete.")
+    print("Video creation for test data complete.") if test else print("Video creation for training data complete.")
 
     # Change the current working directory back to the experiment folder
     os.chdir("../..")
@@ -558,7 +558,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
         plot_model_performance(model, likelihood, train_input_tensor, train_target_tensor, i, target=target, target_normalization=(target_data_mean, target_data_std), test=False) if plot else None
 
         test_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
-        print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Test Loss: {test_loss.item()}')
+        print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Test Loss: {test_loss.item()}\n')
         loss_list.append(loss.item())
         test_loss_list.append(test_loss.item())
         iterations.append(i)
