@@ -21,12 +21,14 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import random
 import cv2
+import warnings
+from gpytorch.utils.warnings import GPInputWarning
 
 # Import parameters
 import parameters
 
 # Import input optimization function from input_optimization.py
-from input_optimization import optimize_inputs_evolutionary, optimize_inputs_gradient_based, optimize_inputs_evolutionary_constraint
+from input_optimization import optimize_inputs_evolutionary, optimize_inputs_gradient_based
 
 # Define a GP model
 class ExactGPModel(gpytorch.models.ExactGP):
@@ -120,7 +122,7 @@ def load_high_amp_doe_data():
     return df, units
 
 # Preprocess the data
-def preprocess_data(df, target='voltage', cutoff_current=0):
+def preprocess_data(df, target='voltage', cutoff_current=0, params_pyhsics=None):
 
     # Drop data points from the dataframe with current values below the cutoff value
     df = df[df['current'] > cutoff_current]
@@ -157,8 +159,9 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
     input_data_dict['current_A'] = df_dict['current']
     input_data_dict['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
     input_data_dict['stoich_cathode'] = df_dict['cathode_stoich']
-    input_data_dict['pressure_cathode_in_bara'] = [pressure_barg + 1.01325 for pressure_barg in df_dict['pressure_cathode_inlet']]
-    input_data_dict['temp_coolant_avg_degC'] = [(temp_in + temp_out) / 2 for temp_in, temp_out in zip(df_dict['temp_coolant_inlet'], df_dict['temp_coolant_outlet'])]
+    input_data_dict['pressure_cathode_in_bara'] = [pressure_barg + params_pyhsics.std_ambient_pressure_bar for pressure_barg in df_dict['pressure_cathode_inlet']]
+    # input_data_dict['temp_coolant_avg_degC'] = [(temp_in + temp_out) / 2 for temp_in, temp_out in zip(df_dict['temp_coolant_inlet'], df_dict['temp_coolant_outlet'])]
+    input_data_dict['temp_coolant_outlet_degC'] = df_dict['temp_coolant_outlet'] # Use the outlet temperature as suggested by Steffen P.
 
     # Extract feature names and write them to a file
     feature_names = list(input_data_dict.keys())
@@ -172,9 +175,9 @@ def preprocess_data(df, target='voltage', cutoff_current=0):
     else:
         # Check for custom targets
         if target == 'eta_lhv':
-            target_data = [voltage / 275 / 1.253 for voltage in df_dict['voltage']]
+            target_data = [voltage / 275 / params_pyhsics.hydrogen_lhv_voltage_equivalent for voltage in df_dict['voltage']]
         elif target == 'eta_hhv':
-            target_data = [voltage / 275 / 1.481 for voltage in df_dict['voltage']]
+            target_data = [voltage / 275 / params_pyhsics.hydrogen_hhv_voltage_equivalent for voltage in df_dict['voltage']]
         else:
             raise ValueError(f'Target variable {target} not found in the dataframe!')
 
@@ -271,7 +274,7 @@ def partial_dependence(model, X, feature_index, fixed_feature_index=None, fixed_
     return grid, pdp
 
 # Evaluate the model performance
-def eval_model_performance(model, likelihood, mll, input_tensor, target_tensor, target, iteration):
+def eval_model_performance(model, likelihood, mll, input_tensor, target_tensor):
 
     model.eval()
     likelihood.eval()
@@ -289,7 +292,9 @@ def plot_model_performance(model, likelihood, input_tensor, target_tensor, itera
     model.eval()
     likelihood.eval()
     with torch.no_grad():
-        predictions = likelihood(model(input_tensor)).mean.numpy()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", GPInputWarning)
+            predictions = likelihood(model(input_tensor)).mean.numpy()
 
     # Denormalize the target tensor and the predictions
     targets = target_tensor.numpy() * target_normalization[1].numpy() + target_normalization[0].numpy()
@@ -307,9 +312,9 @@ def plot_model_performance(model, likelihood, input_tensor, target_tensor, itera
     ax.set_xlabel(f'{target} Targets')
     ax.set_ylabel(f'{target} Predictions')
 
-    # Set axis limits to min and max values of the targets + 10%
-    y_min = np.floor(np.min(targets) * 0.9)
-    y_max = np.ceil(np.max(targets) * 1.1)
+    # Set axis limits to min and max values of the targets + 10% (rounded to nearest 0.1)
+    y_min = np.floor((np.min(targets) * 0.9) * 10) / 10
+    y_max = np.ceil((np.max(targets) * 1.1) * 10) / 10
     ax.set_xlim([y_min, y_max])
     ax.set_ylim([y_min, y_max])
 
@@ -331,7 +336,7 @@ def plot_model_performance(model, likelihood, input_tensor, target_tensor, itera
     # Add text to the plot
     ax.text(
         0.05, 0.95, 
-        f'RMS Error: {rms_error:.2f}\nMax Error: {max_error:.2f}\nR2 Score: {r2_score:.2f}', 
+        f'RMS Error: {rms_error:.4f}\nMax Error: {max_error:.4f}\nR2 Score: {r2_score:.4f}', 
         horizontalalignment='left', 
         verticalalignment='top', 
         transform=ax.transAxes, 
@@ -381,7 +386,7 @@ def create_video_from_snapshots(test=True):
     # Release the VideoWriter
     out.release()
 
-    print("\nVideo creation for test data complete.") if test else print("\nVideo creation for training data complete.")
+    print("Video creation for test data complete.") if test else print("Video creation for training data complete.")
 
     # Change the current working directory back to the experiment folder
     os.chdir("../..")
@@ -462,8 +467,10 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltag
         fig.delaxes(axes.flatten()[-1])
 
     # Unify the y-axis limits to min and max values of the subplots (excluding the fixed feature subplot!)
-    y_min = np.floor(np.min([ax.get_ylim()[0] for ax in axes.flatten() if ax.get_ylim()[0] != 0]))
-    y_max = np.ceil(np.max([ax.get_ylim()[1] for ax in axes.flatten() if ax.get_ylim()[1] != 1]))    
+    # y_min = np.floor((np.min([ax.get_ylim()[0] for ax in axes.flatten() if ax.get_ylim()[0] != 0]) * 0.9) * 10) / 10
+    # y_max = np.ceil((np.min([ax.get_ylim()[1] for ax in axes.flatten() if ax.get_ylim()[1] != 1]) * 1.1) * 10) / 10
+    y_min = 0.4
+    y_max = 0.7
     for ax in axes.flatten():
         ax.set_ylim([y_min, y_max])
 
@@ -483,13 +490,14 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltag
     plt.close()
 
 # Main function
-def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, optimize=True, pretrained_model=None):
+def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, optimize=True, pretrained_model=None, power_constraint_kW=75.0, specified_cell_count=275):
 
     # Load parameters
     _params_training = parameters.Training_Parameters()
     # _params_model = parameters.Model_Parameters()
     _params_logging = parameters.Logging_Parameters()
     _params_optimization = parameters.Optimization_Parameters()
+    _params_pyhsics = parameters.Physical_Parameters()
 
     # Set the random seed for reproducibility
     if _params_training.seed is not None:
@@ -503,7 +511,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
     # Load and assign the data
     pd_dataframe, _ = load_high_amp_doe_data()
     train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, (input_data_mean, input_data_std), (target_data_mean, target_data_std), feature_names = \
-        preprocess_data(pd_dataframe, target, cutoff_current)
+        preprocess_data(pd_dataframe, target, cutoff_current, params_pyhsics=_params_pyhsics)
 
     # Likelihood and model
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
@@ -541,7 +549,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
             plot_model_performance(model, likelihood, train_input_tensor, train_target_tensor, i, target=target, target_normalization=(target_data_mean, target_data_std), test=False) if plot else None
 
             # Compute the test loss
-            test_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
+            test_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor)
             print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Test Loss: {test_loss.item()}')
             loss_list.append(loss.item())
             test_loss_list.append(test_loss.item())
@@ -557,8 +565,8 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
         plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, i, target=target, target_normalization=(target_data_mean, target_data_std), test=True) if plot else None
         plot_model_performance(model, likelihood, train_input_tensor, train_target_tensor, i, target=target, target_normalization=(target_data_mean, target_data_std), test=False) if plot else None
 
-        test_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
-        print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Test Loss: {test_loss.item()}')
+        test_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor)
+        print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Test Loss: {test_loss.item()}\n')
         loss_list.append(loss.item())
         test_loss_list.append(test_loss.item())
         iterations.append(i)
@@ -612,38 +620,44 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
         #     bounds[0] = (current_value-1, current_value+1)
 
         # Specify and normalize the power constraint
-        power_constraint = 75e3
+        power_constraint_cell_W = power_constraint_kW * 1000 / specified_cell_count
 
         # Normalize the bounds
         normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in zip(bounds, input_data_mean.numpy(), input_data_std.numpy())]
         
         # Optimize the input variables
         # optimal_input_norm, optimal_target_norm = optimize_inputs_gradient_based(model, bounds=normalized_bounds, power_constraint_value=power_constraint, initial_guess=None)
-        optimal_input_norm, optimal_target_norm = optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std, bounds=normalized_bounds, power_constraint_value=power_constraint, penalty_weight=0.1)
-        # optimal_input_norm, optimal_target_norm = optimize_inputs_evolutionary_constraint(model, bounds=normalized_bounds, power_constraint_value=power_constraint_norm, initial_guess=None)
+        optimal_input_norm, optimal_target_norm = optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std,
+                                                                               bounds=normalized_bounds, power_constraint_value=power_constraint_cell_W, penalty_weight=0.01, params_physics=_params_pyhsics)
 
         # Denormalize the optimal input and target variables	
         optimal_input = optimal_input_norm * np.array(input_data_std) + np.array(input_data_mean)
         optimal_target = optimal_target_norm * target_data_std + target_data_mean
 
         # Print the optimal input, target variables, and bounds including feature names and target variable
-        print(f"\nPower Constraint: {power_constraint:.0f} W\n")
+        print(f"\nOptimization Power Constraint: {power_constraint_kW:.0f} kW")
+        print(f"Specified Cell Count: {specified_cell_count}\n")
 
         print("Optimal Input Variables:")
         for name, value, bound in zip(feature_names, optimal_input, bounds):
             print(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])")
-        print(f"\nMaximized Target (s.t. Optimal Input Variables and Power Constraint):\n  {target}: {optimal_target:.4f}\n")
+        print(f"\nMaximized Target (s.t. Optimal Input Variables, Power Constraint, and Cell Count):\n  {target}: {optimal_target:.4f}\n")
 
-        print(f"Validation: Power s.t. Optimal Input: {optimal_input[0] * optimal_target:.0f} W")
+        print(f"(Validation: Power s.t. Optimal Input: {optimal_input[0] * optimal_target * specified_cell_count * _params_pyhsics.hydrogen_lhv_voltage_equivalent / 1000:.4f} kW)")
 
         # Save the optimal input, target variables, and bounds to a file
-        with open(f'optimization/optimized_input_power_{int(power_constraint)}.txt', 'w') as file:
-            file.write("Optimal Input Variables:\n")
+        with open(f'optimization/optimized_input_for_{int(power_constraint_kW)}kW_with_{int(specified_cell_count)}_cells.txt', 'w') as file:
+            file.write(f"Power Constraint: {power_constraint_kW:.0f} kW\n")
+            file.write(f"Specified Cell Count: {specified_cell_count}\n")
+
+            file.write("\nOptimal Input Variables:\n")
             for name, value, bound in zip(feature_names, optimal_input, bounds):
                 file.write(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])\n")
-            file.write(f"\nMaximized Target (s.t. Optimal Input Variables:)\n  {target}: {optimal_target:.4f}\n")
-            file.write(f"\nPower Constraint: {power_constraint:.0f} W\n")
-            file.write(f"(Check: Power Resulting from Optimal Input: {optimal_input[0] * optimal_target:.0f} W)\n")
+            file.write(f"\nMaximized Target (s.t. Optimal Input Variables, Power Constraint, and Cell Count):\n  {target}: {optimal_target:.4f}\n")
+
+            file.write(f"\n(Validation: Power s.t. Optimal Input: {optimal_input[0] * optimal_target * specified_cell_count * _params_pyhsics.hydrogen_lhv_voltage_equivalent / 1000:.4f} kW)")
+
+    return None
 
 
 # Entry point of the script
@@ -656,8 +670,10 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--plot", type=bool, help="Plot the input/output data", default=True)
     parser.add_argument("-o", "--optimize", type=bool, help="Optimize the input variables", default=True)
     parser.add_argument("-m", "--model", type=str, help="Load a pretrained GPR model", default=None)
+    parser.add_argument("-w", "--power", type=float, help="Power constraint for input variable optimization", default=75.0)
+    parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=275)
 
     args = parser.parse_args()
 
     # Call the main function                        
-    train_gpr_model_on_doe_data(args.target, args.cutoff, args.plot, args.optimize, args.model)
+    train_gpr_model_on_doe_data(args.target, args.cutoff, args.plot, args.optimize, args.model, args.power, args.cellcount)
