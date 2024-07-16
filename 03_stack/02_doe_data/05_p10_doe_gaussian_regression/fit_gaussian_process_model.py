@@ -308,9 +308,9 @@ def plot_model_performance(model, likelihood, input_tensor, target_tensor, itera
     ax.set_xlabel(f'{target} Targets')
     ax.set_ylabel(f'{target} Predictions')
 
-    # Set axis limits to min and max values of the targets + 10%
-    y_min = np.floor(np.min(targets) * 0.9)
-    y_max = np.ceil(np.max(targets) * 1.1)
+    # Set axis limits to min and max values of the targets + 10% (rounded to nearest 0.1)
+    y_min = np.floor((np.min(targets) * 0.9) * 10) / 10
+    y_max = np.ceil((np.max(targets) * 1.1) * 10) / 10
     ax.set_xlim([y_min, y_max])
     ax.set_ylim([y_min, y_max])
 
@@ -332,7 +332,7 @@ def plot_model_performance(model, likelihood, input_tensor, target_tensor, itera
     # Add text to the plot
     ax.text(
         0.05, 0.95, 
-        f'RMS Error: {rms_error:.2f}\nMax Error: {max_error:.2f}\nR2 Score: {r2_score:.2f}', 
+        f'RMS Error: {rms_error:.4f}\nMax Error: {max_error:.4f}\nR2 Score: {r2_score:.4f}', 
         horizontalalignment='left', 
         verticalalignment='top', 
         transform=ax.transAxes, 
@@ -463,8 +463,10 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltag
         fig.delaxes(axes.flatten()[-1])
 
     # Unify the y-axis limits to min and max values of the subplots (excluding the fixed feature subplot!)
-    y_min = np.floor(np.min([ax.get_ylim()[0] for ax in axes.flatten() if ax.get_ylim()[0] != 0]))
-    y_max = np.ceil(np.max([ax.get_ylim()[1] for ax in axes.flatten() if ax.get_ylim()[1] != 1]))    
+    # y_min = np.floor((np.min([ax.get_ylim()[0] for ax in axes.flatten() if ax.get_ylim()[0] != 0]) * 0.9) * 10) / 10
+    # y_max = np.ceil((np.min([ax.get_ylim()[1] for ax in axes.flatten() if ax.get_ylim()[1] != 1]) * 1.1) * 10) / 10
+    y_min = 0.4
+    y_max = 0.7
     for ax in axes.flatten():
         ax.set_ylim([y_min, y_max])
 
