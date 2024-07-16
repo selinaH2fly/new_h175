@@ -2,7 +2,7 @@ import os
 import shutil
 
 # Create and browse to folder for storing experiment results
-def create_experiment_folder(_params_model=None, _params_training=None, _params_logging=None):
+def create_experiment_folder(_params_model=None, _params_training=None, _params_logging=None, _params_optimization=None, type='training'):
     """ Creates new folder to store training results
 
     Parameters
@@ -24,7 +24,12 @@ def create_experiment_folder(_params_model=None, _params_training=None, _params_
 
     # create folder to store data for the experiment running
     experimentID = 1
-    dirName = "{}_gpr_doe_model_experiment".format(experimentID)
+    if type == 'training':
+        dirName = "{}_gpr_doe_model_training_experiment".format(experimentID)
+    elif type == 'optimization':
+        dirName = "{}_gpr_doe_model_optimization_experiment".format(experimentID)
+    elif type == 'training_and_optimization':
+        dirName = "{}_gpr_doe_model_training_and_optimization_experiment".format(experimentID)
     while os.path.exists(dirName):
         experimentID += 1
         dirName = "{}_".format(experimentID) + dirName.split('_', 1)[1]
@@ -47,9 +52,11 @@ def create_experiment_folder(_params_model=None, _params_training=None, _params_
         parameterFile.write(format(vars(_params_training)) + "\n")
     if _params_logging is not None:
         parameterFile.write(format(vars(_params_logging)))
+    if _params_optimization is not None:
+        parameterFile.write(format(vars(_params_optimization)))
     parameterFile.close()
 
     # create folder for storing model snapshots
-    os.mkdir("model_performance_snapshots")
+    # os.mkdir("model_performance_snapshots")
 
     return None
