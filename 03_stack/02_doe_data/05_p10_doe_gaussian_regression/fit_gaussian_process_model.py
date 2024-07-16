@@ -21,6 +21,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import random
 import cv2
+import warnings
+from gpytorch.utils.warnings import GPInputWarning
 
 # Import parameters
 import parameters
@@ -290,7 +292,9 @@ def plot_model_performance(model, likelihood, input_tensor, target_tensor, itera
     model.eval()
     likelihood.eval()
     with torch.no_grad():
-        predictions = likelihood(model(input_tensor)).mean.numpy()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", GPInputWarning)
+            predictions = likelihood(model(input_tensor)).mean.numpy()
 
     # Denormalize the target tensor and the predictions
     targets = target_tensor.numpy() * target_normalization[1].numpy() + target_normalization[0].numpy()
