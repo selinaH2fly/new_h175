@@ -24,23 +24,26 @@ import cv2
 import warnings
 from gpytorch.utils.warnings import GPInputWarning
 
+# Import the Gaussian process regression model
+from gpr_model import ExactGPModel
+
 # Import parameters
 import parameters
 
 # Import input optimization function from input_optimization.py
 from input_optimization import optimize_inputs_evolutionary, optimize_inputs_gradient_based
 
-# Define a GP model
-class ExactGPModel(gpytorch.models.ExactGP):
-    def __init__(self, train_x, train_y, likelihood):
-        super(ExactGPModel, self).__init__(train_x, train_y, likelihood=gpytorch.likelihoods.GaussianLikelihood())
-        self.mean_module = gpytorch.means.ConstantMean()
-        self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
+# # Define a GP model
+# class ExactGPModel(gpytorch.models.ExactGP):
+#     def __init__(self, train_x, train_y, likelihood):
+#         super(ExactGPModel, self).__init__(train_x, train_y, likelihood=gpytorch.likelihoods.GaussianLikelihood())
+#         self.mean_module = gpytorch.means.ConstantMean()
+#         self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
 
-    def forward(self, x):
-        mean_x = self.mean_module(x)
-        covar_x = self.covar_module(x)
-        return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+#     def forward(self, x):
+#         mean_x = self.mean_module(x)
+#         covar_x = self.covar_module(x)
+#         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
 # Create and browse to folder for storing experiment results
 def create_experiment_folder(_params_model=None, _params_training=None, _params_logging=None):
@@ -77,7 +80,7 @@ def create_experiment_folder(_params_model=None, _params_training=None, _params_
     os.chdir(dirName)
     shutil.make_archive("Sources", 'zip', "Sources_unzipped")
     shutil.rmtree("Sources_unzipped")
-    print("Directory for running experiment no. {} created".format(experimentID))
+    print("Directory for running experiment no. {} created\n".format(experimentID))
 
     # save parameters to file
     parameterFile = open("parameterFile.txt", "w")
