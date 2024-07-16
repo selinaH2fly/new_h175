@@ -66,10 +66,7 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
     print(f"(Validation: Power s.t. Optimal Input: {optimal_input[0] * optimal_target * specified_cell_count * _params_pyhsics.hydrogen_lhv_voltage_equivalent / 1000:.4f} kW)")
 
     # Save the optimal input, target variables, and bounds to a file
-    if not os.path.exists('optimization'):
-        os.mkdir('optimization')
-
-    with open(f'optimization/optimized_input_for_{int(power_constraint_kW)}kW_with_{int(specified_cell_count)}_cells.txt', 'w') as file:
+    with open(f'optimized_input_for_{int(power_constraint_kW)}kW_with_{int(specified_cell_count)}_cells.txt', 'w') as file:
         file.write(f"Power Constraint: {power_constraint_kW:.0f} kW\n")
         file.write(f"Specified Cell Count: {specified_cell_count}\n")
 
