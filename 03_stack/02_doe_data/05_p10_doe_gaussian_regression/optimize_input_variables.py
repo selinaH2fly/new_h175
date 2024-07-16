@@ -28,7 +28,7 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
     # Create a folder to store the training results
     create_experiment_folder(_params_optimization=_params_optimization, type='optimization')
 
-    # Load and assign the data TODO: Extract all necessary information from the stored model
+    # Load and assign the data TODO Extract all necessary information from the stored model
     pd_dataframe, _ = load_high_amp_doe_data()
     train_input_tensor, train_target_tensor, _, _, (input_data_mean, input_data_std), (target_data_mean, target_data_std), feature_names = \
         preprocess_data(pd_dataframe, 'eta_lhv', 50, params_pyhsics=_params_pyhsics)
@@ -61,7 +61,7 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
     print("Optimal Input Variables:")
     for name, value, bound in zip(feature_names, optimal_input, bounds):
         print(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])")
-    print(f"\nMaximized Target (s.t. Optimal Input Variables, Power Constraint, and Cell Count):\n  voltage: {optimal_target:.4f}\n")
+    print(f"\nMaximized Target (s.t. Optimal Input Variables, Power Constraint, and Cell Count):\n  eta_lhv: {optimal_target:.4f}\n")
 
     print(f"(Validation: Power s.t. Optimal Input: {optimal_input[0] * optimal_target * specified_cell_count * _params_pyhsics.hydrogen_lhv_voltage_equivalent / 1000:.4f} kW)")
 
