@@ -274,7 +274,7 @@ def partial_dependence(model, X, feature_index, fixed_feature_index=None, fixed_
     return grid, pdp
 
 # Evaluate the model performance
-def eval_model_performance(model, likelihood, mll, input_tensor, target_tensor, target, iteration):
+def eval_model_performance(model, likelihood, mll, input_tensor, target_tensor):
 
     model.eval()
     likelihood.eval()
@@ -549,7 +549,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
             plot_model_performance(model, likelihood, train_input_tensor, train_target_tensor, i, target=target, target_normalization=(target_data_mean, target_data_std), test=False) if plot else None
 
             # Compute the test loss
-            test_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
+            test_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor)
             print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Test Loss: {test_loss.item()}')
             loss_list.append(loss.item())
             test_loss_list.append(test_loss.item())
@@ -565,7 +565,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
         plot_model_performance(model, likelihood, test_input_tensor, test_target_tensor, i, target=target, target_normalization=(target_data_mean, target_data_std), test=True) if plot else None
         plot_model_performance(model, likelihood, train_input_tensor, train_target_tensor, i, target=target, target_normalization=(target_data_mean, target_data_std), test=False) if plot else None
 
-        test_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor, target, i)
+        test_loss = eval_model_performance(model, likelihood, mll, test_input_tensor, test_target_tensor)
         print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Test Loss: {test_loss.item()}\n')
         loss_list.append(loss.item())
         test_loss_list.append(test_loss.item())
@@ -628,7 +628,7 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
         # Optimize the input variables
         # optimal_input_norm, optimal_target_norm = optimize_inputs_gradient_based(model, bounds=normalized_bounds, power_constraint_value=power_constraint, initial_guess=None)
         optimal_input_norm, optimal_target_norm = optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std,
-                                                                               bounds=normalized_bounds, power_constraint_value=power_constraint_cell_W, penalty_weight=0.1, params_physics=_params_pyhsics)
+                                                                               bounds=normalized_bounds, power_constraint_value=power_constraint_cell_W, penalty_weight=0.01, params_physics=_params_pyhsics)
 
         # Denormalize the optimal input and target variables	
         optimal_input = optimal_input_norm * np.array(input_data_std) + np.array(input_data_mean)
@@ -656,6 +656,8 @@ def train_gpr_model_on_doe_data(target='voltage', cutoff_current=0, plot=True, o
             file.write(f"\nMaximized Target (s.t. Optimal Input Variables, Power Constraint, and Cell Count):\n  {target}: {optimal_target:.4f}\n")
 
             file.write(f"\n(Validation: Power s.t. Optimal Input: {optimal_input[0] * optimal_target * specified_cell_count * _params_pyhsics.hydrogen_lhv_voltage_equivalent / 1000:.4f} kW)")
+
+    return None
 
 
 # Entry point of the script
