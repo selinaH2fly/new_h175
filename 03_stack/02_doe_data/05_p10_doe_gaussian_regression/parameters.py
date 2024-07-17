@@ -37,7 +37,16 @@ class Optimization_Parameters:
 class Physical_Parameters:
      
     def __init__(self):
-         self.hydrogen_lhv_voltage_equivalent = 1.253
-         self.hydrogen_hhv_voltage_equivalent = 1.481
-         self.std_ambient_pressure_bar = 1.01325
+        self.hydrogen_lhv_voltage_equivalent = 1.253
+        self.hydrogen_hhv_voltage_equivalent = 1.481
+
+        self.sea_level_ambient_pressure_bar = 1.01325
+        self.sea_level_ambient_temperature_K = 288.15
+        self.temperature_lapse_rate = 0.0065
+
+        self.specific_gas_constant = 287.05
+        self.gravity = 9.81
+    
+        self.oxygen_mol_fraction = 0.2095
+        self.air_molar_mass = 28.97
           

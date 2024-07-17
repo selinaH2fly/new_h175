@@ -30,7 +30,7 @@ def load_high_amp_doe_data():
     return df, units
 
 # Preprocess the data
-def preprocess_data(df, target='voltage', cutoff_current=0, params_pyhsics=None):
+def preprocess_data(df, target='eta_lhv', cutoff_current=0, params_pyhsics=None):
 
     # Drop data points from the dataframe with current values below the cutoff value
     df = df[df['current'] > cutoff_current]
@@ -67,7 +67,7 @@ def preprocess_data(df, target='voltage', cutoff_current=0, params_pyhsics=None)
     input_data_dict['current_A'] = df_dict['current']
     input_data_dict['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
     input_data_dict['stoich_cathode'] = df_dict['cathode_stoich']
-    input_data_dict['pressure_cathode_in_bara'] = [pressure_barg + params_pyhsics.std_ambient_pressure_bar for pressure_barg in df_dict['pressure_cathode_inlet']]
+    input_data_dict['pressure_cathode_in_bara'] = [pressure_barg + params_pyhsics.sea_level_ambient_pressure_bar for pressure_barg in df_dict['pressure_cathode_inlet']]
     # input_data_dict['temp_coolant_avg_degC'] = [(temp_in + temp_out) / 2 for temp_in, temp_out in zip(df_dict['temp_coolant_inlet'], df_dict['temp_coolant_outlet'])]
     input_data_dict['temp_coolant_outlet_degC'] = df_dict['temp_coolant_outlet'] # Use the outlet temperature as suggested by Steffen P.
 

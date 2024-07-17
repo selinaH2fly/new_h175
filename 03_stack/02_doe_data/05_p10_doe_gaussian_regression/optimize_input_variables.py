@@ -12,9 +12,24 @@ import parameters
 from file_handling import create_experiment_folder
 from gpr_model import ExactGPModel
 from data_processing import load_high_amp_doe_data, preprocess_data
-from input_optimization import optimize_inputs_evolutionary
+from optimization_functions import optimize_inputs_evolutionary
 
-def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cell_count=275):
+def icao_atmosphere(flight_level_100ft, params_physics):
+    """
+    Calculate the temperature and pressure at a given altitude using the ICAO atmosphere model.
+    """
+    # Calculate the altitude in meters
+    altitude_m = flight_level_100ft * 100 * 0.3048
+
+    # Calculate the temperature and pressure at the given altitude
+    temperature_K = params_physics.sea_level_ambient_temperature_K - params_physics.temperature_lapse_rate * altitude_m
+    pressure_Pa = params_physics.sea_level_ambient_pressure_bar*1e5 * \
+        (1 - params_physics.temperature_lapse_rate * altitude_m / params_physics.sea_level_ambient_temperature_K) ** \
+            (params_physics.gravity / (params_physics.specific_gas_constant * params_physics.temperature_lapse_rate))
+
+    return temperature_K, pressure_Pa
+
+def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50):
     # Load parameters
     _params_optimization = parameters.Optimization_Parameters()
     _params_pyhsics = parameters.Physical_Parameters()
@@ -38,6 +53,9 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
     model = ExactGPModel(train_input_tensor, train_target_tensor, likelihood)
     model_path = os.path.join(Path(os.getcwd()).parents[0], model_path)
     model.load_state_dict(torch.load(model_path))
+
+    # Calculate the temperature and pressure at the given flight level
+    temperature_K, pressure_Pa = icao_atmosphere(flight_level_100ft, _params_pyhsics)
 
     # Normalize the bounds
     bounds = _params_optimization.bounds
@@ -84,8 +102,9 @@ if __name__ == '__main__':
     parser.add_argument("-m", "--model", type=str, help="Path to the trained GPR model", required=True)
     parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=75.0)
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=275)
+    parser.add_argument("-f", "--flightlevel", type=float, help="Flight level in 100x feets", default=50)
 
     args = parser.parse_args()
 
     # Call the optimize_with_trained_model function                        
-    optimize_input_variables(args.model, args.power, args.cellcount)
+    optimize_input_variables(args.model, args.power, args.cellcount, args.flightlevel)
