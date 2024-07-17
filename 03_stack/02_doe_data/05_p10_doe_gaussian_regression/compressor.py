@@ -1,12 +1,13 @@
 import CoolProp.CoolProp as CP
 
 class Compressor:
-    def __init__(self, params_physics):
-        self.isentropic_efficiency = 0.75
-        self.electric_efficiency = 0.95
+    def __init__(self, params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95):
+
+        self.isentropic_efficiency = isentropic_efficiency
+        self.electric_efficiency = electric_efficiency
         self.params_physics = params_physics
 
-    def compressor_power(air_mass_flow_kg_s, pressure_in_Pa, pressure_out_Pa, temperature_in_K, params_physics):
+    def compressor_power(self, air_mass_flow_kg_s, pressure_out_Pa, flight_level_100ft=50):
         """
         Calculate the electrical power consumed by the compressor.
 
@@ -20,12 +21,15 @@ class Compressor:
         - compressor_el_power_W: The electrical power required for the compressor in Watts.
         """
 
+        # Evaluate the temperature and pressure at the given flight level
+        temperature_in_K, pressure_in_Pa = self.icao_atmosphere(flight_level_100ft)
+
         # Calculate the pressure ratio
         pressure_ratio = pressure_out_Pa / pressure_in_Pa
 
         # Calculate the specific work input to the compressor (isentropic work)
         specific_compressor_work_isentropic = CP.PropsSI('C', 'T', temperature_in_K, 'P', pressure_in_Pa, 'Air') * temperature_in_K * \
-            ((pressure_ratio ** ((params_physics.specific_heat_ratio - 1) / params_physics.specific_heat_ratio)) - 1)
+            ((pressure_ratio ** ((self.params_physics.specific_heat_ratio - 1) / self.params_physics.specific_heat_ratio)) - 1)
         
         # Adjust for isentropic efficiency
         specific_compressor_work = specific_compressor_work_isentropic / self.isentropic_efficiency
@@ -34,21 +38,22 @@ class Compressor:
         compressor_power_W = specific_compressor_work * air_mass_flow_kg_s
 
         # Calculate the electrical power required
-        compressor_el_power_W = compressor_power_W / params_compressor.electric_efficiency
+        compressor_el_power_W = compressor_power_W / self.electric_efficiency
 
         return compressor_el_power_W
     
-def icao_atmosphere(flight_level_100ft, params_physics):
-    """
-    Calculate the temperature and pressure at a given altitude using the ICAO atmosphere model.
-    """
-    # Calculate the altitude in meters
-    altitude_m = flight_level_100ft * 100 * 0.3048
+    def icao_atmosphere(self, flight_level_100ft):
+        """
+        Calculate the temperature and pressure at a given altitude using the ICAO atmosphere model.
+        """
 
-    # Calculate the temperature and pressure at the given altitude
-    temperature_K = params_physics.sea_level_ambient_temperature_K - params_physics.temperature_lapse_rate * altitude_m
-    pressure_Pa = params_physics.sea_level_ambient_pressure_bar*1e5 * \
-        (1 - params_physics.temperature_lapse_rate * altitude_m / params_physics.sea_level_ambient_temperature_K) ** \
-            (params_physics.gravity / (params_physics.specific_gas_constant * params_physics.temperature_lapse_rate))
+        # Calculate the altitude in meters
+        altitude_m = flight_level_100ft * 100 * 0.3048
 
-    return temperature_K, pressure_Pa
+        # Calculate the temperature and pressure at the given altitude
+        temperature_K = self.params_physics.sea_level_ambient_temperature_K - self.params_physics.temperature_lapse_rate * altitude_m
+        pressure_Pa = self.params_physics.sea_level_ambient_pressure_bar*1e5 * \
+            (1 - self.params_physics.temperature_lapse_rate * altitude_m / self.params_physics.sea_level_ambient_temperature_K) ** \
+                (self.params_physics.gravity / (self.params_physics.specific_gas_constant * self.params_physics.temperature_lapse_rate))
+
+        return temperature_K, pressure_Pa

@@ -1,63 +1,26 @@
+# import libraries
 import torch
 import gpytorch
 import numpy as np
-from scipy.optimize import minimize, differential_evolution, NonlinearConstraint
+from scipy.optimize import differential_evolution
 
-def optimize_inputs_gradient_based(model, initial_guess=None, bounds=None, power_constraint_value=None):
+# Import custom classes and functions
+import parameters
+from compressor import Compressor
+
+def compute_air_mass_flow(stoichiometry, current_A, params_physics, cellcount=275):
     """
-    Optimize the efficiency predicted by the GPyTorch model.
-
-    Parameters:
-    - model: The trained GPyTorch model.
-    - initial_guess: Initial guess for the optimizer. If None, the mean of the scaled data is used.
-    - bounds: Bounds for each feature as a list of tuples [(min1, max1), (min2, max2), ...].
-
-    Returns:
-    - optimal_input: The optimal input values in the original scale.
+    Compute the air mass flow rate in kg/s.
     """
 
-    # Define the objective function for optimization
-    def objective_function(x):
-        x_tensor = torch.tensor(x, dtype=torch.float).unsqueeze(0)
-        model.eval()
-        with torch.no_grad(), gpytorch.settings.fast_pred_var():
-            prediction = model(x_tensor).mean.numpy()
-        return -prediction  # We negate because we want to maximize
-    
-    # Define the constraint function
-    if power_constraint_value is not None:
-        def constraint_function(x):
-            return power_constraint(x)
-    else:
-        constraint_function = None
+    # Calculate the air mass flow rate
+    air_mass_flow_kg_s = current_A * cellcount * stoichiometry / \
+        (4 * params_physics.faraday * params_physics.oxygen_mol_fraction)
 
-    def power_constraint(x):
-        voltage = model(torch.tensor(x, dtype=torch.float).unsqueeze(0)).mean.item()
-        current = x[0]
-        return voltage * current - power_constraint_value
-    
-    # Nonlinear constraint
-    nonlinear_constraint = NonlinearConstraint(power_constraint, 0, 0)
+    return air_mass_flow_kg_s
 
-    # If no initial guess is provided, use the mean of bounds provided
-    if initial_guess is None:
-        if bounds is not None:
-            initial_guess = np.mean(bounds, axis=1)
-        else:
-            raise ValueError("If no initial guess is provided, bounds must be specified.")
 
-    # Perform the optimization
-    result = minimize(objective_function, initial_guess, bounds=bounds, constraints=[nonlinear_constraint], method='SLSQP')
-
-    # Get the optimal (normalized) input variables
-    optimal_input_scaled = result.x
-
-    # Return the optimized prediction subject to the optimmal input
-    optimal_target_scaled = -result.fun
-
-    return optimal_input_scaled, optimal_target_scaled
-
-def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std, initial_guess=None, bounds=None, power_constraint_value=None, penalty_weight=0.1, params_physics=None):
+def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std, flight_level_100ft, cellcount=275, bounds=None, power_constraint_kW=None, penalty_weight=0.1, params_physics=None):
     """
     Optimize the (cell) voltage predicted by the GPyTorch model with a (cell) power constraint using differential evolution.
 
@@ -85,18 +48,21 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
         current = current * input_data_std[0] + input_data_mean[0]
         eta_lhv = eta_lhv * target_data_std + target_data_mean
 
-        power_constraint = eta_lhv * params_physics.hydrogen_lhv_voltage_equivalent * current - power_constraint_value
-        penalty = penalty_weight * (power_constraint**2)  # Squared term to ensure positive penalty
+        if power_constraint_kW is None:
+            penalty = 0
+        else:
+            power_constraint = eta_lhv * params_physics.hydrogen_lhv_voltage_equivalent * cellcount * current - power_constraint_kW * 1000
+            penalty = penalty_weight * (power_constraint**2)  # Squared term to ensure positive penalty
+
         result = -eta_lhv + penalty  # Negate voltage to maximize and add penalty for constraint violation
 
         return result
 
-    # If no initial guess is provided, use the mean of bounds provided
-    if initial_guess is None:
-        if bounds is not None:
-            initial_guess = np.mean(bounds, axis=1)
-        else:
-            raise ValueError("If no initial guess is provided, bounds must be specified.")
+    # Instantiate the compressor object
+    _params_physics = parameters.Physical_Parameters()
+    _params_compressor = parameters.Compressor_Parameters()
+    compressor = Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency, \
+                            electric_efficiency=_params_compressor.electric_efficiency)
     
     # Perform the optimization using differential evolution
     result = differential_evolution(objective_function, bounds)
@@ -104,10 +70,18 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
     # Get the optimal (normalized) input variables
     optimal_input_scaled = result.x
 
-    # Evaluate the optimal target value
-    x_tensor = torch.tensor(optimal_input_scaled, dtype=torch.float).unsqueeze(0)
-    model.eval()
-    with torch.no_grad(), gpytorch.settings.fast_pred_var():
-        optimal_target_scaled = model(x_tensor).mean.item()
+    # Denormalize the optimal input and target variables
+    optimal_input = optimal_input_scaled * np.array(input_data_std) + np.array(input_data_mean)
+    optimal_target = -result.fun * target_data_std + target_data_mean
 
-    return optimal_input_scaled, optimal_target_scaled
+    # Test the compressor power function
+    air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], params_physics=_params_physics)
+    compressor_power = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3], flight_level_100ft=50)
+
+    # Evaluate the optimal target value
+    # x_tensor = torch.tensor(optimal_input_scaled, dtype=torch.float).unsqueeze(0)
+    # model.eval()
+    # with torch.no_grad(), gpytorch.settings.fast_pred_var():
+    #     optimal_target_scaled = model(x_tensor).mean.item()
+
+    return optimal_input, optimal_target, compressor_power

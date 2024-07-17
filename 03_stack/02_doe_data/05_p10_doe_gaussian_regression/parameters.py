@@ -39,6 +39,7 @@ class Physical_Parameters:
     def __init__(self):
         self.hydrogen_lhv_voltage_equivalent = 1.253
         self.hydrogen_hhv_voltage_equivalent = 1.481
+        self.faraday = 96485
 
         self.sea_level_ambient_pressure_bar = 1.01325
         self.sea_level_ambient_temperature_K = 288.15
@@ -52,4 +53,9 @@ class Physical_Parameters:
         self.air_molar_mass = 28.97
 
 
-          
+class Compressor_Parameters:
+
+    def __init__(self):
+
+        self.isentropic_efficiency = 0.75
+        self.electric_efficiency = 0.95

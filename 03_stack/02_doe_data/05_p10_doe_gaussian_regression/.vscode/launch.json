@@ -11,7 +11,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--target", "eta_lhv", "--cutoff", "50", "--plot", "True", "--optimize", "True", "--power", "75", "--cellcount", "275"],
+            "args": ["--target", "eta_lhv", "--cutoff", "50"],
         }
 
         {
