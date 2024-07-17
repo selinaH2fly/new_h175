@@ -76,7 +76,7 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
 
     # Test the compressor power function
     air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], params_physics=_params_physics)
-    compressor_power = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3], flight_level_100ft=50)
+    compressor_power = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3]*1e5, flight_level_100ft=50)
 
     # Evaluate the optimal target value
     # x_tensor = torch.tensor(optimal_input_scaled, dtype=torch.float).unsqueeze(0)
