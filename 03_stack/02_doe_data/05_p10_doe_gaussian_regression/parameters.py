@@ -46,7 +46,10 @@ class Physical_Parameters:
 
         self.specific_gas_constant = 287.05
         self.gravity = 9.81
+        self.specific_heat_ratio = 1.4
     
         self.oxygen_mol_fraction = 0.2095
         self.air_molar_mass = 28.97
+
+
           
