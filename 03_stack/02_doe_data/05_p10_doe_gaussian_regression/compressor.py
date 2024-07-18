@@ -57,3 +57,14 @@ class Compressor:
                 (self.params_physics.gravity / (self.params_physics.specific_gas_constant * self.params_physics.temperature_lapse_rate))
 
         return temperature_K, pressure_Pa
+    
+    def compute_air_mass_flow(self, stoichiometry, current_A, cellcount=275):
+        """
+        Compute the air mass flow rate in kg/s.
+        """
+
+        # Calculate the air mass flow rate
+        air_mass_flow_kg_s = current_A * cellcount * stoichiometry * self.params_physics.air_molar_mass / \
+            (4 * self.params_physics.faraday * self.params_physics.oxygen_mol_fraction)
+
+        return air_mass_flow_kg_s

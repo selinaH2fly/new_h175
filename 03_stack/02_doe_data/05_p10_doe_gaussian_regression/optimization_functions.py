@@ -8,18 +8,6 @@ from scipy.optimize import differential_evolution
 import parameters
 from compressor import Compressor
 
-def compute_air_mass_flow(stoichiometry, current_A, params_physics, cellcount=275):
-    """
-    Compute the air mass flow rate in kg/s.
-    """
-
-    # Calculate the air mass flow rate
-    air_mass_flow_kg_s = current_A * cellcount * stoichiometry * params_physics.air_molar_mass / \
-        (4 * params_physics.faraday * params_physics.oxygen_mol_fraction)
-
-    return air_mass_flow_kg_s
-
-
 def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std, flight_level_100ft, cellcount=275, bounds=None, power_constraint_kW=None, penalty_weight=0.1, params_physics=None):
     """
     Optimize the (cell) voltage predicted by the GPyTorch model with a (cell) power constraint using differential evolution.
@@ -75,13 +63,7 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
     optimal_target = -result.fun * target_data_std + target_data_mean
 
     # Test the compressor power function
-    air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], params_physics=_params_physics)
+    air_mass_flow_kg_s = compressor.compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], cellcount=cellcount)
     compressor_power = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3]*1e5, flight_level_100ft=flight_level_100ft)
-
-    # Evaluate the optimal target value
-    # x_tensor = torch.tensor(optimal_input_scaled, dtype=torch.float).unsqueeze(0)
-    # model.eval()
-    # with torch.no_grad(), gpytorch.settings.fast_pred_var():
-    #     optimal_target_scaled = model(x_tensor).mean.item()
 
     return optimal_input, optimal_target, compressor_power
