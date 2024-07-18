@@ -14,15 +14,26 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
 
     Parameters:
     - model: The trained GPyTorch model.
-    - power_constraint_value: The power constraint value per cell (voltage_cell * current).
-    - initial_guess: Initial guess for the optimizer. If None, the mean of the scaled data is used.
+    - input_data_mean: Mean values for input data normalization.
+    - input_data_std: Standard deviation values for input data normalization.
+    - target_data_mean: Mean values for target data normalization.
+    - target_data_std: Standard deviation values for target data normalization.
+    - flight_level_100ft: Flight level in 100 feet units.
+    - cellcount: Number of cells.
     - bounds: Bounds for each feature as a list of tuples [(min1, max1), (min2, max2), ...].
+    - power_constraint_kW: Power constraint in kilowatts.
     - penalty_weight: Weight for the penalty term in the objective function.
+    - params_physics: Physical parameters.
 
     Returns:
     - optimal_input: The optimal input values in the original scale.
     - optimal_target: The maximized target (eta_lhv) subject to the power constraint.
+    - compressor_power: The power of the compressor.
     """
+    
+    # Define global list to store residuum values
+    global residuum_list
+    residuum_list = []
 
     # Define the objective function for optimization
     def objective_function(x):
@@ -44,7 +55,17 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
 
         result = -eta_lhv + penalty  # Negate voltage to maximize and add penalty for constraint violation
 
+        # Calculate residuum
+        residuum = abs(result)
+        residuum_list.append(residuum)
+
         return result
+
+    # Define the callback function to monitor optimization
+    def callback(xk, convergence):
+        # Print the latest residuum value
+        if residuum_list:
+            print(f'Current optimization residuum: {residuum_list[-1]:.4f}')
 
     # Instantiate the compressor object
     _params_physics = parameters.Physical_Parameters()
@@ -53,7 +74,18 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
                             electric_efficiency=_params_compressor.electric_efficiency)
     
     # Perform the optimization using differential evolution
-    result = differential_evolution(objective_function, bounds)
+    result = differential_evolution(
+        objective_function,
+        bounds,
+        maxiter=1000,           # Maximum number of generations
+        popsize=15,             # Population size multiplier
+        tol=0.01,               # Relative tolerance for convergence
+        atol=0,                 # Absolute tolerance for convergence
+        mutation=(0.5, 1),      # Mutation factor
+        recombination=0.7,      # Recombination constant
+        callback=callback,      # Callback function
+        strategy='best1bin'     # Strategy for differential evolution
+    )
 
     # Get the optimal (normalized) input variables
     optimal_input_scaled = result.x

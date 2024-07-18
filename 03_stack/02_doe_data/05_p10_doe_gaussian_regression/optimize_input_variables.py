@@ -25,8 +25,8 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
         np.random.seed(_params_optimization.seed)
         torch.manual_seed(_params_optimization.seed)
 
-    print(f"Optimization Stack Power Constraint: {power_constraint_kW:.0f} kW")
-    print(f"Specified Cell Count: {specified_cell_count}\n")
+    print(f"\nOptimization Stack Power Constraint: {power_constraint_kW:.0f} kW")
+    print(f"Specified Cell Count: {specified_cell_count}")
 
     # Create a folder to store the training results
     create_experiment_folder(_params_optimization=_params_optimization, type='optimization')
@@ -53,7 +53,7 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
                                                                                      penalty_weight=1e-4, params_physics=_params_pyhsics)
 
     # Print the optimal input, target variables, and bounds including feature names and target variable
-    print("Optimal Input Variables:")
+    print("\nOptimal Input Variables:")
     for name, value, bound in zip(feature_names, optimal_input, bounds):
         print(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])")
     print(f"\nMaximized Target (s.t. Optimal Input Variables, Stack Power Constraint, and Cell Count):\n  eta_lhv: {optimal_target:.4f}\n")
