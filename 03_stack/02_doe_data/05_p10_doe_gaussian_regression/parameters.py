@@ -50,7 +50,7 @@ class Physical_Parameters:
         self.specific_heat_ratio = 1.4
     
         self.oxygen_mol_fraction = 0.2095
-        self.air_molar_mass = 28.97
+        self.air_molar_mass = 28.97 * 1e-3
 
 
 class Compressor_Parameters:

@@ -47,7 +47,7 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
     # Optimize the input variables
     optimal_input, optimal_target, compressor_power_W = optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std, flight_level_100ft,
                                                                                      cellcount=specified_cell_count, bounds=normalized_bounds, power_constraint_kW=power_constraint_kW,
-                                                                                     penalty_weight=0.01, params_physics=_params_pyhsics)
+                                                                                     penalty_weight=0.001, params_physics=_params_pyhsics)
 
     # Denormalize the optimal input and target variables	
     # optimal_input = optimal_input_norm * np.array(input_data_std) + np.array(input_data_mean)
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     parser.add_argument("-m", "--model", type=str, help="Path to the trained GPR model", required=True)
     parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=75.0)
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=275)
-    parser.add_argument("-f", "--flightlevel", type=float, help="Flight level in 100x feets", default=50)
+    parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=50)
 
     args = parser.parse_args()
 
