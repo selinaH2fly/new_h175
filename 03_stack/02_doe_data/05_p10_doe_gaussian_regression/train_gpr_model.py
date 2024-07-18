@@ -82,7 +82,7 @@ def train_gpr_model(target='voltage', cutoff_current=0, plot=True, pretrained_mo
 
             # Compute the test loss
             test_loss = eval_prediction_performance(model, likelihood, mll, test_input_tensor, test_target_tensor)
-            print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Test Loss: {test_loss.item()}')
+            print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item():.4f} - Test Loss: {test_loss.item():.4f}')
             loss_list.append(loss.item())
             test_loss_list.append(test_loss.item())
             iterations.append(i)
@@ -98,7 +98,7 @@ def train_gpr_model(target='voltage', cutoff_current=0, plot=True, pretrained_mo
         plot_prediction_performance(model, likelihood, train_input_tensor, train_target_tensor, i, target=target, target_normalization=(target_data_mean, target_data_std), test=False)
 
         test_loss = eval_prediction_performance(model, likelihood, mll, test_input_tensor, test_target_tensor)
-        print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item()} - Test Loss: {test_loss.item()}\n')
+        print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item():.4f} - Test Loss: {test_loss.item():.4f}\n')
         loss_list.append(loss.item())
         test_loss_list.append(test_loss.item())
         iterations.append(i)
@@ -134,6 +134,9 @@ def train_gpr_model(target='voltage', cutoff_current=0, plot=True, pretrained_mo
     # Create a video from the model performance snapshots
     create_prediction_performance_video(test=True)
     create_prediction_performance_video(test=False)
+
+    print(f'\nTraining of the Gaussian process regression model for target variable {target} is completed!')
+    print('___________________________________________________________________________________________\n')
 
     return model, input_data_mean, input_data_std, target_data_mean, target_data_std, feature_names
 

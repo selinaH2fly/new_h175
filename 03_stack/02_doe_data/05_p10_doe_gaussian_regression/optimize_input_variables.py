@@ -25,6 +25,9 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
         np.random.seed(_params_optimization.seed)
         torch.manual_seed(_params_optimization.seed)
 
+    print(f"Optimization Stack Power Constraint: {power_constraint_kW:.0f} kW")
+    print(f"Specified Cell Count: {specified_cell_count}\n")
+
     # Create a folder to store the training results
     create_experiment_folder(_params_optimization=_params_optimization, type='optimization')
 
@@ -47,16 +50,9 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
     # Optimize the input variables
     optimal_input, optimal_target, compressor_power_W = optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std, flight_level_100ft,
                                                                                      cellcount=specified_cell_count, bounds=normalized_bounds, power_constraint_kW=power_constraint_kW,
-                                                                                     penalty_weight=0.001, params_physics=_params_pyhsics)
-
-    # Denormalize the optimal input and target variables	
-    # optimal_input = optimal_input_norm * np.array(input_data_std) + np.array(input_data_mean)
-    # optimal_target = optimal_target_norm * target_data_std + target_data_mean
+                                                                                     penalty_weight=1e-4, params_physics=_params_pyhsics)
 
     # Print the optimal input, target variables, and bounds including feature names and target variable
-    print(f"\nOptimization Stack Power Constraint: {power_constraint_kW:.0f} kW")
-    print(f"Specified Cell Count: {specified_cell_count}\n")
-
     print("Optimal Input Variables:")
     for name, value, bound in zip(feature_names, optimal_input, bounds):
         print(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])")
