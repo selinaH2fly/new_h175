@@ -30,7 +30,7 @@ class Optimization_Parameters:
                         (0, 100),        # cathode_rh_in_perc
                         (1, 5),          # stoich_cathode
                         (1.5, 3),        # pressure_cathode_in_bara
-                        (40, 90),]       # temp_coolant_outlet_degC
+                        (60, 90),]       # temp_coolant_outlet_degC
         self.seed = None
 
         

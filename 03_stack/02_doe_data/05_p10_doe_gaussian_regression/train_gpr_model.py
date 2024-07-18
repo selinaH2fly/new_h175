@@ -82,7 +82,7 @@ def train_gpr_model(target='voltage', cutoff_current=0, plot=True, pretrained_mo
 
             # Compute the test loss
             test_loss = eval_prediction_performance(model, likelihood, mll, test_input_tensor, test_target_tensor)
-            print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item():.4f} - Test Loss: {test_loss.item():.4f}')
+            print(f'Iteration {i:04d}/{training_iterations} - Training Loss: {loss.item():02.4f} - Test Loss: {test_loss.item():02.4f}')
             loss_list.append(loss.item())
             test_loss_list.append(test_loss.item())
             iterations.append(i)
@@ -98,7 +98,7 @@ def train_gpr_model(target='voltage', cutoff_current=0, plot=True, pretrained_mo
         plot_prediction_performance(model, likelihood, train_input_tensor, train_target_tensor, i, target=target, target_normalization=(target_data_mean, target_data_std), test=False)
 
         test_loss = eval_prediction_performance(model, likelihood, mll, test_input_tensor, test_target_tensor)
-        print(f'Iteration {i}/{training_iterations} - Training Loss: {loss.item():.4f} - Test Loss: {test_loss.item():.4f}\n')
+        print(f'Iteration {i:04d}/{training_iterations} - Training Loss: {loss.item():02.4f} - Test Loss: {test_loss.item():02.4f}\n')
         loss_list.append(loss.item())
         test_loss_list.append(test_loss.item())
         iterations.append(i)

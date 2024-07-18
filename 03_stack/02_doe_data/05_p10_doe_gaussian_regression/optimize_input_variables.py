@@ -58,8 +58,8 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
         print(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])")
     print(f"\nMaximized Target (s.t. Optimal Input Variables, Stack Power Constraint, and Cell Count):\n  eta_lhv: {optimal_target:.4f}\n")
 
-    print(f"Validation: Stack Power s.t. Optimal Input: {optimal_input[0] * optimal_target * specified_cell_count * _params_pyhsics.hydrogen_lhv_voltage_equivalent / 1000:.4f} kW")
-    print(f"Compressor Power required at Fligh-Level {flight_level_100ft}:  {compressor_power_W / 1000:.4f} kW")
+    print(f"Validation: Stack Power s.t. Optimal Input: {optimal_input[0] * optimal_target * specified_cell_count * _params_pyhsics.hydrogen_lhv_voltage_equivalent / 1000:.2f} kW")
+    print(f"Compressor Power required at Fligh-Level {flight_level_100ft}:  {compressor_power_W / 1000:.2f} kW")
 
     # Save the optimal input, target variables, and bounds to a file
     with open(f'optimized_input_for_{int(power_constraint_kW)}kW_with_{int(specified_cell_count)}_cells.txt', 'w') as file:
@@ -71,8 +71,8 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
             file.write(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])\n")
         file.write(f"\nMaximized Target (s.t. Optimal Input Variables, Stack Power Constraint, and Cell Count):\n  voltage: {optimal_target:.4f}\n")
 
-        file.write(f"\nValidation: Stack Power s.t. Optimal Input: {optimal_input[0] * optimal_target * specified_cell_count * _params_pyhsics.hydrogen_lhv_voltage_equivalent / 1000:.4f} kW")
-        file.write(f"\nCompressor Power required at Fligh-Level {flight_level_100ft}:  {compressor_power_W / 1000:.4f} kW")
+        file.write(f"\nValidation: Stack Power s.t. Optimal Input: {optimal_input[0] * optimal_target * specified_cell_count * _params_pyhsics.hydrogen_lhv_voltage_equivalent / 1000:.2f} kW")
+        file.write(f"\nCompressor Power required at Fligh-Level {flight_level_100ft}: {compressor_power_W / 1000:.2f} kW")
 
 # Entry point of the script
 if __name__ == '__main__':

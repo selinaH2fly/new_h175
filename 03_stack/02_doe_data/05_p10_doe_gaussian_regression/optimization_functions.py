@@ -30,10 +30,6 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
     - optimal_target: The maximized target (eta_lhv) subject to the power constraint.
     - compressor_power: The power of the compressor.
     """
-    
-    # Define global list to store residuum values
-    global residuum_list
-    residuum_list = []
 
     # Define the objective function for optimization
     def objective_function(x):
@@ -55,17 +51,7 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
 
         result = -eta_lhv + penalty  # Negate voltage to maximize and add penalty for constraint violation
 
-        # Calculate residuum
-        residuum = abs(result)
-        residuum_list.append(residuum)
-
         return result
-
-    # Define the callback function to monitor optimization
-    def callback(xk, convergence):
-        # Print the latest residuum value
-        if residuum_list:
-            print(f'Current optimization residuum: {residuum_list[-1]:.4f}')
 
     # Instantiate the compressor object
     _params_physics = parameters.Physical_Parameters()
@@ -73,19 +59,11 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
     compressor = Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency, \
                             electric_efficiency=_params_compressor.electric_efficiency)
     
-    # Perform the optimization using differential evolution
-    result = differential_evolution(
-        objective_function,
-        bounds,
-        maxiter=1000,           # Maximum number of generations
-        popsize=15,             # Population size multiplier
-        tol=0.01,               # Relative tolerance for convergence
-        atol=0,                 # Absolute tolerance for convergence
-        mutation=(0.5, 1),      # Mutation factor
-        recombination=0.7,      # Recombination constant
-        callback=callback,      # Callback function
-        strategy='best1bin'     # Strategy for differential evolution
-    )
+    # Perform the optimization using differential evolution TODO: Define parameters in parameters.py and pass as arguments
+    result = differential_evolution(objective_function, bounds, maxiter=1000, tol=1e-4, disp=True, seed=None)
+
+    # Print the stopping criterion
+    print(f'\n{result.message}')
 
     # Get the optimal (normalized) input variables
     optimal_input_scaled = result.x
