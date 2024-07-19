@@ -11,7 +11,6 @@ import os
 import sys
 import shutil
 import argparse
-import mariadb
 import csv
 import numpy as np
 import torch
@@ -29,11 +28,13 @@ import parameters
 from load_doe_data import load_doe_data
 from load_doe_data import plot_doe_data
 
+from sklearn.preprocessing import MinMaxScaler
+
 # Define a neural network class
 class ANN_Stack_Model(nn.Module):
 
     # Define the layers of the network
-    def __init__(self, num_inputs=10, num_outputs=10, hidden_layer_sizes=[64, 64], dropout_prob=0.3):
+    def __init__(self, num_inputs=13, num_outputs=32, hidden_layer_sizes=[128, 128], dropout_prob=0.3):
         super(ANN_Stack_Model, self).__init__()
         self.fc1 = nn.Linear(num_inputs, hidden_layer_sizes[0])
         self.drop1 = nn.Dropout(p=dropout_prob)
@@ -90,69 +91,69 @@ def plot_model_performance(model, dataset, data_sampler, denormalize_min, denorm
     observations = [tensor.numpy() for tensor in observations]
     observations_array = np.stack(observations, axis=0)
 
-    # Plot predictions vs. observations
-    fig, axs = plt.subplots(2, 2)
-    mgr = plt.get_current_fig_manager()
-    mgr.resize(1280, 720)
+    # # Plot predictions vs. observations
+    # fig, axs = plt.subplots(2, 2)
+    # mgr = plt.get_current_fig_manager()
+    # mgr.resize(1280, 720)
 
-    if test:
-        fig.suptitle('Model Performance on Test Data')
-    else:
-        fig.suptitle('Model Performance on Training Data')
+    # if test:
+    #     fig.suptitle('Model Performance on Test Data')
+    # else:
+    #     fig.suptitle('Model Performance on Training Data')
 
-    voltage_predictions = predictions_array[:, 0]
-    voltage_observations = observations_array[:, 0]
-    axs[0, 0].grid(True, zorder=1)
-    axs[0, 0].set_title('Voltage (V)')
-    axs[0, 0].set_xlim([250, 450])
-    axs[0, 0].set_ylim([250, 450])
-    axs[0, 0].plot(np.linspace(250, 450, 100), np.linspace(250, 450, 100), color='blue', zorder=2)
-    axs[0, 0].scatter(voltage_observations, voltage_predictions, color='orange', zorder=2)
-    axs[0, 0].xaxis.set_label_text('Observations')
-    axs[0, 0].yaxis.set_label_text('Predictions')
+    # voltage_predictions = predictions_array[:, 0]
+    # voltage_observations = observations_array[:, 0]
+    # axs[0, 0].grid(True, zorder=1)
+    # axs[0, 0].set_title('Voltage (V)')
+    # axs[0, 0].set_xlim([250, 450])
+    # axs[0, 0].set_ylim([250, 450])
+    # axs[0, 0].plot(np.linspace(250, 450, 100), np.linspace(250, 450, 100), color='blue', zorder=2)
+    # axs[0, 0].scatter(voltage_observations, voltage_predictions, color='orange', zorder=2)
+    # axs[0, 0].xaxis.set_label_text('Observations')
+    # axs[0, 0].yaxis.set_label_text('Predictions')
 
-    pressure_drop_anode_predictions = predictions_array[:, 6]
-    pressure_drop_anode_observations = observations_array[:, 6]
-    axs[0, 1].grid(True, zorder=1)
-    axs[0, 1].set_title('Anode Pressure Drop (mbar)')
-    axs[0, 1].set_xlim([0, 500])
-    axs[0, 1].set_ylim([0, 500])
-    axs[0, 1].plot(np.linspace(0, 500, 100), np.linspace(0, 500, 100), color='blue', zorder=2)
-    axs[0, 1].scatter(pressure_drop_anode_observations, pressure_drop_anode_predictions, color='orange', zorder=2)
-    axs[0, 1].xaxis.set_label_text('Observations')
-    axs[0, 1].yaxis.set_label_text('Predictions')
+    # pressure_drop_anode_predictions = predictions_array[:, 6]
+    # pressure_drop_anode_observations = observations_array[:, 6]
+    # axs[0, 1].grid(True, zorder=1)
+    # axs[0, 1].set_title('Anode Pressure Drop (mbar)')
+    # axs[0, 1].set_xlim([0, 500])
+    # axs[0, 1].set_ylim([0, 500])
+    # axs[0, 1].plot(np.linspace(0, 500, 100), np.linspace(0, 500, 100), color='blue', zorder=2)
+    # axs[0, 1].scatter(pressure_drop_anode_observations, pressure_drop_anode_predictions, color='orange', zorder=2)
+    # axs[0, 1].xaxis.set_label_text('Observations')
+    # axs[0, 1].yaxis.set_label_text('Predictions')
 
-    pressure_drop_cathode_predictions = predictions_array[:, 7]
-    pressure_drop_cathode_observations = observations_array[:, 7]
-    axs[1, 0].grid(True, zorder=1)
-    axs[1, 0].set_title('Cathode Pressure Drop (mbar)')
-    axs[1, 0].set_xlim([0, 500])
-    axs[1, 0].set_ylim([0, 500])
-    axs[1, 0].plot(np.linspace(0, 500, 100), np.linspace(0, 500, 100), color='blue', zorder=2)
-    axs[1, 0].scatter(pressure_drop_cathode_observations, pressure_drop_cathode_predictions, color='orange', zorder=2)
-    axs[1, 0].xaxis.set_label_text('Observations')
-    axs[1, 0].yaxis.set_label_text('Predictions')
+    # pressure_drop_cathode_predictions = predictions_array[:, 7]
+    # pressure_drop_cathode_observations = observations_array[:, 7]
+    # axs[1, 0].grid(True, zorder=1)
+    # axs[1, 0].set_title('Cathode Pressure Drop (mbar)')
+    # axs[1, 0].set_xlim([0, 500])
+    # axs[1, 0].set_ylim([0, 500])
+    # axs[1, 0].plot(np.linspace(0, 500, 100), np.linspace(0, 500, 100), color='blue', zorder=2)
+    # axs[1, 0].scatter(pressure_drop_cathode_observations, pressure_drop_cathode_predictions, color='orange', zorder=2)
+    # axs[1, 0].xaxis.set_label_text('Observations')
+    # axs[1, 0].yaxis.set_label_text('Predictions')
 
-    pressure_drop_coolant_predictions = predictions_array[:, 8]
-    pressure_drop_coolant_observations = observations_array[:, 8]
-    axs[1, 1].grid(True, zorder=1)
-    axs[1, 1].set_title('Coolant Pressure Drop (mbar)')
-    axs[1, 1].set_xlim([0, 1000])
-    axs[1, 1].set_ylim([0, 1000])
-    axs[1, 1].plot(np.linspace(0, 1000, 100), np.linspace(0, 1000, 100), color='blue', zorder=2)
-    axs[1, 1].scatter(pressure_drop_coolant_observations, pressure_drop_coolant_predictions, color='orange', zorder=2)
-    axs[1, 1].xaxis.set_label_text('Observations')
-    axs[1, 1].yaxis.set_label_text('Predictions')
+    # pressure_drop_coolant_predictions = predictions_array[:, 8]
+    # pressure_drop_coolant_observations = observations_array[:, 8]
+    # axs[1, 1].grid(True, zorder=1)
+    # axs[1, 1].set_title('Coolant Pressure Drop (mbar)')
+    # axs[1, 1].set_xlim([0, 1000])
+    # axs[1, 1].set_ylim([0, 1000])
+    # axs[1, 1].plot(np.linspace(0, 1000, 100), np.linspace(0, 1000, 100), color='blue', zorder=2)
+    # axs[1, 1].scatter(pressure_drop_coolant_observations, pressure_drop_coolant_predictions, color='orange', zorder=2)
+    # axs[1, 1].xaxis.set_label_text('Observations')
+    # axs[1, 1].yaxis.set_label_text('Predictions')
 
-    plt.tight_layout()
+    # plt.tight_layout()
 
-    if test:
-        plt.savefig("model_performance_test_{}".format((epoch + 1)) + ".png")
-    else:
-        plt.savefig("model_performance_train_{}".format((epoch + 1)) + ".png")
+    # if test:
+    #     plt.savefig("model_performance_test_{}".format((epoch + 1)) + ".png")
+    # else:
+    #     plt.savefig("model_performance_train_{}".format((epoch + 1)) + ".png")
 
-    # Close the figure
-    plt.close(fig)
+    # # Close the figure
+    # plt.close(fig)
 
     return None
 
@@ -203,7 +204,7 @@ def create_experiment_folder(_params_model, _params_training, _params_logging):
     return None
 
 # Main function
-def train_ann_model_on_doe_data(plot=False):
+def train_ann_model_on_doe_data(plot=True):
 
     # Load parameters
     _params_model = parameters.Model_Parameters()
@@ -220,8 +221,9 @@ def train_ann_model_on_doe_data(plot=False):
     create_experiment_folder(_params_model=_params_model, _params_training=_params_training, _params_logging = _params_logging)
 
     # Load and assign the data
-    (model_in_dict, model_out_dict) = load_doe_data()
-
+    (_, _, output_data, _output_units, parameters_data, _parameters_units) = load_doe_data()
+    model_in_dict = parameters_data
+    model_out_dict = output_data
     # Create scatter plots of the varied input parameters (cf. illustration provided by Powercell)
     if plot:
         plot_doe_data(model_in_dict, model_out_dict)
@@ -229,7 +231,8 @@ def train_ann_model_on_doe_data(plot=False):
     # Assign data to torch tensors [n_samples, n_features]
     model_in_tensor = torch.tensor(list(model_in_dict.values())).t()
     model_out_tensor = torch.tensor(list(model_out_dict.values())).t()
-
+    
+    #TODO:
     # Normalize to [0, 1] (each feature is normalized independently) TODO: Normalization should be done after splitting into training and testing sets (to prevent data leakage)
     model_in_tensor_normalized = ((model_in_tensor - model_in_tensor.min(axis=0)[0]) / (model_in_tensor.max(axis=0)[0] - model_in_tensor.min(axis=0)[0])) * 2 - 1
     model_out_tensor_normalized = ((model_out_tensor - model_out_tensor.min(axis=0)[0]) / (model_out_tensor.max(axis=0)[0] - model_out_tensor.min(axis=0)[0])) * 2 - 1	
@@ -344,7 +347,7 @@ if __name__ == '__main__':
 
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Train an artificial neural network on Powercell DoE data")
-    parser.add_argument("-p", "--plot", type=int, help="Plot the input/output data", default=False)
+    parser.add_argument("-p", "--plot", type=int, help="Plot the input/output data", default=True)
 
     args = parser.parse_args()
 
