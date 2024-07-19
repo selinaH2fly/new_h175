@@ -6,7 +6,7 @@ import argparse
 def main(power_constraint_kW, specified_cell_count, flight_level_100ft):
 
     # Define arguments for training
-    target = 'eta_lhv'
+    target = 'cell_voltage'
     cutoff = 50.0
     pretrained_model = None
 

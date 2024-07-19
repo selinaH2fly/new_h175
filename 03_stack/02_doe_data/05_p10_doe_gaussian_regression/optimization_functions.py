@@ -27,7 +27,7 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
 
     Returns:
     - optimal_input: The optimal input values in the original scale.
-    - optimal_target: The maximized target (eta_lhv) subject to the power constraint.
+    - hydrogen_mass_flow_g_s: The minized target.
     - compressor_power: The power of the compressor.
     """
 
@@ -42,11 +42,11 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
         x_tensor = torch.tensor(x, dtype=torch.float).unsqueeze(0)
         model.eval()
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
-            eta_lhv = model(x_tensor).mean.item()
+            cell_voltage = model(x_tensor).mean.item()
 
         # Denormalize
         optimal_input = x * np.array(input_data_std) + np.array(input_data_mean)
-        eta_lhv = eta_lhv * target_data_std + target_data_mean
+        cell_voltage = cell_voltage * target_data_std + target_data_mean
 
         # Compute the compressor power
         air_mass_flow_kg_s = compressor.compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], cellcount=cellcount)
@@ -58,12 +58,10 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
         if power_constraint_kW is None:
             penalty = 0
         else:
-            power_constraint = eta_lhv * params_physics.hydrogen_lhv_voltage_equivalent * cellcount * optimal_input[0] - compressor_power_W - \
-                power_constraint_kW * 1000
-            penalty = penalty_weight * (power_constraint**2)  # Squared term to ensure positive penalty
+            power_constraint = cell_voltage * cellcount * optimal_input[0] - compressor_power_W - power_constraint_kW * 1000
+            penalty = penalty_weight * (power_constraint**2)
 
-        # result = -eta_lhv + penalty  # Negate eta_lhv to maximize and add penalty for constraint violation
-        result = hydrogen_mass_flow_g_s + penalty  # Negate eta_lhv to maximize and add penalty for constraint violation
+        result = hydrogen_mass_flow_g_s + penalty 
 
         return result
 
@@ -80,11 +78,11 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
     optimal_input = optimal_input_scaled * np.array(input_data_std) + np.array(input_data_mean)
 
     with torch.no_grad(), gpytorch.settings.fast_pred_var():
-            eta_lhv = model(torch.tensor(optimal_input_scaled, dtype=torch.float).unsqueeze(0)).mean.item()
-    eta_lhv = eta_lhv * target_data_std + target_data_mean
+            cell_voltage = model(torch.tensor(optimal_input_scaled, dtype=torch.float).unsqueeze(0)).mean.item()
+    cell_voltage = cell_voltage * target_data_std + target_data_mean
 
     # Test the stack power s.t. the optimal input variables
-    stack_power_kW = optimal_input[0] * eta_lhv * cellcount * params_physics.hydrogen_lhv_voltage_equivalent / 1000
+    stack_power_kW = optimal_input[0] * cell_voltage * cellcount / 1000
 
     # Compute the compressor power function with the optimal input
     air_mass_flow_kg_s = compressor.compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], cellcount=cellcount)

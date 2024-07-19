@@ -35,7 +35,7 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
     # Load and assign the data TODO Extract all necessary information from the stored model
     pd_dataframe, _ = load_high_amp_doe_data()
     train_input_tensor, train_target_tensor, _, _, (input_data_mean, input_data_std), (target_data_mean, target_data_std), feature_names = \
-        preprocess_data(pd_dataframe, 'eta_lhv', 50, params_pyhsics=_params_pyhsics)
+        preprocess_data(pd_dataframe, 'cell_voltage', 50, params_pyhsics=_params_pyhsics)
     
     # Load the trained model
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
@@ -46,7 +46,6 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
     # Normalize the bounds TODO: Move to optimization function
     bounds = _params_optimization.bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in zip(bounds, input_data_mean.numpy(), input_data_std.numpy())]
-
 
     # Optimize the input variables
     optimal_input, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_kW = optimize_inputs_evolutionary(model, input_data_mean,

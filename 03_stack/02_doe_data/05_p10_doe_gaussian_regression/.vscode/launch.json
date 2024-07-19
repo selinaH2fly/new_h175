@@ -11,7 +11,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--target", "eta_lhv", "--cutoff", "50"],
+            "args": ["--target", "voltage", "--cutoff", "50"],
         }
 
         {

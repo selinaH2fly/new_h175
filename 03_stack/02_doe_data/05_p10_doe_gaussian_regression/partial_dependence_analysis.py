@@ -122,10 +122,10 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltag
         fig.delaxes(axes.flatten()[-1])
 
     # Unify the y-axis limits to min and max values of the subplots (excluding the fixed feature subplot!)
-    # y_min = np.floor((np.min([ax.get_ylim()[0] for ax in axes.flatten() if ax.get_ylim()[0] != 0]) * 0.9) * 10) / 10
-    # y_max = np.ceil((np.min([ax.get_ylim()[1] for ax in axes.flatten() if ax.get_ylim()[1] != 1]) * 1.1) * 10) / 10
-    y_min = 0.4
-    y_max = 0.7
+    y_min = np.floor((np.min([ax.get_ylim()[0] for ax in axes.flatten() if ax.get_ylim()[0] != 0]) * 0.9) * 10) / 10
+    y_max = np.ceil((np.max([ax.get_ylim()[1] for ax in axes.flatten() if ax.get_ylim()[1] != 1]) * 1.1) * 10) / 10
+    # y_min = 0.4
+    # y_max = 0.7
     for ax in axes.flatten():
         ax.set_ylim([y_min, y_max])
 

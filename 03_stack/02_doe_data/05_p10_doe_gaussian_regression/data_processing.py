@@ -86,6 +86,8 @@ def preprocess_data(df, target='eta_lhv', cutoff_current=0, params_pyhsics=None)
             target_data = [voltage / 275 / params_pyhsics.hydrogen_lhv_voltage_equivalent for voltage in df_dict['voltage']]
         elif target == 'eta_hhv':
             target_data = [voltage / 275 / params_pyhsics.hydrogen_hhv_voltage_equivalent for voltage in df_dict['voltage']]
+        elif target == 'cell_voltage':
+            target_data = df_dict['metis_CVM_Cell_Voltage_Mean']
         else:
             raise ValueError(f'Target variable {target} not found in the dataframe!')
 
