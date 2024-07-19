@@ -50,37 +50,47 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
 
         # Compute the compressor power
         air_mass_flow_kg_s = compressor.compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], cellcount=cellcount)
-        compressor_power = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3]*1e5, flight_level_100ft=flight_level_100ft)
+        compressor_power_W = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3]*1e5, flight_level_100ft=flight_level_100ft)
+
+        # Compute the hydrogen mass flow rate
+        hydrogen_mass_flow_g_s = optimal_input[0] * cellcount * params_physics.hydrogen_molar_mass / (2 * params_physics.faraday) * 1000
 
         if power_constraint_kW is None:
             penalty = 0
         else:
-            power_constraint = eta_lhv * params_physics.hydrogen_lhv_voltage_equivalent * cellcount * optimal_input[0] - compressor_power - \
+            power_constraint = eta_lhv * params_physics.hydrogen_lhv_voltage_equivalent * cellcount * optimal_input[0] - compressor_power_W - \
                 power_constraint_kW * 1000
             penalty = penalty_weight * (power_constraint**2)  # Squared term to ensure positive penalty
 
-        result = -eta_lhv + penalty  # Negate eta_lhv to maximize and add penalty for constraint violation
+        # result = -eta_lhv + penalty  # Negate eta_lhv to maximize and add penalty for constraint violation
+        result = hydrogen_mass_flow_g_s + penalty  # Negate eta_lhv to maximize and add penalty for constraint violation
 
         return result
 
     # Perform the optimization using differential evolution
-    result = differential_evolution(objective_function, bounds, maxiter=1000, tol=1e-4, disp=True, seed=42)
+    result = differential_evolution(objective_function, bounds, maxiter=1000, tol=1e-4, disp=False, seed=42)
 
     # Print the stopping criterion
-    print(f'\n{result.message}')
+    print(f'{result.message}')
 
     # Get the optimal (normalized) input variables
     optimal_input_scaled = result.x
 
     # Denormalize the optimal input and target variables
     optimal_input = optimal_input_scaled * np.array(input_data_std) + np.array(input_data_mean)
-    optimal_target = -result.fun * target_data_std + target_data_mean
+
+    with torch.no_grad(), gpytorch.settings.fast_pred_var():
+            eta_lhv = model(torch.tensor(optimal_input_scaled, dtype=torch.float).unsqueeze(0)).mean.item()
+    eta_lhv = eta_lhv * target_data_std + target_data_mean
 
     # Test the stack power s.t. the optimal input variables
-    stack_power_kW = optimal_input[0] * optimal_target * cellcount * params_physics.hydrogen_lhv_voltage_equivalent / 1000
+    stack_power_kW = optimal_input[0] * eta_lhv * cellcount * params_physics.hydrogen_lhv_voltage_equivalent / 1000
 
-    # Test the compressor power function with the optimal input
+    # Compute the compressor power function with the optimal input
     air_mass_flow_kg_s = compressor.compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], cellcount=cellcount)
     compressor_power_kW = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3]*1e5, flight_level_100ft=flight_level_100ft) / 1000
 
-    return optimal_input, optimal_target, stack_power_kW, compressor_power_kW
+    # Compute the minimized hydrogen mass flow rate
+    hydrogen_mass_flow_g_s = optimal_input[0] * cellcount * params_physics.hydrogen_molar_mass / (2 * params_physics.faraday) * 1000
+
+    return optimal_input, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_kW
