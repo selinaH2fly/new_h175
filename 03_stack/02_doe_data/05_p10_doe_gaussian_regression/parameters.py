@@ -26,11 +26,11 @@ class Optimization_Parameters:
     
     def __init__(self):
         # self.grid_resolution = 100
-        self.bounds = [(50, 700),      # current_A
-                        (0, 100),        # cathode_rh_in_perc
-                        (1, 5),          # stoich_cathode
-                        (1.5, 3),        # pressure_cathode_in_bara
-                        (60, 90),]       # temp_coolant_outlet_degC
+        self.bounds = [(50, 700),       # current_A
+                        (0, 100),       # cathode_rh_in_perc
+                        (1.4, 5),       # stoich_cathode
+                        (1.5, 3),       # pressure_cathode_in_bara
+                        (60, 90),]      # temp_coolant_outlet_degC
         self.seed = None
 
         
