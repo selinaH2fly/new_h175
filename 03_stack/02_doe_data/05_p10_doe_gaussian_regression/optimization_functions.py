@@ -1,4 +1,4 @@
-# import libraries
+# Import libraries
 import torch
 import gpytorch
 import numpy as np
@@ -31,36 +31,40 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
     - compressor_power: The power of the compressor.
     """
 
+    # Instantiate the compressor object
+    _params_physics = parameters.Physical_Parameters()
+    _params_compressor = parameters.Compressor_Parameters()
+    compressor = Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency, 
+                            electric_efficiency=_params_compressor.electric_efficiency)
+
     # Define the objective function for optimization
     def objective_function(x):
         x_tensor = torch.tensor(x, dtype=torch.float).unsqueeze(0)
         model.eval()
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
             eta_lhv = model(x_tensor).mean.item()
-        current = x[0]
 
-        # Denormalize current and voltage
-        current = current * input_data_std[0] + input_data_mean[0]
+        # Denormalize
+        optimal_input = x * np.array(input_data_std) + np.array(input_data_mean)
         eta_lhv = eta_lhv * target_data_std + target_data_mean
+
+        # Compute the compressor power
+        air_mass_flow_kg_s = compressor.compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], cellcount=cellcount)
+        compressor_power = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3]*1e5, flight_level_100ft=flight_level_100ft)
 
         if power_constraint_kW is None:
             penalty = 0
         else:
-            power_constraint = eta_lhv * params_physics.hydrogen_lhv_voltage_equivalent * cellcount * current - power_constraint_kW * 1000
+            power_constraint = eta_lhv * params_physics.hydrogen_lhv_voltage_equivalent * cellcount * optimal_input[0] - compressor_power - \
+                power_constraint_kW * 1000
             penalty = penalty_weight * (power_constraint**2)  # Squared term to ensure positive penalty
 
-        result = -eta_lhv + penalty  # Negate voltage to maximize and add penalty for constraint violation
+        result = -eta_lhv + penalty  # Negate eta_lhv to maximize and add penalty for constraint violation
 
         return result
 
-    # Instantiate the compressor object
-    _params_physics = parameters.Physical_Parameters()
-    _params_compressor = parameters.Compressor_Parameters()
-    compressor = Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency, \
-                            electric_efficiency=_params_compressor.electric_efficiency)
-    
-    # Perform the optimization using differential evolution TODO: Define parameters in parameters.py and pass as arguments
-    result = differential_evolution(objective_function, bounds, maxiter=1000, tol=1e-4, disp=True, seed=None)
+    # Perform the optimization using differential evolution
+    result = differential_evolution(objective_function, bounds, maxiter=1000, tol=1e-4, disp=True, seed=42)
 
     # Print the stopping criterion
     print(f'\n{result.message}')
@@ -72,8 +76,11 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
     optimal_input = optimal_input_scaled * np.array(input_data_std) + np.array(input_data_mean)
     optimal_target = -result.fun * target_data_std + target_data_mean
 
-    # Test the compressor power function
-    air_mass_flow_kg_s = compressor.compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], cellcount=cellcount)
-    compressor_power = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3]*1e5, flight_level_100ft=flight_level_100ft)
+    # Test the stack power s.t. the optimal input variables
+    stack_power_kW = optimal_input[0] * optimal_target * cellcount * params_physics.hydrogen_lhv_voltage_equivalent / 1000
 
-    return optimal_input, optimal_target, compressor_power
+    # Test the compressor power function with the optimal input
+    air_mass_flow_kg_s = compressor.compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], cellcount=cellcount)
+    compressor_power_kW = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3]*1e5, flight_level_100ft=flight_level_100ft) / 1000
+
+    return optimal_input, optimal_target, stack_power_kW, compressor_power_kW

@@ -42,24 +42,28 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
     model_path = os.path.join(Path(os.getcwd()).parents[0], model_path)
     model.load_state_dict(torch.load(model_path))
 
-    # Normalize the bounds
+    # Normalize the bounds TODO: Move to optimization function
     bounds = _params_optimization.bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in zip(bounds, input_data_mean.numpy(), input_data_std.numpy())]
 
 
     # Optimize the input variables
-    optimal_input, optimal_target, compressor_power_W = optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std, flight_level_100ft,
-                                                                                     cellcount=specified_cell_count, bounds=normalized_bounds, power_constraint_kW=power_constraint_kW,
-                                                                                     penalty_weight=1e-4, params_physics=_params_pyhsics)
+    optimal_input, optimal_target, stack_power_kW, compressor_power_kW = optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std,
+                                                                                                      flight_level_100ft,cellcount=specified_cell_count, bounds=normalized_bounds,
+                                                                                                      power_constraint_kW=power_constraint_kW, penalty_weight=1e-4, params_physics=_params_pyhsics)
+    
+    system_power_kW = stack_power_kW - compressor_power_kW
 
     # Print the optimal input, target variables, and bounds including feature names and target variable
     print("\nOptimal Input Variables:")
     for name, value, bound in zip(feature_names, optimal_input, bounds):
         print(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])")
-    print(f"\nMaximized Target (s.t. Optimal Input Variables, Stack Power Constraint, and Cell Count):\n  eta_lhv: {optimal_target:.4f}\n")
+    print(f"\nMaximized Target (s.t. Optimal Input Variables, System Power Constraint, and Cell Count):\n  eta_lhv: {optimal_target:.4f}\n")
 
-    print(f"Validation: Stack Power s.t. Optimal Input: {optimal_input[0] * optimal_target * specified_cell_count * _params_pyhsics.hydrogen_lhv_voltage_equivalent / 1000:.2f} kW")
-    print(f"Compressor Power required at Fligh-Level {flight_level_100ft}:  {compressor_power_W / 1000:.2f} kW")
+    print("Resultamt Power Numbers:")
+    print(f"  System (Net) Power: {system_power_kW:.2f} kW")
+    print(f"  Stack (Gross) Power: {stack_power_kW:.2f} kW")
+    print(f"  Compressor Power required at Fligh-Level {flight_level_100ft}: {compressor_power_kW / 1000:.2f} kW")
 
     # Save the optimal input, target variables, and bounds to a file
     with open(f'optimized_input_for_{int(power_constraint_kW)}kW_with_{int(specified_cell_count)}_cells.txt', 'w') as file:
@@ -71,8 +75,10 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
             file.write(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])\n")
         file.write(f"\nMaximized Target (s.t. Optimal Input Variables, Stack Power Constraint, and Cell Count):\n  voltage: {optimal_target:.4f}\n")
 
-        file.write(f"\nValidation: Stack Power s.t. Optimal Input: {optimal_input[0] * optimal_target * specified_cell_count * _params_pyhsics.hydrogen_lhv_voltage_equivalent / 1000:.2f} kW")
-        file.write(f"\nCompressor Power required at Fligh-Level {flight_level_100ft}: {compressor_power_W / 1000:.2f} kW")
+        file.write("Resultamt Power Numbers:")
+        file.write(f"  System (Net) Power: {system_power_kW:.2f} kW")
+        file.write(f"  Stack (Gross) Power: {stack_power_kW:.2f} kW")
+        file.write(f"  Compressor Power required at Fligh-Level {flight_level_100ft}: {compressor_power_kW / 1000:.2f} kW")
 
 # Entry point of the script
 if __name__ == '__main__':
