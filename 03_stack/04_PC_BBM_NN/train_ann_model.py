@@ -91,70 +91,6 @@ def plot_model_performance(model, dataset, data_sampler, denormalize_min, denorm
     observations = [tensor.numpy() for tensor in observations]
     observations_array = np.stack(observations, axis=0)
 
-    # # Plot predictions vs. observations
-    # fig, axs = plt.subplots(2, 2)
-    # mgr = plt.get_current_fig_manager()
-    # mgr.resize(1280, 720)
-
-    # if test:
-    #     fig.suptitle('Model Performance on Test Data')
-    # else:
-    #     fig.suptitle('Model Performance on Training Data')
-
-    # voltage_predictions = predictions_array[:, 0]
-    # voltage_observations = observations_array[:, 0]
-    # axs[0, 0].grid(True, zorder=1)
-    # axs[0, 0].set_title('Voltage (V)')
-    # axs[0, 0].set_xlim([250, 450])
-    # axs[0, 0].set_ylim([250, 450])
-    # axs[0, 0].plot(np.linspace(250, 450, 100), np.linspace(250, 450, 100), color='blue', zorder=2)
-    # axs[0, 0].scatter(voltage_observations, voltage_predictions, color='orange', zorder=2)
-    # axs[0, 0].xaxis.set_label_text('Observations')
-    # axs[0, 0].yaxis.set_label_text('Predictions')
-
-    # pressure_drop_anode_predictions = predictions_array[:, 6]
-    # pressure_drop_anode_observations = observations_array[:, 6]
-    # axs[0, 1].grid(True, zorder=1)
-    # axs[0, 1].set_title('Anode Pressure Drop (mbar)')
-    # axs[0, 1].set_xlim([0, 500])
-    # axs[0, 1].set_ylim([0, 500])
-    # axs[0, 1].plot(np.linspace(0, 500, 100), np.linspace(0, 500, 100), color='blue', zorder=2)
-    # axs[0, 1].scatter(pressure_drop_anode_observations, pressure_drop_anode_predictions, color='orange', zorder=2)
-    # axs[0, 1].xaxis.set_label_text('Observations')
-    # axs[0, 1].yaxis.set_label_text('Predictions')
-
-    # pressure_drop_cathode_predictions = predictions_array[:, 7]
-    # pressure_drop_cathode_observations = observations_array[:, 7]
-    # axs[1, 0].grid(True, zorder=1)
-    # axs[1, 0].set_title('Cathode Pressure Drop (mbar)')
-    # axs[1, 0].set_xlim([0, 500])
-    # axs[1, 0].set_ylim([0, 500])
-    # axs[1, 0].plot(np.linspace(0, 500, 100), np.linspace(0, 500, 100), color='blue', zorder=2)
-    # axs[1, 0].scatter(pressure_drop_cathode_observations, pressure_drop_cathode_predictions, color='orange', zorder=2)
-    # axs[1, 0].xaxis.set_label_text('Observations')
-    # axs[1, 0].yaxis.set_label_text('Predictions')
-
-    # pressure_drop_coolant_predictions = predictions_array[:, 8]
-    # pressure_drop_coolant_observations = observations_array[:, 8]
-    # axs[1, 1].grid(True, zorder=1)
-    # axs[1, 1].set_title('Coolant Pressure Drop (mbar)')
-    # axs[1, 1].set_xlim([0, 1000])
-    # axs[1, 1].set_ylim([0, 1000])
-    # axs[1, 1].plot(np.linspace(0, 1000, 100), np.linspace(0, 1000, 100), color='blue', zorder=2)
-    # axs[1, 1].scatter(pressure_drop_coolant_observations, pressure_drop_coolant_predictions, color='orange', zorder=2)
-    # axs[1, 1].xaxis.set_label_text('Observations')
-    # axs[1, 1].yaxis.set_label_text('Predictions')
-
-    # plt.tight_layout()
-
-    # if test:
-    #     plt.savefig("model_performance_test_{}".format((epoch + 1)) + ".png")
-    # else:
-    #     plt.savefig("model_performance_train_{}".format((epoch + 1)) + ".png")
-
-    # # Close the figure
-    # plt.close(fig)
-
     return None
 
 def create_experiment_folder(_params_model, _params_training, _params_logging):
@@ -253,7 +189,8 @@ def train_ann_model_on_doe_data(plot=True):
 
     # Create a dataloader
     trainloader = torch.utils.data.DataLoader(dataset, batch_size=_params_training.batch_size, sampler=train_sampler)
-
+    testloader = torch.utils.data.DataLoader(dataset, batch_size=_params_training.batch_size, sampler=test_sampler)
+    
     # Instantiate the network with size of input and output layer according to the data
     model = ANN_Stack_Model(num_inputs=len(model_in_dict), num_outputs=len(model_out_dict),
                             hidden_layer_sizes=[_params_model.hidden_layer_size_1, _params_model.hidden_layer_size_2],
@@ -272,6 +209,7 @@ def train_ann_model_on_doe_data(plot=True):
     lossFile.close()
 
     epoch_loss_history = []
+    test_loss_history = []
     average_loss = []
 
     # Loop over the dataset multiple times
@@ -300,7 +238,19 @@ def train_ann_model_on_doe_data(plot=True):
 
         n_mean = _params_logging.log_interval if len(epoch_loss_history) >= _params_logging.log_interval else len(epoch_loss_history)
         average_loss.append(np.convolve(list(epoch_loss_history)[-n_mean:], np.ones((n_mean,)) / n_mean, mode='valid')[0])
+        
+        # Compute test loss
+        model.eval()
+        test_loss = 0
+        with torch.no_grad():
+            for inputs, targets in testloader:
+                outputs = model(inputs)
+                loss = criterion(outputs, targets)
+                test_loss += loss.item()
 
+        test_loss /= len(testloader)
+        test_loss_history.append(test_loss)
+        
         # Print results to display and log them to file
         if len(average_loss) and (epoch + 1) % _params_logging.log_interval == 0:
             print('epoch: %d, avg. loss: %.6f' % (epoch + 1, average_loss[-1]))
@@ -312,21 +262,7 @@ def train_ann_model_on_doe_data(plot=True):
             
             if epoch:
                 torch.save(model.state_dict(), "ann_doe_model_epoch_{}".format((epoch + 1)) + ".pt")
-
-                fig, ax = plt.subplots()
-                returns_to_plot = pd.read_csv('lossFile_running.dat')
-                returns_to_plot.plot(x='epoch', y='avg_loss', ax=ax)
-                plt.title("Training Progress")
-                plt.xlabel("Training Epochs (-)")
-                plt.xlim([0, _params_training.epochs])
-                plt.ylabel("Training Loss (-)")
-                plt.yscale('log')
-                plt.ylim([1e-2, 2e-1])
-                plt.yticks([2e-1, 1e-1, 9e-2, 8e-2, 7e-2, 6e-2, 5e-2, 4e-2, 3e-2, 2e-2, 1e-2, 1e-1])
-                plt.grid(True)
-                plt.legend(["Average MSE"], loc="upper right")
-                plt.savefig("average_loss_{}".format((epoch + 1)) + ".png")
-                plt.close()
+                
         
             model.eval()
             with torch.no_grad():
@@ -334,10 +270,23 @@ def train_ann_model_on_doe_data(plot=True):
                 plot_model_performance(model, dataset, data_sampler=train_sampler, denormalize_min=model_out_tensor.min(axis=0)[0], denormalize_max=model_out_tensor.max(axis=0)[0], epoch=epoch, test=False)
                 plot_model_performance(model, dataset, data_sampler=test_sampler, denormalize_min=model_out_tensor.min(axis=0)[0], denormalize_max=model_out_tensor.max(axis=0)[0], epoch=epoch, test=True)
 
+# Plot the training and test loss
+    plt.figure()
+    plt.plot(range(1, _params_training.epochs + 1), epoch_loss_history, label='Training Loss')
+    plt.plot(range(1, _params_training.epochs + 1), test_loss_history, label='Test Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.yscale('log')
+    plt.legend()
+    plt.title('Training and Test Loss')
+    plt.grid(True)
+    plt.savefig("loss_plot.png")
+    plt.show()
+    
     # Rename loss file consistently
     loss_file.close()
     os.rename(loss_file.name, "average_loss_final.dat")
-
+    
     print('Finished Training')
     torch.save(model.state_dict(), "ann_doe_mode_final.pt")
 

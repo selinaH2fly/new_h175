@@ -94,51 +94,51 @@ def load_doe_data():
 
 def plot_doe_data(model_in_dict, model_out_dict):
     
-    # Create scatter plots of the varied input parameters (cf. illustration provided by Powercell)
-    cols = 3
-    rows = int(np.ceil((len(model_in_dict)-1)/cols))
-    fig, axs = plt.subplots(rows, cols)
-    mgr = plt.get_current_fig_manager()
-    mgr.resize(1280, 720)
-    fig.suptitle('Variation of Input Parameters \n (cf. Illustration provided by Powercell)')
-    row, col = 0, 0
-    for key in model_in_dict:
-        if key != 'Current':
-            axs[row, col].grid(True, zorder=1)
-            axs[row, col].scatter(model_in_dict['Current'], model_in_dict[key], marker='o', facecolor='darkred', edgecolor='black', zorder=2)
-            axs[row, col].xaxis.set_label_text('current (A)')
-            axs[row, col].yaxis.set_label_text(key)
-            col += 1
-            if col == cols:
-                col = 0
-                row += 1
+    # # Create scatter plots of the varied input parameters (cf. illustration provided by Powercell)
+    # cols = 3
+    # rows = int(np.ceil((len(model_in_dict)-1)/cols))
+    # fig, axs = plt.subplots(rows, cols)
+    # mgr = plt.get_current_fig_manager()
+    # mgr.resize(1280, 720)
+    # fig.suptitle('Variation of Input Parameters \n (cf. Illustration provided by Powercell)')
+    # row, col = 0, 0
+    # for key in model_in_dict:
+    #     if key != 'Current':
+    #         axs[row, col].grid(True, zorder=1)
+    #         axs[row, col].scatter(model_in_dict['Current'], model_in_dict[key], marker='o', facecolor='darkred', edgecolor='black', zorder=2)
+    #         axs[row, col].xaxis.set_label_text('current (A)')
+    #         axs[row, col].yaxis.set_label_text(key)
+    #         col += 1
+    #         if col == cols:
+    #             col = 0
+    #             row += 1
 
-    for ax in axs.flat:
-        if ax.get_xlabel() != 'current (A)':
-            # Delete the axes
-            fig.delaxes(ax)
+    # for ax in axs.flat:
+    #     if ax.get_xlabel() != 'current (A)':
+    #         # Delete the axes
+    #         fig.delaxes(ax)
 
-    plt.tight_layout()
-    plt.show(block=False)
+    # plt.tight_layout()
+    # plt.show(block=False)
 
-    # Create scatter plots of the output parameters (cf. illustration provided by Powercell)
-    cols = 3
-    rows = int(np.ceil((len(model_out_dict))/cols))
-    fig, axs = plt.subplots(rows, cols)
-    mgr = plt.get_current_fig_manager()
-    mgr.resize(1280, 720)
-    fig.suptitle('Variation of Output Parameters \n (cf. Illustration provided by Powercell)')
-    row, col = 0, 0
-    for key in model_out_dict:
-            axs[row, col].grid(True, zorder=1)
-            axs[row, col].scatter(model_in_dict['Current'], model_out_dict[key], marker='o', facecolor='darkred', edgecolor='black', zorder=2)
-            axs[row, col].xaxis.set_label_text('current (A)')
-            axs[row, col].yaxis.set_label_text(key)
-            col += 1
-            if col == cols:
-                col = 0
-                row += 1
-    plt.tight_layout()
-    plt.draw()
+    # # Create scatter plots of the output parameters (cf. illustration provided by Powercell)
+    # cols = 3
+    # rows = int(np.ceil((len(model_out_dict))/cols))
+    # fig, axs = plt.subplots(rows, cols)
+    # mgr = plt.get_current_fig_manager()
+    # mgr.resize(1280, 720)
+    # fig.suptitle('Variation of Output Parameters \n (cf. Illustration provided by Powercell)')
+    # row, col = 0, 0
+    # for key in model_out_dict:
+    #         axs[row, col].grid(True, zorder=1)
+    #         axs[row, col].scatter(model_in_dict['Current'], model_out_dict[key], marker='o', facecolor='darkred', edgecolor='black', zorder=2)
+    #         axs[row, col].xaxis.set_label_text('current (A)')
+    #         axs[row, col].yaxis.set_label_text(key)
+    #         col += 1
+    #         if col == cols:
+    #             col = 0
+    #             row += 1
+    # plt.tight_layout()
+    # plt.draw()
 
     return plt
