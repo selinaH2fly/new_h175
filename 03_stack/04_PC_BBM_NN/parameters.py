@@ -3,7 +3,7 @@ import numpy as np
 class Training_Parameters:
 
     def __init__(self):
-        self.epochs = 3000
+        self.epochs = 100000
         self.batch_size = 32
         self.learning_rate = 1e-3
         self.split_ratio = 0.8
