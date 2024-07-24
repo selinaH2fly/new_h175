@@ -48,11 +48,11 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in zip(bounds, input_data_mean.numpy(), input_data_std.numpy())]
 
     # Optimize the input variables
-    optimal_input, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_kW = optimize_inputs_evolutionary(model, input_data_mean,
-                                                                                                            input_data_std, target_data_mean, target_data_std,
-                                                                                                            flight_level_100ft, cellcount=specified_cell_count, bounds=normalized_bounds,
-                                                                                                            power_constraint_kW=power_constraint_kW, penalty_weight=1e-4,
-                                                                                                            params_physics=_params_pyhsics)
+    optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_kW = optimize_inputs_evolutionary(model, input_data_mean,
+                                                                                                                            input_data_std, target_data_mean, target_data_std,
+                                                                                                                            flight_level_100ft, cellcount=specified_cell_count, bounds=normalized_bounds,
+                                                                                                                            power_constraint_kW=power_constraint_kW, penalty_weight=1e-6,
+                                                                                                                            params_physics=_params_pyhsics)
     
     system_power_kW = stack_power_kW - compressor_power_kW
 
@@ -61,6 +61,7 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
     for name, value, bound in zip(feature_names, optimal_input, bounds):
         print(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])")
     print(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  Hydrogen Consumption: {hydrogen_mass_flow_g_s:.4f} g/s\n")
+    print(f"Cell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {cell_voltage:.4f} V\n")
 
     print("Resultant Power Numbers:")
     print(f"  System (Net) Power (s.t. Optimization): {system_power_kW:.2f} kW")
