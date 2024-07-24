@@ -4,13 +4,23 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
         {
-            "name": "Python Debugger: Current File",
+            "name": "Python Debugger: Train GPR Model",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--target", "eta_lhv", "--cutoff", "50", "--plot", "True", "--optimize", "True", "--power", "75", "--cellcount", "275"],
+            "args": ["--target", "voltage", "--cutoff", "50"],
+        }
+
+        {
+            "name": "Python Debugger: Optimize Input Variables",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["--model", "gpr_model_eta_lhv.pth", "--power", "125", "--cellcount", "350", "--flightlevel", "50"],
         }
     ]
 }

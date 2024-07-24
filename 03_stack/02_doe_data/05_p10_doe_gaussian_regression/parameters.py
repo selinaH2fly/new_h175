@@ -26,16 +26,37 @@ class Optimization_Parameters:
     
     def __init__(self):
         # self.grid_resolution = 100
-        self.bounds = [(50, 700),      # current_A
-                        (0, 100),        # cathode_rh_in_perc
-                        (1, 5),          # stoich_cathode
-                        (1.5, 3),        # pressure_cathode_in_bara
-                        (40, 90),]       # temp_coolant_outlet_degC
+        self.bounds = [(50, 700),       # current_A
+                        (0, 100),       # cathode_rh_in_perc
+                        (1.4, 5),       # stoich_cathode
+                        (1.5, 3),       # pressure_cathode_in_bara
+                        (60, 90),]      # temp_coolant_outlet_degC
+        self.seed = None
+
         
 class Physical_Parameters:
      
     def __init__(self):
-         self.hydrogen_lhv_voltage_equivalent = 1.253
-         self.hydrogen_hhv_voltage_equivalent = 1.481
-         self.std_ambient_pressure_bar = 1.01325
-          
+        self.hydrogen_lhv_voltage_equivalent = 1.253
+        self.hydrogen_hhv_voltage_equivalent = 1.481
+        self.hydrogen_molar_mass = 2.016 * 1e-3         # kg/mol
+        self.faraday = 96485                            # C/mol
+
+        self.sea_level_ambient_pressure_bar = 1.01325
+        self.sea_level_ambient_temperature_K = 288.15
+        self.temperature_lapse_rate = 0.0065
+
+        self.specific_gas_constant = 287.05
+        self.gravity = 9.81
+        self.specific_heat_ratio = 1.4
+    
+        self.oxygen_mol_fraction = 0.2095
+        self.air_molar_mass = 28.97 * 1e-3              # kg/mol        
+
+
+class Compressor_Parameters:
+
+    def __init__(self):
+
+        self.isentropic_efficiency = 0.75
+        self.electric_efficiency = 0.95
