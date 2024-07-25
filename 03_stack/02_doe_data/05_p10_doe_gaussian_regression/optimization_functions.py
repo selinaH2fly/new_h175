@@ -8,7 +8,7 @@ from scipy.optimize import differential_evolution
 import parameters
 from compressor import Compressor
 
-def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std, flight_level_100ft, cellcount=275, bounds=None, power_constraint_kW=None, penalty_weight=0.1, params_physics=None):
+def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std, flight_level_100ft, cellcount=275, variables_user=[100,5,3,60,75], bounds=None, power_constraint_kW=None, penalty_weight=0.1, params_physics=None):
     """
     Optimize the (cell) voltage predicted by the GPyTorch model with a (cell) power constraint using differential evolution.
 
@@ -39,6 +39,7 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
 
     # Define the objective function for optimization
     def objective_function(x):
+        #%todo remove vary exept current
         x_tensor = torch.tensor(x, dtype=torch.float).unsqueeze(0)
         model.eval()
         with torch.no_grad(), gpytorch.settings.fast_pred_var():

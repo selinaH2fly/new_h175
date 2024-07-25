@@ -14,9 +14,11 @@ from gpr_model import ExactGPModel
 from data_processing import load_high_amp_doe_data, preprocess_data
 from optimization_functions import optimize_inputs_evolutionary
 
-def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50):
+def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50,variables_user=[100,5,3,60,75]):
     # Load parameters
+    #For now just overwrite the parameters originating from the parameters.py file with the user input: variables_user
     _params_optimization = parameters.Optimization_Parameters()
+    _params_optimization[1:] = [(val, val) for val in variables_user] #parameters.Optimization_Parameters()
     _params_pyhsics = parameters.Physical_Parameters()
 
     # Set the random seed for reproducibility
@@ -92,8 +94,9 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=75.0)
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=275)
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=50)
+    parser.add_argument("-v", "--variables_user", type=list, help="Enter input variables for model evaluation: [cathode_rh_in_perc,stoich_cathode,pressure_cathode_in_bara,temp_coolant_inlet_degC,temp_coolant_outlet_degC]", default=[100,5,3,60,75]) #TODO: Change defaults and varnames
 
     args = parser.parse_args()
 
     # Call the optimize_with_trained_model function                        
-    optimize_input_variables(args.model, args.power, args.cellcount, args.flightlevel)
+    optimize_input_variables(args.model, args.power, args.cellcount, args.flightlevel, args.variables_user)
