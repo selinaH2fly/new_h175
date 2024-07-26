@@ -92,4 +92,4 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
     # Compute the minimized hydrogen mass flow rate
     hydrogen_mass_flow_g_s = optimal_input[0] * cellcount * params_physics.hydrogen_molar_mass / (2 * params_physics.faraday) * 1000
 
-    return optimal_input, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_kW
+    return optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_kW

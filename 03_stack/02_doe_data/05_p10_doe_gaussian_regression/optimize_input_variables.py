@@ -14,7 +14,7 @@ from gpr_model import ExactGPModel
 from data_processing import load_high_amp_doe_data, preprocess_data
 from optimization_functions import optimize_inputs_evolutionary
 
-def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50,variables_user=[100,5,3,60,75]):
+def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, variables_user=[100,5,3,60,75]):
     # Load parameters
     #For now just overwrite the parameters originating from the parameters.py file with the user input: variables_user
     _params_optimization = parameters.Optimization_Parameters()
