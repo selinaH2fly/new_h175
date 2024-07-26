@@ -98,7 +98,7 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=75.0)
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=275)
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=50)
-    parser.add_argument("-v", "--variables_user", type=list, help="Enter input variables for model evaluation: [cathode_rh_in_perc,stoich_cathode,pressure_cathode_in_bara,temp_coolant_inlet_degC,temp_coolant_outlet_degC]", default=[100,5,3,60,75]) #TODO: Change defaults and varnames
+    parser.add_argument("-v", "--variables_user", type=list, help="Enter input variables for model evaluation: [cathode_rh_in_perc,stoich_cathode,pressure_cathode_in_bara,temp_coolant_inlet_degC,temp_coolant_outlet_degC]", default=[100,1.4,1.5,60,75]) #TODO: Change defaults and varnames
 
     args = parser.parse_args()
 
