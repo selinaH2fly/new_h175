@@ -18,7 +18,11 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
     # Load parameters
     #For now just overwrite the parameters originating from the parameters.py file with the user input: variables_user
     _params_optimization = parameters.Optimization_Parameters()
-    _params_optimization[1:] = [(val, val) for val in variables_user] #parameters.Optimization_Parameters()
+    # Update bounds, keeping the first value unchanged
+    for i, val in enumerate(variables_user, start=1):
+        _params_optimization.bounds[i] = (val, val)
+    
+    
     _params_pyhsics = parameters.Physical_Parameters()
 
     # Set the random seed for reproducibility
