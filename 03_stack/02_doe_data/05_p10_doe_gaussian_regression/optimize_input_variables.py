@@ -92,7 +92,7 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
         file.write(f"  Compressor Power required at Fligh-Level {flight_level_100ft}: {compressor_power_kW:.2f} kW")
         file.write(f"  Stack (Gross) Power: {stack_power_kW:.2f} kW")
     
-    _file_path="test.xlsx"   
+    _file_path = os.path.join(os.getcwd(), "resulting_data")
     save_results_to_excel(_file_path, feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, cell_voltage, system_power_kW, compressor_power_kW, stack_power_kW, power_constraint_kW, specified_cell_count, flight_level_100ft)
     
 # Entry point of the script
