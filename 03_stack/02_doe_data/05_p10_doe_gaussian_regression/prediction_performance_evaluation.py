@@ -2,7 +2,7 @@ import os
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-import cv2
+#import cv2
 import warnings
 from gpytorch.utils.warnings import GPInputWarning
 
@@ -84,44 +84,44 @@ def plot_prediction_performance(model, likelihood, input_tensor, target_tensor, 
 
     plt.close()
 
-def create_prediction_performance_video(test=True):
+# def create_prediction_performance_video(test=True):
 
-    # Change the current working directory
-    path = 'model_performance_snapshots/test' if test else 'model_performance_snapshots/train'
-    os.chdir(path)
+#     # Change the current working directory
+#     path = 'model_performance_snapshots/test' if test else 'model_performance_snapshots/train'
+#     os.chdir(path)
 
-    # Set the path to the folder containing your PNG frames and the output video file name
-    frame_folder = os.getcwd()
+#     # Set the path to the folder containing your PNG frames and the output video file name
+#     frame_folder = os.getcwd()
 
-    output_video = "model_performance_evolution_test.avi" if test else "model_performance_evolution_train.avi"
+#     output_video = "model_performance_evolution_test.avi" if test else "model_performance_evolution_train.avi"
 
-    # Define the frame rate and frame size
-    frame_rate = 5  # Adjust as needed
+#     # Define the frame rate and frame size
+#     frame_rate = 5  # Adjust as needed
 
-    # Get a list of the PNG files in the folder
-    frame_files = sorted([f for f in os.listdir(frame_folder) if f.startswith("model_performance_snapshot")], key=lambda x: int(''.join(filter(str.isdigit, os.path.splitext(x)[0]))))
+#     # Get a list of the PNG files in the folder
+#     frame_files = sorted([f for f in os.listdir(frame_folder) if f.startswith("model_performance_snapshot")], key=lambda x: int(''.join(filter(str.isdigit, os.path.splitext(x)[0]))))
 
-    # Extract frame size from first frame
-    frame_path = os.path.join(frame_folder, frame_files[0])
-    frame = cv2.imread(frame_path)
-    height, width, _ = frame.shape
+#     # Extract frame size from first frame
+#     frame_path = os.path.join(frame_folder, frame_files[0])
+#     frame = cv2.imread(frame_path)
+#     height, width, _ = frame.shape
 
-    # Initialize VideoWriter
-    fourcc = 0
-    out = cv2.VideoWriter(output_video, fourcc, frame_rate, (width, height))
+#     # Initialize VideoWriter
+#     fourcc = 0
+#     out = cv2.VideoWriter(output_video, fourcc, frame_rate, (width, height))
 
-    # Loop through the PNG frames and add them to the video
-    for frame_file in frame_files:
-        frame_path = os.path.join(frame_folder, frame_file)
-        frame = cv2.imread(frame_path)
-        out.write(frame)
+#     # Loop through the PNG frames and add them to the video
+#     for frame_file in frame_files:
+#         frame_path = os.path.join(frame_folder, frame_file)
+#         frame = cv2.imread(frame_path)
+#         out.write(frame)
 
-    # Release the VideoWriter
-    out.release()
+#     # Release the VideoWriter
+#     out.release()
 
-    print("Video creation for test data complete.") if test else print("Video creation for training data complete.")
+#     print("Video creation for test data complete.") if test else print("Video creation for training data complete.")
 
-    # Change the current working directory back to the experiment folder
-    os.chdir("../..")
+#     # Change the current working directory back to the experiment folder
+#     os.chdir("../..")
 
-    return None
+#     return None

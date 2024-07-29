@@ -132,8 +132,8 @@ def train_gpr_model(target='voltage', cutoff_current=0, plot=True, pretrained_mo
     plt.close()
 
     # Create a video from the model performance snapshots
-    create_prediction_performance_video(test=True)
-    create_prediction_performance_video(test=False)
+    #create_prediction_performance_video(test=True)
+    #create_prediction_performance_video(test=False)
 
     print(f'\nTraining of the Gaussian process regression model for target variable {target} is completed!')
     print('___________________________________________________________________________________________\n')

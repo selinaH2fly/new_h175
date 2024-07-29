@@ -16,7 +16,7 @@ from optimization_functions import optimize_inputs_evolutionary
 
 from excel_magic import initialize_excel_file, write_to_excel, save_results_to_excel
     
-def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, variables_user=[100,5,3,60,75]):
+def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, variables_user=[100,5,3,60,75]):
     # Load parameters
     #For now just overwrite the parameters originating from the parameters.py file with the user input: variables_user
     _params_optimization = parameters.Optimization_Parameters()
@@ -99,7 +99,7 @@ def optimize_input_variables(model_path, power_constraint_kW=75.0, specified_cel
 if __name__ == '__main__':
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Optimize input variables using a trained Gaussian process regression model")
-    parser.add_argument("-m", "--model", type=str, help="Path to the trained GPR model", required=True)
+    parser.add_argument("-m", "--model", type=str, help="Path to the trained GPR model", default = "gpr_model_cell_voltage.pth")
     parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=75.0)
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=275)
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=50)
