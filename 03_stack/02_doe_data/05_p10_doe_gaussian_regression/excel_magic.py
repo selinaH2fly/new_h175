@@ -24,6 +24,9 @@ def initialize_excel_file(file_path="test.xlsx"):
     None.
 
     """
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    
     if not os.path.exists(file_path):
         wb = Workbook()
         ws = wb.active
