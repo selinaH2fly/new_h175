@@ -1,0 +1,3 @@
+[submodule "ps100_fcs_model"]
+	path = ps100_fcs_model
+	url = https://github.com/H2FLY-GmbH/ps100_fcs_model.git
