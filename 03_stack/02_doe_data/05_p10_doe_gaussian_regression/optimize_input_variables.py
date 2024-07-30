@@ -26,7 +26,7 @@ def parse_range(input_str):
     return [single_value, single_value]
 
     
-def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, variables_user=[100,5,3,60,75]):
+def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, variables_user=[[100,100],[5,5],[3,3],[60,60],[75,75]]):
     # Load parameters
     #For now just overwrite the parameters originating from the parameters.py file with the user input: variables_user
     _params_optimization = parameters.Optimization_Parameters()
@@ -103,7 +103,7 @@ def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_cons
         file.write(f"  Stack (Gross) Power: {stack_power_kW:.2f} kW")
     
     _file_path = os.path.join(os.getcwd(), "resulting_data")
-    save_results_to_excel(_file_path, feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, cell_voltage, system_power_kW, compressor_power_kW, stack_power_kW, power_constraint_kW, specified_cell_count, flight_level_100ft)
+    #save_results_to_excel(_file_path, feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, cell_voltage, system_power_kW, compressor_power_kW, stack_power_kW, power_constraint_kW, specified_cell_count, flight_level_100ft)
     
 # Entry point of the script
 if __name__ == '__main__':
@@ -117,11 +117,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
 # Prompt the user for input variables
-    cathode_rh_in_perc = input("Enter cathode relative humidity in percentage (single value or ran,ge): ")
-    stoich_cathode = input("Enter stoichiometry of the cathode (single value or ran,ge): ")
-    pressure_cathode_in_bara = input("Enter pressure at the cathode inlet in bara (single value or ran,ge): ")
-    temp_coolant_inlet_degC = input("Enter temperature of the coolant inlet in degrees Celsius (single value or ran,ge): ")
-    temp_coolant_outlet_degC = input("Enter temperature of the coolant outlet in degrees Celsius (single value or ran,ge): ")
+    cathode_rh_in_perc = input("Enter cathode relative humidity in percentage (single value or ran,ge): ")  or "91,100"
+    stoich_cathode = input("Enter stoichiometry of the cathode (single value or ran,ge): ") or "4,4"
+    pressure_cathode_in_bara = input("Enter pressure at the cathode inlet in bara (single value or ran,ge): ")  or "3"
+    temp_coolant_inlet_degC = input("Enter temperature of the coolant inlet in degrees Celsius (single value or ran,ge): ") or "60,70"
+    temp_coolant_outlet_degC = input("Enter temperature of the coolant outlet in degrees Celsius (single value or ran,ge): ") or "60,70"
 
     # Parse the input arguments to handle single values and ranges
     variables_user = [
