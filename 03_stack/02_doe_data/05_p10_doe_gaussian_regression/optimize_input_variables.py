@@ -15,6 +15,16 @@ from data_processing import load_high_amp_doe_data, preprocess_data
 from optimization_functions import optimize_inputs_evolutionary
 
 from excel_magic import initialize_excel_file, write_to_excel, save_results_to_excel
+
+def parse_range(input_str):
+    """
+    Parse the input string to return either a range or a list with the same value twice.
+    """
+    if ',' in input_str:
+        return [float(x.strip()) for x in input_str.split(',')]
+    single_value = float(input_str)
+    return [single_value, single_value]
+
     
 def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, variables_user=[100,5,3,60,75]):
     # Load parameters
@@ -22,7 +32,7 @@ def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_cons
     _params_optimization = parameters.Optimization_Parameters()
     # Update bounds, keeping the first value unchanged
     for i, val in enumerate(variables_user, start=1):
-        _params_optimization.bounds[i] = (val, val)
+        _params_optimization.bounds[i] = (val[0], val[1])
     
     
     _params_pyhsics = parameters.Physical_Parameters()
@@ -103,9 +113,24 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=75.0)
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=275)
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=50)
-    parser.add_argument("-v", "--variables_user", type=list, help="Enter input variables for model evaluation: [cathode_rh_in_perc,stoich_cathode,pressure_cathode_in_bara,temp_coolant_inlet_degC,temp_coolant_outlet_degC]", default=[100,1.4,1.5,60,75]) #TODO: Change defaults and varnames
 
     args = parser.parse_args()
+    
+# Prompt the user for input variables
+    cathode_rh_in_perc = input("Enter cathode relative humidity in percentage (single value or ran,ge): ")
+    stoich_cathode = input("Enter stoichiometry of the cathode (single value or ran,ge): ")
+    pressure_cathode_in_bara = input("Enter pressure at the cathode inlet in bara (single value or ran,ge): ")
+    temp_coolant_inlet_degC = input("Enter temperature of the coolant inlet in degrees Celsius (single value or ran,ge): ")
+    temp_coolant_outlet_degC = input("Enter temperature of the coolant outlet in degrees Celsius (single value or ran,ge): ")
 
-    # Call the optimize_with_trained_model function                        
-    optimize_input_variables(args.model, args.power, args.cellcount, args.flightlevel, args.variables_user)
+    # Parse the input arguments to handle single values and ranges
+    variables_user = [
+        parse_range(cathode_rh_in_perc),
+        parse_range(stoich_cathode),
+        parse_range(pressure_cathode_in_bara),
+        parse_range(temp_coolant_inlet_degC),
+        parse_range(temp_coolant_outlet_degC)
+    ]
+
+# Call the optimize_with_trained_model function
+    optimize_input_variables(args.model, args.power, args.cellcount, args.flightlevel, variables_user)
