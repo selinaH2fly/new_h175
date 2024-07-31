@@ -29,7 +29,7 @@ def parse_range(input_str):
     single_value = float(input_str)
     return [single_value, single_value]
  
-def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, model="manuel", variables_user=[[100,100],[5,5],[3,3],[60,60],[75,75]]):
+def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, model="manuel"):#, variables_user=[[100,100],[5,5],[3,3],[60,60],[75,75]]):
     # Load parameters
     #For now just overwrite the parameters originating from the parameters.py file with the user input: variables_user
     _params_optimization = parameters.Optimization_Parameters()
@@ -151,15 +151,6 @@ if __name__ == '__main__':
             parse_range(temp_coolant_inlet_degC),
             parse_range(temp_coolant_outlet_degC)
         ]
-    else:
-        # Use command-line arguments directly
-        variables_user = [
-            parse_range("100,110"),  
-            parse_range("1.4"),      
-            parse_range("1.5,2.0"),  
-            parse_range("60"),       
-            parse_range("75,80")     
-        ]
 
     # Call the optimize_with_trained_model function
-    optimize_input_variables(args.model, args.power, args.cellcount, args.flightlevel, args.mode, variables_user)
+    optimize_input_variables(args.model, args.power, args.cellcount, args.flightlevel, args.mode)

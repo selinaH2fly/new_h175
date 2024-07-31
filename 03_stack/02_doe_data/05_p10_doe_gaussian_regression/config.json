@@ -1,7 +1,7 @@
 {
-    "cathode_rh_in_perc": "100,110",
-    "stoich_cathode": "1.4",
+    "cathode_rh_in_perc": "100",
+    "stoich_cathode": "1.4,2.1",
     "pressure_cathode_in_bara": "1.5,2.0",
     "temp_coolant_inlet_degC": "60",
-    "temp_coolant_outlet_degC": "75,80"
+    "temp_coolant_outlet_degC": "75"
 }
