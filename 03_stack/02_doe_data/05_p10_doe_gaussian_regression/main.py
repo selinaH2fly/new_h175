@@ -11,7 +11,7 @@ def main(power_constraint_kW, specified_cell_count, flight_level_100ft):
     pretrained_model = None
 
     # Call the training script
-    subprocess.run(['python', 'train_gpr_model.py', '-t', target, '-c', str(cutoff), '-m', str(pretrained_model)])
+    #subprocess.run(['python', 'train_gpr_model.py', '-t', target, '-c', str(cutoff), '-m', str(pretrained_model)])
 
     # Define arguments for optimization
     model_path = f'gpr_model_{target}.pth'
