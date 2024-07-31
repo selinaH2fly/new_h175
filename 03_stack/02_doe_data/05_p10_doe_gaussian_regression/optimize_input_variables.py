@@ -6,7 +6,7 @@ import argparse
 import random
 import gpytorch
 from pathlib import Path
-
+import json
 # Import custom classes and functions
 import parameters
 from file_handling import create_experiment_folder
@@ -16,6 +16,10 @@ from optimization_functions import optimize_inputs_evolutionary
 
 from excel_magic import initialize_excel_file, write_to_excel, save_results_to_excel, export_to_csv
 
+def load_config(filename):
+    with open(filename, 'r') as file:
+        return json.load(file)
+    
 def parse_range(input_str):
     """
     Parse the input string to return either a range or a list with the same value twice.
@@ -24,16 +28,27 @@ def parse_range(input_str):
         return [float(x.strip()) for x in input_str.split(',')]
     single_value = float(input_str)
     return [single_value, single_value]
-
-    
-def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, variables_user=[[100,100],[5,5],[3,3],[60,60],[75,75]]):
+ 
+def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, model="manuel", variables_user=[[100,100],[5,5],[3,3],[60,60],[75,75]]):
     # Load parameters
     #For now just overwrite the parameters originating from the parameters.py file with the user input: variables_user
     _params_optimization = parameters.Optimization_Parameters()
+    config = load_config('config.json')
+    
+    variables_user = []
+    for key in [
+        "cathode_rh_in_perc",
+        "stoich_cathode",
+        "pressure_cathode_in_bara",
+        "temp_coolant_inlet_degC",
+        "temp_coolant_outlet_degC"]:
+        
+            if key in config:
+                variables_user.append(parse_range(config[key]))
+            
     # Update bounds, keeping the first value unchanged
     for i, val in enumerate(variables_user, start=1):
         _params_optimization.bounds[i] = (val[0], val[1])
-    
     
     _params_pyhsics = parameters.Physical_Parameters()
 
@@ -116,7 +131,7 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=120.0)
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=275)
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=50)
-    parser.add_argument("--mode", type=str, choices=["auto", "manual"], default="manual", help="Mode of operation: 'auto' or 'manual'")
+    parser.add_argument("--mode", type=str, choices=["auto", "manual"], default="auto", help="Mode of operation: 'auto' or 'manual'")
 
     args = parser.parse_args()
     
@@ -147,4 +162,4 @@ if __name__ == '__main__':
         ]
 
     # Call the optimize_with_trained_model function
-    optimize_input_variables(args.model, args.power, args.cellcount, args.flightlevel, variables_user)
+    optimize_input_variables(args.model, args.power, args.cellcount, args.flightlevel, args.mode, variables_user)
