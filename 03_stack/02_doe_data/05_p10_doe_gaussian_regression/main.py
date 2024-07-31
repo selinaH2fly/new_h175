@@ -33,7 +33,7 @@ import json
 #     main(args.power, args.cellcount, args.flightlevel, args.mode)
 
 
-def build_command(args, config):
+def build_command(args):
     command = [
         "python", "optimize_input_variables.py",
         "--model", args.model,
@@ -42,14 +42,8 @@ def build_command(args, config):
         "--flightlevel", str(args.flightlevel),
         "--mode", args.mode
     ]
-    for key, value in config.items():
-        command.append(f"--{key}")
-        command.append(value)
     return command
 
-def load_config(filename):
-    with open(filename, 'r') as file:
-        return json.load(file)
     
 if __name__ == '__main__':
     import argparse
@@ -63,11 +57,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # Load configuration
-    config = load_config('config.json')
-
     # Build and execute command
-    command = build_command(args, config)
+    command = build_command(args)
     result = subprocess.run(command, capture_output=True, text=True)
     # Print the output and error (if any) from the subprocess call
     print("Output:")
