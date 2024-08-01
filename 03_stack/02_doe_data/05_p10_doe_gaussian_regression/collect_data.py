@@ -23,13 +23,26 @@ def consolidate_experiment_data(parameters):
     None.
 
     """
+    experimentID = 1
     working_directory = os.getcwd()
-    # Define the new directory
-    new_dir = os.path.join(working_directory, f'consolidated_{parameters[0][0]}-{parameters[-1][0]}kW_{parameters[0][1]}-{parameters[-1][1]}_{parameters[0][2]}-{parameters[-1][2]}ft')
     
-    # Create the new directory if it doesn't exist
-    if not os.path.exists(new_dir):
-        os.makedirs(new_dir)
+    while True:
+        # Define the new directory with the current experimentID
+        new_dir = os.path.join(
+            working_directory, 
+            f'consolidated_{parameters[0][0]}-{parameters[-1][0]}kW_{parameters[0][1]}-{parameters[-1][1]}_{parameters[0][2]}-{parameters[-1][2]}ft__{experimentID}'
+        )
+        
+        # Check if the directory already exists
+        if not os.path.exists(new_dir):
+            # Create the new directory if it doesn't exist
+            os.makedirs(new_dir)
+            break
+        else:
+            # Increment experimentID if directory exists
+            experimentID += 1
+        
+        
     
     # Collect all the directories named X_gpr_doe_model_optimization_experiment
     experiment_dirs = [d for d in os.listdir(working_directory) if os.path.isdir(os.path.join(working_directory, d)) and d.endswith('_gpr_doe_model_optimization_experiment')]
