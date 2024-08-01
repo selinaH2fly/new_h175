@@ -68,7 +68,7 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
         return result
 
     # Perform the optimization using differential evolution
-    result = differential_evolution(objective_function, bounds, maxiter=1000, tol=1e-7,popsize=100, disp=False, seed=None)
+    result = differential_evolution(objective_function, bounds, maxiter=1000, tol=1e-7,popsize=50, disp=False, seed=None)
 
     # Print the stopping criterion
     print(f'{result.message}')
