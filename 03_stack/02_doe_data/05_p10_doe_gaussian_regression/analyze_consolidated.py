@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 
 
 #file_path = r"consolidated_20-175kW_300-300_100-100ft__1\optimized_parameters_20-175kW_300-300_100-100ft.csv"
-file_path = r"consolidated_20-175kW_350-350_100-100ft__1\optimized_parameters_20-175kW_350-350_100-100ft.csv"
+file_path = r"consolidated_20-175kW_400-500_120-120ft__1\optimized_parameters_20-175kW_400-500_120-120ft.csv"
+
 # Load the CSV file into a DataFrame
 # Replace 'your_file.csv' with the path to your CSV file
 df = pd.read_csv(file_path)
@@ -164,11 +165,70 @@ plt.show()
 
 
 
+# %% Plot multi data (var Ncell in csv) H2 consumption
 
+import pandas as pd
+import matplotlib.pyplot as plt
 
+# File path to the CSV file
+file_path = r"consolidated_20.0-175.0kW_400-500_120-120ft__1\optimized_parameters_20.0-175.0kW_400-500_120-120ft.csv"
 
+# Load the CSV file into a DataFrame
+df = pd.read_csv(file_path)
 
+# Split the data based on 'Specified Cell Count'
+df_400 = df[df['Specified Cell Count'] == 400]
+df_450 = df[df['Specified Cell Count'] == 450]
+df_500 = df[df['Specified Cell Count'] == 500]
 
+# Plot 'Hydrogen Consumption (g/s)' vs 'System Power (kW)' for each dataset
+fig, ax = plt.subplots(figsize=(12, 8))
+# Scatter plot for each dataset
+scatter_400 = ax.scatter(df_400['System Power (kW)'], df_400['Hydrogen Consumption (g/s)'], label='Cell Count 400', color='blue', s=100, edgecolor='k')
+scatter_450 = ax.scatter(df_450['System Power (kW)'], df_450['Hydrogen Consumption (g/s)'], label='Cell Count 450', color='green', s=100, edgecolor='k')
+scatter_500 = ax.scatter(df_500['System Power (kW)'], df_500['Hydrogen Consumption (g/s)'], label='Cell Count 500', color='red', s=100, edgecolor='k')
+
+# Set title and labels
+ax.set_title('Hydrogen Consumption vs System Power, FL 120')
+ax.set_xlabel('System Power (kW)')
+ax.set_ylabel('Hydrogen Consumption (g/s)')
+ax.grid(True)
+ax.legend(loc='best')
+
+plt.show()
+
+# %% Plot multi data (var Ncell in csv) System Polarization Curve
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# File path to the CSV file
+file_path = r"consolidated_20.0-175.0kW_400-500_120-120ft__1\optimized_parameters_20.0-175.0kW_400-500_120-120ft.csv"
+
+# Load the CSV file into a DataFrame
+df = pd.read_csv(file_path)
+
+# Split the data based on 'Specified Cell Count'
+df_400 = df[df['Specified Cell Count'] == 400]
+df_450 = df[df['Specified Cell Count'] == 450]
+df_500 = df[df['Specified Cell Count'] == 500]
+
+# Plot 'Current A (Value)' vs 'Cell Voltage (V)' for each dataset
+fig, ax = plt.subplots(figsize=(12, 8))
+
+# Scatter plot for each dataset
+scatter_400 = ax.scatter(df_400['current_A (Value)'], df_400['Cell Voltage (V)'], label='Cell Count 400', color='blue', s=100, edgecolor='k')
+scatter_450 = ax.scatter(df_450['current_A (Value)'], df_450['Cell Voltage (V)'], label='Cell Count 450', color='green', s=100, edgecolor='k')
+scatter_500 = ax.scatter(df_500['current_A (Value)'], df_500['Cell Voltage (V)'], label='Cell Count 500', color='red', s=100, edgecolor='k')
+
+# Set title and labels
+ax.set_title(r'System Polarization Curve, FL 120', fontsize=14)
+ax.set_xlabel('Current [A]', fontsize=12)
+ax.set_ylabel('Cell Voltage [V]', fontsize=12)
+ax.grid(True)
+ax.legend(loc='best')
+ax.set_xlim([0, 700])
+ax.set_ylim([0.5, 0.75])
+plt.show()
 
 
 
