@@ -3,7 +3,7 @@
 import torch
 import gpytorch
 import numpy as np
-from scipy.optimize import differential_evolution
+from scipy.optimize import differential_evolution, LinearConstraint
 
 # Import custom classes and functions
 import parameters
@@ -66,9 +66,12 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
         result = hydrogen_mass_flow_g_s + penalty 
 
         return result
+    
+    # Define the constraint for the coolant outlet temperature being higher than the inlet temperature: x[5] - x[4] >= 0
+    linear_constraint = LinearConstraint([[0, 0, 0, 0, -1, 1]], [0], [np.inf])
 
     # Perform the optimization using differential evolution
-    result = differential_evolution(objective_function, bounds, maxiter=5000, popsize=50, tol=1e-9, recombination=0.9, polish=False, disp=False, seed=None)
+    result = differential_evolution(objective_function, bounds, constraints=linear_constraint, maxiter=5000, popsize=50, tol=1e-9, recombination=0.9, polish=False, disp=False, seed=None)
 
     # Print the stopping criterion
     print(f'{result.message}')
