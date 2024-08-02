@@ -22,7 +22,7 @@ def create_experiment_folder(_params_model=None, _params_training=None, _params_
 
     os.mkdir(dirName)
     shutil.copytree(os.getcwd(), os.path.join(dirName, "Sources_unzipped"),
-                    ignore=shutil.ignore_patterns('*experiment*', 'archive', '.git*', 
+                    ignore=shutil.ignore_patterns('*experiment*', '*consolidated*', 'archive', '.git*', 
                                                   '../.idea', '__pycache__', 'README*'))
 
     os.chdir(dirName)
