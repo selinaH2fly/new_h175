@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 
 #file_path = r"consolidated_20-175kW_300-300_100-100ft__1\optimized_parameters_20-175kW_300-300_100-100ft.csv"
-file_path = r"consolidated_20-175kW_400-500_120-120ft__1\optimized_parameters_20-175kW_400-500_120-120ft.csv"
+file_path = r"consolidated_20.0-175.0kW_450-450_120-120ft__2\optimized_parameters_20.0-175.0kW_450-450_120-120ft.csv"
 
 # Load the CSV file into a DataFrame
 # Replace 'your_file.csv' with the path to your CSV file
@@ -232,9 +232,132 @@ plt.show()
 
 
 
+# %%
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
+
+# File paths to the CSV files
+file_path1 = r"consolidated_20.0-175.0kW_400-500_120-120ft__1\optimized_parameters_20.0-175.0kW_400-500_120-120ft.csv"
+#file_path2 = r"consolidated_20-175kW_350-350_100-100ft__2\optimized_parameters_20-175kW_350-350_100-100ft.csv"
+
+# Load the CSV files into DataFrames
+df1 = pd.read_csv(file_path1)
+#df2 = pd.read_csv(file_path2)
+
+# Combine the DataFrames
+df = df1
+
+# Split the data based on 'Specified Cell Count'
+df_400 = df[df['Specified Cell Count'] == 400]
+df_450 = df[df['Specified Cell Count'] == 450]
+df_500 = df[df['Specified Cell Count'] == 500]
+
+# Plotting function
+def plot_system_polarization_curve(df, cell_count, ax):
+    norm = mcolors.Normalize(vmin=20, vmax=175)
+    scatter = ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], c=df['System Power (kW)'], cmap='viridis', norm=norm, edgecolor='k', s=100, label=f'Cell Count {cell_count}')
+    cbar = plt.colorbar(cm.ScalarMappable(norm=norm, cmap='viridis'), ax=ax)
+    cbar.set_label('System Power [kW]')
+    ax.set_title(rf'System Polarization Curve', fontsize=14)
+    ax.set_xlabel('Current [A]', fontsize=12)
+    ax.set_ylabel('Cell Voltage [V]', fontsize=12)
+    ax.grid(True)
+    ax.legend(loc='best')
+
+# Create individual plots
+fig, axs = plt.subplots(3, 1, figsize=(12, 24))
+
+plot_system_polarization_curve(df_400, 400, axs[0])
+plot_system_polarization_curve(df_450, 450, axs[1])
+plot_system_polarization_curve(df_500, 500, axs[2])
+
+plt.tight_layout()
+plt.show()
+
+# Create a combined plot
+fig, ax = plt.subplots(figsize=(12, 8))
+
+plot_system_polarization_curve(df_400, 400, ax)
+plot_system_polarization_curve(df_450, 450, ax)
+plot_system_polarization_curve(df_500, 500, ax)
+
+plt.show()
+
+#
+# Create individual plots
+fig, axs = plt.subplots(1, 1, figsize=(12, 8))
+
+#plot_system_polarization_curve(df_400, 400, axs)
+#plot_system_polarization_curve(df_450, 450, axs)
+plot_system_polarization_curve(df_500, 500, axs)#
+
+plt.tight_layout()
+plt.show()
+
+# Create a combined plot
+fig, ax = plt.subplots(figsize=(12, 8))
+
+plot_system_polarization_curve(df_400, 400, ax)
+plot_system_polarization_curve(df_450, 450, ax)
+plot_system_polarization_curve(df_500, 500, ax)
+
+plt.show()
 
 
+# %%
+import pandas as pd
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 
+# Read the data from the CSV file
+file_path = r"consolidated_20.0-175.0kW_400-400_120-120ft__1\optimized_parameters_20.0-175.0kW_400-400_120-120ft.csv"
+df = pd.read_csv(file_path)
+
+# Sort the DataFrame by 'System Power (kW)'
+df = df.sort_values(by='System Power (kW)')
+
+# Create a colormap and normalize for the color gradient
+norm = mcolors.Normalize(vmin=df['System Power (kW)'].min(), vmax=min(df['System Power (kW)'].max(), 175))
+cmap = cm.ScalarMappable(norm=norm, cmap='viridis')
+
+# Plot 'Current A (Value)' vs 'Cell Voltage (V)'
+fig, ax = plt.subplots(figsize=(12, 8))
+
+# Scatter plot with color based on 'System Power (kW)'
+scatter = ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], c=df['System Power (kW)'], cmap='viridis', norm=norm, edgecolor='k', s=100)
+
+# Add colorbar for the gradient
+cbar = plt.colorbar(scatter, ax=ax)
+cbar.set_label('System Power [kW]')
+
+# Add a red shaded area from 700 A to 800 A
+ax.axvspan(700, 800, color='red', alpha=0.3)
+
+# Set title and labels
+flight_level = "Enter_Flight_Level"
+cell_count = "Enter_Cell_Count"
+ax.set_title(r'System Polarization Curve, FL 120, 400 Cells', fontsize=14)
+ax.set_xlabel('Current [A]')
+ax.set_ylabel('Cell Voltage [V]')
+ax.grid(True)
+ax.set_xlim([0, 800])
+ax.set_ylim([0.55, 0.8])
+
+# Annotate the first, last, and second-to-last points with the corresponding 'System Power (kW)'
+for idx in [0, -1, -2]:
+    point = df.iloc[idx]
+    ax.annotate(f"{point['Power Constraint (kW)']:.1f} kW", (point['current_A (Value)'], point['Cell Voltage (V)']),
+                textcoords="offset points", xytext=(0,10), ha='center')
+
+# Add a legend (the colorbar serves as the legend in this case)
+scatter.set_label('System Power [kW]')
+ax.legend(loc='best')
+
+plt.show()
 
 
 
