@@ -3,7 +3,7 @@
 import torch
 import gpytorch
 import numpy as np
-from scipy.optimize import differential_evolution
+from scipy.optimize import differential_evolution, LinearConstraint, NonlinearConstraint
 
 # Import custom classes and functions
 import parameters
@@ -40,7 +40,8 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
 
     # Define the objective function for optimization
     def objective_function(x):
-        #%todo remove vary exept current
+
+        # Evaluate the cell voltage model
         x_tensor = torch.tensor(x, dtype=torch.float).unsqueeze(0)
         model.eval()
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
@@ -66,9 +67,16 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
         result = hydrogen_mass_flow_g_s + penalty 
 
         return result
+    
+    # Define the nonlinear constriant for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 5 K
+    def nonlinear_constraint(x):
+        return (x[5]*np.array(input_data_std[5]) + np.array(input_data_mean[5])) \
+            - (x[4]*np.array(input_data_std[4]) + np.array(input_data_mean[4])) - 5
+    
+    nonlinear_constraint = NonlinearConstraint(nonlinear_constraint, 0, np.inf)
 
     # Perform the optimization using differential evolution
-    result = differential_evolution(objective_function, bounds, maxiter=1000, tol=1e-7, disp=False, seed=None)
+    result = differential_evolution(objective_function, bounds, constraints=nonlinear_constraint, maxiter=1000, popsize=30, tol=1e-6, recombination=0.9, polish=False, disp=False, seed=None)
 
     # Print the stopping criterion
     print(f'{result.message}')

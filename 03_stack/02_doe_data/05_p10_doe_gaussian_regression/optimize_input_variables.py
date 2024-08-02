@@ -84,7 +84,7 @@ def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_cons
     optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_kW = optimize_inputs_evolutionary(model, input_data_mean,
                                                                                                                             input_data_std, target_data_mean, target_data_std,
                                                                                                                             flight_level_100ft, cellcount=specified_cell_count, bounds=normalized_bounds,
-                                                                                                                            power_constraint_kW=power_constraint_kW, penalty_weight=1e-6,
+                                                                                                                            power_constraint_kW=power_constraint_kW, penalty_weight=1e-7,
                                                                                                                             params_physics=_params_pyhsics)
     
     system_power_kW = stack_power_kW - compressor_power_kW
