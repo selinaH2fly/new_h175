@@ -225,8 +225,68 @@ ax.legend(loc='best')
 
 plt.show()
 
+    
+# %% H2 consumption over flight level all in one
 
+import pandas as pd
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 
+# File path to the CSV file
+file_path1 = r"consolidated_20-175kW_400-500_0-120ft__1/optimized_parameters_20-175kW_400-500_0-120ft.csv"
+
+# List of cell counts and corresponding icons
+cells = [400, 450, 500]
+icons = ["o", "v", "s"]
+
+# Define power levels to highlight
+highlight_powers = [125, 150, 175]
+highlight_range = 4
+
+# Load the CSV file into a DataFrame
+df1 = pd.read_csv(file_path1)
+
+# Create a figure and axis
+fig, ax = plt.subplots(figsize=(12, 8))
+
+# Create a colormap and normalize for the color gradient
+norm = mcolors.Normalize(vmin=125, vmax=175)
+cmap = cm.ScalarMappable(norm=norm, cmap='plasma')
+
+# Loop through each cell count and plot the data
+for cell, icon in zip(cells, icons):
+    #filter dataframe after cell count and 125-+, 150+-, and 175+-
+    df_filtered = df1[(df1['Specified Cell Count'] == cell) &
+                      (df1['System Power (kW)'].between(highlight_powers[0] - highlight_range, highlight_powers[0] + highlight_range) |
+                       df1['System Power (kW)'].between(highlight_powers[1] - highlight_range, highlight_powers[1] + highlight_range) |
+                       df1['System Power (kW)'].between(highlight_powers[2] - highlight_range, highlight_powers[2] + highlight_range))]
+
+    # Scatter plot with color based on 'System Power (kW)'
+    scatter = ax.scatter(df_filtered['Flight Level (100x ft)'], df_filtered['Hydrogen Consumption (g/s)'], 
+                         c=df_filtered['System Power (kW)'], cmap='plasma', norm=norm, edgecolor='k', s=100, marker=icon, label=f'{cell} Cells')
+
+# Add colorbar for the gradient
+cbar = plt.colorbar(cmap, ax=ax)
+cbar.set_label('System Power [kW]')
+
+# Create custom legend handles
+handles = [plt.Line2D([0], [0], marker=icon, color='w', markerfacecolor='k', markersize=10, linestyle='') for icon in icons]
+labels = [f'{cell} Cells' for cell in cells]
+
+# Add legend
+ax.legend(handles, labels, loc='upper left')
+
+# Set title and labels
+ax.set_title('System Hydrogen Consumption over Flight Level for Different Cell Counts', fontsize=14)
+ax.set_xlabel('Flight Level [100x ft]')
+ax.set_xlim([0, 120])
+ax.set_ylabel('Hydrogen Consumption [g/s]')
+ax.set_ylim([1.9, 3.4])
+ax.grid(True)
+
+# Show the plot
+plt.show()
 
 # %% PLOT BOTH LOW AND HIGH C_IN BAR INTO ON PLOT Gray shaded
 
