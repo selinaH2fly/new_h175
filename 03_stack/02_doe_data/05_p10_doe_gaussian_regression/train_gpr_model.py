@@ -103,8 +103,17 @@ def train_gpr_model(target='voltage', cutoff_current=0, plot=True, pretrained_mo
         test_loss_list.append(test_loss.item())
         iterations.append(i)
 
-    # Save the model refering to the target variable
-    torch.save(model.state_dict(), f'gpr_model_{target}.pth')
+    # Save all the necessary information to a "model" subfolder for restoring the trained model (refering to the target variable)
+    os.mkdir('model')
+    torch.save(model.state_dict(), f'model/gpr_model_{target}.pth')
+    torch.save(likelihood.state_dict(), f'model/pr_likelihood_{target}.pth')
+    torch.save(input_data_mean, f'model/input_data_mean_{target}.pth')
+    torch.save(input_data_std, f'model/input_data_std_{target}.pth')
+    torch.save(target_data_mean, f'model/target_data_mean_{target}.pth')
+    torch.save(target_data_std, f'model/target_data_std_{target}.pth')
+    with open(f'model/feature_names_{target}.dat', 'w') as file:
+        for feature in feature_names:
+            file.write(f'{feature}\n')    
 
     # Save the loss values and the corresponding iteration values to a dat file
     with open('loss_values.dat', 'w', newline='') as file:

@@ -3,7 +3,7 @@ import numpy as np
 class Training_Parameters:
 
     def __init__(self):
-        self.iterations = 20e3
+        self.iterations = 10e3
         # self.iterations = 100
         self.learning_rate = 1e-2
         # self.split_ratio = 0.8
