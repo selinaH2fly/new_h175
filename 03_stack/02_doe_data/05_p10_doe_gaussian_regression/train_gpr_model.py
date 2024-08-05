@@ -106,7 +106,7 @@ def train_gpr_model(target='voltage', cutoff_current=0, plot=True, pretrained_mo
     # Save all the necessary information to a "model" subfolder for restoring the trained model (refering to the target variable)
     os.mkdir('model')
     torch.save(model.state_dict(), f'model/gpr_model_{target}.pth')
-    torch.save(likelihood.state_dict(), f'model/pr_likelihood_{target}.pth')
+    torch.save(likelihood.state_dict(), f'model/gpr_likelihood_{target}.pth')
     torch.save(input_data_mean, f'model/input_data_mean_{target}.pth')
     torch.save(input_data_std, f'model/input_data_std_{target}.pth')
     torch.save(target_data_mean, f'model/target_data_mean_{target}.pth')
