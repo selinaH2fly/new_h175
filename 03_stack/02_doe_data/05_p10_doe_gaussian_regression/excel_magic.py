@@ -136,7 +136,7 @@ def save_results_to_excel(file_path, feature_names, optimal_input, bounds, hydro
 import csv
 
 def export_to_csv(feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, cell_voltage, 
-                  system_power_kW, compressor_power_kW, stack_power_kW, power_constraint_kW, 
+                  system_power_kW, compressor_power_kW, turbine_power_kW, stack_power_kW, power_constraint_kW, 
                   specified_cell_count, flight_level_100ft, filename='optimized_input_data.csv'):
     # Check if the file already exists to determine if we need to write the header
     file_exists = os.path.isfile(filename)
@@ -160,5 +160,5 @@ def export_to_csv(feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, 
         data.extend([f'{bound[0]:.4f}' for bound in bounds])
         data.extend([f'{bound[1]:.4f}' for bound in bounds])
         data.extend([f'{hydrogen_mass_flow_g_s:.4f}', f'{cell_voltage:.4f}', 
-                     f'{system_power_kW:.2f}', f'{compressor_power_kW:.2f}', f'{stack_power_kW:.2f}'])
+                     f'{system_power_kW:.2f}', f'{compressor_power_kW:.2f}', f'{turbine_power_kW:.2f}', f'{stack_power_kW:.2f}'])
         writer.writerow(data)
