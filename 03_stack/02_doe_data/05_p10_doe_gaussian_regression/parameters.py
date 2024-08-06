@@ -61,3 +61,9 @@ class Compressor_Parameters:
 
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
+
+class Turbine_Parameters:
+
+    def __init__(self):
+
+        self.isentropic_efficiency = 0.85
