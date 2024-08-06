@@ -157,7 +157,7 @@ def cathode_dp_input_data_dict(df_dict, params_physics):
 
     return input_data_dict
 
-# Helper function for calculating the relative humidity
+# Helper function for calculating the relative humidity TODO: Check this function!
 def calculate_relative_humidity(dewpoint_degC, air_temp_degC):
     """
     Calculate the relative humidity using the PowerCell formula from dewpoint temperature and actual temperature.
