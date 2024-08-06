@@ -144,16 +144,12 @@ def cathode_dp_input_data_dict(df_dict, params_physics):
 
     input_data_dict = {}
 
-    # "Best" features from the feature selection process for the voltage prediction (as of July 05, 2024)
+    # Variables believed to affect flow velocity and, therefore, pressure drop in the cathode
     input_data_dict['current_A'] = df_dict['current']
     # input_data_dict['cathode_rh_in_perc'] = [calculate_relative_humidity(dewpoint, temp) for dewpoint, temp in zip(df_dict['temp_cathode_dewpoint_gas'], df_dict['temp_cathode_inlet'])]
     input_data_dict['stoich_cathode'] = df_dict['cathode_stoich']
     input_data_dict['pressure_cathode_in_bara'] = [pressure_barg + params_physics.sea_level_ambient_pressure_bar for pressure_barg in df_dict['pressure_cathode_inlet']]
     input_data_dict['temp_cathode_inlet_degC'] = df_dict['temp_cathode_inlet']
-
-    # input_data_dict['mass_flow_cathode_kg_s'] = [current_A * 275 * cathode_stochiometry * params_physics.air_molar_mass / \
-    #         (4 * params_physics.faraday * params_physics.oxygen_mol_fraction) for current_A, cathode_stochiometry in zip(df_dict['current'], df_dict['cathode_stoich'])]
-
 
     return input_data_dict
 
