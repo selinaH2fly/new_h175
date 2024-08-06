@@ -67,16 +67,13 @@ class Turbine:
         enthalpy_in_J_kg = CP.PropsSI('H', 'T', temperature_in_K, 'P', pressure_in_Pa, 'Air')
 
         # Evaluate the temperature and pressure at the given flight level
-        _, pressure_out_Pa = icao_atmosphere(flight_level_100ft)
-
-        # Calculate the isentropic outlet temperature
-        temperature_out_isentropic_K = CP.PropsSI('T', 'P', pressure_out_Pa, 'S', CP.PropsSI('S', 'T', temperature_in_K, 'P', pressure_in_Pa, 'Air'), 'Air')
+        temperature_out_K, pressure_out_Pa = icao_atmosphere(flight_level_100ft)
 
         # Calculate the specific enthalpy at the isentropic outlet
-        enthalpy_out_isentropic_J_kg = CP.PropsSI('H', 'T', temperature_out_isentropic_K, 'P', pressure_out_Pa, 'Air')
+        enthalpy_out_J_kg = CP.PropsSI('H', 'T', temperature_out_K, 'P', pressure_out_Pa, 'Air')
 
         # Calculate the specific work output (isentropic work)
-        specific_turbine_work_isentropic = enthalpy_in_J_kg - enthalpy_out_isentropic_J_kg
+        specific_turbine_work_isentropic = enthalpy_in_J_kg - enthalpy_out_J_kg
 
         # Adjust for isentropic efficiency
         specific_turbine_work = specific_turbine_work_isentropic * self.isentropic_efficiency
