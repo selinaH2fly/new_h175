@@ -61,7 +61,9 @@ class Rezi_Pump:
         Cp_N2 = CP.PropsSI("C", "P" , (p1*100000), "T", (T1+273), "Nitrogen")       #specific heat nitrogen
         Cp_mix = Cp_H2*w_H2 + Cp_N2*w_N2                                            #specific heat gas mixtrue
         return Cp_mix
-        
+ 
+# %% Example usage:
+      
 C1 = Rezi_Pump()
 
 #define parameters
