@@ -21,7 +21,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description="Main script to call optimize_input_variables.py")
-    parser.add_argument("-m", "--model", type=str, help="Path to the trained GPR model", default="gpr_model_cell_voltage_longrun.pth")
+    # parser.add_argument("-m", "--model", type=str, help="Path to the trained GPR model", default="gpr_model_cell_voltage_longrun.pth")
     parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[20,175])
     parser.add_argument("-n", "--cellcount", type=float, nargs='+', help="Stack cell number for optimizing subject to power constraint", default=[400,400])
     parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[100, 100])
@@ -46,6 +46,6 @@ if __name__ == '__main__':
         result = subprocess.run(command, capture_output=True, text=True)
         # Print the output and error (if any) from the subprocess call
         print(result.stdout)
-    print("Done with Optimize")
+    print("Done with Optimization")
         
     consolidate_experiment_data(parameters)
