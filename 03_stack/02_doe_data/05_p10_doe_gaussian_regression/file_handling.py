@@ -3,7 +3,7 @@ import shutil
 
 import torch
 import gpytorch
-from gpr_model import ExactGPModel
+from gpr_model import ExactGPModel, GPRModelContainer
 
 # Create and browse to folder for storing experiment results
 def create_experiment_folder(_params_model=None, _params_training=None, _params_logging=None, _params_optimization=None, type='training'):
@@ -75,4 +75,5 @@ def load_gpr_model(file_path):
     model.eval()
     likelihood.eval()
 
-    return model, likelihood, input_data_mean, input_data_std, target_data_mean, target_data_std, feature_names
+    # Return a single encapsulated object
+    return GPRModelContainer(model, likelihood, input_data_mean, input_data_std, target_data_mean, target_data_std, feature_names)

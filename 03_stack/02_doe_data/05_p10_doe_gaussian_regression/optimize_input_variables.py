@@ -63,15 +63,16 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     print(f"Specified Cell Count: {specified_cell_count}")
     
     # Load the trained cell voltage model from the "trained_models" folder
-    model_path = os.path.join(os.getcwd(), "trained_models", "gpr_model_cell_voltage.pth")
-    cv_model, _, cv_input_data_mean, cv_input_data_std, cv_target_data_mean, cv_target_data_std, feature_names = load_gpr_model(model_path)
+    gpr_model_cell_voltage = load_gpr_model(os.path.join(os.getcwd(), "trained_models", "gpr_model_cell_voltage.pth"))
+
+    # Load the trained cathode pressure drop model from the "trained_models" folder
+    gpr_model_cathode_pressure_drop = load_gpr_model(os.path.join(os.getcwd(), "trained_models", "gpr_model_cathode_pressure_drop.pth"))
 
     # Create a folder to store the training results
     create_experiment_folder(_params_optimization=_params_optimization, type='optimization')
     
     # Optimize the input variables
-    optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_kW = optimize_inputs_evolutionary(cv_model, cv_input_data_mean,
-                                                                                                                            cv_input_data_std, cv_target_data_mean, cv_target_data_std,
+    optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_kW = optimize_inputs_evolutionary(gpr_model_cell_voltage,
                                                                                                                             flight_level_100ft, cellcount=specified_cell_count, bounds=_params_optimization.bounds,
                                                                                                                             power_constraint_kW=power_constraint_kW, penalty_weight=1e-7,
                                                                                                                             params_physics=_params_pyhsics)
@@ -80,7 +81,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
 
     # Print the optimal input, target variables, and bounds including feature names and target variable
     print("\nOptimized Input Variables:")
-    for name, value, bound in zip(feature_names, optimal_input, _params_optimization.bounds):
+    for name, value, bound in zip(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds):
         print(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])")
     print(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  Hydrogen Consumption: {hydrogen_mass_flow_g_s:.4f} g/s\n")
     print(f"Cell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {cell_voltage:.4f} V\n")
@@ -97,7 +98,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
         file.write(f"Specified Cell Count: {specified_cell_count}\n")
 
         file.write("\nOptimized Variables:\n")
-        for name, value, bound in zip(feature_names, optimal_input, _params_optimization.bounds):
+        for name, value, bound in zip(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds):
             file.write(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])\n")
             file.write(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  Hydrogen Consumption: {hydrogen_mass_flow_g_s:.4f} g/s\n")
 
@@ -108,7 +109,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     
     #_file_path = os.path.join(os.getcwd(), "resulting_data")
     #save_results_to_excel(_file_path, feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, cell_voltage, system_power_kW, compressor_power_kW, stack_power_kW, power_constraint_kW, specified_cell_count, flight_level_100ft)
-    export_to_csv(feature_names, optimal_input, _params_optimization.bounds, hydrogen_mass_flow_g_s, cell_voltage, 
+    export_to_csv(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds, hydrogen_mass_flow_g_s, cell_voltage, 
                       system_power_kW, compressor_power_kW, stack_power_kW, power_constraint_kW, 
                       specified_cell_count, flight_level_100ft, filename='optimized_input_data.csv')
     

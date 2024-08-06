@@ -11,3 +11,13 @@ class ExactGPModel(gpytorch.models.ExactGP):
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+    
+class GPRModelContainer:
+    def __init__(self, model, likelihood, input_data_mean, input_data_std, target_data_mean, target_data_std, feature_names):
+        self.model = model
+        self.likelihood = likelihood
+        self.input_data_mean = input_data_mean
+        self.input_data_std = input_data_std
+        self.target_data_mean = target_data_mean
+        self.target_data_std = target_data_std
+        self.feature_names = feature_names

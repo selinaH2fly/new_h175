@@ -9,16 +9,12 @@ from scipy.optimize import differential_evolution, LinearConstraint, NonlinearCo
 import parameters
 from compressor import Compressor
 
-def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_data_mean, target_data_std, flight_level_100ft, cellcount=275, variables_user=[100,5,3,60,75], bounds=None, power_constraint_kW=None, penalty_weight=0.1, params_physics=None):
+def optimize_inputs_evolutionary(cell_voltage_model, flight_level_100ft, cellcount=275, variables_user=[100,5,3,60,75], bounds=None, power_constraint_kW=None, penalty_weight=0.1, params_physics=None):
     """
     Optimize the (cell) voltage predicted by the GPyTorch model with a (cell) power constraint using differential evolution.
 
     Parameters:
-    - model: The trained GPyTorch model.
-    - input_data_mean: Mean values for input data normalization.
-    - input_data_std: Standard deviation values for input data normalization.
-    - target_data_mean: Mean values for target data normalization.
-    - target_data_std: Standard deviation values for target data normalization.
+    - cell_voltage_model: The trained GPyTorch model (alongside likelihood and input/target data statistics).
     - flight_level_100ft: Flight level in 100 feet units.
     - cellcount: Number of cells.
     - bounds: Bounds for each feature as a list of tuples [(min1, max1), (min2, max2), ...].
@@ -39,7 +35,8 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
                             electric_efficiency=_params_compressor.electric_efficiency)
     
     # Normalize the bounds
-    normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in zip(bounds, input_data_mean.numpy(), input_data_std.numpy())]
+    normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
+                         zip(bounds, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
 
 
     # Define the objective function for optimization
@@ -47,13 +44,13 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
 
         # Evaluate the cell voltage model
         x_tensor = torch.tensor(x, dtype=torch.float).unsqueeze(0)
-        model.eval()
+        cell_voltage_model.model.eval()
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
-            cell_voltage = model(x_tensor).mean.item()
+            cell_voltage = cell_voltage_model.model(x_tensor).mean.item()
 
         # Denormalize
-        optimal_input = x * np.array(input_data_std) + np.array(input_data_mean)
-        cell_voltage = cell_voltage * target_data_std + target_data_mean
+        optimal_input = x * np.array(cell_voltage_model.input_data_std) + np.array(cell_voltage_model.input_data_mean)
+        cell_voltage = cell_voltage * cell_voltage_model.target_data_std + cell_voltage_model.target_data_mean
 
         # Compute the compressor power
         air_mass_flow_kg_s = compressor.compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], cellcount=cellcount)
@@ -72,10 +69,10 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
 
         return result
     
-    # Define the nonlinear constriant for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 5 K
+    # Define the nonlinear constraint for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 5 K
     def nonlinear_constraint(x):
-        return (x[5]*np.array(input_data_std[5]) + np.array(input_data_mean[5])) \
-            - (x[4]*np.array(input_data_std[4]) + np.array(input_data_mean[4])) - 5
+        return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
+            - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4])) - 5
     
     nonlinear_constraint = NonlinearConstraint(nonlinear_constraint, 0, np.inf)
 
@@ -89,11 +86,11 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
     optimal_input_scaled = result.x
 
     # Denormalize the optimal input and target variables
-    optimal_input = optimal_input_scaled * np.array(input_data_std) + np.array(input_data_mean)
+    optimal_input = optimal_input_scaled * np.array(cell_voltage_model.input_data_std) + np.array(cell_voltage_model.input_data_mean)
 
     with torch.no_grad(), gpytorch.settings.fast_pred_var():
-            cell_voltage = model(torch.tensor(optimal_input_scaled, dtype=torch.float).unsqueeze(0)).mean.item()
-    cell_voltage = cell_voltage * target_data_std + target_data_mean
+            cell_voltage = cell_voltage_model.model(torch.tensor(optimal_input_scaled, dtype=torch.float).unsqueeze(0)).mean.item()
+    cell_voltage = cell_voltage * cell_voltage_model.target_data_std + cell_voltage_model.target_data_mean
 
     # Test the stack power s.t. the optimal input variables
     stack_power_kW = optimal_input[0] * cell_voltage * cellcount / 1000
