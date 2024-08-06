@@ -65,12 +65,19 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         x_tensor = torch.tensor([current_for_dp_normalized, stoichiometry_for_dp_normalized, pressure_for_dp_normalized, temperature_for_dp_normalized], dtype=torch.float).unsqueeze(0)
 
         # Evaluate the cathode pressure drop model
+        ''' TODO: How on earth account for different cell counts?
+        SteNo's basic thoughts indicate that the cell count might cancel out: dp ~ vel ~ \dot{V}/A ~ \lambda*I*N/A ~ \lambda*I
+        '''
         cathode_pressure_drop_model.model.eval()
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
              cathode_pressure_drop = cathode_pressure_drop_model.model(x_tensor).mean.item()
 
         # Denormalize
-        cathode_pressure_drop_bar = cathode_pressure_drop * cathode_pressure_drop_model.target_data_std + cathode_pressure_drop_model.target_data_mean
+        cathode_pressure_drop_bar = cathode_pressure_drop * cathode_pressure_drop_model.target_data_std \
+            + cathode_pressure_drop_model.target_data_mean
+        
+        # Limit the cathode pressure drop to be non-negative
+        cathode_pressure_drop_bar = np.max(cathode_pressure_drop_bar.item(), 0)
         
         # Compute the cathode pressure out        
         cathode_pressure_out_bar = optimal_input[3] - cathode_pressure_drop_bar
@@ -121,8 +128,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # Test the stack power s.t. the optimal input variables
     stack_power_kW = optimal_input[0] * cell_voltage * cellcount / 1000
 
-
-    # Normalize current, stoichiometry, and pressure and temperature for evualting the cathode pressure drop model
+    # Normalize current, stoichiometry, and pressure and temperature for evualting the cathode pressure drop model TODO: Move this to a function
     current_for_dp_normalized = (optimal_input[0] - cathode_pressure_drop_model.input_data_mean[0]) / cathode_pressure_drop_model.input_data_std[0]
     stoichiometry_for_dp_normalized = (optimal_input[2] - cathode_pressure_drop_model.input_data_mean[1]) / cathode_pressure_drop_model.input_data_std[1]
     pressure_for_dp_normalized = (optimal_input[3] - cathode_pressure_drop_model.input_data_mean[2]) / cathode_pressure_drop_model.input_data_std[2]
@@ -135,7 +141,11 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             cathode_pressure_drop = cathode_pressure_drop_model.model(x_tensor).mean.item()
 
     # Denormalize
-    cathode_pressure_drop_bar = cathode_pressure_drop * cathode_pressure_drop_model.target_data_std + cathode_pressure_drop_model.target_data_mean
+    cathode_pressure_drop_bar = cathode_pressure_drop * cathode_pressure_drop_model.target_data_std \
+        + cathode_pressure_drop_model.target_data_mean
+    
+    # Limit the cathode pressure drop to be non-negative
+    cathode_pressure_drop_bar = np.max(cathode_pressure_drop_bar.item(), 0)
     
     # Compute the cathode pressure out        
     cathode_pressure_out_bar = optimal_input[3] - cathode_pressure_drop_bar
@@ -144,7 +154,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], cellcount=cellcount)
     compressor_power_kW = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3]*1e5, flight_level_100ft=flight_level_100ft) / 1000
     turbine_power_kW = turbine.turbine_power(air_mass_flow_kg_s, pressure_in_Pa=cathode_pressure_out_bar*1e5, temperature_in_K=optimal_input[5]+273.15, flight_level_100ft=flight_level_100ft) / 1000
-
 
     # Compute the minimized hydrogen mass flow rate
     hydrogen_mass_flow_g_s = optimal_input[0] * cellcount * params_physics.hydrogen_molar_mass / (2 * params_physics.faraday) * 1000

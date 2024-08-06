@@ -121,7 +121,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Optimize input variables using a trained Gaussian process regression model")
     parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=75.0)
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=275)
-    parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=50)
+    parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=120)
     parser.add_argument("--mode", type=str, choices=["auto", "manual"], default="auto", help="Mode of operation: 'auto' or 'manual'")
 
     args = parser.parse_args()
