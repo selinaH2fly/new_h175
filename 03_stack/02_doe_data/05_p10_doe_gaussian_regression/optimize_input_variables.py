@@ -9,7 +9,7 @@ from pathlib import Path
 import json
 # Import custom classes and functions
 import parameters
-from file_handling import create_experiment_folder
+from file_handling import create_experiment_folder, load_gpr_model
 from gpr_model import ExactGPModel
 from data_processing import load_high_amp_doe_data, preprocess_data
 from optimization_functions import optimize_inputs_evolutionary
@@ -29,7 +29,7 @@ def parse_range(input_str):
     single_value = float(input_str)
     return [single_value, single_value]
  
-def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, model="manuel"):#, variables_user=[[100,100],[5,5],[3,3],[60,60],[75,75]]):
+def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, model="manuel"):#, variables_user=[[100,100],[5,5],[3,3],[60,60],[75,75]]):
     # Load parameters
     #For now just overwrite the parameters originating from the parameters.py file with the user input: variables_user
     _params_optimization = parameters.Optimization_Parameters()
@@ -61,29 +61,18 @@ def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_cons
     print(f"\nOptimization Stack Power Constraint: {power_constraint_kW:.0f} kW")
     print(f"Specified Flight Level: {flight_level_100ft} (100x ft)")
     print(f"Specified Cell Count: {specified_cell_count}")
+    
+    # Load the trained cell voltage model from the "trained_models" folder
+    model_path = os.path.join(os.getcwd(), "trained_models", "gpr_model_cell_voltage.pth")
+    cv_model, _, cv_input_data_mean, cv_input_data_std, cv_target_data_mean, cv_target_data_std, feature_names = load_gpr_model(model_path)
 
     # Create a folder to store the training results
     create_experiment_folder(_params_optimization=_params_optimization, type='optimization')
-
-    # Load and assign the data TODO Extract all necessary information from the stored model
-    pd_dataframe, _ = load_high_amp_doe_data()
-    train_input_tensor, train_target_tensor, _, _, (input_data_mean, input_data_std), (target_data_mean, target_data_std), feature_names = \
-        preprocess_data(pd_dataframe, 'cell_voltage', 50, params_pyhsics=_params_pyhsics)
     
-    # Load the trained model
-    likelihood = gpytorch.likelihoods.GaussianLikelihood()
-    model = ExactGPModel(train_input_tensor, train_target_tensor, likelihood)
-    model_path = os.path.join(Path(os.getcwd()).parents[0], model_path)
-    model.load_state_dict(torch.load(model_path))
-
-    # Normalize the bounds TODO: Move to optimization function
-    bounds = _params_optimization.bounds
-    normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in zip(bounds, input_data_mean.numpy(), input_data_std.numpy())]
-
     # Optimize the input variables
-    optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_kW = optimize_inputs_evolutionary(model, input_data_mean,
-                                                                                                                            input_data_std, target_data_mean, target_data_std,
-                                                                                                                            flight_level_100ft, cellcount=specified_cell_count, bounds=normalized_bounds,
+    optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_kW = optimize_inputs_evolutionary(cv_model, cv_input_data_mean,
+                                                                                                                            cv_input_data_std, cv_target_data_mean, cv_target_data_std,
+                                                                                                                            flight_level_100ft, cellcount=specified_cell_count, bounds=_params_optimization.bounds,
                                                                                                                             power_constraint_kW=power_constraint_kW, penalty_weight=1e-7,
                                                                                                                             params_physics=_params_pyhsics)
     
@@ -91,7 +80,7 @@ def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_cons
 
     # Print the optimal input, target variables, and bounds including feature names and target variable
     print("\nOptimized Input Variables:")
-    for name, value, bound in zip(feature_names, optimal_input, bounds):
+    for name, value, bound in zip(feature_names, optimal_input, _params_optimization.bounds):
         print(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])")
     print(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  Hydrogen Consumption: {hydrogen_mass_flow_g_s:.4f} g/s\n")
     print(f"Cell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {cell_voltage:.4f} V\n")
@@ -108,7 +97,7 @@ def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_cons
         file.write(f"Specified Cell Count: {specified_cell_count}\n")
 
         file.write("\nOptimized Variables:\n")
-        for name, value, bound in zip(feature_names, optimal_input, bounds):
+        for name, value, bound in zip(feature_names, optimal_input, _params_optimization.bounds):
             file.write(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])\n")
             file.write(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  Hydrogen Consumption: {hydrogen_mass_flow_g_s:.4f} g/s\n")
 
@@ -119,7 +108,7 @@ def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_cons
     
     #_file_path = os.path.join(os.getcwd(), "resulting_data")
     #save_results_to_excel(_file_path, feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, cell_voltage, system_power_kW, compressor_power_kW, stack_power_kW, power_constraint_kW, specified_cell_count, flight_level_100ft)
-    export_to_csv(feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, cell_voltage, 
+    export_to_csv(feature_names, optimal_input, _params_optimization.bounds, hydrogen_mass_flow_g_s, cell_voltage, 
                       system_power_kW, compressor_power_kW, stack_power_kW, power_constraint_kW, 
                       specified_cell_count, flight_level_100ft, filename='optimized_input_data.csv')
     
@@ -127,8 +116,7 @@ def optimize_input_variables(model_path="gpr_model_cell_voltage.pth", power_cons
 if __name__ == '__main__':
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Optimize input variables using a trained Gaussian process regression model")
-    parser.add_argument("-m", "--model", type=str, help="Path to the trained GPR model", default = "gpr_model_cell_voltage.pth")
-    parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=120.0)
+    parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=75.0)
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=275)
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=50)
     parser.add_argument("--mode", type=str, choices=["auto", "manual"], default="auto", help="Mode of operation: 'auto' or 'manual'")
@@ -153,4 +141,4 @@ if __name__ == '__main__':
         ]
 
     # Call the optimize_with_trained_model function
-    optimize_input_variables(args.model, args.power, args.cellcount, args.flightlevel, args.mode)
+    optimize_input_variables(args.power, args.cellcount, args.flightlevel, args.mode)

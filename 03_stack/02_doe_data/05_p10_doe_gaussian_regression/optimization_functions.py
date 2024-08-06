@@ -37,6 +37,10 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
     _params_compressor = parameters.Compressor_Parameters()
     compressor = Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency, 
                             electric_efficiency=_params_compressor.electric_efficiency)
+    
+    # Normalize the bounds
+    normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in zip(bounds, input_data_mean.numpy(), input_data_std.numpy())]
+
 
     # Define the objective function for optimization
     def objective_function(x):
@@ -76,7 +80,7 @@ def optimize_inputs_evolutionary(model, input_data_mean, input_data_std, target_
     nonlinear_constraint = NonlinearConstraint(nonlinear_constraint, 0, np.inf)
 
     # Perform the optimization using differential evolution
-    result = differential_evolution(objective_function, bounds, constraints=nonlinear_constraint, maxiter=1000, popsize=30, tol=1e-6, recombination=0.9, polish=False, disp=False, seed=None)
+    result = differential_evolution(objective_function, normalized_bounds, constraints=nonlinear_constraint, maxiter=1000, popsize=30, tol=1e-6, recombination=0.9, polish=False, disp=False, seed=None)
 
     # Print the stopping criterion
     print(f'{result.message}')

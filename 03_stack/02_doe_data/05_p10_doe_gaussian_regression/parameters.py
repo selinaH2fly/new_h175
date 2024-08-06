@@ -3,9 +3,9 @@ import numpy as np
 class Training_Parameters:
 
     def __init__(self):
-        self.iterations = 1e3
+        self.iterations = 10e3
         # self.iterations = 100
-        self.learning_rate = 0.01
+        self.learning_rate = 1e-2
         # self.split_ratio = 0.8
         # self.seed = 42
         self.seed = None
@@ -19,7 +19,7 @@ class Training_Parameters:
 class Logging_Parameters:
 
     def __init__(self):
-        self.log_interval = 10
+        self.log_interval = 100
         # self.save_interval = 50000
 
 class Optimization_Parameters:
