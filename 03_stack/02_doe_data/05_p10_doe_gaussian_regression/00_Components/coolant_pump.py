@@ -49,7 +49,7 @@ class Pump:
         :param pressure_out: Outlet pressure in [bara]
         :return: Volume flow rate in [l/min]
         """
-        #TODO check where the ref_* are coming from?! --> EES?
+        #TODO check where the ref_* are coming from?!Giga SUS...
         
         ref_temp = self.temperature - self.current / 40  # Reference temperature
         ref_flow = (20 * self.current + 2620) / 43  # Reference flow rate
