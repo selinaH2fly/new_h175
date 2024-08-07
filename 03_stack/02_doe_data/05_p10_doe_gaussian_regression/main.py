@@ -13,7 +13,8 @@ def build_command(parameter):
         "--power", str(parameter[0]),
         "--cellcount", str(parameter[1]),
         "--flightlevel", str(parameter[2]),
-        "--turbine", args.turbine
+        "--turbine", args.turbine,
+        "--eol", args.eol
     ]
     return command
  
@@ -21,10 +22,11 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description="Main script to call optimize_input_variables.py")
-    parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[20,20])
+    parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[20,180])
     parser.add_argument("-n", "--cellcount", type=float, nargs='+', help="Stack cell number for optimizing subject to power constraint", default=[500,500])
     parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[120, 120])
     parser.add_argument("-t", "--turbine", type=str, choices=["true", "false"], default="true", help="Specifies whether recuperation shall be taken into account (default: True).")
+    parser.add_argument("--eol", type=str, choices=["true", "false"], default="false", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
 
     args = parser.parse_args()
     

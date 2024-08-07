@@ -9,7 +9,7 @@ import parameters
 from components import Compressor, Turbine
 from basic_physics import compute_air_mass_flow
 
-def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275, variables_user=[100,5,3,60,75], bounds=None, power_constraint_kW=None, penalty_weight=0.1, params_physics=None, consider_turbine=True):
+def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275, bounds=None, power_constraint_kW=None, penalty_weight=0.1, params_physics=None, consider_turbine=True, end_of_life=False):
     """
     Optimize the (cell) voltage predicted by the GPyTorch model with a (cell) power constraint using differential evolution.
 
@@ -22,6 +22,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     - power_constraint_kW: Power constraint in kilowatts.
     - penalty_weight: Weight for the penalty term in the objective function.
     - params_physics: Physical parameters.
+    - consider_turbine: Whether to consider power recuperation in the optimization.
+    - end_of_life: Whether to consider the end of life derating factor.
 
     Returns:
     - optimal_input: The optimal input values in the original scale.
@@ -61,6 +63,10 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Denormalize
         optimal_input = x * np.array(cell_voltage_model.input_data_std) + np.array(cell_voltage_model.input_data_mean)
         cell_voltage = cell_voltage * cell_voltage_model.target_data_std + cell_voltage_model.target_data_mean
+
+        # Consider the end of life derating factor
+        if end_of_life:
+            cell_voltage *= 0.8
 
         # Compute air massflow and compressor power
         air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], cellcount=cellcount)
