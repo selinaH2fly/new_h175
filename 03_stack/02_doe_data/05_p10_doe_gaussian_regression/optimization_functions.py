@@ -6,7 +6,10 @@ from scipy.optimize import differential_evolution, NonlinearConstraint
 
 # Import custom classes and functions
 import parameters
-from components import Compressor, Turbine
+#from components import Compressor, Turbine
+#TODO: think about the structure again.... import looks shit
+from Components.compressor import Compressor
+from Components.turbine import Turbine
 from basic_physics import compute_air_mass_flow
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275, variables_user=[100,5,3,60,75], bounds=None, power_constraint_kW=None, penalty_weight=0.1, params_physics=None, consider_turbine=True):
@@ -29,7 +32,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     - compressor_power: The power of the compressor.
     """
     
-    # Instantiate the compressor and turbine objects
+    # Instantiate classes
     _params_physics = parameters.Physical_Parameters()
     _params_compressor = parameters.Compressor_Parameters()
     compressor = Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency, 
@@ -62,9 +65,16 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         optimal_input = x * np.array(cell_voltage_model.input_data_std) + np.array(cell_voltage_model.input_data_mean)
         cell_voltage = cell_voltage * cell_voltage_model.target_data_std + cell_voltage_model.target_data_mean
 
-        # Compute air massflow and compressor power
+        # Compute air massflow
         air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], cellcount=cellcount)
-        compressor_power_W = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3]*1e5, flight_level_100ft=flight_level_100ft)
+        
+        #Set Parameters for compressor:
+        compressor.air_mass_flow_kg_s = air_mass_flow_kg_s
+        compressor.pressure_out_Pa = optimal_input[3]*1e5
+        compressor.flight_level_100ft = flight_level_100ft
+        
+        #Calculat compressor power
+        compressor_power_W = compressor.calculate_power()
 
         if consider_turbine:
             # Normalize current, stoichiometry, and pressure and temperature for evaluating the cathode pressure drop model
@@ -89,9 +99,14 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             # Compute the cathode pressure out        
             cathode_pressure_out_bar = optimal_input[3] - cathode_pressure_drop_bar
 
-            # Compute the turbine power
-            turbine_power_W = turbine.turbine_power(air_mass_flow_kg_s, pressure_in_Pa=cathode_pressure_out_bar*1e5,
-                                                    temperature_in_K=optimal_input[5]+273.15, flight_level_100ft=flight_level_100ft)
+            #Set Parameters for turbine
+            turbine.air_mass_flow_kg_s = air_mass_flow_kg_s
+            turbine.pressure_in_Pa     = cathode_pressure_out_bar*1e5
+            turbine.temperature_in_K   = optimal_input[5]+273.15 
+            turbine.flight_level_100ft = flight_level_100ft
+            
+            # Compute the turbine power        
+            turbine_power_W = turbine.calculate_power()
             
             # Limit the turbine power to not exceed the compressor power
             turbine_power_W = min(turbine_power_W, compressor_power_W)

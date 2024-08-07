@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Aug  7 11:24:48 2024
-
-@author: wenzel.gassner
-"""
-
 import CoolProp.CoolProp as CP
 from basic_physics import icao_atmosphere
 
@@ -34,13 +27,13 @@ class Compressor:
         """
 
         # Evaluate the temperature and pressure at the given flight level
-        self.temperature_in_K, self.pressure_in_Pa = icao_atmosphere(self.flight_level_100ft)
+        temperature_in_K, pressure_in_Pa = icao_atmosphere(self.flight_level_100ft)
 
         # Calculate the pressure ratio
-        pressure_ratio = self.pressure_out_Pa / self.pressure_in_Pa
+        pressure_ratio = self.pressure_out_Pa / pressure_in_Pa
 
         # Calculate the specific work input to the compressor (isentropic work)
-        specific_compressor_work_isentropic = CP.PropsSI('C', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Air') * self.temperature_in_K * \
+        specific_compressor_work_isentropic = CP.PropsSI('C', 'T', temperature_in_K, 'P', pressure_in_Pa, 'Air') * temperature_in_K * \
             ((pressure_ratio ** ((self.params_physics.specific_heat_ratio - 1) / self.params_physics.specific_heat_ratio)) - 1)
         
         # Adjust for isentropic efficiency
@@ -58,7 +51,7 @@ class Compressor:
 import parameters   
 params_physics = parameters.Physical_Parameters() 
 C1 = Compressor(params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95,
-             air_mass_flow_kg_s=0.01, pressure_out_Pa=1e5,flight_level_100ft=50)
+             air_mass_flow_kg_s=1, pressure_out_Pa=1e5,flight_level_100ft=50)
 
 #electrical power
 power_el = C1.calculate_power()
