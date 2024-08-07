@@ -14,7 +14,8 @@ def build_command(parameter):
         "--cellcount", str(parameter[1]),
         "--flightlevel", str(parameter[2]),
         "--mode", args.mode,
-        "--turbine", args.turbine
+        "--turbine", args.turbine,
+        "--eol", args.eol
     ]
     return command
  
@@ -28,6 +29,8 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[120, 120])
     parser.add_argument("--mode", type=str, choices=["auto", "manual"], default="auto", help="Mode of operation: 'auto' or 'manual'")
     parser.add_argument("-t", "--turbine", type=str, choices=["true", "false"], default="true", help="Specifies whether recuperation shall be taken into account (default: True).")
+    parser.add_argument("-t", "--eol", type=str, choices=["true", "false"], default="false", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
+
 
 
     args = parser.parse_args()

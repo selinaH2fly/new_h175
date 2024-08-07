@@ -29,7 +29,7 @@ def parse_range(input_str):
     single_value = float(input_str)
     return [single_value, single_value]
  
-def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, mode="auto", consider_turbine=True):#, variables_user=[[100,100],[5,5],[3,3],[60,60],[75,75]]):
+def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, mode="auto", consider_turbine=True, end_of_life=False):
     # Load parameters
     #For now just overwrite the parameters originating from the parameters.py file with the user input: variables_user
     _params_optimization = parameters.Optimization_Parameters()
@@ -73,9 +73,10 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     
     # Optimize the input variables
     optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_kW, turbine_power_kW = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
-                                                                                                                                              flight_level_100ft, cellcount=specified_cell_count, bounds=_params_optimization.bounds,
-                                                                                                                                              power_constraint_kW=power_constraint_kW, penalty_weight=1e-7,
-                                                                                                                                              params_physics=_params_pyhsics, consider_turbine=consider_turbine)
+                                                                                                                                              flight_level_100ft, cellcount=specified_cell_count,
+                                                                                                                                              bounds=_params_optimization.bounds, power_constraint_kW=power_constraint_kW,
+                                                                                                                                              penalty_weight=1e-7, params_physics=_params_pyhsics,
+                                                                                                                                              consider_turbine=consider_turbine, end_of_life=end_of_life)
     
     system_power_kW = stack_power_kW - compressor_power_kW + turbine_power_kW
 
@@ -124,10 +125,13 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=120)
     parser.add_argument("--mode", type=str, choices=["auto", "manual"], default="auto", help="Mode of operation: 'auto' or 'manual'")
     parser.add_argument("-t", "--turbine", type=str, choices=["true", "false"], default="true", help="Specifies whether recuperation shall be taken into account (default: True).")
+    parser.add_argument("--eol", type=str, choices=["true", "false"], default="false", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
+
     args = parser.parse_args()
 
-    # Convert the string input to a boolean
-    turbine = args.turbine == "true"
+    # Convert string inputs to booleans
+    consider_turbine = args.turbine == "true"
+    end_of_life = args.eol == "true"
     
     if args.mode == "manual":
         # Prompt the user for input variables
@@ -147,4 +151,4 @@ if __name__ == '__main__':
         ]
 
     # Call the optimize_with_trained_model function
-    optimize_input_variables(args.power, args.cellcount, args.flightlevel, args.mode, consider_turbine=turbine)
+    optimize_input_variables(args.power, args.cellcount, args.flightlevel, args.mode, consider_turbine=consider_turbine, end_of_life=end_of_life)
