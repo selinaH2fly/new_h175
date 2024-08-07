@@ -82,13 +82,17 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                 + cathode_pressure_drop_model.target_data_mean
             
             # Limit the cathode pressure drop to be non-negative
-            cathode_pressure_drop_bar = np.max(cathode_pressure_drop_bar.item(), 0)
+            cathode_pressure_drop_bar = max(cathode_pressure_drop_bar.item(), 0)
             
             # Compute the cathode pressure out        
             cathode_pressure_out_bar = optimal_input[3] - cathode_pressure_drop_bar
 
             # Compute the turbine power
-            turbine_power_W = turbine.turbine_power(air_mass_flow_kg_s, pressure_in_Pa=cathode_pressure_out_bar*1e5, temperature_in_K=optimal_input[5]+273.15, flight_level_100ft=flight_level_100ft)
+            turbine_power_W = turbine.turbine_power(air_mass_flow_kg_s, pressure_in_Pa=cathode_pressure_out_bar*1e5,
+                                                    temperature_in_K=optimal_input[5]+273.15, flight_level_100ft=flight_level_100ft)
+            
+            # Limit the turbine power to not exceed the compressor power
+            turbine_power_W = min(turbine_power_W, compressor_power_W)
         else:
             turbine_power_W = 0
 
@@ -156,13 +160,17 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             + cathode_pressure_drop_model.target_data_mean
         
         # Limit the cathode pressure drop to be non-negative
-        cathode_pressure_drop_bar = np.max(cathode_pressure_drop_bar.item(), 0)
+        cathode_pressure_drop_bar = max(cathode_pressure_drop_bar.item(), 0)
         
         # Compute the cathode pressure out        
         cathode_pressure_out_bar = optimal_input[3] - cathode_pressure_drop_bar
 
         # Compute the turbine power
-        turbine_power_kW = turbine.turbine_power(air_mass_flow_kg_s, pressure_in_Pa=cathode_pressure_out_bar*1e5, temperature_in_K=optimal_input[5]+273.15, flight_level_100ft=flight_level_100ft) / 1000
+        turbine_power_kW = turbine.turbine_power(air_mass_flow_kg_s, pressure_in_Pa=cathode_pressure_out_bar*1e5,
+                                                 temperature_in_K=optimal_input[5]+273.15, flight_level_100ft=flight_level_100ft) / 1000
+        
+        # Limit the turbine power to not exceed the compressor power
+        turbine_power_kW = min(turbine_power_kW, compressor_power_kW)
 
     else:
         turbine_power_kW = 0
