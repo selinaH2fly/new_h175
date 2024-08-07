@@ -99,8 +99,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Convert string inputs to booleans
-    consider_turbine = args.turbine
-    end_of_life = args.eol
+    consider_turbine = args.turbine == "True"
+    end_of_life = args.eol == "True"
 
     # Call the optimize_with_trained_model function
     optimize_input_variables(args.power, args.cellcount, args.flightlevel, consider_turbine=consider_turbine, end_of_life=end_of_life)
