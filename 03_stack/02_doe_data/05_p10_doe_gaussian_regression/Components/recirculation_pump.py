@@ -8,12 +8,12 @@ Created on Mon Aug  5 10:51:37 2024
 import CoolProp.CoolProp as CP
 import math
 
-class Rezi_Pump:
+class Recirculation_Pump:
     
     def __init__(self, isentropic_efficiency=0.75, pump_efficiency=0.75, 
                  current=1, temperature=0.0, pressure_in=0.0, pressure_out=0.0, n_cell=0.0, stoich_anode = 3.0): # pump eher 0.60...? 
         """
-        Initialize the rezi pump with a given efficiency and operating conditions.
+        Initialize the recirculation pump with a given efficiency and operating conditions.
 
         Parameters
         ----------
@@ -84,7 +84,7 @@ class Rezi_Pump:
         e = self.pressure_out/self.pressure_in                                                        #pressure ratio
         k = 1.4                                                           #k for H2 and N2 is almost equal to k for Air
         T2 = ((self.temperature+273) * e**((k-1)/k)) - 273                                #tempearture out from compressor
-        return T2# isentrop rezi machine temperature out
+        return T2# isentrop recirculation pump temperature out
 
 
     def specific_heat(self):
@@ -96,7 +96,7 @@ class Rezi_Pump:
  
 # %% Example usage:
       
-C1 = Rezi_Pump(current=200,temperature=65, pressure_in=2.1, pressure_out=2.5,n_cell=300, stoich_anode = 2.4)
+C1 = Recirculation_Pump(current=200,temperature=65, pressure_in=2.1, pressure_out=2.5,n_cell=300, stoich_anode = 2.4)
 
 #electrical power
 power_el = C1.calculate_power()
