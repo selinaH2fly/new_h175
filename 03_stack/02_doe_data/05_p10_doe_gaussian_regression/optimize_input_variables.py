@@ -14,7 +14,7 @@ from gpr_model import ExactGPModel
 from data_processing import load_high_amp_doe_data, preprocess_data
 from optimization_functions import optimize_inputs_evolutionary
 
-from excel_magic import initialize_excel_file, write_to_excel, save_results_to_excel, export_to_csv
+from data_export_csv import export_to_csv
 
 def load_config(filename):
     with open(filename, 'r') as file:
@@ -112,7 +112,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     #_file_path = os.path.join(os.getcwd(), "resulting_data")
     #save_results_to_excel(_file_path, feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, cell_voltage, system_power_kW, compressor_power_kW, stack_power_kW, power_constraint_kW, specified_cell_count, flight_level_100ft)
     export_to_csv(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds, hydrogen_mass_flow_g_s, cell_voltage, 
-                      system_power_kW, compressor_power_kW, stack_power_kW, turbine_power_kW, power_constraint_kW, 
+                      system_power_kW, compressor_power_kW, turbine_power_kW, stack_power_kW, power_constraint_kW, 
                       specified_cell_count, flight_level_100ft, filename='optimized_input_data.csv')
     
 # Entry point of the script
