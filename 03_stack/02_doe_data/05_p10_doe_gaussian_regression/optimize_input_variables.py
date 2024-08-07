@@ -4,14 +4,10 @@ import numpy as np
 import torch
 import argparse
 import random
-import gpytorch
-from pathlib import Path
-import json
+
 # Import custom classes and functions
 import parameters
 from file_handling import create_experiment_folder, load_gpr_model
-from gpr_model import ExactGPModel
-from data_processing import load_high_amp_doe_data, preprocess_data
 from optimization_functions import optimize_inputs_evolutionary
 
 from data_export_csv import export_to_csv
