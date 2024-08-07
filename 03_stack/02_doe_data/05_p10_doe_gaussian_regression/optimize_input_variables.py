@@ -18,8 +18,6 @@ from data_export_csv import export_to_csv
 
 
 def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, consider_turbine=True):
-    # Load parameters
-    #For now just overwrite the parameters originating from the parameters.py file with the user input: variables_user
     
     _params_optimization = parameters.Optimization_Parameters()
     _params_pyhsics = parameters.Physical_Parameters()
@@ -101,4 +99,4 @@ if __name__ == '__main__':
     turbine = args.turbine == "true"
 
     # Call the optimize_with_trained_model function
-    optimize_input_variables(args.power, args.cellcount, args.flightlevel, args.mode, consider_turbine=turbine)
+    optimize_input_variables(args.power, args.cellcount, args.flightlevel, consider_turbine=turbine)
