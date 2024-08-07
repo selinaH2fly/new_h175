@@ -1,4 +1,3 @@
-
 # Import libraries
 import torch
 import gpytorch
@@ -26,27 +25,33 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
     Returns:
     - optimal_input: The optimal input values in the original scale.
-    - hydrogen_mass_flow_g_s: The minized target.
+    - hydrogen_mass_flow_g_s: The minimized target.
     - compressor_power: The power of the compressor.
     """
-
-    # Instantiate the compressor object
+    
+    # Instantiate the compressor and turbine objects
     _params_physics = parameters.Physical_Parameters()
     _params_compressor = parameters.Compressor_Parameters()
     compressor = Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency, 
                             electric_efficiency=_params_compressor.electric_efficiency)
     
-    # Instantiate the turbine object
     _params_turbine = parameters.Turbine_Parameters()
     turbine = Turbine(_params_physics, isentropic_efficiency=_params_turbine.isentropic_efficiency)
-    
-    # Normalize the bounds
-    normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
-                         zip(bounds, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
 
-    # Define the objective function for optimization
-    def objective_function(x):
+    def evaluate_models(x):
+        """
+        Helper function to evaluate models and compute necessary values.
 
+        Parameters:
+        - x: Normalized input variables.
+
+        Returns:
+        - optimal_input: Denormalized optimal input variables.
+        - cell_voltage: Denormalized cell voltage.
+        - compressor_power_W: Computed compressor power.
+        - turbine_power_W: Computed turbine power.
+        - hydrogen_mass_flow_g_s: Computed hydrogen mass flow rate.
+        """
         # Evaluate the cell voltage model
         x_tensor = torch.tensor(x, dtype=torch.float).unsqueeze(0)
         cell_voltage_model.model.eval()
@@ -62,7 +67,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         compressor_power_W = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3]*1e5, flight_level_100ft=flight_level_100ft)
 
         if consider_turbine:
-            # Normalize current, stoichiometry, and pressure and temperature for evualting the cathode pressure drop model
+            # Normalize current, stoichiometry, and pressure and temperature for evaluating the cathode pressure drop model
             current_for_dp_normalized = (optimal_input[0] - cathode_pressure_drop_model.input_data_mean[0]) / cathode_pressure_drop_model.input_data_std[0]
             stoichiometry_for_dp_normalized = (optimal_input[2] - cathode_pressure_drop_model.input_data_mean[1]) / cathode_pressure_drop_model.input_data_std[1]
             pressure_for_dp_normalized = (optimal_input[3] - cathode_pressure_drop_model.input_data_mean[2]) / cathode_pressure_drop_model.input_data_std[2]
@@ -70,9 +75,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             x_tensor = torch.tensor([current_for_dp_normalized, stoichiometry_for_dp_normalized, pressure_for_dp_normalized, temperature_for_dp_normalized], dtype=torch.float).unsqueeze(0)
 
             # Evaluate the cathode pressure drop model
-            ''' TODO: How on earth account for different cell counts?
-            SteNo's basic thoughts indicate that the cell count might cancel out: dp ~ vel ~ \dot{V}/A ~ \lambda*I*N/A ~ \lambda*I
-            '''
             cathode_pressure_drop_model.model.eval()
             with torch.no_grad(), gpytorch.settings.fast_pred_var():
                 cathode_pressure_drop = cathode_pressure_drop_model.model(x_tensor).mean.item()
@@ -96,20 +98,30 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         else:
             turbine_power_W = 0
 
-        # Compute the penalty term for the power constraint
-        if power_constraint_kW is None:
-            penalty = 0
-        else:
-            power_constraint = cell_voltage * cellcount * optimal_input[0] - compressor_power_W + turbine_power_W \
-                  - power_constraint_kW * 1000
-            penalty = penalty_weight * (power_constraint**2)
-
         # Compute the hydrogen mass flow rate
         hydrogen_mass_flow_g_s = optimal_input[0] * cellcount * params_physics.hydrogen_molar_mass / (2 * params_physics.faraday) * 1000
 
-        result = hydrogen_mass_flow_g_s + penalty 
+        return optimal_input, cell_voltage, compressor_power_W, turbine_power_W, hydrogen_mass_flow_g_s
 
-        return result
+    # Normalize the bounds
+    normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
+                         zip(bounds, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
+
+    # Define the objective function for optimization
+    def objective_function(x):
+
+        # Evaluate the models with the normalized input
+        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, hydrogen_mass_flow_g_s = evaluate_models(x)
+        
+        # Compute the penalty term for the power constraint
+        if power_constraint_kW is not None:
+            power_constraint = cell_voltage * cellcount * optimal_input[0] - compressor_power_W + turbine_power_W \
+                  - power_constraint_kW * 1000
+            penalty = penalty_weight * (power_constraint**2)
+        else:
+            penalty = 0
+        
+        return hydrogen_mass_flow_g_s + penalty
     
     # Define the nonlinear constraint for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 5 K
     def nonlinear_constraint(x):
@@ -120,62 +132,14 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
     # Perform the optimization using differential evolution
     result = differential_evolution(objective_function, normalized_bounds, constraints=nonlinear_constraint, maxiter=1000, popsize=30, tol=1e-6, recombination=0.9, polish=False, disp=False, seed=None)
-
-    # Print the stopping criterion
     print(f'{result.message}')
 
-    # Get the optimal (normalized) input variables
-    optimal_input_scaled = result.x
+    # Evaluate the models with the optimal input
+    optimal_input, cell_voltage, compressor_power_W, turbine_power_W, hydrogen_mass_flow_g_s = evaluate_models(result.x)
 
-    # TODO: All of the below is a copy-paste from the objective function. This should be refactored into a separate function.
-    # Denormalize the optimal input and target variables
-    optimal_input = optimal_input_scaled * np.array(cell_voltage_model.input_data_std) + np.array(cell_voltage_model.input_data_mean)
-
-    with torch.no_grad(), gpytorch.settings.fast_pred_var():
-            cell_voltage = cell_voltage_model.model(torch.tensor(optimal_input_scaled, dtype=torch.float).unsqueeze(0)).mean.item()
-    cell_voltage = cell_voltage * cell_voltage_model.target_data_std + cell_voltage_model.target_data_mean
-
-    # Test the stack power s.t. the optimal input variables
+    # Convert powers from W to kW
     stack_power_kW = optimal_input[0] * cell_voltage * cellcount / 1000
-
-    # Compute air massflow and compressor power
-    air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimal_input[2], current_A=optimal_input[0], cellcount=cellcount)
-    compressor_power_kW = compressor.compressor_power(air_mass_flow_kg_s, pressure_out_Pa=optimal_input[3]*1e5, flight_level_100ft=flight_level_100ft) / 1000
-
-    if consider_turbine:
-        # Normalize current, stoichiometry, and pressure and temperature for evualting the cathode pressure drop model TODO: Move this to a function
-        current_for_dp_normalized = (optimal_input[0] - cathode_pressure_drop_model.input_data_mean[0]) / cathode_pressure_drop_model.input_data_std[0]
-        stoichiometry_for_dp_normalized = (optimal_input[2] - cathode_pressure_drop_model.input_data_mean[1]) / cathode_pressure_drop_model.input_data_std[1]
-        pressure_for_dp_normalized = (optimal_input[3] - cathode_pressure_drop_model.input_data_mean[2]) / cathode_pressure_drop_model.input_data_std[2]
-        temperature_for_dp_normalized = (optimal_input[4] - cathode_pressure_drop_model.input_data_mean[3]) / cathode_pressure_drop_model.input_data_std[3]
-        x_tensor = torch.tensor([current_for_dp_normalized, stoichiometry_for_dp_normalized, pressure_for_dp_normalized, temperature_for_dp_normalized], dtype=torch.float).unsqueeze(0)
-        
-        # Evaluate the cathode pressure drop model
-        cathode_pressure_drop_model.model.eval()
-        with torch.no_grad(), gpytorch.settings.fast_pred_var():
-                cathode_pressure_drop = cathode_pressure_drop_model.model(x_tensor).mean.item()
-
-        # Denormalize
-        cathode_pressure_drop_bar = cathode_pressure_drop * cathode_pressure_drop_model.target_data_std \
-            + cathode_pressure_drop_model.target_data_mean
-        
-        # Limit the cathode pressure drop to be non-negative
-        cathode_pressure_drop_bar = max(cathode_pressure_drop_bar.item(), 0)
-        
-        # Compute the cathode pressure out        
-        cathode_pressure_out_bar = optimal_input[3] - cathode_pressure_drop_bar
-
-        # Compute the turbine power
-        turbine_power_kW = turbine.turbine_power(air_mass_flow_kg_s, pressure_in_Pa=cathode_pressure_out_bar*1e5,
-                                                 temperature_in_K=optimal_input[5]+273.15, flight_level_100ft=flight_level_100ft) / 1000
-        
-        # Limit the turbine power to not exceed the compressor power
-        turbine_power_kW = min(turbine_power_kW, compressor_power_kW)
-
-    else:
-        turbine_power_kW = 0
-
-    # Compute the minimized hydrogen mass flow rate
-    hydrogen_mass_flow_g_s = optimal_input[0] * cellcount * params_physics.hydrogen_molar_mass / (2 * params_physics.faraday) * 1000
+    compressor_power_kW = compressor_power_W / 1000
+    turbine_power_kW = turbine_power_W / 1000
 
     return optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_kW, turbine_power_kW
