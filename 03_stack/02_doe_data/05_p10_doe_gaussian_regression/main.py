@@ -12,8 +12,8 @@ def build_command(parameter):
         "python", "optimize_input_variables.py",
         "--power", str(parameter[0]),
         "--cellcount", str(parameter[1]),
-        "--flightlevel", str(parameter[2]),
-        "--mode", args.mode
+        "--flightlevel", str(parameter[2])
+        #,"--mode", args.mode
     ]
     return command
  
@@ -22,13 +22,13 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="Main script to call optimize_input_variables.py")
     parser.add_argument("-m", "--model", type=str, help="Path to the trained GPR model", default="gpr_model_cell_voltage_longrun.pth")
-    parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[20,180])
+    parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[20,20])
     parser.add_argument("-n", "--cellcount", type=float, nargs='+', help="Stack cell number for optimizing subject to power constraint", default=[500,500])
     parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[120, 120])
-    parser.add_argument("--mode", type=str, choices=["auto", "manual"], default="auto", help="Mode of operation: 'auto' or 'manual'")
+    #parser.add_argument("--mode", type=str, choices=["auto", "manual"], default="auto", help="Mode of operation: 'auto' or 'manual'")
 
     args = parser.parse_args()
-    _step_p = 20
+    _step_p = 40
     _step_c = 50
     _step_fl = 20
     #TODO: range_power is ugly deined atm. due to not starting at 0 and want to have inclusive bounds.... maybe there is a better way?
