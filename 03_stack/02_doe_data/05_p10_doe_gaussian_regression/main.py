@@ -13,7 +13,8 @@ def build_command(parameter):
         "--power", str(parameter[0]),
         "--cellcount", str(parameter[1]),
         "--flightlevel", str(parameter[2]),
-        "--mode", args.mode
+        "--mode", args.mode,
+        "--turbine", args.turbine
     ]
     return command
  
@@ -21,11 +22,13 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description="Main script to call optimize_input_variables.py")
-    parser.add_argument("-m", "--model", type=str, help="Path to the trained GPR model", default="gpr_model_cell_voltage_longrun.pth")
+    # parser.add_argument("-m", "--model", type=str, help="Path to the trained GPR model", default="gpr_model_cell_voltage_longrun.pth")
     parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[20,180])
     parser.add_argument("-n", "--cellcount", type=float, nargs='+', help="Stack cell number for optimizing subject to power constraint", default=[500,500])
     parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[120, 120])
     parser.add_argument("--mode", type=str, choices=["auto", "manual"], default="auto", help="Mode of operation: 'auto' or 'manual'")
+    parser.add_argument("-t", "--turbine", type=str, choices=["true", "false"], default="true", help="Specifies whether recuperation shall be taken into account (default: True).")
+
 
     args = parser.parse_args()
     _step_p = 20
@@ -49,6 +52,6 @@ if __name__ == '__main__':
         result = subprocess.run(command, capture_output=True, text=True)
         # Print the output and error (if any) from the subprocess call
         print(result.stdout)
-    print("Done with Optimize")
+    print("Done with Optimization")
         
     consolidate_experiment_data(parameters)
