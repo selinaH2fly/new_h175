@@ -136,6 +136,8 @@ def voltage_input_data_dict(df_dict, params_pyhsics):
     input_data_dict['pressure_cathode_in_bara'] = [pressure_barg + params_pyhsics.sea_level_ambient_pressure_bar for pressure_barg in df_dict['pressure_cathode_inlet']]
     input_data_dict['temp_coolant_inlet_degC'] = df_dict['temp_coolant_inlet']
     input_data_dict['temp_coolant_outlet_degC'] = df_dict['temp_coolant_outlet']
+    input_data_dict['stoich_anode'] = df_dict['anode_stoich']
+    input_data_dict['pressure_anode_in_bara'] = [pressure_barg + params_pyhsics.sea_level_ambient_pressure_bar for pressure_barg in df_dict['pressure_anode_inlet']]
 
     return input_data_dict
 
