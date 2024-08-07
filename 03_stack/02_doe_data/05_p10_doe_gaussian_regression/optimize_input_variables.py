@@ -16,40 +16,12 @@ from optimization_functions import optimize_inputs_evolutionary
 
 from data_export_csv import export_to_csv
 
-def load_config(filename):
-    with open(filename, 'r') as file:
-        return json.load(file)
-    
-def parse_range(input_str):
-    """
-    Parse the input string to return either a range or a list with the same value twice.
-    """
-    if ',' in input_str:
-        return [float(x.strip()) for x in input_str.split(',')]
-    single_value = float(input_str)
-    return [single_value, single_value]
- 
-def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, mode="auto", consider_turbine=True):#, variables_user=[[100,100],[5,5],[3,3],[60,60],[75,75]]):
+
+def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, consider_turbine=True):
     # Load parameters
     #For now just overwrite the parameters originating from the parameters.py file with the user input: variables_user
+    
     _params_optimization = parameters.Optimization_Parameters()
-    config = load_config('config.json')
-    
-    variables_user = []
-    for key in [
-        "cathode_rh_in_perc",
-        "stoich_cathode",
-        "pressure_cathode_in_bara",
-        "temp_coolant_inlet_degC",
-        "temp_coolant_outlet_degC"]:
-        
-            if key in config:
-                variables_user.append(parse_range(config[key]))
-            
-    # Update bounds, keeping the first value unchanged
-    for i, val in enumerate(variables_user, start=1):
-        _params_optimization.bounds[i] = (val[0], val[1])
-    
     _params_pyhsics = parameters.Physical_Parameters()
 
     # Set the random seed for reproducibility
@@ -122,29 +94,11 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=75.0)
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=275)
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=120)
-    parser.add_argument("--mode", type=str, choices=["auto", "manual"], default="auto", help="Mode of operation: 'auto' or 'manual'")
     parser.add_argument("-t", "--turbine", type=str, choices=["true", "false"], default="true", help="Specifies whether recuperation shall be taken into account (default: True).")
     args = parser.parse_args()
 
     # Convert the string input to a boolean
     turbine = args.turbine == "true"
-    
-    if args.mode == "manual":
-        # Prompt the user for input variables
-        cathode_rh_in_perc = input("Enter cathode relative humidity in percentage (single value or range like 100,110) [default: 100,110]: ") or "100,110"
-        stoich_cathode = input("Enter stoichiometry of the cathode (single value or range like 1.4) [default: 1.4]: ") or "1.4"
-        pressure_cathode_in_bara = input("Enter pressure at the cathode inlet in bara (single value or range like 1.5,2.0) [default: 1.5,2.0]: ") or "1.5,2.0"
-        temp_coolant_inlet_degC = input("Enter temperature of the coolant inlet in degrees Celsius (single value or range like 60) [default: 60]: ") or "60"
-        temp_coolant_outlet_degC = input("Enter temperature of the coolant outlet in degrees Celsius (single value or range like 75,80) [default: 75,80]: ") or "75,80"
-
-        # Parse the input arguments to handle single values and ranges
-        variables_user = [
-            parse_range(cathode_rh_in_perc),
-            parse_range(stoich_cathode),
-            parse_range(pressure_cathode_in_bara),
-            parse_range(temp_coolant_inlet_degC),
-            parse_range(temp_coolant_outlet_degC)
-        ]
 
     # Call the optimize_with_trained_model function
     optimize_input_variables(args.power, args.cellcount, args.flightlevel, args.mode, consider_turbine=turbine)
