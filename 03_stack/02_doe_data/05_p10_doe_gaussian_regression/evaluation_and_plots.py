@@ -12,7 +12,8 @@ import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 
 # Read the data from the CSV file
-file_path = r"consolidated_20.0-175.0kW_500-500_120-120ft__1\optimized_parameters_20.0-175.0kW_500-500_120-120ft.csv"
+file_path = r"consolidated_20.0-175.0kW_500-500_120-120ft__2\optimized_parameters_20.0-175.0kW_500-500_120-120ft.csv"
+
 df = pd.read_csv(file_path)
 
 # Sort the DataFrame by 'System Power (kW)'
@@ -377,6 +378,71 @@ plt.show()
 
 
 
+# %% Polkurven 1 cell count, mit shaded are bis 800 A, Cmap Power
+import pandas as pd
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+
+# Read the data from the CSV file
+file_path1 = r"consolidated_20-175kW_400-500_120-120ft__2\optimized_parameters_20-175kW_400-500_120-120ft.csv"
+
+# Load the CSV file into a DataFrame
+df1 = pd.read_csv(file_path1)
+df1 = df1.sort_values(by=['idx'])
+
+_turbine = False
+_eol = False
+
+# Split the data based on 'Specified Cell Count', turbine and eol
+df = df1[(df1['Specified Cell Count'] == 500) 
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
+
+
+
+# Sort the DataFrame by 'System Power (kW)'
+df = df.sort_values(by='System Power (kW)')
+
+# Create a colormap and normalize for the color gradient
+norm = mcolors.Normalize(vmin=df['System Power (kW)'].min(), vmax=min(df['System Power (kW)'].max(), 175))
+cmap = cm.ScalarMappable(norm=norm, cmap='viridis')
+
+# Plot 'Current A (Value)' vs 'Cell Voltage (V)'
+fig, ax = plt.subplots(figsize=(12, 8))
+
+# Scatter plot with color based on 'System Power (kW)'
+scatter = ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], c=df['System Power (kW)'], cmap='viridis', norm=norm, edgecolor='k', s=100)
+
+# Add colorbar for the gradient
+cbar = plt.colorbar(scatter, ax=ax)
+cbar.set_label('System Power [kW]')
+
+# Add a red shaded area from 700 A to 800 A
+ax.axvspan(700, 800, color='red', alpha=0.3)
+
+# Set title and labels
+flight_level = "Enter_Flight_Level"
+cell_count = "Enter_Cell_Count"
+ax.set_title(r'System Polarization Curve, FL 120, 500 Cells', fontsize=14)
+ax.set_xlabel('Current [A]')
+ax.set_ylabel('Cell Voltage [V]')
+ax.grid(True)
+ax.set_xlim([0, 800])
+ax.set_ylim([0.55, 0.88])
+
+# Annotate the first, last, and second-to-last points with the corresponding 'System Power (kW)'
+for idx in [0, -1, -2]:
+    point = df.iloc[idx]
+    ax.annotate(f"{point['Power Constraint (kW)']:.1f} kW", (point['current_A (Value)'], point['Cell Voltage (V)']),
+                textcoords="offset points", xytext=(0,10), ha='center')
+
+# Add a legend (the colorbar serves as the legend in this case)
+scatter.set_label('System Power [kW]')
+ax.legend(loc='best')
+
+plt.show()
+
 #%% Polcurves: Analysis turbine/no turbine eol/no elo
 import pandas as pd
 import matplotlib.colors as mcolors
@@ -385,32 +451,33 @@ import matplotlib.pyplot as plt
 import itertools
 import numpy as np
 
-file_path1 = r""
+file_path1 = r"consolidated_20-175kW_400-500_120-120ft__2\optimized_parameters_20-175kW_400-500_120-120ft.csv"
 
 # Load the CSV file into a DataFrame
 df1 = pd.read_csv(file_path1)
 df1 = df1.sort_values(by=['idx'])
 
-_turbine = "True"
-_eol = "True"
+_turbine = True
+_eol = False
 
 # Split the data based on 'Specified Cell Count', turbine and eol
 df_400 = df1[(df1['Specified Cell Count'] == 400) 
-             & (df1["Turbine Power (kW)"] == _turbine)
-             & (df1["eol"] == _eol)]
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
 
 df_450 = df1[(df1['Specified Cell Count'] == 450) 
-             & (df1["Turbine Power (kW)"] == _turbine)
-             & (df1["eol"] == _eol)]
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
 
 df_500 = df1[(df1['Specified Cell Count'] == 500) 
-             & (df1["Turbine Power (kW)"] == _turbine)
-             & (df1["eol"] == _eol)]
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
 
 data = [df_400, df_450, df_500]
-titles = ['System Polarization Curve, FL 120, 400 Cells',
-          'System Polarization Curve, FL 120, 450 Cells',
-          'System Polarization Curve, FL 120, 500 Cells']
+
+titles = ['400 Cells bol',
+          '450 Cells bol',
+          '500 Cells bol']
 
 colors = ["tab:blue", "tab:orange", "tab:red"]
 
@@ -419,29 +486,377 @@ colors = ["tab:blue", "tab:orange", "tab:red"]
 highlight_powers = [125, 150, 175]
 highlight_range = 4
 
+fig, ax = plt.subplots(figsize=(12, 8))
 for df, title, color in zip(data, titles ,colors):
-    fig, ax = plt.subplots(figsize=(12, 8))
 
     # Plot all points in gray with some transparency
-    ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color='gray', alpha=0.3, label='_nolegend_')
-    #ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color=color)
+    #ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color='gray', alpha=0.3, label='_nolegend_')
+    ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color=color, label =title )
+    
     # Highlight points for each power level
+    # for i, power in enumerate(highlight_powers):
+    #     highlight = df[df['System Power (kW)'].between(power - highlight_range, power + highlight_range)]
+    #     #ax.scatter(highlight['current_A (Value)'], highlight['Cell Voltage (V)'], 
+    #                 color=colors[i], s=100, edgecolor='k', label=f'{power} kW ± {highlight_range} kW')
+ 
+ ######  
+file_path1 = r"consolidated_20-175kW_400-500_120-120ft__2\optimized_parameters_20-175kW_400-500_120-120ft.csv"
+
+# Load the CSV file into a DataFrame
+df1 = pd.read_csv(file_path1)
+df1 = df1.sort_values(by=['idx'])
+
+_turbine = True
+_eol = True
+
+# Split the data based on 'Specified Cell Count', turbine and eol
+df_400_eol = df1[(df1['Specified Cell Count'] == 400) 
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
+
+df_450_eol = df1[(df1['Specified Cell Count'] == 450) 
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
+
+df_500_eol = df1[(df1['Specified Cell Count'] == 500) 
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
+
+data = [df_400_eol, df_450_eol, df_500_eol]
+
+titles = ['400 Cells eol',
+          '450 Cells eol',
+          '500 Cells eol']
+
+colors = ["blue", "orange", "red"]
+
+
+# Define power levels to highlight
+highlight_powers = [125, 150, 175]
+highlight_range = 4
+
+#fig, ax = plt.subplots(figsize=(12, 8))
+for df, title, color in zip(data, titles ,colors):
+
+    # Plot all points in gray with some transparency
+    #ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color='gray', alpha=0.3, label='_nolegend_')
+    ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color=color, label =title, marker='v' )
+    
+    # Highlight points for each power level
+    # for i, power in enumerate(highlight_powers):
+    #     highlight = df[df['System Power (kW)'].between(power - highlight_range, power + highlight_range)]
+    #     #ax.scatter(highlight['current_A (Value)'], highlight['Cell Voltage (V)'], 
+    #                 color=colors[i], s=100, edgecolor='k', label=f'{power} kW ± {highlight_range} kW')
+ 
+    
+ 
+   
+ ########
+   
+# Add a red shaded area from 700 A to 800 A
+ax.axvspan(700, 1300, color='red', alpha=0.2)
+# Set title and labels
+ax.set_title("System Polarization Curve, FL 120, eol vs bol")
+ax.set_xlabel('Current [A]')
+ax.set_xlim([0, 1300])
+ax.set_ylabel('Cell Voltage [V]')
+ax.set_ylim([0.3, 1])
+ax.grid(True)
+ax.legend(loc='upper right')
+
+plt.show()
+
+
+
+
+# %%
+
+#%% Polcurves: Analysis turbine/no turbine eol/no elo
+import pandas as pd
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import itertools
+import numpy as np
+
+file_path1 = r"consolidated_20-175kW_400-500_120-120ft__2\optimized_parameters_20-175kW_400-500_120-120ft.csv"
+
+# Load the CSV file into a DataFrame
+df1 = pd.read_csv(file_path1)
+df1 = df1.sort_values(by=['idx'])
+
+_turbine = True
+_eol = False
+
+# Split the data based on 'Specified Cell Count', turbine and eol
+df_400 = df1[(df1['Specified Cell Count'] == 400) 
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
+
+df_450 = df1[(df1['Specified Cell Count'] == 450) 
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
+
+df_500 = df1[(df1['Specified Cell Count'] == 500) 
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
+
+data = [df_400, df_450, df_500]
+
+titles = ['400 Cells bol',
+          '450 Cells bol',
+          '500 Cells bol']
+
+colors = ["tab:blue", "tab:orange", "tab:red"]
+
+# Define power levels to highlight
+highlight_powers = [125, 150, 175]
+highlight_range = 4
+
+fig, ax = plt.subplots(figsize=(12, 8))
+for df, title, color in zip(data, titles ,colors):
+
+    # Plot all points in the dataset
+    ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color=color, label=title)
+    
+    # Highlight and annotate points for each power level
     for i, power in enumerate(highlight_powers):
         highlight = df[df['System Power (kW)'].between(power - highlight_range, power + highlight_range)]
         ax.scatter(highlight['current_A (Value)'], highlight['Cell Voltage (V)'], 
-                    color=colors[i], s=100, edgecolor='k', label=f'{power} kW ± {highlight_range} kW')
-    # Add a red shaded area from 700 A to 800 A
-    ax.axvspan(700, 800, color='red', alpha=0.3)
-    # Set title and labels
-    ax.set_title(title)
-    ax.set_xlabel('Current [A]')
-    ax.set_xlim([0, 800])
-    ax.set_ylabel('Cell Voltage [V]')
-    ax.set_ylim([0.55, 0.76])
-    ax.grid(True)
-    ax.legend(loc='best')
+                   color=colors[i], s=100, edgecolor='k', label=f'{power} kW ± {highlight_range} kW')
+        
+        # Annotate each highlighted point
+        for _, row in highlight.iterrows():
+            ax.annotate(f'{power} kW', 
+                        (row['current_A (Value)'], row['Cell Voltage (V)']),
+                        textcoords="offset points", xytext=(10,+30), ha='center', label='_nolegend_')  # Increased distance
 
-    plt.show()
+file_path1 = r"consolidated_20-175kW_400-500_120-120ft__2\optimized_parameters_20-175kW_400-500_120-120ft.csv"
+
+# Load the CSV file into a DataFrame
+df1 = pd.read_csv(file_path1)
+df1 = df1.sort_values(by=['idx'])
+
+_turbine = True
+_eol = True
+
+# Split the data based on 'Specified Cell Count', turbine and eol
+df_400_eol = df1[(df1['Specified Cell Count'] == 400) 
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
+
+df_450_eol = df1[(df1['Specified Cell Count'] == 450) 
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
+
+df_500_eol = df1[(df1['Specified Cell Count'] == 500) 
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
+
+data = [df_400_eol, df_450_eol, df_500_eol]
+
+titles = ['400 Cells eol',
+          '450 Cells eol',
+          '500 Cells eol']
+
+colors = ["blue", "orange", "red"]
+
+# Define power levels to highlight
+highlight_powers = [125, 150, 175]
+highlight_range = 4
+
+# Plot the eol data
+for df, title, color in zip(data, titles ,colors):
+
+    # Plot all points in the dataset
+    ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color=color, label=title, marker='v')
+    
+    # Highlight and annotate points for each power level
+    for i, power in enumerate(highlight_powers):
+        highlight = df[df['System Power (kW)'].between(power - highlight_range, power + highlight_range)]
+        ax.scatter(highlight['current_A (Value)'], highlight['Cell Voltage (V)'], 
+                   color=colors[i], s=100, edgecolor='k', marker='v', label=f'{power} kW ± {highlight_range} kW')
+        
+        # Annotate each highlighted point
+        for _, row in highlight.iterrows():
+            ax.annotate(f'{power} kW', 
+                        (row['current_A (Value)'], row['Cell Voltage (V)']),
+                        textcoords="offset points", xytext=(10,+30), ha='center', label='_nolegend_')  # Increased distance
+
+########
+
+# Add a red shaded area from 700 A to 1300 A
+ax.axvspan(700, 1300, color='red', alpha=0.2)
+
+# Set title and labels
+ax.set_title("System Polarization Curve, FL 120, eol vs bol")
+ax.set_xlabel('Current [A]')
+ax.set_xlim([0, 1300])
+ax.set_ylabel('Cell Voltage [V]')
+ax.set_ylim([0.3, 1])
+ax.grid(True)
+#ax.legend(loc='upper right')
+plt.show()
+
+
+
+# %%
+
+import pandas as pd
+
+def load_and_filter_data(file_path, turbine, eol, cell_counts):
+    # Load the CSV file into a DataFrame
+    df = pd.read_csv(file_path)
+    df = df.sort_values(by=['idx'])
+    
+    # Create a dictionary to store filtered DataFrames for each cell count
+    filtered_data = {}
+    
+    for count in cell_counts:
+        filtered_data[count] = df[(df['Specified Cell Count'] == count) 
+                                  & (df["turbine (t/f)"] == turbine)
+                                  & (df["eol (t/f)"] == eol)]
+    
+    return filtered_data
+
+file_path = r"consolidated_20-175kW_400-500_120-120ft__2\optimized_parameters_20-175kW_400-500_120-120ft.csv"
+cell_counts = [400, 450, 500]
+
+# Load and filter data for different scenarios
+bol_data = load_and_filter_data(file_path, turbine=True, eol=False, cell_counts=cell_counts)
+eol_data = load_and_filter_data(file_path, turbine=True, eol=True, cell_counts=cell_counts)
+
+import matplotlib.pyplot as plt
+
+# Define plotting and annotation function
+def plot_and_annotate_data(ax, data, titles, colors, highlight_powers, highlight_range=10, marker='o'):
+    for count, title, color in zip(data.keys(), titles, colors):
+        df = data[count]
+        ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color=color, label=title, marker=marker)
+
+        # Annotate points for each power level
+        for power in highlight_powers:
+            highlight = df[df["Power Constraint (kW)"].between(power - 0, power + 0)]
+            for _, row in highlight.iterrows():
+                ax.annotate(f'{row["Power Constraint (kW)"]:.0f} kW', 
+                            (row['current_A (Value)'], row['Cell Voltage (V)']),
+                            textcoords="offset points", xytext=(0, 30), ha='center',
+                            arrowprops=dict(facecolor=color, shrink=0.1))
+
+# Define titles and colors
+titles = ['400 Cells', '450 Cells', '500 Cells']
+colors = ["tab:blue", "tab:orange", "tab:red"]
+
+# Power levels to highlight and annotate
+highlight_powers = [125, 150, 175]
+
+# Create a plot
+fig, ax = plt.subplots(figsize=(12, 8))
+
+# Plot and annotate BOL data
+plot_and_annotate_data(ax, bol_data, [f'{title} bol' for title in titles], colors, highlight_powers)
+
+# Plot and annotate EOL data with different markers
+plot_and_annotate_data(ax, eol_data, [f'{title} eol' for title in titles], colors, highlight_powers, marker='v')
+
+# Add a red shaded area from 700 A to 1300 A
+ax.axvspan(700, 1300, color='red', alpha=0.2)
+
+# Set title and labels
+ax.set_title("System Polarization Curve, FL 120, eol vs bol")
+ax.set_xlabel('Current [A]')
+ax.set_xlim([0, 1300])
+ax.set_ylabel('Cell Voltage [V]')
+ax.set_ylim([0.3, 1])
+ax.grid(True)
+ax.legend(loc='upper right')
+
+# Show plot
+plt.show()
+
+# %%
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def load_and_filter_data(file_path, turbine, eol, cell_counts):
+    df = pd.read_csv(file_path)
+    df = df.sort_values(by=['idx'])
+    
+    filtered_data = {}
+    for count in cell_counts:
+        filtered_data[count] = df[(df['Specified Cell Count'] == count) 
+                                  & (df["turbine (t/f)"] == turbine)
+                                  & (df["eol (t/f)"] == eol)]
+    
+    return filtered_data
+
+file_path = r"consolidated_20-175kW_400-500_120-120ft__2\optimized_parameters_20-175kW_400-500_120-120ft.csv"
+cell_counts = [400, 450, 500]
+
+# Load and filter data for different scenarios
+bol_data = load_and_filter_data(file_path, turbine=True, eol=False, cell_counts=cell_counts)
+eol_data = load_and_filter_data(file_path, turbine=True, eol=True, cell_counts=cell_counts)
+
+# Define plotting and annotation function
+def plot_and_annotate_data(ax, bol_data, eol_data, titles, colors, highlight_powers, highlight_range=10, marker='o'):
+    for count, title, color in zip(bol_data.keys(), titles, colors):
+        bol_df = bol_data[count]
+        eol_df = eol_data[count]
+        
+        # Plot BOL data
+        ax.scatter(bol_df['current_A (Value)'], bol_df['Cell Voltage (V)'], color=color, label=f'{title} bol', marker=marker)
+        
+        # Plot EOL data
+        ax.scatter(eol_df['current_A (Value)'], eol_df['Cell Voltage (V)'], color=color, label=f'{title} eol', marker='v')
+        
+        # Connect corresponding BOL and EOL points
+        for power in highlight_powers:
+            bol_highlight = bol_df[bol_df["Power Constraint (kW)"].between(power - 0, power + 0)]
+            eol_highlight = eol_df[eol_df["Power Constraint (kW)"].between(power - 0, power + 0)]
+            
+            for (_, bol_row), (_, eol_row) in zip(bol_highlight.iterrows(), eol_highlight.iterrows()):
+                ax.plot([bol_row['current_A (Value)'], eol_row['current_A (Value)']], 
+                        [bol_row['Cell Voltage (V)'], eol_row['Cell Voltage (V)']],
+                        color=color, alpha=0.5, linestyle='--')
+                
+                # Annotate points
+                ax.annotate(f'{bol_row["Power Constraint (kW)"]:.0f} kW', 
+                            (bol_row['current_A (Value)'], bol_row['Cell Voltage (V)']),
+                            textcoords="offset points", xytext=(0, 30), ha='center', color=color,
+                            arrowprops=dict(facecolor=color, shrink=0.1))
+
+# Define titles and colors
+titles = ['400 Cells', '450 Cells', '500 Cells']
+colors = ["tab:blue", "tab:orange", "tab:red"]
+
+# Power levels to highlight and annotate
+highlight_powers = [125, 150, 175]
+
+# Create a plot
+fig, ax = plt.subplots(figsize=(12, 8))
+
+# Plot, annotate, and connect BOL and EOL data
+plot_and_annotate_data(ax, bol_data, eol_data, titles, colors, highlight_powers)
+
+# Add a red shaded area from 700 A to 1300 A
+ax.axvspan(700, 1300, color='red', alpha=0.2)
+
+# Set title and labels
+ax.set_title("System Polarization Curve, FL 120, eol vs bol")
+ax.set_xlabel('Current [A]')
+ax.set_xlim([0, 1300])
+ax.set_ylabel('Cell Voltage [V]')
+ax.set_ylim([0.3, 1])
+ax.grid(True)
+ax.legend(loc='upper right')
+
+# Show plot
+plt.show()
+
+
+
+
+
 
 # %% Plot (weight spcific) H2 consumption vs System Power with fits 
 import pandas as pd
@@ -452,21 +867,21 @@ from scipy.stats import linregress
 df1 = pd.read_csv(file_path1)
 df1 = df1.sort_values(by=['idx'])
 
-_turbine = "True"
-_eol = "True"
+_turbine = True
+_eol = True
 
 # Split the data based on 'Specified Cell Count', turbine and eol
 df_400 = df1[(df1['Specified Cell Count'] == 400) 
-             & (df1["Turbine Power (kW)"] == _turbine)
-             & (df1["eol"] == _eol)]
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
 
 df_450 = df1[(df1['Specified Cell Count'] == 450) 
-             & (df1["Turbine Power (kW)"] == _turbine)
-             & (df1["eol"] == _eol)]
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
 
 df_500 = df1[(df1['Specified Cell Count'] == 500) 
-             & (df1["Turbine Power (kW)"] == _turbine)
-             & (df1["eol"] == _eol)]
+             & (df1["turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)]
 
 data_sets = [df_400, df_450, df_500]
 
@@ -502,11 +917,12 @@ for i, (data, title,weight) in enumerate(zip(data_sets, titles, weights)):
     ax.scatter([], [], label=formula, color=scatter.get_facecolor()[0])
 
 # Set title and labels
-ax.set_title('Weight Specific Hydrogen Consumption vs System Power, FL 120')
+ax.set_title(f'Weight Specific Hydrogen Consumption vs System Power, FL 120, Turbine: {_turbine}')
 ax.set_xlabel('System Power [kW]')
 ax.set_ylabel('Weight Specific Hydrogen Consumption [g/s kg]')
 ax.grid(True)
 ax.legend(loc='best')
+ax.set_ylim([0.002, 0.12])
 
 plt.show()
 
