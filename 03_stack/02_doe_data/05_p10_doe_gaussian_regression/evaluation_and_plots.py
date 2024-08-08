@@ -377,7 +377,7 @@ plt.show()
 
 
 
-#%% Analysis turbine/no turbine eol/no elo
+#%% Polcurves: Analysis turbine/no turbine eol/no elo
 import pandas as pd
 import matplotlib.colors as mcolors
 import matplotlib.cm as cm
@@ -385,45 +385,27 @@ import matplotlib.pyplot as plt
 import itertools
 import numpy as np
 
-#parameter vom run:
-_range_power = np.array([20, 50, 80, 125, 150, 175])
-_range_cellcount = np.arange(400,500+50,50)
-_range_fl = np.arange(120,120+20,20)
-
-# Convert turbine and eol to boolean lists
-_range_turbine = ["true","false"]
-_range_eol = ["true","false"]
-
-# Generate all combinations of parameters
-_parameters = list(itertools.product(_range_power, _range_cellcount, _range_fl, _range_turbine, _range_eol))
-_c_names = ["p","c","fl","t","eol"]
-
-# Create the DataFrame
-_df_parameters = pd.DataFrame(_parameters, columns=_c_names)
-
-file_path1 = r"consolidated_20-175kW_400-500_120-120ft__1\optimized_parameters_20-175kW_400-500_120-120ft.csv"
+file_path1 = r""
 
 # Load the CSV file into a DataFrame
 df1 = pd.read_csv(file_path1)
-df1 = df1.sort_values(by=['Flight Level (100x ft)','Power Constraint (kW)','Specified Cell Count'])
+df1 = df1.sort_values(by=['idx'])
 
-# Concatenate side by side
-df1 = pd.concat([df1, _df_parameters], axis=1)
+_turbine = "True"
+_eol = "True"
 
-# Split the data based on 'Specified Cell Count'
+# Split the data based on 'Specified Cell Count', turbine and eol
 df_400 = df1[(df1['Specified Cell Count'] == 400) 
-             & (df1["Turbine Power (kW)"] == 0)
-             & (df1["eol"] == "false")]
-
-
-.reset_index(drop=True)
-df_even_indices = df1.iloc[::2]
+             & (df1["Turbine Power (kW)"] == _turbine)
+             & (df1["eol"] == _eol)]
 
 df_450 = df1[(df1['Specified Cell Count'] == 450) 
-             & (df1["Turbine Power (kW)"] == 0)]
+             & (df1["Turbine Power (kW)"] == _turbine)
+             & (df1["eol"] == _eol)]
 
 df_500 = df1[(df1['Specified Cell Count'] == 500) 
-             & (df1["Turbine Power (kW)"] == 0)]
+             & (df1["Turbine Power (kW)"] == _turbine)
+             & (df1["eol"] == _eol)]
 
 data = [df_400, df_450, df_500]
 titles = ['System Polarization Curve, FL 120, 400 Cells',
@@ -432,7 +414,7 @@ titles = ['System Polarization Curve, FL 120, 400 Cells',
 
 colors = ["tab:blue", "tab:orange", "tab:red"]
 
-#colors = plt.cm.tab10.colors  # Native tab colors of matplotlib
+
 # Define power levels to highlight
 highlight_powers = [125, 150, 175]
 highlight_range = 4
@@ -441,13 +423,13 @@ for df, title, color in zip(data, titles ,colors):
     fig, ax = plt.subplots(figsize=(12, 8))
 
     # Plot all points in gray with some transparency
-    #ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color='gray', alpha=0.3, label='_nolegend_')
-    ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color=color)
+    ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color='gray', alpha=0.3, label='_nolegend_')
+    #ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color=color)
     # Highlight points for each power level
-    # for i, power in enumerate(highlight_powers):
-    #     highlight = df[df['System Power (kW)'].between(power - highlight_range, power + highlight_range)]
-    #     ax.scatter(highlight['current_A (Value)'], highlight['Cell Voltage (V)'], 
-    #                color=colors[i], s=100, edgecolor='k', label=f'{power} kW ± {highlight_range} kW')
+    for i, power in enumerate(highlight_powers):
+        highlight = df[df['System Power (kW)'].between(power - highlight_range, power + highlight_range)]
+        ax.scatter(highlight['current_A (Value)'], highlight['Cell Voltage (V)'], 
+                    color=colors[i], s=100, edgecolor='k', label=f'{power} kW ± {highlight_range} kW')
     # Add a red shaded area from 700 A to 800 A
     ax.axvspan(700, 800, color='red', alpha=0.3)
     # Set title and labels
@@ -460,3 +442,72 @@ for df, title, color in zip(data, titles ,colors):
     ax.legend(loc='best')
 
     plt.show()
+
+# %% Plot (weight spcific) H2 consumption vs System Power with fits 
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.stats import linregress
+
+# Load the CSV file into a DataFrame
+df1 = pd.read_csv(file_path1)
+df1 = df1.sort_values(by=['idx'])
+
+_turbine = "True"
+_eol = "True"
+
+# Split the data based on 'Specified Cell Count', turbine and eol
+df_400 = df1[(df1['Specified Cell Count'] == 400) 
+             & (df1["Turbine Power (kW)"] == _turbine)
+             & (df1["eol"] == _eol)]
+
+df_450 = df1[(df1['Specified Cell Count'] == 450) 
+             & (df1["Turbine Power (kW)"] == _turbine)
+             & (df1["eol"] == _eol)]
+
+df_500 = df1[(df1['Specified Cell Count'] == 500) 
+             & (df1["Turbine Power (kW)"] == _turbine)
+             & (df1["eol"] == _eol)]
+
+data_sets = [df_400, df_450, df_500]
+
+# Titles for the datasets
+titles = [
+    '400 Cells',
+    '450 Cells',
+    '500 Cells'
+]
+
+#set to [1,1,1] for system h2 consumption...
+weights = [39.92+ 6.26,43.75+6.01,47.58+5.77] #Masse: stack + compressor [400,450,500] cells
+
+fig, ax = plt.subplots(figsize=(12, 8))
+
+for i, (data, title,weight) in enumerate(zip(data_sets, titles, weights)):
+    df = data
+    
+    # Scatter plot for each dataset
+    scatter = ax.scatter(df['System Power (kW)'], df['Hydrogen Consumption (g/s)']/weight, label=title, s=100, edgecolor='k')
+    
+    # Fit a polynomial of degree 2 (you can change the degree as needed)
+    coeffs = np.polyfit(df['System Power (kW)'], df['Hydrogen Consumption (g/s)']/weight, 2)
+    poly = np.poly1d(coeffs)
+    
+    # Plot the polynomial fit
+    line_x = np.linspace(df['System Power (kW)'].min(), df['System Power (kW)'].max(), 500)
+    line_y = poly(line_x)
+    ax.plot(line_x, line_y, color=scatter.get_facecolor()[0], alpha=0.5)
+    
+    # Add the polynomial formula to the legend
+    formula = f'Fit: {coeffs[0]:.2e}x² + {coeffs[1]:.2e}x + {coeffs[2]:.2e}'
+    ax.scatter([], [], label=formula, color=scatter.get_facecolor()[0])
+
+# Set title and labels
+ax.set_title('Weight Specific Hydrogen Consumption vs System Power, FL 120')
+ax.set_xlabel('System Power [kW]')
+ax.set_ylabel('Weight Specific Hydrogen Consumption [g/s kg]')
+ax.grid(True)
+ax.legend(loc='best')
+
+plt.show()
+
+    
