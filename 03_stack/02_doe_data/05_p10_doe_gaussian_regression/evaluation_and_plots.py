@@ -374,3 +374,89 @@ plt.show()
 # ax.legend(loc='best')
 
 # plt.show()
+
+
+
+#%% Analysis turbine/no turbine eol/no elo
+import pandas as pd
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import itertools
+import numpy as np
+
+#parameter vom run:
+_range_power = np.array([20, 50, 80, 125, 150, 175])
+_range_cellcount = np.arange(400,500+50,50)
+_range_fl = np.arange(120,120+20,20)
+
+# Convert turbine and eol to boolean lists
+_range_turbine = ["true","false"]
+_range_eol = ["true","false"]
+
+# Generate all combinations of parameters
+_parameters = list(itertools.product(_range_power, _range_cellcount, _range_fl, _range_turbine, _range_eol))
+_c_names = ["p","c","fl","t","eol"]
+
+# Create the DataFrame
+_df_parameters = pd.DataFrame(_parameters, columns=_c_names)
+
+file_path1 = r"consolidated_20-175kW_400-500_120-120ft__1\optimized_parameters_20-175kW_400-500_120-120ft.csv"
+
+# Load the CSV file into a DataFrame
+df1 = pd.read_csv(file_path1)
+df1 = df1.sort_values(by=['Flight Level (100x ft)','Power Constraint (kW)','Specified Cell Count'])
+
+# Concatenate side by side
+df1 = pd.concat([df1, _df_parameters], axis=1)
+
+# Split the data based on 'Specified Cell Count'
+df_400 = df1[(df1['Specified Cell Count'] == 400) 
+             & (df1["Turbine Power (kW)"] == 0)
+             & (df1["eol"] == "false")]
+
+
+.reset_index(drop=True)
+df_even_indices = df1.iloc[::2]
+
+df_450 = df1[(df1['Specified Cell Count'] == 450) 
+             & (df1["Turbine Power (kW)"] == 0)]
+
+df_500 = df1[(df1['Specified Cell Count'] == 500) 
+             & (df1["Turbine Power (kW)"] == 0)]
+
+data = [df_400, df_450, df_500]
+titles = ['System Polarization Curve, FL 120, 400 Cells',
+          'System Polarization Curve, FL 120, 450 Cells',
+          'System Polarization Curve, FL 120, 500 Cells']
+
+colors = ["tab:blue", "tab:orange", "tab:red"]
+
+#colors = plt.cm.tab10.colors  # Native tab colors of matplotlib
+# Define power levels to highlight
+highlight_powers = [125, 150, 175]
+highlight_range = 4
+
+for df, title, color in zip(data, titles ,colors):
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # Plot all points in gray with some transparency
+    #ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color='gray', alpha=0.3, label='_nolegend_')
+    ax.scatter(df['current_A (Value)'], df['Cell Voltage (V)'], color=color)
+    # Highlight points for each power level
+    # for i, power in enumerate(highlight_powers):
+    #     highlight = df[df['System Power (kW)'].between(power - highlight_range, power + highlight_range)]
+    #     ax.scatter(highlight['current_A (Value)'], highlight['Cell Voltage (V)'], 
+    #                color=colors[i], s=100, edgecolor='k', label=f'{power} kW ± {highlight_range} kW')
+    # Add a red shaded area from 700 A to 800 A
+    ax.axvspan(700, 800, color='red', alpha=0.3)
+    # Set title and labels
+    ax.set_title(title)
+    ax.set_xlabel('Current [A]')
+    ax.set_xlim([0, 800])
+    ax.set_ylabel('Cell Voltage [V]')
+    ax.set_ylim([0.55, 0.76])
+    ax.grid(True)
+    ax.legend(loc='best')
+
+    plt.show()
