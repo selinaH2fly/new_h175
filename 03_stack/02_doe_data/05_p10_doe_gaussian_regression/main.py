@@ -6,6 +6,8 @@ import json
 import numpy as np
 import itertools
 from collect_data import consolidate_experiment_data
+#testing:
+from tqdm import tqdm
 
 def build_command(parameter):
     command = [
@@ -47,11 +49,11 @@ if __name__ == '__main__':
     parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_eol))
 
     
-    for parameter in parameters:
+    for parameter in tqdm(parameters, desc="Optimization Progress", unit="parameter"):
         
         # Build and execute command
         command = build_command(parameter)
-        print(command)
+        print('\n',command)
         result = subprocess.run(command, capture_output=True, text=True)
         # Print the output and error (if any) from the subprocess call
         print(result.stdout)
