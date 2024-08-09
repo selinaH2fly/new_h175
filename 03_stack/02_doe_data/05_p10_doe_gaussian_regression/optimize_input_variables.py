@@ -40,13 +40,13 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     # Optimize the input variables
     optimal_input, cell_voltage, hydrogen_mass_flow_g_s, \
         stack_power_kW, compressor_power_kW, turbine_power_kW, \
-            reci_pump_power_kW = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
-                                                              flight_level_100ft, cellcount=specified_cell_count,
-                                                              bounds=_params_optimization.bounds, power_constraint_kW=power_constraint_kW,
-                                                              penalty_weight=1e-7, params_physics=_params_pyhsics,
-                                                              consider_turbine=consider_turbine, end_of_life=end_of_life)
+            reci_pump_power_kW, coolant_pump_power_kW = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
+                                                                                     flight_level_100ft, cellcount=specified_cell_count,
+                                                                                     bounds=_params_optimization.bounds, power_constraint_kW=power_constraint_kW,
+                                                                                     penalty_weight=1e-7, params_physics=_params_pyhsics,
+                                                                                     consider_turbine=consider_turbine, end_of_life=end_of_life)
     
-    system_power_kW = stack_power_kW - compressor_power_kW + turbine_power_kW - reci_pump_power_kW
+    system_power_kW = stack_power_kW - compressor_power_kW + turbine_power_kW - reci_pump_power_kW - coolant_pump_power_kW
 
     # Print the optimal input, target variables, and bounds including feature names and target variable
     print("\nOptimized Input Variables:")
@@ -60,6 +60,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     print(f"  Compressor Power Estimate (at Fligh-Level {flight_level_100ft}): {compressor_power_kW:.2f} kW")
     print(f"  Turbine Power Estimate (at Fligh-Level {flight_level_100ft}): {turbine_power_kW:.2f} kW")
     print(f"  Recirculation Pump Power Estimate: {reci_pump_power_kW:.2f} kW")
+    print(f"  Coolant Pump Power Estimate: {coolant_pump_power_kW:.2f} kW")
     print(f"  Stack (Gross) Power Estimate: {stack_power_kW:.2f} kW")
 
     # Save the optimal input, target variables, and bounds to a file
@@ -78,13 +79,14 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
         file.write(f"  Compressor Power Estimate (at Fligh-Level {flight_level_100ft}): {compressor_power_kW:.2f} kW")
         file.write(f"  Turbine Power Estimate (at Fligh-Level {flight_level_100ft}): {turbine_power_kW:.2f} kW")
         file.write(f"  Recirculation Pump Power Estimate: {reci_pump_power_kW:.2f} kW")
+        file.write(f"  Coolant Pump Power Estimate: {coolant_pump_power_kW:.2f} kW")
         file.write(f"  Stack (Gross) Power Estimate: {stack_power_kW:.2f} kW")
     
     #_file_path = os.path.join(os.getcwd(), "resulting_data")
     #save_results_to_excel(_file_path, feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, cell_voltage, system_power_kW, compressor_power_kW, stack_power_kW, power_constraint_kW, specified_cell_count, flight_level_100ft)
     export_to_csv(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds, hydrogen_mass_flow_g_s, cell_voltage, 
-                      system_power_kW, compressor_power_kW, turbine_power_kW, reci_pump_power_kW, stack_power_kW, power_constraint_kW, 
-                      specified_cell_count, flight_level_100ft, consider_turbine, end_of_life, filename='optimized_input_data.csv')
+                      system_power_kW, compressor_power_kW, turbine_power_kW, reci_pump_power_kW, coolant_pump_power_kW, stack_power_kW,
+                      power_constraint_kW, specified_cell_count, flight_level_100ft, consider_turbine, end_of_life, filename='optimized_input_data.csv')
     
 # Entry point of the script
 if __name__ == '__main__':
