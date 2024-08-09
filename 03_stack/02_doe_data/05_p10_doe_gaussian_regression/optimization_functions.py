@@ -42,11 +42,11 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_recirculation_pump = parameters.Recirculation_Pump_Parameters()
 
      # Instantiate components
-    compressor = Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency, 
-                            electric_efficiency=_params_compressor.electric_efficiency)
-    turbine = Turbine(_params_physics, isentropic_efficiency=_params_turbine.isentropic_efficiency)
-    reci_pump = Recirculation_Pump(isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
-                                   n_cell=cellcount, pump_efficiency=_params_recirculation_pump.pump_efficiency)
+    compressor  =   Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency,
+                               electric_efficiency=_params_compressor.electric_efficiency)
+    turbine     =   Turbine(_params_physics, isentropic_efficiency=_params_turbine.isentropic_efficiency)
+    reci_pump   =   Recirculation_Pump(isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
+                                       n_cell=cellcount, pump_efficiency=_params_recirculation_pump.pump_efficiency)
 
     def evaluate_models(x):
         """
