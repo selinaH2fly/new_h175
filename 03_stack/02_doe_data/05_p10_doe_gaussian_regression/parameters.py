@@ -70,7 +70,15 @@ class Turbine_Parameters:
 
 class Recirculation_Pump_Parameters:
     
-        def __init__(self):
-    
-            self.isentropic_efficiency = 0.75
-            self.pump_efficiency = 0.75
+    def __init__(self):
+
+        self.isentropic_efficiency = 0.75
+        self.pump_efficiency = 0.75
+
+class Coolant_Pump_Parameters:
+
+    def __init__(self):
+
+        self.isentropic_efficiency = 0.75
+        self.electrical_efficiency = 0.95
+
