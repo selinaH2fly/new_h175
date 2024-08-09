@@ -158,11 +158,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         reci_pump_power_W = reci_pump.calculate_power()
 
         # Compute the coolant pump power
-        coolant_pump.mass_flow_rate_kg_s, \
-            coolant_flow_rate_l_min = compute_coolant_flow(optimized_current_A, optimized_cell_voltage_V,
-                                                           optimized_temp_coolant_inlet_degC, optimized_temp_coolant_outlet_degC,
-                                                           flight_level_100ft=flight_level_100ft, cellcount=cellcount)
-        stack_pressure_drop_mbar = 6.5e-3*coolant_flow_rate_l_min + 0.477*coolant_flow_rate_l_min  # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
+        coolant_flow_rate_m3_s = compute_coolant_flow(optimized_current_A, optimized_cell_voltage_V,
+                                                      optimized_temp_coolant_inlet_degC, optimized_temp_coolant_outlet_degC,
+                                                      flight_level_100ft=flight_level_100ft, cellcount=cellcount)
+        coolant_pump.coolant_flow_m3_s = coolant_flow_rate_m3_s
+        coolant_flow_rate_l_min = coolant_flow_rate_m3_s * 60 * 1000
+        stack_pressure_drop_mbar = 6.5e-3*(coolant_flow_rate_l_min ** 2)  + 0.477*coolant_flow_rate_l_min  # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
         coolant_pump.head_Pa = stack_pressure_drop_mbar * 100  + radiator.pressure_drop_Pa
         coolant_pump_power_W = coolant_pump.calculate_power()
 
@@ -207,8 +208,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     print(f'{result.message}')
 
     # Evaluate the models with the optimal input
-    optimal_input, cell_voltage, compressor_power_W, turbine_power_W, \
-        reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(result.x)
+    optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(result.x)
 
     # Compute stack power
     stack_power_kW = optimal_input[0] * cell_voltage * cellcount / 1000

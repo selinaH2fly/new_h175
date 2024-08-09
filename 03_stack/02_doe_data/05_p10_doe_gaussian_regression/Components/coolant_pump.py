@@ -6,20 +6,20 @@ class Coolant_Pump:
         power, coolant state, and volume flow.
     """
 
-    def __init__(self, isentropic_efficiency=0.75, electrical_efficiency=0.95, head_Pa=0.0, coolant_flow_kg_s=0.0):
+    def __init__(self, isentropic_efficiency=0.75, electrical_efficiency=0.95, head_Pa=0.0, coolant_flow_m3_s=0.0):
         """
         Initialize the pump with a given efficiency and operating conditions.
 
         :param isentropic_efficiency: Efficiency of the pump (default is 0.75)
         :param electrical_efficiency: Electrical efficiency of the pump (default is 0.95)
         :param head_Pa: Pump head in [Pascals] (default is 0.0)
-        :param coolant_flow_kg_s: Coolant flow rate in [kg/s] (default is 0.0)
+        :param coolant_flow_m3_s: Coolant flow rate in [m3/s] (default is 0.0)
         """
 
         self.isentropic_efficiency = isentropic_efficiency
         self.electrical_efficiency = electrical_efficiency
         self.head_Pa = head_Pa
-        self.coolant_flow_kg_s = coolant_flow_kg_s
+        self.coolant_flow_m3_s = coolant_flow_m3_s
 
     def calculate_power(self) -> float:
         """
@@ -28,7 +28,7 @@ class Coolant_Pump:
         :return: Electrical power consumed by the pump in [W]
         """
         
-        pump_shaft_power_W = self.head_Pa * self.coolant_flow_kg_s / self.isentropic_efficiency
+        pump_shaft_power_W = self.head_Pa * self.coolant_flow_m3_s / self.isentropic_efficiency
         pump_electrical_power_W = pump_shaft_power_W / self.electrical_efficiency
 
         return pump_electrical_power_W
@@ -42,6 +42,6 @@ class Coolant_Pump:
 # %% Example usage:
 
     
-coolant_pump = Coolant_Pump(isentropic_efficiency=0.75, electrical_efficiency=0.95, head_Pa=2e7, coolant_flow_kg_s=3.0)
+coolant_pump = Coolant_Pump(isentropic_efficiency=0.75, electrical_efficiency=0.95, head_Pa=2e7, coolant_flow_m3_s=0.5)
 coolant_pump_power_W = coolant_pump.calculate_power()
 
