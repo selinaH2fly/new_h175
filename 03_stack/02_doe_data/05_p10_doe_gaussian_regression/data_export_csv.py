@@ -9,8 +9,8 @@ import csv
 import os
 
 def export_to_csv(feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, cell_voltage, 
-                  system_power_kW, compressor_power_kW, turbine_power_kW, stack_power_kW, power_constraint_kW, 
-                  specified_cell_count, flight_level_100ft,consider_turbine,end_of_life, filename='optimized_input_data.csv'):
+                  system_power_kW, compressor_power_kW, turbine_power_kW, reci_pump_power_kW, stack_power_kW, power_constraint_kW, 
+                  specified_cell_count, flight_level_100ft, consider_turbine, end_of_life, filename='optimized_input_data.csv'):
     # Get the current directory
     current_dir = os.getcwd()
     
@@ -31,7 +31,8 @@ def export_to_csv(feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, 
             header.extend([f'{name} (Lower Bound)' for name in feature_names])
             header.extend([f'{name} (Upper Bound)' for name in feature_names])
             header.extend(['Hydrogen Consumption (g/s)', 'Cell Voltage (V)', 
-                           'System Power (kW)', 'Compressor Power (kW)', "Turbine Power (kW)", "Stack Power (kW)", "turbine (t/f)","eol (t/f)"])
+                           'System Power (kW)', 'Compressor Power (kW)', "Turbine Power (kW)", "Recirculation Pump Power (kW)",
+                           "Stack Power (kW)", "turbine (t/f)","eol (t/f)"])
             writer.writerow(header)
         
         # Write the data
@@ -41,5 +42,6 @@ def export_to_csv(feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, 
         data.extend([f'{bound[1]:.4f}' for bound in bounds])
         data.extend([f'{hydrogen_mass_flow_g_s:.4f}', f'{cell_voltage:.4f}', 
                      f'{system_power_kW:.2f}', f'{compressor_power_kW:.2f}', 
-                     f'{turbine_power_kW:.2f}', f'{stack_power_kW:.2f}', f'{consider_turbine}', f'{end_of_life}'])
+                     f'{turbine_power_kW:.2f}', f'{reci_pump_power_kW:.2f}',
+                     f'{stack_power_kW:.2f}', f'{consider_turbine}', f'{end_of_life}'])
         writer.writerow(data)
