@@ -192,10 +192,10 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         return hydrogen_mass_flow_g_s + penalty
     
-    # Define the nonlinear constraint for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 5 K
+    # Define the nonlinear constraint for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 0 K
     def nonlinear_constraint(x):
         return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
-            - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4])) - 5
+            - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4])) - 0
     
     nonlinear_constraint = NonlinearConstraint(nonlinear_constraint, 0, np.inf)
 
