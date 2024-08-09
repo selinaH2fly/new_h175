@@ -11,7 +11,7 @@ import math
 class Recirculation_Pump:
     
     def __init__(self, isentropic_efficiency=0.75, pump_efficiency=0.75, 
-                 current=1, temperature=0.0, pressure_in=0.0, pressure_out=0.0, n_cell=0.0, stoich_anode = 3.0): # pump eher 0.60...? 
+                 current=1, temperature_in=0.0, pressure_in=0.0, pressure_out=0.0, n_cell=0.0, stoich_anode = 3.0): # pump eher 0.60...? 
         """
         Initialize the recirculation pump with a given efficiency and operating conditions.
 
@@ -38,23 +38,24 @@ class Recirculation_Pump:
             
         """
         
+        # TODO: Use SI units for all parameters!
         self.isentropic_efficiency = isentropic_efficiency
         self.pump_efficiency = pump_efficiency
-        self.current = current                  #[A]
-        self.temperature = temperature          #[°C]
-        self.pressure_in = pressure_in          #[bar(a)]
-        self.pressure_out = pressure_out        #[bar(a)]
-        self.n_cell = n_cell                    #[/]
+        self.current = current                  # [A]
+        self.temperature_in = temperature_in    # [°C]
+        self.pressure_in = pressure_in          # [bar(a)]
+        self.pressure_out = pressure_out        # [bar(a)]
+        self.n_cell = n_cell                    # [/]
         self.stoich_anode = stoich_anode
         self.stoich_0=1.05                      # stoich_0 1.02-1.05 "lost als H2 aus system = ~5%"
-        self.C_H2 = 1                           #Parameter for 
+        self.C_H2 = 1
     
     def calculate_power(self)->float:#, T_in, p_in, p_out, stoich_0, stoich_anode, current, C_H2, n_cell):
         T_out = self.temp_out()
         Cp = self.specific_heat()
         mass_flow_gr_s = self.mass_flows()[2]
 
-        P_shaft = Cp*mass_flow_gr_s*(T_out-self.temperature)/1000
+        P_shaft = Cp*mass_flow_gr_s*(T_out-self.temperature_in)/1000
         P_isentropic = P_shaft/self.isentropic_efficiency
         P_el = P_isentropic/self.pump_efficiency
 
@@ -83,20 +84,20 @@ class Recirculation_Pump:
     def temp_out(self):
         e = self.pressure_out/self.pressure_in                                                        #pressure ratio
         k = 1.4                                                           #k for H2 and N2 is almost equal to k for Air
-        T2 = ((self.temperature+273) * e**((k-1)/k)) - 273                                #tempearture out from compressor
+        T2 = ((self.temperature_in+273) * e**((k-1)/k)) - 273                                #tempearture out from pump
         return T2# isentrop recirculation pump temperature out
 
 
     def specific_heat(self):
         w_H2, w_N2 = self.mass_fractions()
-        Cp_H2 = CP.PropsSI("C", "P" , (self.pressure_in*100000), "T", (self.temperature+273), "Hydrogen")       #specific heat hydrogen
-        Cp_N2 = CP.PropsSI("C", "P" , (self.pressure_in*100000), "T", (self.temperature+273), "Nitrogen")       #specific heat nitrogen
+        Cp_H2 = CP.PropsSI("C", "P" , (self.pressure_in*100000), "T", (self.temperature_in+273), "Hydrogen")       #specific heat hydrogen
+        Cp_N2 = CP.PropsSI("C", "P" , (self.pressure_in*100000), "T", (self.temperature_in+273), "Nitrogen")       #specific heat nitrogen
         Cp_mix = Cp_H2*w_H2 + Cp_N2*w_N2                                            #specific heat gas mixtrue
         return Cp_mix
  
 # %% Example usage:
       
-C1 = Recirculation_Pump(current=200,temperature=65, pressure_in=2.1, pressure_out=2.5,n_cell=300, stoich_anode = 2.4)
+C1 = Recirculation_Pump(current=200,temperature_in=65, pressure_in=2.1, pressure_out=2.5,n_cell=300, stoich_anode = 2.4)
 
 #electrical power
 power_el = C1.calculate_power()
