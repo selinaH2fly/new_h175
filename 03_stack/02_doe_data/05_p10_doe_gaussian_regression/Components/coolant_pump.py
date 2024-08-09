@@ -42,6 +42,6 @@ class Coolant_Pump:
 # %% Example usage:
 
     
-coolant_pump = Coolant_Pump(isentropic_efficiency=0.75, electrical_efficiency=0.95, pump_head_Pa=2e7, coolant_flow_kg_s=3.0)
+coolant_pump = Coolant_Pump(isentropic_efficiency=0.75, electrical_efficiency=0.95, head_Pa=2e7, coolant_flow_kg_s=3.0)
 coolant_pump_power_W = coolant_pump.calculate_power()
 

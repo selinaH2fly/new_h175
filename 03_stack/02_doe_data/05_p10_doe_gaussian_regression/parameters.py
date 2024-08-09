@@ -82,3 +82,9 @@ class Coolant_Pump_Parameters:
         self.isentropic_efficiency = 0.75
         self.electrical_efficiency = 0.95
 
+class Radiator_Parameters:
+
+    def __init__(self):
+
+        self.pressure_drop_Pa = 500 * 100 # roughly 500 mbar constant pressure drop according to Chris B.
+
