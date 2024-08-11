@@ -32,17 +32,18 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    _step_p = 60
+    _step_p = 5
     _step_c = 50
     _step_fl = 20
     #TODO: range_power is ugly deined atm. due to not starting at 0 and want to have inclusive bounds.... maybe there is a better way?
-    #range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
-    range_power = np.array([20, 50, 80, 125, 150, 175])
+    range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
+    #range_power = np.array([20, 50, 80, 125, 150, 175])
     range_cellcount = np.arange(args.cellcount[0],args.cellcount[1]+_step_c,_step_c)
     range_fl = np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
     
     # Convert turbine and eol to boolean lists
-    range_turbine = [args.turbine.lower() == "true", args.turbine.lower() == "false"]
+    #range_turbine = [args.turbine.lower() == "true", args.turbine.lower() == "false"]
+    range_turbine = [True]
     range_eol = [args.eol.lower() == "true", args.eol.lower() == "false"]
 
     # Generate all combinations of parameters

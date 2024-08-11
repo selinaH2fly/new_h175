@@ -774,7 +774,7 @@ ax.legend(loc='upper right')
 # Show plot
 plt.show()
 
-# %%
+# %% same plot as above but with connection lines
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -822,7 +822,7 @@ def plot_and_annotate_data(ax, bol_data, eol_data, titles, colors, highlight_pow
                 # Annotate points
                 ax.annotate(f'{bol_row["Power Constraint (kW)"]:.0f} kW', 
                             (bol_row['current_A (Value)'], bol_row['Cell Voltage (V)']),
-                            textcoords="offset points", xytext=(0, 30), ha='center', color=color,
+                            textcoords="offset points", xytext=(0, 40), ha='center', color=color,
                             arrowprops=dict(facecolor=color, shrink=0.1))
 
 # Define titles and colors
