@@ -198,6 +198,129 @@ def plot_polarization_curves_bol_eol(df1, titles,colors, saving=True):
         plt.savefig('Hydrogen_Consumption.png')
     plt.show()
     
+    
+# %% Power Plot Grid, fancy
+def format_data_for_plot(df, components, eol_col='eol (t/f)'):
+    """
+    Formats the DataFrame for plotting by separating components based on the eol (t/f) column.
+
+    Parameters:
+    - df (pd.DataFrame): The DataFrame to be formatted.
+    - components (list): List of component columns to include in the formatted DataFrame.
+    - eol_col (str): Name of the column containing 'True' or 'False' values to split by.
+
+    Returns:
+    - pd.DataFrame: A formatted DataFrame for plotting.
+    """
+    # Create an empty DataFrame to store formatted data
+    formatted_df = pd.DataFrame()
+
+    for component in components:
+        # Filter out the columns related to the component
+        component_df = df[['Power', component, eol_col]].copy()
+
+        # Separate the data based on eol (t/f)
+        df_false = component_df[component_df[eol_col] == False].drop(columns=[eol_col])
+        df_true = component_df[component_df[eol_col] == True].drop(columns=[eol_col])
+
+        # Append to the formatted DataFrame
+        formatted_df = pd.concat([formatted_df, df_false, df_true], axis=1)
+
+    # Reset column names to be more descriptive
+    formatted_df.columns = ['Power'] + [f'{component}_False' for component in components] + [f'{component}_True' for component in components]
+    
+    return formatted_df
+
+# Example usage
+components = ['C1', 'C2', 'C3', 'C4', 'C5']  # Specify components to include
+filtered_df_400 = filter_columns(df_400, ['Power'] + components + ['eol (t/f)'])
+formatted_df_400 = format_data_for_plot(filtered_df_400, components)
+
+def plot_power_needs(df, saving=False):
+    """
+    Plot a heatmap-like representation of power needs by components, with specific formatting.
+
+    Parameters:
+    - df (pd.DataFrame): DataFrame where the first column is 'Power' and the remaining columns represent components.
+    - saving (bool): If True, saves the plot to a file. Defaults to False.
+    - filename (str): Filename to save the plot, used only if saving=True.
+
+    The plot displays:
+    - A heatmap-like grid where each cell represents power needs.
+    - Gaps are inserted between every second column for visual separation.
+    """
+    
+    # Set up the figure and axis
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+    # Define the colormap and normalization
+    cmap = plt.cm.viridis
+    norm = mcolors.Normalize(vmin=df.iloc[:, 1:].min().min(), vmax=df.iloc[:, 1:].max().max())
+
+    # Plot each cell with a gap between every second column
+    for i in range(len(df)):
+        for j in range(df.shape[1] - 1):
+            col_pos = j + (j // 2)  # Calculate position with gaps after every second column
+            cell_value = df.iloc[i, j + 1]
+            ax.imshow([[cell_value]], aspect='auto', cmap=cmap, norm=norm,
+                      extent=[col_pos, col_pos + 1, (len(df) - i - 1) * 2, (len(df) - i - 1) * 2 + 1])
+
+    # Adjust xlim to ensure the first cell is fully inside the plot
+    total_columns = df.shape[1] - 1 + (df.shape[1] - 2) // 2  # Adjusted number of columns with gaps
+    ax.set_xlim(-0.5, total_columns + 0.5)
+
+    # Calculate adjusted x-tick positions (centered)
+    col_positions = [i + (i // 2) + 0.5 for i in range(df.shape[1] - 1)]
+    ax.set_xticks(col_positions)
+
+    # Set x-tick labels to alternate between 'Bol' and 'Eol'
+    ax.set_xticklabels(['Bol' if i % 2 == 0 else 'Eol' for i in range(df.shape[1] - 1)])
+
+    # Adjust y-ticks to be centered on the colored boxes
+    y_tick_positions = np.arange(1, len(df) * 2, 2) - 0.5  # Center y-ticks by shifting them down
+    ax.set_yticks(y_tick_positions)
+    ax.set_yticklabels([f'Power Level {i + 1}' for i in range(len(df))])
+    ax.set_ylim(-0.5, len(df) * 2 - 0.5)
+
+    # Add secondary x-axis on top, with centered labels above each pair of boxes
+    ax2 = ax.twiny()
+    ax2.set_xlim(ax.get_xlim())  # Ensure the limits are the same
+
+    # Determine the tick positions for the secondary x-axis
+    num_columns = df.shape[1] - 1
+    positions = [1 + 3 * i for i in range((df.shape[1] - 2) // 2 + 1)]  # Positions for labels, adjust to the center
+    ax2.set_xticks(positions)
+
+    # Adjust labels for the secondary x-axis
+    ax2.set_xticklabels([df.columns[i + 1] for i in range(0, num_columns, 2)])  # Every other column label
+    ax2.set_xlabel('Components', labelpad=10)
+
+    # Add colorbar
+    cbar = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax)
+    cbar.set_label('Power (kW)')
+
+    # Set the title centered between the colored boxes
+    title = "Powerconsuption of Components [kW]"
+    ax.set_title(title, pad=20, loc='center')
+
+    # Save or show the plot
+    if saving:
+        plt.savefig('power_needs_plot.png', bbox_inches='tight')
+    else:
+        plt.show()
+
+
+# Create the DataFrame
+np.random.seed(0)
+powerlevel = 7
+components_num = 5
+column_num = components_num * 2 + 1
+data = np.random.rand(powerlevel, column_num) * 100
+df = pd.DataFrame(data, columns=['Power'] + [f'C{i}' for i in range(column_num - 1)])
+
+plot_power_needs(df, saving=False, filename='power_needs_plot.png')
+
+    
 def analyze_data(_file_path1=r"consolidated_20-175kW_400-500_120-120ft__3\optimized_parameters_20-175kW_400-500_120-120ft.csv", saving=True):
     
     # Load the CSV file into a DataFrame
