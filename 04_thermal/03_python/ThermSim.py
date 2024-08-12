@@ -205,7 +205,7 @@ class Heatsource:
         return[self.eq1, self.eq2, self.eq3]
 
 
-class Splitter:
+class SplitterPassive1to2:
     def __init__(self, p_in, T_in, Vdot_in, p_out_1, T_out_1, Vdot_out_1, p_out_2, T_out_2, Vdot_out_2, nsplit_1, nsplit_2):
         self.p_in = p_in
         self.T_in = T_in
@@ -223,7 +223,6 @@ class Splitter:
     def set_eq(self):
         self.eq1 = "%s = %s"%(self.p_in, self.p_out_1)
         self.eq2 = "%s = %s"%(self.p_in, self.p_out_2)
-        #self.eq3 = "%s * %s = %s * %s + %s * %s"%(self.T_in, self.Vdot_in, self.T_out_1, self.Vdot_out_1, self.T_out_2, self.Vdot_out_2)
         self.eq3 = "%s = %s"%(self.T_in, self.T_out_1)
         self.eq4 = "%s = %s"%(self.T_in, self.T_out_2)
         self.eq5 = "%s = %s + %s"%(self.Vdot_in, self.Vdot_out_1, self.Vdot_out_2)
@@ -232,7 +231,35 @@ class Splitter:
         return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6, self.eq7]
 
 
-class Mixer:
+class SplitterActive1to2:
+    def __init__(self, p_in, T_in, Vdot_in, p_out_1, T_out_1, Vdot_out_1, p_out_2, T_out_2, Vdot_out_2, nsplit_1, nsplit_2, delta_p_1, delta_p_2):
+        self.p_in = p_in
+        self.T_in = T_in
+        self.Vdot_in = Vdot_in
+        self.p_out_1 = p_out_1
+        self.T_out_1 = T_out_1
+        self.Vdot_out_1 = Vdot_out_1
+        self.p_out_2 = p_out_2
+        self.T_out_2 = T_out_2
+        self.Vdot_out_2 = Vdot_out_2
+        self.nsplit_1 = nsplit_1
+        self.nsplit_2 = nsplit_2
+        self.delta_p_1 = delta_p_1
+        self.delta_p_2 = delta_p_2
+
+
+    def set_eq(self):
+        self.eq1 = "%s = %s - %s"%(self.p_in, self.p_out_1, self.delta_p_1)
+        self.eq2 = "%s = %s - %s"%(self.p_in, self.p_out_2, self.delta_p_2)
+        self.eq3 = "%s = %s"%(self.T_in, self.T_out_1)
+        self.eq4 = "%s = %s"%(self.T_in, self.T_out_2)
+        self.eq5 = "%s = %s + %s"%(self.Vdot_in, self.Vdot_out_1, self.Vdot_out_2)
+        self.eq6 = "%s = %s / %s"%(self.nsplit_1, self.Vdot_out_1, self.Vdot_in)
+        self.eq7 = "%s = %s / %s"%(self.nsplit_2, self.Vdot_out_2, self.Vdot_in)
+        return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6, self.eq7]
+
+
+class MixerPassive2to1:
     def __init__(self, p_in_1, T_in_1, Vdot_in_1, p_in_2, T_in_2, Vdot_in_2, p_out, T_out, Vdot_out, nmix_1, nmix_2):
         self.p_in_1 = p_in_1
         self.T_in_1 = T_in_1
@@ -257,18 +284,45 @@ class Mixer:
         return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6]
 
 
+class MixerActive2to1:
+    def __init__(self, p_in_1, T_in_1, Vdot_in_1, p_in_2, T_in_2, Vdot_in_2, p_out, T_out, Vdot_out, nmix_1, nmix_2, delta_p_1, delta_p_2):
+        self.p_in_1 = p_in_1
+        self.T_in_1 = T_in_1
+        self.Vdot_in_1 = Vdot_in_1
+        self.p_in_2 = p_in_2
+        self.T_in_2 = T_in_2
+        self.Vdot_in_2 = Vdot_in_2
+        self.p_out = p_out
+        self.T_out = T_out
+        self.Vdot_out = Vdot_out
+        self.nmix_1 = nmix_1
+        self.nmix_2 = nmix_2
+        self.delta_p_1 = delta_p_1
+        self.delta_p_2 = delta_p_2
+
+
+    def set_eq(self):
+        self.eq1 = "%s = %s - %s"%(self.p_in_1, self.p_out, self.delta_p_1)
+        self.eq2 = "%s = %s - %s"%(self.p_in_2, self.p_out, self.delta_p_2)
+        self.eq3 = "%s * %s + %s * %s = %s * %s"%(self.T_in_1, self.Vdot_in_1, self.T_in_2, self.Vdot_in_2, self.T_out, self.Vdot_out)
+        self.eq4 = "%s + %s = %s"%(self.Vdot_in_1, self.Vdot_in_2, self.Vdot_out)
+        self.eq5 = "%s = %s / %s"%(self.nmix_1, self.Vdot_in_1, self.Vdot_out)
+        self.eq6 = "%s = %s / %s"%(self.nmix_2, self.Vdot_in_2, self.Vdot_out)
+        return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6]
+
+
 # Input on architecture
 
 circ = Circuit()
 pump1 = Pump("p_7", "T_7", "Vdot_7", "p_1", "T_1", "Vdot_1", "delta_p_pump1")
 circ.add_comp(pump1)
-splitter1 = Splitter("p_1", "T_1", "Vdot_1", "p_2", "T_2", "Vdot_2", "p_4", "T_4", "Vdot_4", "nsplit_1_splitter1", "nsplit_2_splitter1")
+splitter1 = SplitterPassive1to2("p_1", "T_1", "Vdot_1", "p_2", "T_2", "Vdot_2", "p_4", "T_4", "Vdot_4", "nsplit_1_splitter1", "nsplit_2_splitter1")
 circ.add_comp(splitter1)
 stack1 = Heatsource("p_2", "T_2", "Vdot_2", "p_3", "T_3", "Vdot_3", "delta_p_stack1", "Qdot_stack1")
 circ.add_comp(stack1)
 comp1 = Heatsource("p_4", "T_4", "Vdot_4", "p_5", "T_5", "Vdot_5", "delta_p_comp1", "Qdot_comp1")
 circ.add_comp(comp1)
-mixer1 = Mixer("p_3", "T_3", "Vdot_3", "p_5", "T_5", "Vdot_5", "p_6", "T_6", "Vdot_6", "nmix_1_mixer1", "nmix_2_mixer1")
+mixer1 = MixerPassive2to1("p_3", "T_3", "Vdot_3", "p_5", "T_5", "Vdot_5", "p_6", "T_6", "Vdot_6", "nmix_1_mixer1", "nmix_2_mixer1")
 circ.add_comp(mixer1)
 rad1 = Heatsource("p_6", "T_6", "Vdot_6", "p_7", "T_7", "Vdot_7", "delta_p_rad1", "Qdot_rad1")
 circ.add_comp(rad1)
@@ -294,6 +348,9 @@ circ.reduce_var()
 circ.sort_eq()
 
 solution = sp.least_squares(circ.calculate_res, np.array(circ.var_init), max_nfev=100000, gtol=1e-10, bounds=(np.array(circ.var_min), np.array(circ.var_max)))
+
+
+# Output
 
 if solution.success == False:
     print("ERROR! No convergence could be achieved.")
