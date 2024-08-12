@@ -48,12 +48,12 @@ class Recirculation_Pump:
         self.n_cell = n_cell                    # [/]
         self.stoich_anode = stoich_anode
         self.stoich_0=1.05                      # stoich_0 1.02-1.05 "lost als H2 aus system = ~5%"
-        self.C_H2 = 1
+        self.C_H2 = 1                           # H2 concentration in tank
     
     def calculate_power(self)->float:#, T_in, p_in, p_out, stoich_0, stoich_anode, current, C_H2, n_cell):
         T_out = self.temp_out()
         Cp = self.specific_heat()
-        mass_flow_gr_s = self.mass_flows()[2]
+        mass_flow_gr_s = self.mass_flows()[2] # in g/s!???
 
         P_shaft = Cp*mass_flow_gr_s*(T_out-self.temperature_in)/1000
         P_isentropic = P_shaft/self.isentropic_efficiency
@@ -62,15 +62,15 @@ class Recirculation_Pump:
         return P_el # kW?
         
     def mass_flows(self): 
-        m_H2_stoich = self.current*2.02*self.n_cell/(2*96485)                                                  #consumed(stoich) hydrogen in stack
-        m_N2_diff = (1.2578 + math.log(self.current) - 2.6091)*28.02*300*self.n_cell*(10**(-9))                #diffusion flow of nitrogen in stack
+        m_H2_stoich = self.current*2.02*self.n_cell/(2*96485)                                                  #consumed(stoich) hydrogen in stack; massflow consumed for given current; g/s
+        m_N2_diff = (1.2578 + math.log(self.current) - 2.6091)*28.02*300*self.n_cell*(10**(-9))                #diffusion flow of nitrogen in stack; Voss' magic formula
         m_H2_stack = self.stoich_anode*m_H2_stoich                                                            #hydrogen supply in stack
         m_H2_R = (self.stoich_anode-self.stoich_0)*m_H2_stoich                                                     #hydrogen out from stack = recirculated hydrogen
-        r = m_N2_diff*2.02/(m_H2_stoich*28.02)                                                       #molar rate of stack flows
-        C_H2_in = self.C_H2*(self.stoich_anode*(self.stoich_0-1))/(self.stoich_0*(self.stoich_anode-1)+self.C_H2*(self.stoich_anode-self.stoich_0)*(r-1))   #stack inlet H2 concentration
-        C_H2_out = C_H2_in*(self.stoich_anode - 1)/(self.stoich_anode + C_H2_in*(r-1))                                 #stack outlet H2 concentration
+        r = m_N2_diff*2.02/(m_H2_stoich*28.02)                                                       #molar rate of stack flows ("Stoffmengenverhältnis")
+        C_H2_in = 0.85 #self.C_H2*(self.stoich_anode*(self.stoich_0-1))/(self.stoich_0*(self.stoich_anode-1)+self.C_H2*(self.stoich_anode-self.stoich_0)*(r-1))   #stack inlet H2 concentration
+        C_H2_out = C_H2_in*(self.stoich_anode - 1)/(self.stoich_anode + C_H2_in*(r-1))                                 #stack outlet H2 concentration; 0.6 .. 0.7 (Voss' expecation)
         m_N2_R = (m_H2_R*28.02/2.02) * ((1-C_H2_out)/C_H2_out)                                       #recirculated nitrogen mass flow
-        m_R = m_N2_R + m_H2_R                                                                        #total recirculated mass flow 
+        m_R = m_N2_R + m_H2_R                                                                        #total recirculated mass flow; unit??? kg/s or g/s? Expectation: 15...20 g/s (@450 cells, 600 Amps, 70/30 ratio at stack outlet)
         return m_H2_R, m_N2_R , m_R
 
     
