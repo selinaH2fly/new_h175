@@ -335,6 +335,7 @@ circ.add_bc("T_2 = 273.15 + 60.0")
 circ.add_bc("T_3 = 273.15 + 75.0")
 circ.add_bc("delta_p_stack1 = - 2.0")
 circ.add_bc("delta_p_rad1 = - 1.0")
+circ.add_bc("delta_p_comp1 = - 100.0 * Vdot_4 ** 2")
 circ.add_bc("Qdot_stack1 = 100000.0")
 circ.add_bc("Qdot_comp1 = 5000.0")
 
@@ -342,6 +343,12 @@ circ.add_bc("Qdot_comp1 = 5000.0")
 # Evaluation
 
 circ.get_var()
+
+if len(circ.eq_unsorted) < len(circ.var_name):
+    print("ERROR! Equation system is underdetermined. Set additional boundary conditions.")
+    exit()
+elif len(circ.eq_unsorted) > len(circ.var_name):
+    print("WARNING! Equation system may be overdetermined.")
 
 circ.reduce_var()
 
@@ -362,5 +369,6 @@ else:
     circ.extend_var()
     
     print(solution.message)
+    
     for j in range(len(circ.var_name)):
         print("%20s = %12.3f %s"%(circ.var_name[j], circ.var_res[j], circ.var_unit[j]))
