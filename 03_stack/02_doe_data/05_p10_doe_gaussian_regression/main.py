@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    _step_p = 60
+    _step_p = 30
     _step_c = 50
     _step_fl = 20
     #TODO: range_power is ugly deined atm. due to not starting at 0 and want to have inclusive bounds.... maybe there is a better way?
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     range_fl = np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
     
     # Convert turbine and eol to boolean lists
-    range_turbine = [args.turbine.lower() == "true", args.turbine.lower() == "false"]
+    range_turbine = [True]#[args.turbine.lower() == "true", args.turbine.lower() == "false"]
     range_eol = [args.eol.lower() == "true", args.eol.lower() == "false"]
 
     # Generate all combinations of parameters
@@ -53,10 +53,10 @@ if __name__ == '__main__':
         
         # Build and execute command
         command = build_command(parameter)
-        print('\n',command)
+        print('\n',command, "\n")
         result = subprocess.run(command, capture_output=True, text=True)
         # Print the output and error (if any) from the subprocess call
-        print(result.stdout)
+        print( "\n", result.stdout, "\n")
     print("Done with Optimization")
         
     consolidate_experiment_data(parameters)
