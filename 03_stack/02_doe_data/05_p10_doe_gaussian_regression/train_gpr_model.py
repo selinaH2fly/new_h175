@@ -136,7 +136,7 @@ def train_gpr_model(target='voltage', cutoff_current=0, plot=True, pretrained_mo
     plt.plot(iterations, test_loss_list, label='Validation Loss')    
     plt.xlabel('Iterations')
     plt.ylabel('MLL Loss')
-    # plt.yscale('log')
+    plt.yscale('log')
     plt.legend()
     plt.grid(True, zorder=1)
     plt.title('Loss During Training')

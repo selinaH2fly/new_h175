@@ -3,9 +3,9 @@ import numpy as np
 class Training_Parameters:
 
     def __init__(self):
-        self.iterations = 10e3
+        self.iterations = 20e3
         # self.iterations = 100
-        self.learning_rate = 1e-2
+        self.learning_rate = 5e-3
         # self.split_ratio = 0.8
         # self.seed = 42
         self.seed = None
@@ -19,17 +19,17 @@ class Training_Parameters:
 class Logging_Parameters:
 
     def __init__(self):
-        self.log_interval = 100
+        self.log_interval = 500
         # self.save_interval = 50000
 
 class Optimization_Parameters:
     
     def __init__(self):
         # self.grid_resolution = 100
-        self.bounds = [(50, 2000),       # current_A
-                        (0, 100),       # cathode_rh_in_perc
-                        (1.4, 5),       # stoich_cathode
-                        (1.5, 3),       # pressure_cathode_in_bara
+        self.bounds = [(50, 700),       # current_A
+                        (30, 100),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
+                        (1.6, 5),       # stoich_cathode (lambda_min = 1.6 according to P10 manual)
+                        (1.1, 3.3),     # pressure_cathode_in_bara (p_max = 2.3 barg according to P10 manual)
                         (60, 90),       # temp_coolant_inlet_degC
                         (60, 90)]       # temp_coolant_outlet_degC
         self.seed = None
