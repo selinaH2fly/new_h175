@@ -209,10 +209,6 @@ def plot_polarization_curves_bol_eol(df1, titles,colors, saving=True):
     
 # %% Power Plot Grid, fancy
 
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-import numpy as np
-
 def annotate_boxes(ax, df, cell_width=1, cell_height=2):
     """
     Annotates each cell in the plot with its corresponding value, taking into account the gaps between columns.
@@ -276,16 +272,6 @@ def format_data_for_plot(df, components, eol_col='eol (t/f)', tolerance=0.01):
         # Append to the formatted DataFrame
         formatted_df = pd.concat([formatted_df, df_false, df_true], axis=1)
 
-    # Check if 'Power Constraint (kW)_bol' matches system power values
-    if 'Stack Power (kW)_bol' in formatted_df.columns and 'Stack Power (kW)_eol' in formatted_df.columns:
-        system_bol = formatted_df['System Power (kW)_bol']
-        system_eol = formatted_df['System Power (kW)_eol']
-        power_caint = formatted_df['Power Constraint (kW)_bol']
-
-        # Set NaN where values do not match within the tolerance
-        formatted_df.loc[~((power_caint - power_caint*tolerance <= system_bol) & (system_bol <= power_caint + power_caint*tolerance)), 'Stack Power (kW)_bol'] = np.nan
-        formatted_df.loc[~((power_caint - power_caint*tolerance <= system_eol) & (system_eol <= power_caint + power_caint*tolerance)), 'Stack Power (kW)_eol'] = np.nan
-    
     if 'current_A (Value)_bol' in formatted_df.columns and 'current_A (Value)_eol' in formatted_df.columns:
         current_bol = formatted_df['current_A (Value)_bol']
         current_eol = formatted_df['current_A (Value)_eol']
@@ -297,7 +283,7 @@ def format_data_for_plot(df, components, eol_col='eol (t/f)', tolerance=0.01):
     
     
 # Drop columns that should not be in the final DataFrame
-    drop_columns = ['Power Constraint (kW)_eol','System Power (kW)_bol','System Power (kW)_eol','current_A (Value)_bol','current_A (Value)_eol']
+    drop_columns = ['Power Constraint (kW)_eol','current_A (Value)_bol','current_A (Value)_eol']
     for drop_column in drop_columns:
         if drop_column in formatted_df.columns:
             formatted_df.drop(drop_column, axis=1, inplace=True)
@@ -314,7 +300,6 @@ def plot_power_needs(data, titles, saving=False):
     - saving (bool): If True, saves the plot to a file. Defaults to False.
     """
     components = ["Power Constraint (kW)",
-                  "System Power (kW)",
                   "current_A (Value)",
                   "Compressor Power (kW)",	
                   "Turbine Power (kW)",	
@@ -373,15 +358,15 @@ def plot_power_needs(data, titles, saving=False):
     
         # Adjust labels for the secondary x-axis
         ax2.set_xticklabels([col.replace(' Power (kW)_bol', '').replace(' Power (kW)_eol', '') for col in df.columns[1::2]])
-        ax2.set_xlabel('Components', labelpad=10)
+        #ax2.set_xlabel('Components', labelpad=10)
     
         # Add colorbar
         cbar = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax)
         cbar.set_label('Power (kW)')
     
         # Set the title centered between the colored boxes
-        title = f"Powerconsumption of Components [kW], {title}"
-        ax.set_title(title, pad=20, loc='center')
+        title = f"Power Consumption of Components [kW] {title}"
+        ax.set_title(title, pad=30, loc='center')
     
         # Save or show the plot
         if saving:
@@ -391,6 +376,11 @@ def plot_power_needs(data, titles, saving=False):
 
 # Example usage:
 #plot_power_needs(data, titles, saving=False)
+
+
+
+
+
 
 
 #%%  
