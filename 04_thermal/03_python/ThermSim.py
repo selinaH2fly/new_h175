@@ -2,8 +2,6 @@ import scipy.optimize as sp
 import ast
 import numpy as np
 
-# Definition of classes and functions
-
 class Circuit:
     def __init__(self):
         self.eq_unsorted = []
@@ -21,62 +19,25 @@ class Circuit:
     def add_comp(self, comp):
         self.eq_unsorted.append(comp.set_eq())
 
+        for var in comp.set_var():
+            if var[0] not in self.var_name:
+                self.var_name.append(var[0])
+                self.var_init.append(var[1])
+                self.var_min.append(var[2])
+                self.var_max.append(var[3])
+                self.var_unit.append(var[4])
+
 
     def add_bc(self, bc):
         self.eq_unsorted.append([bc])
-    
 
-    def get_var(self):
+
+    def sort_eq(self):
         self.eq_unsorted = sum(self.eq_unsorted, [])
-        
-        for eq in self.eq_unsorted:
-            start, end = eq.split("=")            
-            eq_parsed = ast.parse("(%s) - (%s)"%(start, end))
-            
-            for var in ast.walk(eq_parsed):
-                if isinstance(var, ast.Name):
-                    self.var_name.append(var.id)
-        
-        self.var_name = sorted(set(self.var_name))
 
-        for var in self.var_name:
-            if var.startswith("p_"):
-                self.var_init.append(1.0)
-                self.var_min.append(0.0)
-                self.var_max.append(np.inf)
-                self.var_unit.append("bar")
-            elif var.startswith("T_"):
-                self.var_init.append(273.15)
-                self.var_min.append(0.0)
-                self.var_max.append(np.inf)
-                self.var_unit.append("K")
-            elif var.startswith("Vdot"):
-                self.var_init.append(1.0)
-                self.var_min.append(0.0)
-                self.var_max.append(np.inf)
-                self.var_unit.append("l/s")
-            elif var.startswith("delta_p"):
-                self.var_init.append(1.0)
-                self.var_min.append(- np.inf)
-                self.var_max.append(np.inf)
-                self.var_unit.append("bar")
-            elif var.startswith("Qdot"):
-                self.var_init.append(10000.0)
-                self.var_min.append(- np.inf)
-                self.var_max.append(np.inf)
-                self.var_unit.append("W")
-            elif var.startswith("nsplit"):
-                self.var_init.append(0.5)
-                self.var_min.append(0.0)
-                self.var_max.append(1.0)
-                self.var_unit.append("")
-            elif var.startswith("nmix"):
-                self.var_init.append(0.5)
-                self.var_min.append(0.0)
-                self.var_max.append(1.0)
-                self.var_unit.append("")
-            else:
-                print("ERROR! Missing definition of initialization for variable.")
+
+    def sort_var(self):
+        self.var_name, self.var_init, self.var_min, self.var_max, self.var_unit = [list(a) for a in zip(*sorted(zip(self.var_name, self.var_init, self.var_min, self.var_max, self.var_unit)))]
     
 
     def reduce_var(self):
@@ -122,7 +83,7 @@ class Circuit:
                     break
     
 
-    def sort_eq(self):
+    def convert_eq(self):
         for eq in self.eq_unsorted:
             start, end = eq.split("=")
             self.eq_sorted.append("(" + start + ") - (" + end + ")")
@@ -132,12 +93,12 @@ class Circuit:
         for i in range(len(self.var_name)):
             globals()[self.var_name[i]] = variables[i]
         
-        self.eq_unsorted_eval = []
+        self.eq_sorted_eval = []
 
         for eq in self.eq_sorted:
-            self.eq_unsorted_eval.append(eval(eq))
+            self.eq_sorted_eval.append(eval(eq))
 
-        return self.eq_unsorted_eval
+        return self.eq_sorted_eval
     
 
     def extend_var(self):
@@ -151,7 +112,39 @@ class Circuit:
                     self.var_unit.append(self.var_unit[j])
                     self.var_res.append(self.var_res[j])
         
-        self.var_name, self.var_init, self.var_min, self.var_max, self.var_unit, self.var_res = zip(*sorted(zip(self.var_name, self.var_init, self.var_min, self.var_max, self.var_unit, self.var_res)))
+        self.var_name, self.var_init, self.var_min, self.var_max, self.var_unit, self.var_res = [list(a) for a in zip(*sorted(zip(self.var_name, self.var_init, self.var_min, self.var_max, self.var_unit, self.var_res)))]
+
+
+    def evaluate(self):
+        self.sort_eq()
+
+        self.sort_var()
+
+        if len(self.eq_unsorted) < len(self.var_name):
+            print("ERROR! Equation system is underdetermined. Set additional boundary conditions.")
+            exit()
+        elif len(self.eq_unsorted) > len(self.var_name):
+            print("WARNING! Equation system may be overdetermined.")
+
+        self.reduce_var()
+
+        self.convert_eq()
+
+        self.solution = sp.least_squares(self.calculate_res, np.array(self.var_init), max_nfev=100000, gtol=1e-10, bounds=(np.array(self.var_min), np.array(self.var_max)))
+
+        if self.solution.success == False:
+            print("ERROR! No convergence could be achieved.")
+            print(self.solution)
+        else:
+            for i in range(len(self.var_name)):
+                self.var_res.append(self.solution.x[i])
+
+            self.extend_var()
+            
+            print(self.solution.message)
+            
+            for j in range(len(self.var_name)):
+                print("%20s = %12.3f %s"%(self.var_name[j], self.var_res[j], self.var_unit[j]))
 
 
 class NodeRenamer(ast.NodeTransformer):
@@ -184,6 +177,46 @@ class Pump:
         self.eq2 = "%s = %s"%(self.T_in, self.T_out)
         self.eq3 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
         return[self.eq1, self.eq2, self.eq3]
+    
+
+    def set_var(self):
+        self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
+        self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
+        self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
+        self.var4 = [self.p_out, 1.0, 0.0, np.inf, "bar"]
+        self.var5 = [self.T_out, 273.15, 0.0, np.inf, "K"]
+        self.var6 = [self.Vdot_out, 1.0, 0.0, np.inf, "l/s"]
+        self.var7 = [self.delta_p, 1.0, 0.0, np.inf, "bar"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7]
+
+
+class Throttle:
+    def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p):
+        self.p_in = p_in
+        self.T_in = T_in
+        self.Vdot_in = Vdot_in
+        self.p_out = p_out
+        self.T_out = T_out
+        self.Vdot_out = Vdot_out
+        self.delta_p = delta_p
+
+
+    def set_eq(self):
+        self.eq1 = "%s = %s - %s"%(self.p_in, self.p_out, self.delta_p)
+        self.eq2 = "%s = %s"%(self.T_in, self.T_out)
+        self.eq3 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
+        return[self.eq1, self.eq2, self.eq3]
+    
+
+    def set_var(self):
+        self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
+        self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
+        self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
+        self.var4 = [self.p_out, 1.0, 0.0, np.inf, "bar"]
+        self.var5 = [self.T_out, 273.15, 0.0, np.inf, "K"]
+        self.var6 = [self.Vdot_out, 1.0, 0.0, np.inf, "l/s"]
+        self.var7 = [self.delta_p, - 1.0, - np.inf, 0.0, "bar"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7]
 
 
 class Heatsource:
@@ -203,6 +236,49 @@ class Heatsource:
         self.eq2 = "%s = %s - %s / (%s * 4180.0)"%(self.T_in, self.T_out, self.Qdot, self.Vdot_in)               #TODO: implement Glysantin properties
         self.eq3 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
         return[self.eq1, self.eq2, self.eq3]
+    
+
+    def set_var(self):
+        self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
+        self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
+        self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
+        self.var4 = [self.p_out, 1.0, 0.0, np.inf, "bar"]
+        self.var5 = [self.T_out, 273.15, 0.0, np.inf, "K"]
+        self.var6 = [self.Vdot_out, 1.0, 0.0, np.inf, "l/s"]
+        self.var7 = [self.delta_p, - 1.0, - np.inf, 0.0, "bar"]
+        self.var8 = [self.Qdot, 10000.0, 0.0, np.inf, "W"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8]
+
+
+class Heatsink:
+    def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p, Qdot):
+        self.p_in = p_in
+        self.T_in = T_in
+        self.Vdot_in = Vdot_in
+        self.p_out = p_out
+        self.T_out = T_out
+        self.Vdot_out = Vdot_out
+        self.delta_p = delta_p
+        self.Qdot = Qdot
+
+
+    def set_eq(self):
+        self.eq1 = "%s = %s - %s"%(self.p_in, self.p_out, self.delta_p)
+        self.eq2 = "%s = %s - %s / (%s * 4180.0)"%(self.T_in, self.T_out, self.Qdot, self.Vdot_in)               #TODO: implement Glysantin properties
+        self.eq3 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
+        return[self.eq1, self.eq2, self.eq3]
+    
+
+    def set_var(self):
+        self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
+        self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
+        self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
+        self.var4 = [self.p_out, 1.0, 0.0, np.inf, "bar"]
+        self.var5 = [self.T_out, 273.15, 0.0, np.inf, "K"]
+        self.var6 = [self.Vdot_out, 1.0, 0.0, np.inf, "l/s"]
+        self.var7 = [self.delta_p, - 1.0, - np.inf, 0.0, "bar"]
+        self.var8 = [self.Qdot, - 10000.0, - np.inf, 0.0, "W"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8]
 
 
 class SplitterPassive1to2:
@@ -229,6 +305,21 @@ class SplitterPassive1to2:
         self.eq6 = "%s = %s / %s"%(self.nsplit_1, self.Vdot_out_1, self.Vdot_in)
         self.eq7 = "%s = %s / %s"%(self.nsplit_2, self.Vdot_out_2, self.Vdot_in)
         return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6, self.eq7]
+    
+
+    def set_var(self):
+        self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
+        self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
+        self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
+        self.var4 = [self.p_out_1, 1.0, 0.0, np.inf, "bar"]
+        self.var5 = [self.T_out_1, 273.15, 0.0, np.inf, "K"]
+        self.var6 = [self.Vdot_out_1, 1.0, 0.0, np.inf, "l/s"]
+        self.var7 = [self.p_out_2, 1.0, 0.0, np.inf, "bar"]
+        self.var8 = [self.T_out_2, 273.15, 0.0, np.inf, "K"]
+        self.var9 = [self.Vdot_out_2, 1.0, 0.0, np.inf, "l/s"]
+        self.var10 = [self.nsplit_1, 0.5, 0.0, 1.0, "-"]
+        self.var11 = [self.nsplit_2, 0.5, 0.0, 1.0, "-"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10, self.var11]
 
 
 class SplitterActive1to2:
@@ -257,6 +348,23 @@ class SplitterActive1to2:
         self.eq6 = "%s = %s / %s"%(self.nsplit_1, self.Vdot_out_1, self.Vdot_in)
         self.eq7 = "%s = %s / %s"%(self.nsplit_2, self.Vdot_out_2, self.Vdot_in)
         return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6, self.eq7]
+    
+
+    def set_var(self):
+        self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
+        self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
+        self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
+        self.var4 = [self.p_out_1, 1.0, 0.0, np.inf, "bar"]
+        self.var5 = [self.T_out_1, 273.15, 0.0, np.inf, "K"]
+        self.var6 = [self.Vdot_out_1, 1.0, 0.0, np.inf, "l/s"]
+        self.var7 = [self.p_out_2, 1.0, 0.0, np.inf, "bar"]
+        self.var8 = [self.T_out_2, 273.15, 0.0, np.inf, "K"]
+        self.var9 = [self.Vdot_out_2, 1.0, 0.0, np.inf, "l/s"]
+        self.var10 = [self.nsplit_1, 0.5, 0.0, 1.0, "-"]
+        self.var11 = [self.nsplit_2, 0.5, 0.0, 1.0, "-"]
+        self.var12 = [self.delta_p_1, - 1.0, - np.inf, 0.0, "bar"]
+        self.var13 = [self.delta_p_2, - 1.0, - np.inf, 0.0, "bar"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10, self.var11, self.var12, self.var13]
 
 
 class MixerPassive2to1:
@@ -282,6 +390,21 @@ class MixerPassive2to1:
         self.eq5 = "%s = %s / %s"%(self.nmix_1, self.Vdot_in_1, self.Vdot_out)
         self.eq6 = "%s = %s / %s"%(self.nmix_2, self.Vdot_in_2, self.Vdot_out)
         return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6]
+    
+
+    def set_var(self):
+        self.var1 = [self.p_in_1, 1.0, 0.0, np.inf, "bar"]
+        self.var2 = [self.T_in_1, 273.15, 0.0, np.inf, "K"]
+        self.var3 = [self.Vdot_in_1, 1.0, 0.0, np.inf, "l/s"]
+        self.var4 = [self.p_in_2, 1.0, 0.0, np.inf, "bar"]
+        self.var5 = [self.T_in_2, 273.15, 0.0, np.inf, "K"]
+        self.var6 = [self.Vdot_in_2, 1.0, 0.0, np.inf, "l/s"]
+        self.var7 = [self.p_out, 1.0, 0.0, np.inf, "bar"]
+        self.var8 = [self.T_out, 273.15, 0.0, np.inf, "K"]
+        self.var9 = [self.Vdot_out, 1.0, 0.0, np.inf, "l/s"]
+        self.var10 = [self.nmix_1, 0.5, 0.0, 1.0, "-"]
+        self.var11 = [self.nmix_2, 0.5, 0.0, 1.0, "-"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10, self.var11]
 
 
 class MixerActive2to1:
@@ -309,66 +432,20 @@ class MixerActive2to1:
         self.eq5 = "%s = %s / %s"%(self.nmix_1, self.Vdot_in_1, self.Vdot_out)
         self.eq6 = "%s = %s / %s"%(self.nmix_2, self.Vdot_in_2, self.Vdot_out)
         return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6]
-
-
-# Input on architecture
-
-circ = Circuit()
-pump1 = Pump("p_7", "T_7", "Vdot_7", "p_1", "T_1", "Vdot_1", "delta_p_pump1")
-circ.add_comp(pump1)
-splitter1 = SplitterPassive1to2("p_1", "T_1", "Vdot_1", "p_2", "T_2", "Vdot_2", "p_4", "T_4", "Vdot_4", "nsplit_1_splitter1", "nsplit_2_splitter1")
-circ.add_comp(splitter1)
-stack1 = Heatsource("p_2", "T_2", "Vdot_2", "p_3", "T_3", "Vdot_3", "delta_p_stack1", "Qdot_stack1")
-circ.add_comp(stack1)
-comp1 = Heatsource("p_4", "T_4", "Vdot_4", "p_5", "T_5", "Vdot_5", "delta_p_comp1", "Qdot_comp1")
-circ.add_comp(comp1)
-mixer1 = MixerPassive2to1("p_3", "T_3", "Vdot_3", "p_5", "T_5", "Vdot_5", "p_6", "T_6", "Vdot_6", "nmix_1_mixer1", "nmix_2_mixer1")
-circ.add_comp(mixer1)
-rad1 = Heatsource("p_6", "T_6", "Vdot_6", "p_7", "T_7", "Vdot_7", "delta_p_rad1", "Qdot_rad1")
-circ.add_comp(rad1)
-
-
-# Input on boundary conditions
-
-circ.add_bc("p_7 = 1.0")
-circ.add_bc("T_2 = 273.15 + 60.0")
-circ.add_bc("T_3 = 273.15 + 75.0")
-circ.add_bc("delta_p_stack1 = - 2.0")
-circ.add_bc("delta_p_rad1 = - 1.0")
-circ.add_bc("delta_p_comp1 = - 100.0 * Vdot_4 ** 2")
-circ.add_bc("Qdot_stack1 = 100000.0")
-circ.add_bc("Qdot_comp1 = 5000.0")
-
-
-# Evaluation
-
-circ.get_var()
-
-if len(circ.eq_unsorted) < len(circ.var_name):
-    print("ERROR! Equation system is underdetermined. Set additional boundary conditions.")
-    exit()
-elif len(circ.eq_unsorted) > len(circ.var_name):
-    print("WARNING! Equation system may be overdetermined.")
-
-circ.reduce_var()
-
-circ.sort_eq()
-
-solution = sp.least_squares(circ.calculate_res, np.array(circ.var_init), max_nfev=100000, gtol=1e-10, bounds=(np.array(circ.var_min), np.array(circ.var_max)))
-
-
-# Output
-
-if solution.success == False:
-    print("ERROR! No convergence could be achieved.")
-    print(solution)
-else:
-    for i in range(len(circ.var_name)):
-        circ.var_res.append(solution.x[i])
-
-    circ.extend_var()
     
-    print(solution.message)
-    
-    for j in range(len(circ.var_name)):
-        print("%20s = %12.3f %s"%(circ.var_name[j], circ.var_res[j], circ.var_unit[j]))
+
+    def set_var(self):
+        self.var1 = [self.p_in_1, 1.0, 0.0, np.inf, "bar"]
+        self.var2 = [self.T_in_1, 273.15, 0.0, np.inf, "K"]
+        self.var3 = [self.Vdot_in_1, 1.0, 0.0, np.inf, "l/s"]
+        self.var4 = [self.p_in_2, 1.0, 0.0, np.inf, "bar"]
+        self.var5 = [self.T_in_2, 273.15, 0.0, np.inf, "K"]
+        self.var6 = [self.Vdot_in_2, 1.0, 0.0, np.inf, "l/s"]
+        self.var7 = [self.p_out, 1.0, 0.0, np.inf, "bar"]
+        self.var8 = [self.T_out, 273.15, 0.0, np.inf, "K"]
+        self.var9 = [self.Vdot_out, 1.0, 0.0, np.inf, "l/s"]
+        self.var10 = [self.nmix_1, 0.5, 0.0, 1.0, "-"]
+        self.var11 = [self.nmix_2, 0.5, 0.0, 1.0, "-"]
+        self.var12 = [self.delta_p_1, - 1.0, - np.inf, 0.0, "bar"]
+        self.var13 = [self.delta_p_2, - 1.0, - np.inf, 0.0, "bar"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10, self.var11, self.var12, self.var13]
