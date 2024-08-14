@@ -1,6 +1,12 @@
+"""
+This script contains a test case serving as a template to set up and conduct a thermal simulation.
+The circuit of this test case consists of a pump, two parallel heatsources connected via passive splitter and mixer, and a heatsink, with adequately defined dummy boundary conditions.
+"""
+
+
 import ThermSim
 
-# Input on architecture
+# Provide input on architecture
 
 circ = ThermSim.Circuit()
 pump1 = ThermSim.Pump("p_7", "T_7", "Vdot_7", "p_1", "T_1", "Vdot_1", "delta_p_pump1")
@@ -17,7 +23,7 @@ rad1 = ThermSim.Heatsink("p_6", "T_6", "Vdot_6", "p_7", "T_7", "Vdot_7", "delta_
 circ.add_comp(rad1)
 
 
-# Input on boundary conditions
+# Provide input on boundary conditions
 
 circ.add_bc("p_7 = 1.0")
 circ.add_bc("T_2 = 273.15 + 60.0")
@@ -29,6 +35,6 @@ circ.add_bc("Qdot_stack1 = 100000.0")
 circ.add_bc("Qdot_comp1 = 5000.0")
 
 
-# Evaluation and output
+# Evaluate and generate output
 
 circ.evaluate()

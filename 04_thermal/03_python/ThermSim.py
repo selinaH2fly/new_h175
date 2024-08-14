@@ -1,8 +1,17 @@
+"""
+This script contains the classes and working functions used for thermal simulations.
+"""
+
+
 import scipy.optimize as sp
 import ast
 import numpy as np
 
 class Circuit:
+    """
+    Set up a closed circuit to evaluate thermal properties across multiple connected components.
+    """
+
     def __init__(self):
         self.eq_unsorted = []
         self.eq_sorted = []
@@ -17,6 +26,13 @@ class Circuit:
     
 
     def add_comp(self, comp):
+        """
+        Add component to circuit.
+        
+        Args:
+        - comp: A previsouly defined component to be added to the circuit.
+        """
+        
         self.eq_unsorted.append(comp.set_eq())
 
         for var in comp.set_var():
@@ -29,18 +45,37 @@ class Circuit:
 
 
     def add_bc(self, bc):
+        """
+        Add boundary condition to definition of circuit.
+
+        Args:
+        - bc: A string describing a boundary condition in the form of an equation describing a correlation of circuit components' variables.
+        """
+        
         self.eq_unsorted.append([bc])
 
 
     def sort_eq(self):
+        """
+        Sort all equations defined for the circuit.
+        """
+        
         self.eq_unsorted = sum(self.eq_unsorted, [])
 
 
     def sort_var(self):
+        """
+        Sort all variables defined for the circuit.
+        """
+        
         self.var_name, self.var_init, self.var_min, self.var_max, self.var_unit = [list(a) for a in zip(*sorted(zip(self.var_name, self.var_init, self.var_min, self.var_max, self.var_unit)))]
     
 
     def reduce_var(self):
+        """
+        Reduce variables defined for the circuit by removing and replacing variables that are kept constant over components or in boundary conditions, leading to a decrease in number of variables and equations for improved convergence.
+        """
+        
         restart = True
 
         while restart == True:
@@ -84,12 +119,26 @@ class Circuit:
     
 
     def convert_eq(self):
+        """
+        Convert all equations defined for the circuit to the format required for the numeric solver.
+        """
+        
         for eq in self.eq_unsorted:
             start, end = eq.split("=")
             self.eq_sorted.append("(" + start + ") - (" + end + ")")
     
 
     def calculate_res(self, variables):
+        """
+        Set up the equation system required for the numeric solver by setting up the variables and evaluating the equation strings.
+
+        Args:
+        - variables: List of (unknown) variables for equation system.
+
+        Returns::
+        - eq_sorted_eval: Equation system to be solved with dependency from variables.
+        """
+        
         for i in range(len(self.var_name)):
             globals()[self.var_name[i]] = variables[i]
         
@@ -102,6 +151,10 @@ class Circuit:
     
 
     def extend_var(self):
+        """
+        Extend variables defined for the circuit by re-integrating previously removed and replaced variables that are kept constant over components or in boundary conditions.
+        """
+        
         for i in range(len(self.var_removal)):
             for j in range(len(self.var_name)):
                 if self.var_name[j] == self.var_replacement[i]:
@@ -116,6 +169,10 @@ class Circuit:
 
 
     def evaluate(self):
+        """
+        Evaluate thermal properties across the circuit by organizing equations and variables, numerically solving equation system and providing output on result.
+        """
+        
         self.sort_eq()
 
         self.sort_var()
@@ -148,6 +205,14 @@ class Circuit:
 
 
 class NodeRenamer(ast.NodeTransformer):
+    """
+    Rename node in AST to replace variable.
+
+    Args:
+    - var1: String of variable name to be replaced.
+    - var2: String of variable name to replace.
+    """
+    
     def __init__(self, var1, var2):
         ast.NodeTransformer.__init__(self)
         self.var1 = var1
@@ -155,6 +220,13 @@ class NodeRenamer(ast.NodeTransformer):
 
 
     def visit_Name(self, node):
+        """
+        Rename node in AST to replace variable.
+
+        Returns:
+        - node: Renamed node in AST.
+        """
+
         if node.id == self.var1:
             node.id = self.var2
 
@@ -162,6 +234,22 @@ class NodeRenamer(ast.NodeTransformer):
 
 
 class Pump:
+    """
+    Set up a component with pump characteristics:
+    - pressure increase
+    - thermal energy flux conservation
+    - mass flow conservation
+
+    Args:
+    - p_in: Name string for input pressure in bar.
+    - T_in: Name string for input temperature in Kelvin.
+    - Vdot_in: Name string for input volume flow in liters per second.
+    - p_out: Name string for output pressure in bar.
+    - T_out: Name string for output temperature in Kelvin.
+    - Vdot_out: Name string for output volume flow in liters per second.
+    - delta_p: Name string for pressure change over component in bar.
+    """
+    
     def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p):
         self.p_in = p_in
         self.T_in = T_in
@@ -173,6 +261,15 @@ class Pump:
 
 
     def set_eq(self):
+        """
+        Set up equations for component.
+
+        Returns:
+        - eq1: Equation for pressure characteristics.
+        - eq2: Equation for thermal energy flux characteristics.
+        - eq3: Equation for mass flow characteristics.
+        """
+        
         self.eq1 = "%s = %s - %s"%(self.p_in, self.p_out, self.delta_p)
         self.eq2 = "%s = %s"%(self.T_in, self.T_out)
         self.eq3 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
@@ -180,6 +277,19 @@ class Pump:
     
 
     def set_var(self):
+        """
+        Set up variables for component.
+        
+        Returns:
+        - var1: Name string, initialization value, minimum, maximum and unit string for input pressure.
+        - var2: Name string, initialization value, minimum, maximum and unit string for input temperature.
+        - var3: Name string, initialization value, minimum, maximum and unit string for input volume flow.
+        - var4: Name string, initialization value, minimum, maximum and unit string for output pressure.
+        - var5: Name string, initialization value, minimum, maximum and unit string for output temperature.
+        - var6: Name string, initialization value, minimum, maximum and unit string for output volume flow.
+        - var7: Name string, initialization value, minimum, maximum and unit string for pressure change over component.
+        """
+        
         self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
         self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
         self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
@@ -191,6 +301,22 @@ class Pump:
 
 
 class Throttle:
+    """
+    Set up a component with throttle characteristics:
+    - pressure decrease
+    - thermal energy flux conservation
+    - mass flow conservation
+
+    Args:
+    - p_in: Name string for input pressure in bar.
+    - T_in: Name string for input temperature in Kelvin.
+    - Vdot_in: Name string for input volume flow in liters per second.
+    - p_out: Name string for output pressure in bar.
+    - T_out: Name string for output temperature in Kelvin.
+    - Vdot_out: Name string for output volume flow in liters per second.
+    - delta_p: Name string for pressure change over component in bar.
+    """
+
     def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p):
         self.p_in = p_in
         self.T_in = T_in
@@ -202,6 +328,15 @@ class Throttle:
 
 
     def set_eq(self):
+        """
+        Set up equations for component.
+
+        Returns:
+        - eq1: Equation for pressure characteristics.
+        - eq2: Equation for thermal energy flux characteristics.
+        - eq3: Equation for mass flow characteristics.
+        """
+
         self.eq1 = "%s = %s - %s"%(self.p_in, self.p_out, self.delta_p)
         self.eq2 = "%s = %s"%(self.T_in, self.T_out)
         self.eq3 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
@@ -209,6 +344,19 @@ class Throttle:
     
 
     def set_var(self):
+        """
+        Set up variables for component.
+        
+        Returns:
+        - var1: Name string, initialization value, minimum, maximum and unit string for input pressure.
+        - var2: Name string, initialization value, minimum, maximum and unit string for input temperature.
+        - var3: Name string, initialization value, minimum, maximum and unit string for input volume flow.
+        - var4: Name string, initialization value, minimum, maximum and unit string for output pressure.
+        - var5: Name string, initialization value, minimum, maximum and unit string for output temperature.
+        - var6: Name string, initialization value, minimum, maximum and unit string for output volume flow.
+        - var7: Name string, initialization value, minimum, maximum and unit string for pressure change over component.
+        """
+
         self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
         self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
         self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
@@ -220,6 +368,23 @@ class Throttle:
 
 
 class Heatsource:
+    """
+    Set up a component with heatsource characteristics:
+    - pressure decrease
+    - thermal energy flux increase
+    - mass flow conservation
+
+    Args:
+    - p_in: Name string for input pressure in bar.
+    - T_in: Name string for input temperature in Kelvin.
+    - Vdot_in: Name string for input volume flow in liters per second.
+    - p_out: Name string for output pressure in bar.
+    - T_out: Name string for output temperature in Kelvin.
+    - Vdot_out: Name string for output volume flow in liters per second.
+    - delta_p: Name string for pressure change over component in bar.
+    - Qdot: Name string for thermal energy flux change over component in Watts.
+    """
+
     def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p, Qdot):
         self.p_in = p_in
         self.T_in = T_in
@@ -232,6 +397,15 @@ class Heatsource:
 
 
     def set_eq(self):
+        """
+        Set up equations for component.
+
+        Returns:
+        - eq1: Equation for pressure characteristics.
+        - eq2: Equation for thermal energy flux characteristics.
+        - eq3: Equation for mass flow characteristics.
+        """
+
         self.eq1 = "%s = %s - %s"%(self.p_in, self.p_out, self.delta_p)
         self.eq2 = "%s = %s - %s / (%s * 4180.0)"%(self.T_in, self.T_out, self.Qdot, self.Vdot_in)               #TODO: implement Glysantin properties
         self.eq3 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
@@ -239,6 +413,20 @@ class Heatsource:
     
 
     def set_var(self):
+        """
+        Set up variables for component.
+        
+        Returns:
+        - var1: Name string, initialization value, minimum, maximum and unit string for input pressure.
+        - var2: Name string, initialization value, minimum, maximum and unit string for input temperature.
+        - var3: Name string, initialization value, minimum, maximum and unit string for input volume flow.
+        - var4: Name string, initialization value, minimum, maximum and unit string for output pressure.
+        - var5: Name string, initialization value, minimum, maximum and unit string for output temperature.
+        - var6: Name string, initialization value, minimum, maximum and unit string for output volume flow.
+        - var7: Name string, initialization value, minimum, maximum and unit string for pressure change over component.
+        - var8: Name string, initialization value, minimum, maximum and unit string for thermal energy flux change over component.
+        """
+
         self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
         self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
         self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
@@ -251,6 +439,23 @@ class Heatsource:
 
 
 class Heatsink:
+    """
+    Set up a component with heatsink characteristics:
+    - pressure decrease
+    - thermal energy flux decrease
+    - mass flow conservation
+
+    Args:
+    - p_in: Name string for input pressure in bar.
+    - T_in: Name string for input temperature in Kelvin.
+    - Vdot_in: Name string for input volume flow in liters per second.
+    - p_out: Name string for output pressure in bar.
+    - T_out: Name string for output temperature in Kelvin.
+    - Vdot_out: Name string for output volume flow in liters per second.
+    - delta_p: Name string for pressure change over component in bar.
+    - Qdot: Name string for thermal energy flux change over component in Watts.
+    """
+
     def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p, Qdot):
         self.p_in = p_in
         self.T_in = T_in
@@ -263,6 +468,15 @@ class Heatsink:
 
 
     def set_eq(self):
+        """
+        Set up equations for component.
+
+        Returns:
+        - eq1: Equation for pressure characteristics.
+        - eq2: Equation for thermal energy flux characteristics.
+        - eq3: Equation for mass flow characteristics.
+        """
+
         self.eq1 = "%s = %s - %s"%(self.p_in, self.p_out, self.delta_p)
         self.eq2 = "%s = %s - %s / (%s * 4180.0)"%(self.T_in, self.T_out, self.Qdot, self.Vdot_in)               #TODO: implement Glysantin properties
         self.eq3 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
@@ -270,6 +484,20 @@ class Heatsink:
     
 
     def set_var(self):
+        """
+        Set up variables for component.
+        
+        Returns:
+        - var1: Name string, initialization value, minimum, maximum and unit string for input pressure.
+        - var2: Name string, initialization value, minimum, maximum and unit string for input temperature.
+        - var3: Name string, initialization value, minimum, maximum and unit string for input volume flow.
+        - var4: Name string, initialization value, minimum, maximum and unit string for output pressure.
+        - var5: Name string, initialization value, minimum, maximum and unit string for output temperature.
+        - var6: Name string, initialization value, minimum, maximum and unit string for output volume flow.
+        - var7: Name string, initialization value, minimum, maximum and unit string for pressure change over component.
+        - var8: Name string, initialization value, minimum, maximum and unit string for thermal energy flux change over component.
+        """
+
         self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
         self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
         self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
@@ -282,6 +510,26 @@ class Heatsink:
 
 
 class SplitterPassive1to2:
+    """
+    Set up a component with splitter characteristics for 1 input and 2 outputs without active control:
+    - pressure conservation
+    - thermal energy flux conservation
+    - mass flow conservation
+
+    Args:
+    - p_in: Name string for input pressure in bar.
+    - T_in: Name string for input temperature in Kelvin.
+    - Vdot_in: Name string for input volume flow in liters per second.
+    - p_out_1: Name string for output 1 pressure in bar.
+    - T_out_1: Name string for output 1 temperature in Kelvin.
+    - Vdot_out_1: Name string for output 1 volume flow in liters per second.
+    - p_out_2: Name string for output 2 pressure in bar.
+    - T_out_2: Name string for output 2 temperature in Kelvin.
+    - Vdot_out_2: Name string for output 2 volume flow in liters per second.
+    - nsplit_1: Name string for splitting ratio of output 1.
+    - nsplit_2: Name string for splitting ratio of output 2.
+    """
+
     def __init__(self, p_in, T_in, Vdot_in, p_out_1, T_out_1, Vdot_out_1, p_out_2, T_out_2, Vdot_out_2, nsplit_1, nsplit_2):
         self.p_in = p_in
         self.T_in = T_in
@@ -297,6 +545,19 @@ class SplitterPassive1to2:
 
 
     def set_eq(self):
+        """
+        Set up equations for component.
+
+        Returns:
+        - eq1: Equation for pressure characteristics between input and output 1.
+        - eq2: Equation for pressure characteristics between input and output 2.
+        - eq3: Equation for thermal energy flux characteristics between input and output 1.
+        - eq4: Equation for thermal energy flux characteristics between input and output 2.
+        - eq5: Equation for mass flow characteristics.
+        - eq6: Equation for splitting ration characteristics of output 1.
+        - eq7: Equation for splitting ration characteristics of output 2.
+        """
+
         self.eq1 = "%s = %s"%(self.p_in, self.p_out_1)
         self.eq2 = "%s = %s"%(self.p_in, self.p_out_2)
         self.eq3 = "%s = %s"%(self.T_in, self.T_out_1)
@@ -308,6 +569,23 @@ class SplitterPassive1to2:
     
 
     def set_var(self):
+        """
+        Set up variables for component.
+        
+        Returns:
+        - var1: Name string, initialization value, minimum, maximum and unit string for input pressure.
+        - var2: Name string, initialization value, minimum, maximum and unit string for input temperature.
+        - var3: Name string, initialization value, minimum, maximum and unit string for input volume flow.
+        - var4: Name string, initialization value, minimum, maximum and unit string for output 1 pressure.
+        - var5: Name string, initialization value, minimum, maximum and unit string for output 1 temperature.
+        - var6: Name string, initialization value, minimum, maximum and unit string for output 1 volume flow.
+        - var7: Name string, initialization value, minimum, maximum and unit string for output 2 pressure.
+        - var8: Name string, initialization value, minimum, maximum and unit string for output 2 temperature.
+        - var9: Name string, initialization value, minimum, maximum and unit string for output 2 volume flow.
+        - var10: Name string, initialization value, minimum, maximum and unit string for output 1 splitting ratio.
+        - var11: Name string, initialization value, minimum, maximum and unit string for output 2 splitting ratio.
+        """
+
         self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
         self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
         self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
@@ -323,6 +601,28 @@ class SplitterPassive1to2:
 
 
 class SplitterActive1to2:
+    """
+    Set up a component with splitter characteristics for 1 input and 2 outputs with active control:
+    - pressure decrease (individually for both outputs)
+    - thermal energy flux conservation
+    - mass flow conservation
+
+    Args:
+    - p_in: Name string for input pressure in bar.
+    - T_in: Name string for input temperature in Kelvin.
+    - Vdot_in: Name string for input volume flow in liters per second.
+    - p_out_1: Name string for output 1 pressure in bar.
+    - T_out_1: Name string for output 1 temperature in Kelvin.
+    - Vdot_out_1: Name string for output 1 volume flow in liters per second.
+    - p_out_2: Name string for output 2 pressure in bar.
+    - T_out_2: Name string for output 2 temperature in Kelvin.
+    - Vdot_out_2: Name string for output 2 volume flow in liters per second.
+    - nsplit_1: Name string for splitting ratio of output 1.
+    - nsplit_2: Name string for splitting ratio of output 2.
+    - delta_p_1: Name string for pressure change over component of output 1 in bar.
+    - delta_p_2: Name string for pressure change over component of output 2 in bar.
+    """
+
     def __init__(self, p_in, T_in, Vdot_in, p_out_1, T_out_1, Vdot_out_1, p_out_2, T_out_2, Vdot_out_2, nsplit_1, nsplit_2, delta_p_1, delta_p_2):
         self.p_in = p_in
         self.T_in = T_in
@@ -340,6 +640,19 @@ class SplitterActive1to2:
 
 
     def set_eq(self):
+        """
+        Set up equations for component.
+
+        Returns:
+        - eq1: Equation for pressure characteristics between input and output 1.
+        - eq2: Equation for pressure characteristics between input and output 2.
+        - eq3: Equation for thermal energy flux characteristics between input and output 1.
+        - eq4: Equation for thermal energy flux characteristics between input and output 2.
+        - eq5: Equation for mass flow characteristics.
+        - eq6: Equation for splitting ration characteristics of output 1.
+        - eq7: Equation for splitting ration characteristics of output 2.
+        """
+
         self.eq1 = "%s = %s - %s"%(self.p_in, self.p_out_1, self.delta_p_1)
         self.eq2 = "%s = %s - %s"%(self.p_in, self.p_out_2, self.delta_p_2)
         self.eq3 = "%s = %s"%(self.T_in, self.T_out_1)
@@ -351,6 +664,25 @@ class SplitterActive1to2:
     
 
     def set_var(self):
+        """
+        Set up variables for component.
+        
+        Returns:
+        - var1: Name string, initialization value, minimum, maximum and unit string for input pressure.
+        - var2: Name string, initialization value, minimum, maximum and unit string for input temperature.
+        - var3: Name string, initialization value, minimum, maximum and unit string for input volume flow.
+        - var4: Name string, initialization value, minimum, maximum and unit string for output 1 pressure.
+        - var5: Name string, initialization value, minimum, maximum and unit string for output 1 temperature.
+        - var6: Name string, initialization value, minimum, maximum and unit string for output 1 volume flow.
+        - var7: Name string, initialization value, minimum, maximum and unit string for output 2 pressure.
+        - var8: Name string, initialization value, minimum, maximum and unit string for output 2 temperature.
+        - var9: Name string, initialization value, minimum, maximum and unit string for output 2 volume flow.
+        - var10: Name string, initialization value, minimum, maximum and unit string for output 1 splitting ratio.
+        - var11: Name string, initialization value, minimum, maximum and unit string for output 2 splitting ratio.
+        - var12: Name string, initialization value, minimum, maximum and unit string for pressure change over component of output 1.
+        - var13: Name string, initialization value, minimum, maximum and unit string for pressure change over component of output 2.
+        """
+
         self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
         self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
         self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
@@ -368,6 +700,26 @@ class SplitterActive1to2:
 
 
 class MixerPassive2to1:
+    """
+    Set up a component with mixer characteristics for 2 inputs and 1 output without active control:
+    - pressure conservation
+    - thermal energy flux conservation
+    - mass flow conservation
+
+    Args:
+    - p_in_1: Name string for input 1 pressure in bar.
+    - T_in_1: Name string for input 1 temperature in Kelvin.
+    - Vdot_in_1: Name string for input 1 volume flow in liters per second.
+    - p_in_2: Name string for input 2 pressure in bar.
+    - T_in_2: Name string for input 2 temperature in Kelvin.
+    - Vdot_in_2: Name string for input 2 volume flow in liters per second.
+    - p_out: Name string for output pressure in bar.
+    - T_out: Name string for output temperature in Kelvin.
+    - Vdot_out: Name string for output volume flow in liters per second.
+    - nmix_1: Name string for mixing ratio of input 1.
+    - nmix_2: Name string for mixing ratio of input 2.
+    """
+
     def __init__(self, p_in_1, T_in_1, Vdot_in_1, p_in_2, T_in_2, Vdot_in_2, p_out, T_out, Vdot_out, nmix_1, nmix_2):
         self.p_in_1 = p_in_1
         self.T_in_1 = T_in_1
@@ -383,6 +735,19 @@ class MixerPassive2to1:
 
 
     def set_eq(self):
+        """
+        Set up equations for component.
+
+        Returns:
+        - eq1: Equation for pressure characteristics between input 1 and output.
+        - eq2: Equation for pressure characteristics between input 2 and output.
+        - eq3: Equation for thermal energy flux characteristics between input 1 and output.
+        - eq4: Equation for thermal energy flux characteristics between input 2 and output.
+        - eq5: Equation for mass flow characteristics.
+        - eq6: Equation for mixing ration characteristics of input 1.
+        - eq7: Equation for mixing ration characteristics of input 2.
+        """
+
         self.eq1 = "%s = %s"%(self.p_in_1, self.p_out)
         self.eq2 = "%s = %s"%(self.p_in_2, self.p_out)
         self.eq3 = "%s * %s + %s * %s = %s * %s"%(self.T_in_1, self.Vdot_in_1, self.T_in_2, self.Vdot_in_2, self.T_out, self.Vdot_out)
@@ -393,6 +758,23 @@ class MixerPassive2to1:
     
 
     def set_var(self):
+        """
+        Set up variables for component.
+        
+        Returns:
+        - var1: Name string, initialization value, minimum, maximum and unit string for input 1 pressure.
+        - var2: Name string, initialization value, minimum, maximum and unit string for input 1 temperature.
+        - var3: Name string, initialization value, minimum, maximum and unit string for input 1 volume flow.
+        - var4: Name string, initialization value, minimum, maximum and unit string for input 2 pressure.
+        - var5: Name string, initialization value, minimum, maximum and unit string for input 2 temperature.
+        - var6: Name string, initialization value, minimum, maximum and unit string for input 2 volume flow.
+        - var7: Name string, initialization value, minimum, maximum and unit string for output pressure.
+        - var8: Name string, initialization value, minimum, maximum and unit string for output temperature.
+        - var9: Name string, initialization value, minimum, maximum and unit string for output volume flow.
+        - var10: Name string, initialization value, minimum, maximum and unit string for input 1 mixing ratio.
+        - var11: Name string, initialization value, minimum, maximum and unit string for input 2 mixing ratio.
+        """
+
         self.var1 = [self.p_in_1, 1.0, 0.0, np.inf, "bar"]
         self.var2 = [self.T_in_1, 273.15, 0.0, np.inf, "K"]
         self.var3 = [self.Vdot_in_1, 1.0, 0.0, np.inf, "l/s"]
@@ -408,6 +790,28 @@ class MixerPassive2to1:
 
 
 class MixerActive2to1:
+    """
+    Set up a component with mixer characteristics for 2 inputs and 1 output with active control:
+    - pressure decrease (individually for both inputs)
+    - thermal energy flux conservation
+    - mass flow conservation
+
+    Args:
+    - p_in_1: Name string for input 1 pressure in bar.
+    - T_in_1: Name string for input 1 temperature in Kelvin.
+    - Vdot_in_1: Name string for input 1 volume flow in liters per second.
+    - p_in_2: Name string for input 2 pressure in bar.
+    - T_in_2: Name string for input 2 temperature in Kelvin.
+    - Vdot_in_2: Name string for input 2 volume flow in liters per second.
+    - p_out: Name string for output pressure in bar.
+    - T_out: Name string for output temperature in Kelvin.
+    - Vdot_out: Name string for output volume flow in liters per second.
+    - nmix_1: Name string for mixing ratio of input 1.
+    - nmix_2: Name string for mixing ratio of input 2.
+    - delta_p_1: Name string for pressure change over component of input 1 in bar.
+    - delta_p_2: Name string for pressure change over component of input 2 in bar.
+    """
+
     def __init__(self, p_in_1, T_in_1, Vdot_in_1, p_in_2, T_in_2, Vdot_in_2, p_out, T_out, Vdot_out, nmix_1, nmix_2, delta_p_1, delta_p_2):
         self.p_in_1 = p_in_1
         self.T_in_1 = T_in_1
@@ -425,6 +829,19 @@ class MixerActive2to1:
 
 
     def set_eq(self):
+        """
+        Set up equations for component.
+
+        Returns:
+        - eq1: Equation for pressure characteristics between input 1 and output.
+        - eq2: Equation for pressure characteristics between input 2 and output.
+        - eq3: Equation for thermal energy flux characteristics between input 1 and output.
+        - eq4: Equation for thermal energy flux characteristics between input 2 and output.
+        - eq5: Equation for mass flow characteristics.
+        - eq6: Equation for mixing ration characteristics of input 1.
+        - eq7: Equation for mixing ration characteristics of input 2.
+        """
+
         self.eq1 = "%s = %s - %s"%(self.p_in_1, self.p_out, self.delta_p_1)
         self.eq2 = "%s = %s - %s"%(self.p_in_2, self.p_out, self.delta_p_2)
         self.eq3 = "%s * %s + %s * %s = %s * %s"%(self.T_in_1, self.Vdot_in_1, self.T_in_2, self.Vdot_in_2, self.T_out, self.Vdot_out)
@@ -435,6 +852,25 @@ class MixerActive2to1:
     
 
     def set_var(self):
+        """
+        Set up variables for component.
+        
+        Returns:
+        - var1: Name string, initialization value, minimum, maximum and unit string for input 1 pressure.
+        - var2: Name string, initialization value, minimum, maximum and unit string for input 1 temperature.
+        - var3: Name string, initialization value, minimum, maximum and unit string for input 1 volume flow.
+        - var4: Name string, initialization value, minimum, maximum and unit string for input 2 pressure.
+        - var5: Name string, initialization value, minimum, maximum and unit string for input 2 temperature.
+        - var6: Name string, initialization value, minimum, maximum and unit string for input 2 volume flow.
+        - var7: Name string, initialization value, minimum, maximum and unit string for output pressure.
+        - var8: Name string, initialization value, minimum, maximum and unit string for output temperature.
+        - var9: Name string, initialization value, minimum, maximum and unit string for output volume flow.
+        - var10: Name string, initialization value, minimum, maximum and unit string for input 1 mixing ratio.
+        - var11: Name string, initialization value, minimum, maximum and unit string for input 2 mixing ratio.
+        - var12: Name string, initialization value, minimum, maximum and unit string for pressure change over component of input 1.
+        - var13: Name string, initialization value, minimum, maximum and unit string for pressure change over component of input 2.
+        """
+
         self.var1 = [self.p_in_1, 1.0, 0.0, np.inf, "bar"]
         self.var2 = [self.T_in_1, 273.15, 0.0, np.inf, "K"]
         self.var3 = [self.Vdot_in_1, 1.0, 0.0, np.inf, "l/s"]
