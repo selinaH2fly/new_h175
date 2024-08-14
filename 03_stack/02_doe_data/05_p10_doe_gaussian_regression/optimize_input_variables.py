@@ -24,7 +24,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
         np.random.seed(_params_optimization.seed)
         torch.manual_seed(_params_optimization.seed)
 
-    print(f"\nOptimization Stack Power Constraint: {power_constraint_kW:.0f} kW")
+    print(f"\nOptimization System (Net) Power Constraint: {power_constraint_kW:.0f} kW")
     print(f"Specified Flight Level: {flight_level_100ft} (100x ft)")
     print(f"Specified Cell Count: {specified_cell_count}")
     
@@ -55,35 +55,19 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     print(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  Hydrogen Consumption: {hydrogen_mass_flow_g_s:.4f} g/s\n")
     print(f"Cell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {cell_voltage:.4f} V\n")
 
+    # Print the resultant power numbers
+    label_width = 45
+    value_width = 10
     print("Resultant Power Numbers:")
-    print(f"  System (Net) Power (s.t. Optimization): {system_power_kW:.2f} kW")
-    print(f"  Compressor Power Estimate (at Fligh-Level {flight_level_100ft}): {compressor_power_kW:.2f} kW")
-    print(f"  Turbine Power Estimate (at Fligh-Level {flight_level_100ft}): {turbine_power_kW:.2f} kW")
-    print(f"  Recirculation Pump Power Estimate: {reci_pump_power_kW:.2f} kW")
-    print(f"  Coolant Pump Power Estimate: {coolant_pump_power_kW:.2f} kW")
-    print(f"  Stack (Gross) Power Estimate: {stack_power_kW:.2f} kW")
-
-    # Save the optimal input, target variables, and bounds to a file
-    with open(f'optimized_input_for_{int(power_constraint_kW)}kW_with_{int(specified_cell_count)}_cells.txt', 'w') as file:
-        file.write(f"Stack Power Constraint: {power_constraint_kW:.0f} kW\n")
-        file.write(f"Specified Flight Level: {flight_level_100ft} (100x ft)")
-        file.write(f"Specified Cell Count: {specified_cell_count}\n")
-
-        file.write("\nOptimized Variables:\n")
-        for name, value, bound in zip(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds):
-            file.write(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])\n")
-            file.write(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  Hydrogen Consumption: {hydrogen_mass_flow_g_s:.4f} g/s\n")
-
-        file.write("Resultant Power Numbers:")
-        file.write(f"  System (Net) Power (s.t. Optimization): {system_power_kW:.2f} kW")
-        file.write(f"  Compressor Power Estimate (at Fligh-Level {flight_level_100ft}): {compressor_power_kW:.2f} kW")
-        file.write(f"  Turbine Power Estimate (at Fligh-Level {flight_level_100ft}): {turbine_power_kW:.2f} kW")
-        file.write(f"  Recirculation Pump Power Estimate: {reci_pump_power_kW:.2f} kW")
-        file.write(f"  Coolant Pump Power Estimate: {coolant_pump_power_kW:.2f} kW")
-        file.write(f"  Stack (Gross) Power Estimate: {stack_power_kW:.2f} kW")
+    print(f"  {'Stack (Gross) Power Estimate:':<{label_width}}  {stack_power_kW:>{value_width}.2f} kW")
+    print(f"  {'Compressor Power Estimate (at FL ' + str(flight_level_100ft) + '):':<{label_width}} -{compressor_power_kW:>{value_width}.2f} kW")
+    print(f"  {'Turbine Power Estimate (at FL ' + str(flight_level_100ft) + '):':<{label_width}} +{turbine_power_kW:>{value_width}.2f} kW")
+    print(f"  {'Recirculation Pump Power Estimate:':<{label_width}} -{reci_pump_power_kW:>{value_width}.2f} kW")
+    print(f"  {'Coolant Pump Power Estimate:':<{label_width}} -{coolant_pump_power_kW:>{value_width}.2f} kW")
+    print("-" * (label_width + value_width + 7))
+    print(f"  {'System (Net) Power (s.t. Optimization):':<{label_width}} ={system_power_kW:>{value_width}.2f} kW")
     
-    #_file_path = os.path.join(os.getcwd(), "resulting_data")
-    #save_results_to_excel(_file_path, feature_names, optimal_input, bounds, hydrogen_mass_flow_g_s, cell_voltage, system_power_kW, compressor_power_kW, stack_power_kW, power_constraint_kW, specified_cell_count, flight_level_100ft)
+    # Save results to a .csv file 
     export_to_csv(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds, hydrogen_mass_flow_g_s, cell_voltage, 
                       system_power_kW, compressor_power_kW, turbine_power_kW, reci_pump_power_kW, coolant_pump_power_kW, stack_power_kW,
                       power_constraint_kW, specified_cell_count, flight_level_100ft, consider_turbine, end_of_life, filename='optimized_input_data.csv')
@@ -92,8 +76,8 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
 if __name__ == '__main__':
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Optimize input variables using a trained Gaussian process regression model")
-    parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=75.0)
-    parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=275)
+    parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=150.0)
+    parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=455)
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=120)
     parser.add_argument("-t", "--turbine", type=str, choices=["True", "False"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
     parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
