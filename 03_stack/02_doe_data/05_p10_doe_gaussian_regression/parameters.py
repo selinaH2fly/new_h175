@@ -25,7 +25,9 @@ class Logging_Parameters:
 class Optimization_Parameters:
     
     def __init__(self):
-        # self.grid_resolution = 100
+        '''TODO: Steffen P. suggests to evaluate the bounds during runtime depending on the current operating point according to the DoE data
+        to prevent extrapolation. This is a good idea, but requires a bit more effort. Idea: Make it a constraint in the optimization problem.
+        '''
         self.bounds = [(50, 700),       # current_A
                         (30, 100),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
                         (1.6, 5),       # stoich_cathode (lambda_min = 1.6 according to P10 manual)
@@ -66,21 +68,21 @@ class Turbine_Parameters:
 
     def __init__(self):
 
-        self.isentropic_efficiency = 0.85
+        self.isentropic_efficiency = 0.75
 
 class Recirculation_Pump_Parameters:
     
     def __init__(self):
 
         self.isentropic_efficiency = 0.75
-        self.pump_efficiency = 0.75
+        self.electric_efficiency = 0.95
 
 class Coolant_Pump_Parameters:
 
     def __init__(self):
 
         self.isentropic_efficiency = 0.75
-        self.electrical_efficiency = 0.95
+        self.electric_efficiency = 0.95
 
 class Radiator_Parameters:
 
