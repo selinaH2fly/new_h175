@@ -6,8 +6,9 @@ import json
 import numpy as np
 import itertools
 from collect_data import consolidate_experiment_data
-#testing:
+from get_plots import analyze_data
 from tqdm import tqdm
+
 
 def build_command(parameter):
     command = [
@@ -59,4 +60,5 @@ if __name__ == '__main__':
         print( "\n", result.stdout, "\n")
     print("Done with Optimization")
         
-    consolidate_experiment_data(parameters)
+    path_to_data = consolidate_experiment_data(parameters)
+    analyze_data(_file_path1=path_to_data, saving=True)
