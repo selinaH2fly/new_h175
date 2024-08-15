@@ -43,6 +43,7 @@ class Physical_Parameters:
         self.hydrogen_lhv_voltage_equivalent = 1.253
         self.hydrogen_hhv_voltage_equivalent = 1.481
         self.hydrogen_molar_mass = 2.016 * 1e-3         # kg/mol
+        self.nitrogen_molar_mass = 28.0134 * 1e-3       # kg/mol
         self.faraday = 96485                            # C/mol
 
         self.sea_level_ambient_pressure_bar = 1.01325

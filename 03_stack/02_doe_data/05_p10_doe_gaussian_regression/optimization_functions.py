@@ -162,7 +162,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                                                       optimized_temp_coolant_inlet_degC, optimized_temp_coolant_outlet_degC,
                                                       flight_level_100ft=flight_level_100ft, cellcount=cellcount)
         
-        # TODO: Move to coolant pump class!?!
         coolant_pump.coolant_flow_m3_s = coolant_flow_rate_m3_s
         coolant_flow_rate_l_min = coolant_flow_rate_m3_s * 60 * 1000
         stack_pressure_drop_mbar = 6.5e-3*(coolant_flow_rate_l_min ** 2)  + 0.477*coolant_flow_rate_l_min  # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
