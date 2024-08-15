@@ -436,7 +436,7 @@ def H2_consumption_vs_FL(df1, markers, saving=True, mode="eol"):
         plt.show()
 
 #PLOT: Weiht estmate wuth fit:
-def plot_weight_estimate(data, titles, colors, components_dict, markers, saving=True, mode="bol"):
+def plot_weight_estimate(data, titles, colors, components_dict, components_sd_dict, markers, saving=True, mode="bol"):
     
     # Function to perform linear regression and return the formula and R^2
     def linear_fit(x, y):
@@ -464,11 +464,11 @@ def plot_weight_estimate(data, titles, colors, components_dict, markers, saving=
     n_values = np.array([400, 450, 500])
     
     # Calculate m_stack using the formula
-    m_stack_values = 0.0766 * n_values + 9.2813
+    m_stack_values = 0.0766 * n_values + 9.2813  # Equation for PC
     
     # Set up the figure and axis
     fig, ax = plt.subplots(figsize=(10, 8))
-     
+    
     # Create lists to store legend handles and labels
     handles = []
     labels = []
@@ -478,23 +478,33 @@ def plot_weight_estimate(data, titles, colors, components_dict, markers, saving=
         # Filter the df for eol or bol
         df = df[df["eol (t/f)"] == filter_mode]
         system_weights_of_points = []
+        system_errors_of_points = []
         for point in points:
             closest_row = df.iloc[(df["System Power (kW)"] - point).abs().argmin()]
-            total_weight = sum(closest_row[key] * value for key, value in components_dict.items()) + m_stack_value
+            total_weight = 0
+            total_error_squared = 0
+            for key, mean_value in components_dict.items():
+                power_value = closest_row[key]
+                error_value = components_sd_dict[key] * power_value
+                component_weight = power_value * mean_value
+                total_weight += component_weight
+                total_error_squared += (error_value ** 2)
+            total_weight += m_stack_value
+            total_error = np.sqrt(total_error_squared)
+            
             system_weights_of_points.append(total_weight)
+            system_errors_of_points.append(total_error)
         
-        scatter_handle = ax.scatter(points, system_weights_of_points, color=color, marker=marker, label=f'{title} System weight estimate')
-        handles.append(scatter_handle)
-        labels.append(f'{title} System weight estimate')
+        ax.errorbar(points, system_weights_of_points, yerr=system_errors_of_points, fmt=marker, color=color, label=f'{title} System weight estimate',capsize=5)  # Add horizontal lines (caps) to the error bars
         
         # Performing linear regression for each dataset
         slope_, intercept_, r2_, y_pred_ = linear_fit(points, system_weights_of_points)
         
         # Plotting the fitted line with a label for the equation
-        line_handle, = ax.plot(points, y_pred_, linestyle='--', color=color, label=f'{title} fit: y={slope_:.2f}x+{intercept_:.2f}')
-        handles.append(line_handle)
+        ax.plot(points, y_pred_, linestyle='--', color=color, label=f'{title} fit: y={slope_:.2f}x+{intercept_:.2f}')
+
         labels.append(f'{title} fit: y={slope_:.2f}x+{intercept_:.2f}')
-        
+    
     # Adding a text box with the components included
     components_text = "Components Included:\n" + "\n".join(key.replace("Power (kW)", "") for key in components_dict.keys())
     ax.text(0.05, 0.95, components_text, transform=ax.transAxes, fontsize=10,
@@ -576,13 +586,17 @@ def analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-120ft__1\optimize
 
     ############Plot Weight estimate
     #Weight/Power Factor
-    components_dict =  {"Compressor Power (kW)":   0.63,
+    componentsP_dict =  {"Compressor Power (kW)":   0.63,
                         "Turbine Power (kW)":      0.63,
-                        "Recirculation Pump Power (kW)":    17.67,
+                        "Recirculation Pump Power (kW)":    7.38,
                         "Coolant Pump Power (kW)": 4.80}
+    components_SD_dict = {"Compressor Power (kW)":   0.1,
+                        "Turbine Power (kW)":      0.1,
+                        "Recirculation Pump Power (kW)":    4.04,
+                        "Coolant Pump Power (kW)": 1.66}
     
-    plot_weight_estimate(data, titles, colors, components_dict, markers, saving=True, mode="bol")
-    plot_weight_estimate(data, titles, colors, components_dict, markers, saving=True, mode="eol")
+    plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=True, mode="bol")
+    plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=True, mode="eol")
 # Go back to origin dir
     os.chdir("../../")
 # %%    
