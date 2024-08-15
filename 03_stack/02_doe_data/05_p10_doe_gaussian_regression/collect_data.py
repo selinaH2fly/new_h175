@@ -82,3 +82,5 @@ def consolidate_experiment_data(parameters):
         print(f"Consolidated CSV created at {consolidated_csv_path}")
     else:
         print("No CSV files found to consolidate.")
+        
+    return consolidated_csv_path
