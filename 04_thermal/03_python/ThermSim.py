@@ -6,6 +6,7 @@ This script contains the classes and working functions used for thermal simulati
 import scipy.optimize as sp
 import ast
 import numpy as np
+import CoolProp.CoolProp as cp
 
 class Circuit:
     """
@@ -177,17 +178,17 @@ class Circuit:
 
         self.sort_var()
 
-        if len(self.eq_unsorted) < len(self.var_name):
-            print("ERROR! Equation system is underdetermined. Set additional boundary conditions.")
-            exit()
-        elif len(self.eq_unsorted) > len(self.var_name):
-            print("WARNING! Equation system may be overdetermined.")
-
         self.reduce_var()
 
         self.convert_eq()
 
-        self.solution = sp.least_squares(self.calculate_res, np.array(self.var_init), max_nfev=100000, gtol=1e-10, bounds=(np.array(self.var_min), np.array(self.var_max)))
+        if len(self.eq_sorted) < len(self.var_name):
+            print("ERROR! Equation system is underdetermined. Set additional boundary conditions.")
+            exit()
+        elif len(self.eq_sorted) > len(self.var_name):
+            print("WARNING! Equation system may be overdetermined.")
+
+        self.solution = sp.least_squares(self.calculate_res, np.array(self.var_init), max_nfev=100000, gtol=1e-10, xtol=1e-12, bounds=(np.array(self.var_min), np.array(self.var_max)))
 
         if self.solution.success == False:
             print("ERROR! No convergence could be achieved.")
@@ -383,9 +384,11 @@ class Heatsource:
     - Vdot_out: Name string for output volume flow in liters per second.
     - delta_p: Name string for pressure change over component in bar.
     - Qdot: Name string for thermal energy flux change over component in Watts.
+    - c_p_in: Name string for specific heat capacity of coolant at input in Joule per kilogram and Kelvin.
+    - c_p_out: Name string for specific heat capacity of coolant at output in Joule per kilogram and Kelvin.
     """
 
-    def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p, Qdot):
+    def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p, Qdot, c_p_in, c_p_out):
         self.p_in = p_in
         self.T_in = T_in
         self.Vdot_in = Vdot_in
@@ -394,6 +397,8 @@ class Heatsource:
         self.Vdot_out = Vdot_out
         self.delta_p = delta_p
         self.Qdot = Qdot
+        self.c_p_in = c_p_in
+        self.c_p_out = c_p_out
 
 
     def set_eq(self):
@@ -404,12 +409,16 @@ class Heatsource:
         - eq1: Equation for pressure characteristics.
         - eq2: Equation for thermal energy flux characteristics.
         - eq3: Equation for mass flow characteristics.
+        - eq4: Equation for specific heat capacity of coolant at input.
+        - eq5: Equation for specific heat capacity of coolant at output.
         """
 
         self.eq1 = "%s = %s - %s"%(self.p_in, self.p_out, self.delta_p)
-        self.eq2 = "%s = %s - %s / (%s * 4180.0)"%(self.T_in, self.T_out, self.Qdot, self.Vdot_in)               #TODO: implement Glysantin properties
+        self.eq2 = "%s = %s * %s / %s - %s / (%s * %s)"%(self.T_in, self.T_out, self.c_p_out, self.c_p_in, self.Qdot, self.Vdot_in, self.c_p_in)
         self.eq3 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
-        return[self.eq1, self.eq2, self.eq3]
+        self.eq4 = "%s = cp.PropsSI('C', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.c_p_in, self.T_in, self.p_in)
+        self.eq5 = "%s = cp.PropsSI('C', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.c_p_out, self.T_out, self.p_out)
+        return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5]
     
 
     def set_var(self):
@@ -425,6 +434,8 @@ class Heatsource:
         - var6: Name string, initialization value, minimum, maximum and unit string for output volume flow.
         - var7: Name string, initialization value, minimum, maximum and unit string for pressure change over component.
         - var8: Name string, initialization value, minimum, maximum and unit string for thermal energy flux change over component.
+        - var9: Name string, initialization value, minimum, maximum and unit string for specific heat capacity of coolant at input.
+        - var10: Name string, initialization value, minimum, maximum and unit string for specific heat capacity of coolant at output.
         """
 
         self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
@@ -435,7 +446,9 @@ class Heatsource:
         self.var6 = [self.Vdot_out, 1.0, 0.0, np.inf, "l/s"]
         self.var7 = [self.delta_p, - 1.0, - np.inf, 0.0, "bar"]
         self.var8 = [self.Qdot, 10000.0, 0.0, np.inf, "W"]
-        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8]
+        self.var9 = [self.c_p_in, 3500.0, 3300.0, 3600.0, "J/(kg*K)"]
+        self.var10 = [self.c_p_out, 3500.0, 3300.0, 3600.0, "J/(kg*K)"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10]
 
 
 class Heatsink:
@@ -454,9 +467,11 @@ class Heatsink:
     - Vdot_out: Name string for output volume flow in liters per second.
     - delta_p: Name string for pressure change over component in bar.
     - Qdot: Name string for thermal energy flux change over component in Watts.
+    - c_p_in: Name string for specific heat capacity of coolant at input in Joule per kilogram and Kelvin.
+    - c_p_out: Name string for specific heat capacity of coolant at output in Joule per kilogram and Kelvin.
     """
 
-    def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p, Qdot):
+    def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p, Qdot, c_p_in, c_p_out):
         self.p_in = p_in
         self.T_in = T_in
         self.Vdot_in = Vdot_in
@@ -465,6 +480,8 @@ class Heatsink:
         self.Vdot_out = Vdot_out
         self.delta_p = delta_p
         self.Qdot = Qdot
+        self.c_p_in = c_p_in
+        self.c_p_out = c_p_out
 
 
     def set_eq(self):
@@ -475,12 +492,16 @@ class Heatsink:
         - eq1: Equation for pressure characteristics.
         - eq2: Equation for thermal energy flux characteristics.
         - eq3: Equation for mass flow characteristics.
+        - eq4: Equation for specific heat capacity of coolant at input.
+        - eq5: Equation for specific heat capacity of coolant at output.
         """
 
         self.eq1 = "%s = %s - %s"%(self.p_in, self.p_out, self.delta_p)
-        self.eq2 = "%s = %s - %s / (%s * 4180.0)"%(self.T_in, self.T_out, self.Qdot, self.Vdot_in)               #TODO: implement Glysantin properties
+        self.eq2 = "%s = %s * %s / %s - %s / (%s * %s)"%(self.T_in, self.T_out, self.c_p_out, self.c_p_in, self.Qdot, self.Vdot_in, self.c_p_in)
         self.eq3 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
-        return[self.eq1, self.eq2, self.eq3]
+        self.eq4 = "%s = cp.PropsSI('C', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.c_p_in, self.T_in, self.p_in)
+        self.eq5 = "%s = cp.PropsSI('C', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.c_p_out, self.T_out, self.p_out)
+        return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5]
     
 
     def set_var(self):
@@ -496,6 +517,8 @@ class Heatsink:
         - var6: Name string, initialization value, minimum, maximum and unit string for output volume flow.
         - var7: Name string, initialization value, minimum, maximum and unit string for pressure change over component.
         - var8: Name string, initialization value, minimum, maximum and unit string for thermal energy flux change over component.
+        - var9: Name string, initialization value, minimum, maximum and unit string for specific heat capacity of coolant at input.
+        - var10: Name string, initialization value, minimum, maximum and unit string for specific heat capacity of coolant at output.
         """
 
         self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
@@ -506,7 +529,9 @@ class Heatsink:
         self.var6 = [self.Vdot_out, 1.0, 0.0, np.inf, "l/s"]
         self.var7 = [self.delta_p, - 1.0, - np.inf, 0.0, "bar"]
         self.var8 = [self.Qdot, - 10000.0, - np.inf, 0.0, "W"]
-        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8]
+        self.var9 = [self.c_p_in, 3500.0, 3300.0, 3600.0, "J/(kg*K)"]
+        self.var10 = [self.c_p_out, 3500.0, 3300.0, 3600.0, "J/(kg*K)"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10]
 
 
 class SplitterPassive1to2:
@@ -716,11 +741,14 @@ class MixerPassive2to1:
     - p_out: Name string for output pressure in bar.
     - T_out: Name string for output temperature in Kelvin.
     - Vdot_out: Name string for output volume flow in liters per second.
+    - c_p_in_1: Name string for specific heat capacity of coolant at input 1 in Joule per kilogram and Kelvin.
+    - c_p_in_2: Name string for specific heat capacity of coolant at input 2 in Joule per kilogram and Kelvin.
+    - c_p_out: Name string for specific heat capacity of coolant at output in Joule per kilogram and Kelvin.
     - nmix_1: Name string for mixing ratio of input 1.
     - nmix_2: Name string for mixing ratio of input 2.
     """
 
-    def __init__(self, p_in_1, T_in_1, Vdot_in_1, p_in_2, T_in_2, Vdot_in_2, p_out, T_out, Vdot_out, nmix_1, nmix_2):
+    def __init__(self, p_in_1, T_in_1, Vdot_in_1, p_in_2, T_in_2, Vdot_in_2, p_out, T_out, Vdot_out, c_p_in_1, c_p_in_2, c_p_out, nmix_1, nmix_2):
         self.p_in_1 = p_in_1
         self.T_in_1 = T_in_1
         self.Vdot_in_1 = Vdot_in_1
@@ -730,6 +758,9 @@ class MixerPassive2to1:
         self.p_out = p_out
         self.T_out = T_out
         self.Vdot_out = Vdot_out
+        self.c_p_in_1 = c_p_in_1
+        self.c_p_in_2 = c_p_in_2
+        self.c_p_out = c_p_out
         self.nmix_1 = nmix_1
         self.nmix_2 = nmix_2
 
@@ -741,20 +772,25 @@ class MixerPassive2to1:
         Returns:
         - eq1: Equation for pressure characteristics between input 1 and output.
         - eq2: Equation for pressure characteristics between input 2 and output.
-        - eq3: Equation for thermal energy flux characteristics between input 1 and output.
-        - eq4: Equation for thermal energy flux characteristics between input 2 and output.
-        - eq5: Equation for mass flow characteristics.
-        - eq6: Equation for mixing ration characteristics of input 1.
-        - eq7: Equation for mixing ration characteristics of input 2.
+        - eq3: Equation for thermal energy flux characteristics between input 1, input 2 and output.
+        - eq4: Equation for mass flow characteristics.
+        - eq5: Equation for specific heat capacity of coolant at input 1.
+        - eq6: Equation for specific heat capacity of coolant at input 2.
+        - eq7: Equation for specific heat capacity of coolant at output.
+        - eq8: Equation for mixing ration characteristics of input 1.
+        - eq9: Equation for mixing ration characteristics of input 2.
         """
 
         self.eq1 = "%s = %s"%(self.p_in_1, self.p_out)
         self.eq2 = "%s = %s"%(self.p_in_2, self.p_out)
-        self.eq3 = "%s * %s + %s * %s = %s * %s"%(self.T_in_1, self.Vdot_in_1, self.T_in_2, self.Vdot_in_2, self.T_out, self.Vdot_out)
-        self.eq4 = "%s + %s = %s"%(self.Vdot_in_1, self.Vdot_in_2, self.Vdot_out)
-        self.eq5 = "%s = %s / %s"%(self.nmix_1, self.Vdot_in_1, self.Vdot_out)
-        self.eq6 = "%s = %s / %s"%(self.nmix_2, self.Vdot_in_2, self.Vdot_out)
-        return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6]
+        self.eq3 = "%s = %s * %s * %s / %s + %s * %s * %s / %s"%(self.T_out, self.T_in_1, self.nmix_1, self.c_p_in_1, self.c_p_out, self.T_in_2, self.nmix_2, self.c_p_in_2, self.c_p_out)
+        self.eq4 = "%s = %s + %s"%(self.Vdot_out, self.Vdot_in_1, self.Vdot_in_2)
+        self.eq5 = "%s = cp.PropsSI('C', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.c_p_in_1, self.T_in_1, self.p_in_1)
+        self.eq6 = "%s = cp.PropsSI('C', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.c_p_in_2, self.T_in_2, self.p_in_2)
+        self.eq7 = "%s = cp.PropsSI('C', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.c_p_out, self.T_out, self.p_out)
+        self.eq8 = "%s = %s / %s"%(self.nmix_1, self.Vdot_in_1, self.Vdot_out)
+        self.eq9 = "%s = %s / %s"%(self.nmix_2, self.Vdot_in_2, self.Vdot_out)
+        return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6, self.eq7, self.eq8, self.eq9]
     
 
     def set_var(self):
@@ -771,8 +807,11 @@ class MixerPassive2to1:
         - var7: Name string, initialization value, minimum, maximum and unit string for output pressure.
         - var8: Name string, initialization value, minimum, maximum and unit string for output temperature.
         - var9: Name string, initialization value, minimum, maximum and unit string for output volume flow.
-        - var10: Name string, initialization value, minimum, maximum and unit string for input 1 mixing ratio.
-        - var11: Name string, initialization value, minimum, maximum and unit string for input 2 mixing ratio.
+        - var10: Name string, initialization value, minimum, maximum and unit string for specific heat capacity of coolant at input 1.
+        - var11: Name string, initialization value, minimum, maximum and unit string for specific heat capacity of coolant at input 2.
+        - var12: Name string, initialization value, minimum, maximum and unit string for specific heat capacity of coolant at output.
+        - var13: Name string, initialization value, minimum, maximum and unit string for input 1 mixing ratio.
+        - var14: Name string, initialization value, minimum, maximum and unit string for input 2 mixing ratio.
         """
 
         self.var1 = [self.p_in_1, 1.0, 0.0, np.inf, "bar"]
@@ -784,9 +823,12 @@ class MixerPassive2to1:
         self.var7 = [self.p_out, 1.0, 0.0, np.inf, "bar"]
         self.var8 = [self.T_out, 273.15, 0.0, np.inf, "K"]
         self.var9 = [self.Vdot_out, 1.0, 0.0, np.inf, "l/s"]
-        self.var10 = [self.nmix_1, 0.5, 0.0, 1.0, "-"]
-        self.var11 = [self.nmix_2, 0.5, 0.0, 1.0, "-"]
-        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10, self.var11]
+        self.var10 = [self.c_p_in_1, 3500.0, 3300.0, 3600.0, "J/(kg*K)"]
+        self.var11 = [self.c_p_in_2, 3500.0, 3300.0, 3600.0, "J/(kg*K)"]
+        self.var12 = [self.c_p_out, 3500.0, 3300.0, 3600.0, "J/(kg*K)"]
+        self.var13 = [self.nmix_1, 0.5, 0.0, 1.0, "-"]
+        self.var14 = [self.nmix_2, 0.5, 0.0, 1.0, "-"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10, self.var11, self.var12, self.var13, self.var14]
 
 
 class MixerActive2to1:
@@ -806,13 +848,16 @@ class MixerActive2to1:
     - p_out: Name string for output pressure in bar.
     - T_out: Name string for output temperature in Kelvin.
     - Vdot_out: Name string for output volume flow in liters per second.
+    - c_p_in_1: Name string for specific heat capacity of coolant at input 1 in Joule per kilogram and Kelvin.
+    - c_p_in_2: Name string for specific heat capacity of coolant at input 2 in Joule per kilogram and Kelvin.
+    - c_p_out: Name string for specific heat capacity of coolant at output in Joule per kilogram and Kelvin.
     - nmix_1: Name string for mixing ratio of input 1.
     - nmix_2: Name string for mixing ratio of input 2.
     - delta_p_1: Name string for pressure change over component of input 1 in bar.
     - delta_p_2: Name string for pressure change over component of input 2 in bar.
     """
 
-    def __init__(self, p_in_1, T_in_1, Vdot_in_1, p_in_2, T_in_2, Vdot_in_2, p_out, T_out, Vdot_out, nmix_1, nmix_2, delta_p_1, delta_p_2):
+    def __init__(self, p_in_1, T_in_1, Vdot_in_1, p_in_2, T_in_2, Vdot_in_2, p_out, T_out, Vdot_out, c_p_in_1, c_p_in_2, c_p_out, nmix_1, nmix_2, delta_p_1, delta_p_2):
         self.p_in_1 = p_in_1
         self.T_in_1 = T_in_1
         self.Vdot_in_1 = Vdot_in_1
@@ -822,6 +867,9 @@ class MixerActive2to1:
         self.p_out = p_out
         self.T_out = T_out
         self.Vdot_out = Vdot_out
+        self.c_p_in_1 = c_p_in_1
+        self.c_p_in_2 = c_p_in_2
+        self.c_p_out = c_p_out
         self.nmix_1 = nmix_1
         self.nmix_2 = nmix_2
         self.delta_p_1 = delta_p_1
@@ -835,20 +883,25 @@ class MixerActive2to1:
         Returns:
         - eq1: Equation for pressure characteristics between input 1 and output.
         - eq2: Equation for pressure characteristics between input 2 and output.
-        - eq3: Equation for thermal energy flux characteristics between input 1 and output.
-        - eq4: Equation for thermal energy flux characteristics between input 2 and output.
-        - eq5: Equation for mass flow characteristics.
-        - eq6: Equation for mixing ration characteristics of input 1.
-        - eq7: Equation for mixing ration characteristics of input 2.
+        - eq3: Equation for thermal energy flux characteristics between input 1, input 2 and output.
+        - eq4: Equation for mass flow characteristics.
+        - eq5: Equation for specific heat capacity of coolant at input 1.
+        - eq6: Equation for specific heat capacity of coolant at input 2.
+        - eq7: Equation for specific heat capacity of coolant at output.
+        - eq8: Equation for mixing ration characteristics of input 1.
+        - eq9: Equation for mixing ration characteristics of input 2.
         """
 
         self.eq1 = "%s = %s - %s"%(self.p_in_1, self.p_out, self.delta_p_1)
         self.eq2 = "%s = %s - %s"%(self.p_in_2, self.p_out, self.delta_p_2)
-        self.eq3 = "%s * %s + %s * %s = %s * %s"%(self.T_in_1, self.Vdot_in_1, self.T_in_2, self.Vdot_in_2, self.T_out, self.Vdot_out)
-        self.eq4 = "%s + %s = %s"%(self.Vdot_in_1, self.Vdot_in_2, self.Vdot_out)
-        self.eq5 = "%s = %s / %s"%(self.nmix_1, self.Vdot_in_1, self.Vdot_out)
-        self.eq6 = "%s = %s / %s"%(self.nmix_2, self.Vdot_in_2, self.Vdot_out)
-        return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6]
+        self.eq3 = "%s = %s * %s * %s / %s + %s * %s * %s / %s"%(self.T_out, self.T_in_1, self.nmix_1, self.c_p_in_1, self.c_p_out, self.T_in_2, self.nmix_2, self.c_p_in_2, self.c_p_out)
+        self.eq4 = "%s = %s + %s"%(self.Vdot_out, self.Vdot_in_1, self.Vdot_in_2)
+        self.eq5 = "%s = cp.PropsSI('C', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.c_p_in_1, self.T_in_1, self.p_in_1)
+        self.eq6 = "%s = cp.PropsSI('C', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.c_p_in_2, self.T_in_2, self.p_in_2)
+        self.eq7 = "%s = cp.PropsSI('C', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.c_p_out, self.T_out, self.p_out)
+        self.eq8 = "%s = %s / %s"%(self.nmix_1, self.Vdot_in_1, self.Vdot_out)
+        self.eq9 = "%s = %s / %s"%(self.nmix_2, self.Vdot_in_2, self.Vdot_out)
+        return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6, self.eq7, self.eq8, self.eq9]
     
 
     def set_var(self):
@@ -865,10 +918,13 @@ class MixerActive2to1:
         - var7: Name string, initialization value, minimum, maximum and unit string for output pressure.
         - var8: Name string, initialization value, minimum, maximum and unit string for output temperature.
         - var9: Name string, initialization value, minimum, maximum and unit string for output volume flow.
-        - var10: Name string, initialization value, minimum, maximum and unit string for input 1 mixing ratio.
-        - var11: Name string, initialization value, minimum, maximum and unit string for input 2 mixing ratio.
-        - var12: Name string, initialization value, minimum, maximum and unit string for pressure change over component of input 1.
-        - var13: Name string, initialization value, minimum, maximum and unit string for pressure change over component of input 2.
+        - var10: Name string, initialization value, minimum, maximum and unit string for specific heat capacity of coolant at input 1.
+        - var11: Name string, initialization value, minimum, maximum and unit string for specific heat capacity of coolant at input 2.
+        - var12: Name string, initialization value, minimum, maximum and unit string for specific heat capacity of coolant at output.
+        - var13: Name string, initialization value, minimum, maximum and unit string for input 1 mixing ratio.
+        - var14: Name string, initialization value, minimum, maximum and unit string for input 2 mixing ratio.
+        - var15: Name string, initialization value, minimum, maximum and unit string for pressure change over component of input 1.
+        - var16: Name string, initialization value, minimum, maximum and unit string for pressure change over component of input 2.
         """
 
         self.var1 = [self.p_in_1, 1.0, 0.0, np.inf, "bar"]
@@ -880,8 +936,11 @@ class MixerActive2to1:
         self.var7 = [self.p_out, 1.0, 0.0, np.inf, "bar"]
         self.var8 = [self.T_out, 273.15, 0.0, np.inf, "K"]
         self.var9 = [self.Vdot_out, 1.0, 0.0, np.inf, "l/s"]
-        self.var10 = [self.nmix_1, 0.5, 0.0, 1.0, "-"]
-        self.var11 = [self.nmix_2, 0.5, 0.0, 1.0, "-"]
-        self.var12 = [self.delta_p_1, - 1.0, - np.inf, 0.0, "bar"]
-        self.var13 = [self.delta_p_2, - 1.0, - np.inf, 0.0, "bar"]
-        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10, self.var11, self.var12, self.var13]
+        self.var10 = [self.c_p_in_1, 3500.0, 3300.0, 3600.0, "J/(kg*K)"]
+        self.var11 = [self.c_p_in_2, 3500.0, 3300.0, 3600.0, "J/(kg*K)"]
+        self.var12 = [self.c_p_out, 3500.0, 3300.0, 3600.0, "J/(kg*K)"]
+        self.var13 = [self.nmix_1, 0.5, 0.0, 1.0, "-"]
+        self.var14 = [self.nmix_2, 0.5, 0.0, 1.0, "-"]
+        self.var15 = [self.delta_p_1, - 1.0, - np.inf, 0.0, "bar"]
+        self.var16 = [self.delta_p_2, - 1.0, - np.inf, 0.0, "bar"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10, self.var11, self.var12, self.var13, self.var14, self.var15, self.var16]
