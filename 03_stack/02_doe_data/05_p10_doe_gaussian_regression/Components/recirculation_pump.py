@@ -43,28 +43,24 @@ class Recirculation_Pump:
 
         temperature_out_K = self.calculate_outlet_temperature()
 
-        # Calculate mass flows (either based on fixed recirculation ratio or based on nitrogen and hydrogen flow balances)
+        # Calculate flows (either based on fixed recirculation ratio or based on nitrogen and hydrogen flow balances)
         if self.fixed_recirculation_ratio is None:
-            mass_flow_hydrogen_kg_s, mass_flow_nitrogen_kg_s = self.calculate_mass_flows()
+            hydrogen_recirculated_mol_s, nitrogen_recirculated_mol_s = self.calculate_flows()
         else:
-            mass_flow_hydrogen_kg_s, mass_flow_nitrogen_kg_s = self.calculate_mass_flows_fixed_recirculation_ratio(self.fixed_recirculation_ratio)
-            
-        mass_flow_reci_kg_s = mass_flow_hydrogen_kg_s + mass_flow_nitrogen_kg_s  # total recirculated mass flow; expectation: 15...20 g/s (@450 cells, 600 Amps, 70/30 ratio at stack outlet)
+            hydrogen_recirculated_mol_s, nitrogen_recirculated_mol_s = self.calculate_flows_fixed_recirculation_ratio(self.fixed_recirculation_ratio)
 
-        mass_fraction_hydrogen = mass_flow_hydrogen_kg_s/(mass_flow_hydrogen_kg_s + mass_flow_nitrogen_kg_s)
-        mass_fraction_nitrogen = mass_flow_nitrogen_kg_s/(mass_flow_hydrogen_kg_s + mass_flow_nitrogen_kg_s)
+        reci_total_flow_mol_s = hydrogen_recirculated_mol_s + nitrogen_recirculated_mol_s
 
-        cp_hydrogen_J_kgK = CP.PropsSI("C", "P", self.pressure_in_Pa, "T", self.temperature_in_K, "Hydrogen")       # specific heat hydrogen
-        cp_nitrogen_J_kgK = CP.PropsSI("C", "P", self.pressure_in_Pa, "T", self.temperature_in_K, "Nitrogen")       # specific heat nitrogen
-        cp_mix_J_kgK = cp_hydrogen_J_kgK*mass_fraction_hydrogen + cp_nitrogen_J_kgK*mass_fraction_nitrogen
+        # Ideal gas law (expectation: \dot{m} = 15...20 g/s (!) (@450 cells, 600 Amps, 70/30 ratio at stack outlet))
+        reci_total_flow_m3_s = reci_total_flow_mol_s*self.params_physics.ideal_gas_constant*temperature_out_K/self.pressure_out_Pa
 
-        reci_shaft_power_W = cp_mix_J_kgK*mass_flow_reci_kg_s*(temperature_out_K - self.temperature_in_K)
-        reci_isentropic_power_W = reci_shaft_power_W/self.isentropic_efficiency
-        reci_electric_power_W = reci_isentropic_power_W/self.electric_efficiency
+        reci_isentropic_power_W = (self.pressure_out_Pa - self.pressure_in_Pa)*reci_total_flow_m3_s
+        reci_shaft_power_W = reci_isentropic_power_W/self.isentropic_efficiency
+        reci_electric_power_W = reci_shaft_power_W/self.electric_efficiency
 
         return reci_electric_power_W
         
-    def calculate_mass_flows(self):
+    def calculate_flows(self):
         """
         Calculate the mass flows of hydrogen and nitrogen in the recirculation pump based on nitrogen and hydrogen flow balances.
         """
@@ -87,19 +83,9 @@ class Recirculation_Pump:
         # Recirculated nitrogen flow (established by StRudolph; double checked by SteNo)
         nitrogen_recirculated_mol_s = hydrogen_recirculated_mol_s*(1 - hydrogen_concentration_out)/hydrogen_concentration_out
 
-        # Recirculated nitrogen flow (established by SteNo; consistency to StRudolph's version double checked)
-        # hydrogen_anode_in_mol_s = self.stoich_anode*hydrogen_consumption_mol_s
-        # hydrogen_out_mol_s = hydrogen_anode_in_mol_s - hydrogen_consumption_mol_s
-        # nitrogen_out_mol_s = hydrogen_anode_in_mol_s/hydrogen_concentration_in - hydrogen_anode_in_mol_s + stack_flow_ratio*hydrogen_consumption_mol_s
-        # nitrogen_recirculated_mol_s = hydrogen_recirculated_mol_s/hydrogen_out_mol_s*nitrogen_out_mol_s
-
-        # Mass flows
-        hydrogen_recirculated_kg_s = hydrogen_recirculated_mol_s*self.params_physics.hydrogen_molar_mass
-        nitrogen_recirculated_kg_s = nitrogen_recirculated_mol_s*self.params_physics.nitrogen_molar_mass
-
-        return hydrogen_recirculated_kg_s, nitrogen_recirculated_kg_s
+        return hydrogen_recirculated_mol_s, nitrogen_recirculated_mol_s
     
-    def calculate_mass_flows_fixed_recirculation_ratio(self, recirculation_ratio=70/30):
+    def calculate_flows_fixed_recirculation_ratio(self, recirculation_ratio=70/30):
         """
         Calculate the mass flows of hydrogen and nitrogen in the recirculation pump for a fixed recirculation ratio.
         
@@ -111,11 +97,7 @@ class Recirculation_Pump:
 
         nitrogen_recirculated_mol_s = hydrogen_recirculated_mol_s/recirculation_ratio
 
-        # Mass flows
-        hydrogen_recirculated_kg_s = hydrogen_recirculated_mol_s*self.params_physics.hydrogen_molar_mass
-        nitrogen_recirculated_kg_s = nitrogen_recirculated_mol_s*self.params_physics.nitrogen_molar_mass
-
-        return hydrogen_recirculated_kg_s, nitrogen_recirculated_kg_s
+        return hydrogen_recirculated_mol_s, nitrogen_recirculated_mol_s
         
     def calculate_outlet_temperature(self):
 
