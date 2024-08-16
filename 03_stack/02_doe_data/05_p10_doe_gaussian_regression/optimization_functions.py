@@ -50,7 +50,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                                    electric_efficiency=_params_compressor.electric_efficiency)
     turbine         =   Turbine(_params_physics, isentropic_efficiency=_params_turbine.isentropic_efficiency)
     reci_pump       =   Recirculation_Pump(_params_physics, isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
-                                           n_cell=cellcount, electric_efficiency=_params_recirculation_pump.electric_efficiency)
+                                           n_cell=cellcount, cell_area_m2=300*1e-4, electric_efficiency=_params_recirculation_pump.electric_efficiency,
+                                           fixed_recirculation_ratio=70/30)
     coolant_pump    =   Coolant_Pump(isentropic_efficiency=_params_coolant_pump.isentropic_efficiency,
                                      electric_efficiency=_params_coolant_pump.electric_efficiency)
     radiator        =   Radiator(pressure_drop_Pa=_params_radiator.pressure_drop_Pa)
