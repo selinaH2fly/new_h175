@@ -49,7 +49,8 @@ class Compressor:
     
 # %% Example usage:
 import parameters   
-params_physics = parameters.Physical_Parameters() 
+params_physics = parameters.Physical_Parameters()
+
 C1 = Compressor(params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95,
              air_mass_flow_kg_s=1, pressure_out_Pa=1e5,flight_level_100ft=50)
 
