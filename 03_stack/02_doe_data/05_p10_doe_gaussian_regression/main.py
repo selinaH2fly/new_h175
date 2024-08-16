@@ -2,7 +2,7 @@
 
 import subprocess
 import argparse
-import json
+#import json
 import numpy as np
 import itertools
 from collect_data import consolidate_experiment_data
@@ -22,7 +22,7 @@ def build_command(parameter):
     return command
  
 if __name__ == '__main__':
-    import argparse
+    #import argparse
 
     parser = argparse.ArgumentParser(description="Main script to call optimize_input_variables.py")
     parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[20,175])
