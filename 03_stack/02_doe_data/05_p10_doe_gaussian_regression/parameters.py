@@ -90,5 +90,5 @@ class Radiator_Parameters:
 
     def __init__(self):
 
-        self.pressure_drop_Pa = 500 * 100 # roughly 500 mbar constant pressure drop according to Chris B.
+        self.pressure_drop_Pa = 0.3*1e5 # roughly 300 mbar constant pressure drop according to Chris B.
 
