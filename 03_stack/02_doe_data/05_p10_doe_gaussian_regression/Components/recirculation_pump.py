@@ -54,13 +54,18 @@ class Recirculation_Pump:
         mass_fraction_hydrogen = mass_flow_hydrogen_kg_s/(mass_flow_hydrogen_kg_s + mass_flow_nitrogen_kg_s)
         mass_fraction_nitrogen = mass_flow_nitrogen_kg_s/(mass_flow_hydrogen_kg_s + mass_flow_nitrogen_kg_s)
 
-        cp_hydrogen_J_kgK = CP.PropsSI("C", "P", self.pressure_in_Pa, "T", self.temperature_in_K, "Hydrogen")       # specific heat hydrogen
-        cp_nitrogen_J_kgK = CP.PropsSI("C", "P", self.pressure_in_Pa, "T", self.temperature_in_K, "Nitrogen")       # specific heat nitrogen
-        cp_mix_J_kgK = cp_hydrogen_J_kgK*mass_fraction_hydrogen + cp_nitrogen_J_kgK*mass_fraction_nitrogen
+        # cp_hydrogen_J_kgK = CP.PropsSI("C", "P", self.pressure_in_Pa, "T", temperature_out_K, "Hydrogen")       # specific heat hydrogen
+        # cp_nitrogen_J_kgK = CP.PropsSI("C", "P", self.pressure_in_Pa, "T", temperature_out_K, "Nitrogen")       # specific heat nitrogen
+        # cp_mix_J_kgK = cp_hydrogen_J_kgK*mass_fraction_hydrogen + cp_nitrogen_J_kgK*mass_fraction_nitrogen
+        # reci_isentropic_power_W = cp_mix_J_kgK*mass_flow_reci_kg_s*(temperature_out_K - self.temperature_in_K)
 
-        reci_shaft_power_W = cp_mix_J_kgK*mass_flow_reci_kg_s*(temperature_out_K - self.temperature_in_K)
-        reci_isentropic_power_W = reci_shaft_power_W/self.isentropic_efficiency
-        reci_electric_power_W = reci_isentropic_power_W/self.electric_efficiency
+        density_hydrogen_kg_m3 = CP.PropsSI("D", "P", self.pressure_in_Pa, "T", temperature_out_K, "Hydrogen")    # density hydrogen
+        density_nitrogen_kg_m3 = CP.PropsSI("D", "P", self.pressure_in_Pa, "T", temperature_out_K, "Nitrogen")    # density nitrogen
+        density_mix_kg_m3 = density_hydrogen_kg_m3*mass_fraction_hydrogen + density_nitrogen_kg_m3*mass_fraction_nitrogen
+        reci_isentropic_power_W = (self.pressure_out_Pa - self.pressure_in_Pa)*mass_flow_reci_kg_s/density_mix_kg_m3 
+
+        reci_shaft_power_W = reci_isentropic_power_W/self.isentropic_efficiency
+        reci_electric_power_W = reci_shaft_power_W/self.electric_efficiency
 
         return reci_electric_power_W
         
