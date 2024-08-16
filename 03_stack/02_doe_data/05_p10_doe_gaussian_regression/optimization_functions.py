@@ -44,6 +44,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_recirculation_pump = parameters.Recirculation_Pump_Parameters()
     _params_coolant_pump = parameters.Coolant_Pump_Parameters()
     _params_radiator = parameters.Radiator_Parameters()
+    _params_Eol = parameters.Eol_Parameter()
 
      # Instantiate components
     compressor      =   Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency,
@@ -91,7 +92,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Consider the end of life derating factor
         if end_of_life:
-            optimized_cell_voltage_V *= 0.8
+            optimized_cell_voltage_V *= _params_Eol
 
         # Compute air massflow
         air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A,

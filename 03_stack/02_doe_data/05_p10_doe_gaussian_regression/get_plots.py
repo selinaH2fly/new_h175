@@ -602,7 +602,7 @@ def analyze_data(_file_path1, saving=True):
 # %%    
 
 
-analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-120ft__1\optimized_parameters_20-175kW_400-500_0-120ft.csv", saving=True)    
+#analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-120ft__1\optimized_parameters_20-175kW_400-500_0-120ft.csv", saving=True)    
 
 
 #TODO write init:

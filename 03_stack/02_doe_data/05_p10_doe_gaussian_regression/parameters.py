@@ -92,3 +92,8 @@ class Radiator_Parameters:
 
         self.pressure_drop_Pa = 500 * 100 # roughly 500 mbar constant pressure drop according to Chris B.
 
+class Eol_Parameter:
+
+    def __init__(self):
+
+        self.eol_factor = 0.85
