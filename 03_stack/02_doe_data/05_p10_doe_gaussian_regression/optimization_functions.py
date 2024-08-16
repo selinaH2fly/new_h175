@@ -152,7 +152,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         reci_pump.current_A = optimized_current_A
         reci_pump.temperature_in_K = optimized_temp_coolant_outlet_degC + 273.15
         reci_pump.pressure_out_Pa = 1e5*(optimized_pressure_cathode_in_bara + 0.200)    # reci_out == anode_in \approx: cathode_in + 0.2 bar (cf. PowerLayout)Wh; TODO: include p_anode_in in cell voltage model
-        reci_pump.pressure_in_Pa = reci_pump.pressure_out_Pa - 0.200*1e5                # reci_in == anode_out \approx: anode_in - 0.2 bar (cf. PowerLayout); TODO: include anode pressure drop model
+        reci_pump.pressure_in_Pa = reci_pump.pressure_out_Pa - 0.200*1e5 - 0.1*1e5      # reci_in == anode_out \approx: anode_in - 0.2 bar (cf. PowerLayout) - 0.1 bar (BoP); TODO: include anode pressure drop model
         reci_pump.stoich_anode = 1.5                                                    # TODO: include anode stoichiometry in cell voltage model
 
         # Compute the recirculation pump power
@@ -165,7 +165,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         coolant_pump.coolant_flow_m3_s = coolant_flow_rate_m3_s
         coolant_flow_rate_l_min = coolant_flow_rate_m3_s * 60 * 1000
-        stack_pressure_drop_mbar = 6.5e-3*(coolant_flow_rate_l_min ** 2)  + 0.477*coolant_flow_rate_l_min  # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
+        stack_pressure_drop_mbar = 6.5e-3*(coolant_flow_rate_l_min ** 2) + 0.477*coolant_flow_rate_l_min  # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
         coolant_pump.head_Pa = stack_pressure_drop_mbar*1e-3*1e5  + radiator.pressure_drop_Pa + 0.1*1e5 + 0.5*1e5 # coolant_pump.head_Pa = stack_pressure_drop + radiator_pressure_drop + 0.1 bar + 0.5 bar (additional HT + LT pressure drop)
         coolant_pump_power_W = coolant_pump.calculate_power()
 
