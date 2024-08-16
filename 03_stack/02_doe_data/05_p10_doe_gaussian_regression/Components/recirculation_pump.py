@@ -39,17 +39,17 @@ class Recirculation_Pump:
 
         temperature_out_K = self.calculate_outlet_temperature()
 
-        mass_flow_hydrogen_g_s, mass_flow_nitrogen_g_s = self.calculate_mass_flows()
-        mass_flow_reci_g_s = mass_flow_hydrogen_g_s + mass_flow_nitrogen_g_s  # total recirculated mass flow; expectation: 15...20 g/s (@450 cells, 600 Amps, 70/30 ratio at stack outlet)
+        mass_flow_hydrogen_kg_s, mass_flow_nitrogen_kg_s = self.calculate_mass_flows()
+        mass_flow_reci_kg_s = mass_flow_hydrogen_kg_s + mass_flow_nitrogen_kg_s  # total recirculated mass flow; expectation: 15...20 g/s (@450 cells, 600 Amps, 70/30 ratio at stack outlet)
 
-        mass_fraction_hydrogen = mass_flow_hydrogen_g_s/(mass_flow_hydrogen_g_s + mass_flow_nitrogen_g_s)
-        mass_fraction_nitrogen = mass_flow_nitrogen_g_s/(mass_flow_hydrogen_g_s + mass_flow_nitrogen_g_s)
+        mass_fraction_hydrogen = mass_flow_hydrogen_kg_s/(mass_flow_hydrogen_kg_s + mass_flow_nitrogen_kg_s)
+        mass_fraction_nitrogen = mass_flow_nitrogen_kg_s/(mass_flow_hydrogen_kg_s + mass_flow_nitrogen_kg_s)
 
         cp_hydrogen_J_kgK = CP.PropsSI("C", "P", (self.pressure_in_Pa), "T", (self.temperature_in_K), "Hydrogen")       # specific heat hydrogen
         cp_nitrogen_J_kgK = CP.PropsSI("C", "P", (self.pressure_in_Pa), "T", (self.temperature_in_K), "Nitrogen")       # specific heat nitrogen
         cp_mix_J_kgK = cp_hydrogen_J_kgK*mass_fraction_hydrogen + cp_nitrogen_J_kgK*mass_fraction_nitrogen
 
-        reci_shaft_power_W = cp_mix_J_kgK*mass_flow_reci_g_s/1000*(temperature_out_K - self.temperature_in_K)
+        reci_shaft_power_W = cp_mix_J_kgK*mass_flow_reci_kg_s/(temperature_out_K - self.temperature_in_K)
         reci_isentropic_power_W = reci_shaft_power_W/self.isentropic_efficiency
         reci_electric_power_W = reci_isentropic_power_W/self.electric_efficiency
 
