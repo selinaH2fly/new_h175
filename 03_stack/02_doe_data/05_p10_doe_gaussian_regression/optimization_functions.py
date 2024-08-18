@@ -92,7 +92,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Consider the end of life derating factor
         if end_of_life:
-            optimized_cell_voltage_V *= _params_Eol
+            optimized_cell_voltage_V *= _params_Eol.eol_factor
 
         # Compute air massflow
         air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A,

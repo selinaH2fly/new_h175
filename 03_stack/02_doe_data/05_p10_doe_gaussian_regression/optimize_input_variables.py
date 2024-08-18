@@ -12,7 +12,7 @@ from optimization_functions import optimize_inputs_evolutionary
 
 from data_export_csv import export_to_csv
  
-def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, consider_turbine=True, end_of_life=False):
+def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, consider_turbine=True, end_of_life=True):
     
     # Load parameters
     _params_optimization = parameters.Optimization_Parameters()  
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=455)
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=120)
     parser.add_argument("-t", "--turbine", type=str, choices=["True", "False"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
-    parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
+    parser.add_argument("--eol", type=str, choices=["True", "False"], default="True", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
 
     args = parser.parse_args()
 
