@@ -92,7 +92,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Consider the end of life derating factor
         if end_of_life:
-            optimized_cell_voltage_V *= _params_Eol
+            optimized_cell_voltage_V *= _params_Eol.eol_factor
 
         # Compute air massflow
         air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A,
@@ -130,15 +130,15 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                 + cathode_pressure_drop_model.target_data_mean
             
             # Limit the cathode pressure drop to be non-negative
-            cathode_pressure_drop_bar = max(cathode_pressure_drop_bar.item(), 0)
+            cathode_pressure_drop_bar = max(cathode_pressure_drop_bar.item(), 1e-9)
             
             # Compute the cathode pressure out        
             cathode_pressure_out_bar = optimized_input[3] - cathode_pressure_drop_bar
 
             #Set Parameters for turbine
             turbine.air_mass_flow_kg_s = air_mass_flow_kg_s
-            turbine.pressure_in_Pa     = cathode_pressure_out_bar*1e5 - 0.15*1e5 # turbine_in == cathode_out - 0.15 bar (BoP pressure drop)
-            turbine.temperature_in_K   = optimized_temp_coolant_outlet_degC + 273.15 
+            turbine.pressure_in_Pa     = max(cathode_pressure_out_bar*1e5 - 0.15*1e5, 1e-9) # turbine_in == cathode_out - 0.15 bar (BoP pressure drop)
+            turbine.temperature_in_K   = max(optimized_temp_coolant_outlet_degC + 273.15, 1e-9) 
             turbine.flight_level_100ft = flight_level_100ft
             
             # Compute the turbine power        
@@ -151,9 +151,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Set parameters for recirculation pump
         reci_pump.current_A = optimized_current_A
-        reci_pump.temperature_in_K = optimized_temp_coolant_outlet_degC + 273.15
-        reci_pump.pressure_out_Pa = 1e5*(optimized_pressure_cathode_in_bara + 0.200)    # reci_out == anode_in \approx: cathode_in + 0.2 bar (cf. PowerLayout)Wh; TODO: include p_anode_in in cell voltage model
-        reci_pump.pressure_in_Pa = reci_pump.pressure_out_Pa - 0.200*1e5 - 0.1*1e5      # reci_in == anode_out \approx: anode_in - 0.2 bar (cf. PowerLayout) - 0.1 bar (BoP); TODO: include anode pressure drop model
+        reci_pump.temperature_in_K = max(optimized_temp_coolant_outlet_degC + 273.15, 1e-9)
+        reci_pump.pressure_out_Pa = 1e5*(optimized_pressure_cathode_in_bara + 0.200)    # reci_out == anode_in \approx: cathode_in + 0.2 bar (cf. PowerLayout); TODO: include p_anode_in in cell voltage model
+        reci_pump.pressure_in_Pa = max(reci_pump.pressure_out_Pa - 0.200*1e5 - 0.1*1e5, 1e-9)      # reci_in == anode_out \approx: anode_in - 0.2 bar (cf. PowerLayout) - 0.1 bar (BoP); TODO: include anode pressure drop model
         reci_pump.stoich_anode = 1.5                                                    # TODO: include anode stoichiometry in cell voltage model
 
         # Compute the recirculation pump power
@@ -207,7 +207,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                          zip(bounds, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
 
     # Perform the optimization using differential evolution
-    result = differential_evolution(objective_function, normalized_bounds, constraints=nonlinear_constraint, maxiter=1000, popsize=30, tol=1e-6, recombination=0.9, polish=False, disp=False, seed=None)
+    result = differential_evolution(objective_function, normalized_bounds, constraints=nonlinear_constraint, maxiter=1000, popsize=30, recombination=0.9, polish=False, disp=True, seed=None)
     print(f'{result.message}')
 
     # Evaluate the models with the optimal input
