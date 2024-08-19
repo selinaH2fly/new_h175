@@ -51,7 +51,9 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     # Print the optimal input, target variables, and bounds including feature names and target variable
     print("\nOptimized Input Variables:")
     for name, value, bound in zip(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds):
-        print(f"  {name}: {value:.4f} (Bounds: [{bound[0]}, {bound[1]}])")
+        lower_bound_formatted = f"{bound[0]}" if abs(bound[0]) < 1000 else f"{bound[0]:.1e}"
+        upper_bound_formatted = f"{bound[1]}" if abs(bound[1]) < 1000 else f"{bound[1]:.1e}"
+        print(f"  {name}: {value:.4f} (Bounds: [{lower_bound_formatted}, {upper_bound_formatted}])")
     print(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  Hydrogen Consumption: {hydrogen_mass_flow_g_s:.4f} g/s\n")
     print(f"Cell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {cell_voltage:.4f} V\n")
 
