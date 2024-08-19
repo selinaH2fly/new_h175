@@ -207,8 +207,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                          zip(bounds, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
 
     # Perform the optimization using differential evolution
-    result = differential_evolution(objective_function, normalized_bounds, constraints=nonlinear_constraint, maxiter=1000, popsize=30, recombination=0.9, polish=False, disp=True, seed=None)
-    print(f'{result.message}')
+    result = differential_evolution(objective_function, normalized_bounds, constraints=nonlinear_constraint, maxiter=1000, popsize=30, recombination=0.9, polish=False, disp=False, seed=None)
+    print(f'{result.message}') #TODO: Evaluate the message and store success/failure to .csv file
 
     # Evaluate the models with the optimal input
     optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(result.x)
