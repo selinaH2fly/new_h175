@@ -243,23 +243,19 @@ class Pump:
     - mass flow conservation
 
     Args:
-    - p_in: Name string for input pressure in bar.
-    - T_in: Name string for input temperature in Kelvin.
-    - Vdot_in: Name string for input volume flow in liters per second.
-    - p_out: Name string for output pressure in bar.
-    - T_out: Name string for output temperature in Kelvin.
-    - Vdot_out: Name string for output volume flow in liters per second.
-    - delta_p: Name string for pressure change over component in bar.
+    - i_in: Integer for identifier of input.
+    - i_out: Integer for identifier of output.
+    - comp_name: String for name of component.
     """
     
-    def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p):
-        self.p_in = p_in
-        self.T_in = T_in
-        self.Vdot_in = Vdot_in
-        self.p_out = p_out
-        self.T_out = T_out
-        self.Vdot_out = Vdot_out
-        self.delta_p = delta_p
+    def __init__(self, i_in, i_out, comp_name):
+        self.p_in = "p_%i"%(i_in)
+        self.T_in = "T_%i"%(i_in)
+        self.Vdot_in = "Vdot_%i"%(i_in)
+        self.p_out = "p_%i"%(i_out)
+        self.T_out = "T_%i"%(i_out)
+        self.Vdot_out = "Vdot_%i"%(i_out)
+        self.delta_p = "delta_p_%s"%(comp_name)
 
 
     def set_eq(self):
@@ -310,23 +306,19 @@ class Throttle:
     - mass flow conservation
 
     Args:
-    - p_in: Name string for input pressure in bar.
-    - T_in: Name string for input temperature in Kelvin.
-    - Vdot_in: Name string for input volume flow in liters per second.
-    - p_out: Name string for output pressure in bar.
-    - T_out: Name string for output temperature in Kelvin.
-    - Vdot_out: Name string for output volume flow in liters per second.
-    - delta_p: Name string for pressure change over component in bar.
+    - i_in: Integer for identifier of input.
+    - i_out: Integer for identifier of output.
+    - comp_name: String for name of component.
     """
 
-    def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p):
-        self.p_in = p_in
-        self.T_in = T_in
-        self.Vdot_in = Vdot_in
-        self.p_out = p_out
-        self.T_out = T_out
-        self.Vdot_out = Vdot_out
-        self.delta_p = delta_p
+    def __init__(self, i_in, i_out, comp_name):
+        self.p_in = "p_%i"%(i_in)
+        self.T_in = "T_%i"%(i_in)
+        self.Vdot_in = "Vdot_%i"%(i_in)
+        self.p_out = "p_%i"%(i_out)
+        self.T_out = "T_%i"%(i_out)
+        self.Vdot_out = "Vdot_%i"%(i_out)
+        self.delta_p = "delta_p_%s"%(comp_name)
 
 
     def set_eq(self):
@@ -377,29 +369,22 @@ class Heatsource:
     - mass flow conservation
 
     Args:
-    - p_in: Name string for input pressure in bar.
-    - T_in: Name string for input temperature in Kelvin.
-    - Vdot_in: Name string for input volume flow in liters per second.
-    - p_out: Name string for output pressure in bar.
-    - T_out: Name string for output temperature in Kelvin.
-    - Vdot_out: Name string for output volume flow in liters per second.
-    - delta_p: Name string for pressure change over component in bar.
-    - Qdot: Name string for thermal energy flux change over component in Watts.
-    - c_p_in: Name string for specific heat capacity of coolant at input in Joule per kilogram and Kelvin.
-    - c_p_out: Name string for specific heat capacity of coolant at output in Joule per kilogram and Kelvin.
+    - i_in: Integer for identifier of input.
+    - i_out: Integer for identifier of output.
+    - comp_name: String for name of component.
     """
 
-    def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p, Qdot, c_p_in, c_p_out):
-        self.p_in = p_in
-        self.T_in = T_in
-        self.Vdot_in = Vdot_in
-        self.p_out = p_out
-        self.T_out = T_out
-        self.Vdot_out = Vdot_out
-        self.delta_p = delta_p
-        self.Qdot = Qdot
-        self.c_p_in = c_p_in
-        self.c_p_out = c_p_out
+    def __init__(self, i_in, i_out, comp_name):
+        self.p_in = "p_%i"%(i_in)
+        self.T_in = "T_%i"%(i_in)
+        self.Vdot_in = "Vdot_%i"%(i_in)
+        self.p_out = "p_%i"%(i_out)
+        self.T_out = "T_%i"%(i_out)
+        self.Vdot_out = "Vdot_%i"%(i_out)
+        self.delta_p = "delta_p_%s"%(comp_name)
+        self.Qdot = "Qdot_%s"%(comp_name)
+        self.c_p_in = "c_p_in_%s"%(comp_name)
+        self.c_p_out = "c_p_out_%s"%(comp_name)
 
 
     def set_eq(self):
@@ -460,29 +445,22 @@ class Heatsink:
     - mass flow conservation
 
     Args:
-    - p_in: Name string for input pressure in bar.
-    - T_in: Name string for input temperature in Kelvin.
-    - Vdot_in: Name string for input volume flow in liters per second.
-    - p_out: Name string for output pressure in bar.
-    - T_out: Name string for output temperature in Kelvin.
-    - Vdot_out: Name string for output volume flow in liters per second.
-    - delta_p: Name string for pressure change over component in bar.
-    - Qdot: Name string for thermal energy flux change over component in Watts.
-    - c_p_in: Name string for specific heat capacity of coolant at input in Joule per kilogram and Kelvin.
-    - c_p_out: Name string for specific heat capacity of coolant at output in Joule per kilogram and Kelvin.
+    - i_in: Integer for identifier of input.
+    - i_out: Integer for identifier of output.
+    - comp_name: String for name of component.
     """
 
-    def __init__(self, p_in, T_in, Vdot_in, p_out, T_out, Vdot_out, delta_p, Qdot, c_p_in, c_p_out):
-        self.p_in = p_in
-        self.T_in = T_in
-        self.Vdot_in = Vdot_in
-        self.p_out = p_out
-        self.T_out = T_out
-        self.Vdot_out = Vdot_out
-        self.delta_p = delta_p
-        self.Qdot = Qdot
-        self.c_p_in = c_p_in
-        self.c_p_out = c_p_out
+    def __init__(self, i_in, i_out, comp_name):
+        self.p_in = "p_%i"%(i_in)
+        self.T_in = "T_%i"%(i_in)
+        self.Vdot_in = "Vdot_%i"%(i_in)
+        self.p_out = "p_%i"%(i_out)
+        self.T_out = "T_%i"%(i_out)
+        self.Vdot_out = "Vdot_%i"%(i_out)
+        self.delta_p = "delta_p_%s"%(comp_name)
+        self.Qdot = "Qdot_%s"%(comp_name)
+        self.c_p_in = "c_p_in_%s"%(comp_name)
+        self.c_p_out = "c_p_out_%s"%(comp_name)
 
 
     def set_eq(self):
@@ -543,31 +521,24 @@ class ConnectorPassive1to2:
     - mass flow conservation
 
     Args:
-    - p_in: Name string for input pressure in bar.
-    - T_in: Name string for input temperature in Kelvin.
-    - Vdot_in: Name string for input volume flow in liters per second.
-    - p_out_1: Name string for output 1 pressure in bar.
-    - T_out_1: Name string for output 1 temperature in Kelvin.
-    - Vdot_out_1: Name string for output 1 volume flow in liters per second.
-    - p_out_2: Name string for output 2 pressure in bar.
-    - T_out_2: Name string for output 2 temperature in Kelvin.
-    - Vdot_out_2: Name string for output 2 volume flow in liters per second.
-    - nsplit_1: Name string for splitting ratio of output 1.
-    - nsplit_2: Name string for splitting ratio of output 2.
+    - i_in: Integer for identifier of input.
+    - i_out_1: Integer for identifier of output 1.
+    - i_out_2: Integer for identifier of output 2.
+    - comp_name: String for name of component.
     """
 
-    def __init__(self, p_in, T_in, Vdot_in, p_out_1, T_out_1, Vdot_out_1, p_out_2, T_out_2, Vdot_out_2, nsplit_1, nsplit_2):
-        self.p_in = p_in
-        self.T_in = T_in
-        self.Vdot_in = Vdot_in
-        self.p_out_1 = p_out_1
-        self.T_out_1 = T_out_1
-        self.Vdot_out_1 = Vdot_out_1
-        self.p_out_2 = p_out_2
-        self.T_out_2 = T_out_2
-        self.Vdot_out_2 = Vdot_out_2
-        self.nsplit_1 = nsplit_1
-        self.nsplit_2 = nsplit_2
+    def __init__(self, i_in, i_out_1, i_out_2, comp_name):
+        self.p_in = "p_%i"%(i_in)
+        self.T_in = "T_%i"%(i_in)
+        self.Vdot_in = "Vdot_%i"%(i_in)
+        self.p_out_1 = "p_%i"%(i_out_1)
+        self.T_out_1 = "T_%i"%(i_out_1)
+        self.Vdot_out_1 = "Vdot_%i"%(i_out_1)
+        self.p_out_2 = "p_%i"%(i_out_2)
+        self.T_out_2 = "T_%i"%(i_out_2)
+        self.Vdot_out_2 = "Vdot_%i"%(i_out_2)
+        self.nsplit_1 = "nsplit_1_%s"%(comp_name)
+        self.nsplit_2 = "nsplit_2_%s"%(comp_name)
 
 
     def set_eq(self):
@@ -634,35 +605,26 @@ class ConnectorActive1to2:
     - mass flow conservation
 
     Args:
-    - p_in: Name string for input pressure in bar.
-    - T_in: Name string for input temperature in Kelvin.
-    - Vdot_in: Name string for input volume flow in liters per second.
-    - p_out_1: Name string for output 1 pressure in bar.
-    - T_out_1: Name string for output 1 temperature in Kelvin.
-    - Vdot_out_1: Name string for output 1 volume flow in liters per second.
-    - p_out_2: Name string for output 2 pressure in bar.
-    - T_out_2: Name string for output 2 temperature in Kelvin.
-    - Vdot_out_2: Name string for output 2 volume flow in liters per second.
-    - nsplit_1: Name string for splitting ratio of output 1.
-    - nsplit_2: Name string for splitting ratio of output 2.
-    - delta_p_1: Name string for pressure change over component of output 1 in bar.
-    - delta_p_2: Name string for pressure change over component of output 2 in bar.
+    - i_in: Integer for identifier of input.
+    - i_out_1: Integer for identifier of output 1.
+    - i_out_2: Integer for identifier of output 2.
+    - comp_name: String for name of component.
     """
 
-    def __init__(self, p_in, T_in, Vdot_in, p_out_1, T_out_1, Vdot_out_1, p_out_2, T_out_2, Vdot_out_2, nsplit_1, nsplit_2, delta_p_1, delta_p_2):
-        self.p_in = p_in
-        self.T_in = T_in
-        self.Vdot_in = Vdot_in
-        self.p_out_1 = p_out_1
-        self.T_out_1 = T_out_1
-        self.Vdot_out_1 = Vdot_out_1
-        self.p_out_2 = p_out_2
-        self.T_out_2 = T_out_2
-        self.Vdot_out_2 = Vdot_out_2
-        self.nsplit_1 = nsplit_1
-        self.nsplit_2 = nsplit_2
-        self.delta_p_1 = delta_p_1
-        self.delta_p_2 = delta_p_2
+    def __init__(self, i_in, i_out_1, i_out_2, comp_name):
+        self.p_in = "p_%i"%(i_in)
+        self.T_in = "T_%i"%(i_in)
+        self.Vdot_in = "Vdot_%i"%(i_in)
+        self.p_out_1 = "p_%i"%(i_out_1)
+        self.T_out_1 = "T_%i"%(i_out_1)
+        self.Vdot_out_1 = "Vdot_%i"%(i_out_1)
+        self.p_out_2 = "p_%i"%(i_out_2)
+        self.T_out_2 = "T_%i"%(i_out_2)
+        self.Vdot_out_2 = "Vdot_%i"%(i_out_2)
+        self.nsplit_1 = "nsplit_1_%s"%(comp_name)
+        self.nsplit_2 = "nsplit_2_%s"%(comp_name)
+        self.delta_p_1 = "delta_p_1_%s"%(comp_name)
+        self.delta_p_2 = "delta_p_2_%s"%(comp_name)
 
 
     def set_eq(self):
@@ -733,37 +695,27 @@ class ConnectorPassive2to1:
     - mass flow conservation
 
     Args:
-    - p_in_1: Name string for input 1 pressure in bar.
-    - T_in_1: Name string for input 1 temperature in Kelvin.
-    - Vdot_in_1: Name string for input 1 volume flow in liters per second.
-    - p_in_2: Name string for input 2 pressure in bar.
-    - T_in_2: Name string for input 2 temperature in Kelvin.
-    - Vdot_in_2: Name string for input 2 volume flow in liters per second.
-    - p_out: Name string for output pressure in bar.
-    - T_out: Name string for output temperature in Kelvin.
-    - Vdot_out: Name string for output volume flow in liters per second.
-    - c_p_in_1: Name string for specific heat capacity of coolant at input 1 in Joule per kilogram and Kelvin.
-    - c_p_in_2: Name string for specific heat capacity of coolant at input 2 in Joule per kilogram and Kelvin.
-    - c_p_out: Name string for specific heat capacity of coolant at output in Joule per kilogram and Kelvin.
-    - nmix_1: Name string for mixing ratio of input 1.
-    - nmix_2: Name string for mixing ratio of input 2.
+    - i_in_1: Integer for identifier of input 1.
+    - i_in_2: Integer for identifier of input 2.
+    - i_out: Integer for identifier of output.
+    - comp_name: String for name of component.
     """
 
-    def __init__(self, p_in_1, T_in_1, Vdot_in_1, p_in_2, T_in_2, Vdot_in_2, p_out, T_out, Vdot_out, c_p_in_1, c_p_in_2, c_p_out, nmix_1, nmix_2):
-        self.p_in_1 = p_in_1
-        self.T_in_1 = T_in_1
-        self.Vdot_in_1 = Vdot_in_1
-        self.p_in_2 = p_in_2
-        self.T_in_2 = T_in_2
-        self.Vdot_in_2 = Vdot_in_2
-        self.p_out = p_out
-        self.T_out = T_out
-        self.Vdot_out = Vdot_out
-        self.c_p_in_1 = c_p_in_1
-        self.c_p_in_2 = c_p_in_2
-        self.c_p_out = c_p_out
-        self.nmix_1 = nmix_1
-        self.nmix_2 = nmix_2
+    def __init__(self, i_in_1, i_in_2, i_out, comp_name):
+        self.p_in_1 = "p_%i"%(i_in_1)
+        self.T_in_1 = "T_%i"%(i_in_1)
+        self.Vdot_in_1 = "Vdot_%i"%(i_in_1)
+        self.p_in_2 = "p_%i"%(i_in_2)
+        self.T_in_2 = "T_%i"%(i_in_2)
+        self.Vdot_in_2 = "Vdot_%i"%(i_in_2)
+        self.p_out = "p_%i"%(i_out)
+        self.T_out = "T_%i"%(i_out)
+        self.Vdot_out = "Vdot_%i"%(i_out)
+        self.c_p_in_1 = "c_p_in_1_%s"%(comp_name)
+        self.c_p_in_2 = "c_p_in_2_%s"%(comp_name)
+        self.c_p_out = "c_p_out_%s"%(comp_name)
+        self.nmix_1 = "nmix_1_%s"%(comp_name)
+        self.nmix_2 = "nmix_2_%s"%(comp_name)
 
 
     def set_eq(self):
@@ -840,41 +792,29 @@ class ConnectorActive2to1:
     - mass flow conservation
 
     Args:
-    - p_in_1: Name string for input 1 pressure in bar.
-    - T_in_1: Name string for input 1 temperature in Kelvin.
-    - Vdot_in_1: Name string for input 1 volume flow in liters per second.
-    - p_in_2: Name string for input 2 pressure in bar.
-    - T_in_2: Name string for input 2 temperature in Kelvin.
-    - Vdot_in_2: Name string for input 2 volume flow in liters per second.
-    - p_out: Name string for output pressure in bar.
-    - T_out: Name string for output temperature in Kelvin.
-    - Vdot_out: Name string for output volume flow in liters per second.
-    - c_p_in_1: Name string for specific heat capacity of coolant at input 1 in Joule per kilogram and Kelvin.
-    - c_p_in_2: Name string for specific heat capacity of coolant at input 2 in Joule per kilogram and Kelvin.
-    - c_p_out: Name string for specific heat capacity of coolant at output in Joule per kilogram and Kelvin.
-    - nmix_1: Name string for mixing ratio of input 1.
-    - nmix_2: Name string for mixing ratio of input 2.
-    - delta_p_1: Name string for pressure change over component of input 1 in bar.
-    - delta_p_2: Name string for pressure change over component of input 2 in bar.
+    - i_in_1: Integer for identifier of input 1.
+    - i_in_2: Integer for identifier of input 2.
+    - i_out: Integer for identifier of output.
+    - comp_name: String for name of component.
     """
 
-    def __init__(self, p_in_1, T_in_1, Vdot_in_1, p_in_2, T_in_2, Vdot_in_2, p_out, T_out, Vdot_out, c_p_in_1, c_p_in_2, c_p_out, nmix_1, nmix_2, delta_p_1, delta_p_2):
-        self.p_in_1 = p_in_1
-        self.T_in_1 = T_in_1
-        self.Vdot_in_1 = Vdot_in_1
-        self.p_in_2 = p_in_2
-        self.T_in_2 = T_in_2
-        self.Vdot_in_2 = Vdot_in_2
-        self.p_out = p_out
-        self.T_out = T_out
-        self.Vdot_out = Vdot_out
-        self.c_p_in_1 = c_p_in_1
-        self.c_p_in_2 = c_p_in_2
-        self.c_p_out = c_p_out
-        self.nmix_1 = nmix_1
-        self.nmix_2 = nmix_2
-        self.delta_p_1 = delta_p_1
-        self.delta_p_2 = delta_p_2
+    def __init__(self, i_in_1, i_in_2, i_out, comp_name):
+        self.p_in_1 = "p_%i"%(i_in_1)
+        self.T_in_1 = "T_%i"%(i_in_1)
+        self.Vdot_in_1 = "Vdot_%i"%(i_in_1)
+        self.p_in_2 = "p_%i"%(i_in_2)
+        self.T_in_2 = "T_%i"%(i_in_2)
+        self.Vdot_in_2 = "Vdot_%i"%(i_in_2)
+        self.p_out = "p_%i"%(i_out)
+        self.T_out = "T_%i"%(i_out)
+        self.Vdot_out = "Vdot_%i"%(i_out)
+        self.c_p_in_1 = "c_p_in_1_%s"%(comp_name)
+        self.c_p_in_2 = "c_p_in_2_%s"%(comp_name)
+        self.c_p_out = "c_p_out_%s"%(comp_name)
+        self.nmix_1 = "nmix_1_%s"%(comp_name)
+        self.nmix_2 = "nmix_2_%s"%(comp_name)
+        self.delta_p_1 = "delta_p_1_%s"%(comp_name)
+        self.delta_p_2 = "delta_p_2_%s"%(comp_name)
 
 
     def set_eq(self):
@@ -955,47 +895,33 @@ class ConnectorPassive3to1:
     - mass flow conservation
 
     Args:
-    - p_in_1: Name string for input 1 pressure in bar.
-    - T_in_1: Name string for input 1 temperature in Kelvin.
-    - Vdot_in_1: Name string for input 1 volume flow in liters per second.
-    - p_in_2: Name string for input 2 pressure in bar.
-    - T_in_2: Name string for input 2 temperature in Kelvin.
-    - Vdot_in_2: Name string for input 2 volume flow in liters per second.
-    - p_in_3: Name string for input 3 pressure in bar.
-    - T_in_3: Name string for input 3 temperature in Kelvin.
-    - Vdot_in_3: Name string for input 3 volume flow in liters per second.
-    - p_out: Name string for output pressure in bar.
-    - T_out: Name string for output temperature in Kelvin.
-    - Vdot_out: Name string for output volume flow in liters per second.
-    - c_p_in_1: Name string for specific heat capacity of coolant at input 1 in Joule per kilogram and Kelvin.
-    - c_p_in_2: Name string for specific heat capacity of coolant at input 2 in Joule per kilogram and Kelvin.
-    - c_p_in_3: Name string for specific heat capacity of coolant at input 3 in Joule per kilogram and Kelvin.
-    - c_p_out: Name string for specific heat capacity of coolant at output in Joule per kilogram and Kelvin.
-    - nmix_1: Name string for mixing ratio of input 1.
-    - nmix_2: Name string for mixing ratio of input 2.
-    - nmix_3: Name string for mixing ratio of input 3.
+    - i_in_1: Integer for identifier of input 1.
+    - i_in_2: Integer for identifier of input 2.
+    - i_in_3: Integer for identifier of input 3.
+    - i_out: Integer for identifier of output.
+    - comp_name: String for name of component.
     """
 
-    def __init__(self, p_in_1, T_in_1, Vdot_in_1, p_in_2, T_in_2, Vdot_in_2, p_in_3, T_in_3, Vdot_in_3, p_out, T_out, Vdot_out, c_p_in_1, c_p_in_2, c_p_in_3, c_p_out, nmix_1, nmix_2, nmix_3):
-        self.p_in_1 = p_in_1
-        self.T_in_1 = T_in_1
-        self.Vdot_in_1 = Vdot_in_1
-        self.p_in_2 = p_in_2
-        self.T_in_2 = T_in_2
-        self.Vdot_in_2 = Vdot_in_2
-        self.p_in_3 = p_in_3
-        self.T_in_3 = T_in_3
-        self.Vdot_in_3 = Vdot_in_3
-        self.p_out = p_out
-        self.T_out = T_out
-        self.Vdot_out = Vdot_out
-        self.c_p_in_1 = c_p_in_1
-        self.c_p_in_2 = c_p_in_2
-        self.c_p_in_3 = c_p_in_3
-        self.c_p_out = c_p_out
-        self.nmix_1 = nmix_1
-        self.nmix_2 = nmix_2
-        self.nmix_3 = nmix_3
+    def __init__(self, i_in_1, i_in_2, i_in_3, i_out, comp_name):
+        self.p_in_1 = "p_%i"%(i_in_1)
+        self.T_in_1 = "T_%i"%(i_in_1)
+        self.Vdot_in_1 = "Vdot_%i"%(i_in_1)
+        self.p_in_2 = "p_%i"%(i_in_2)
+        self.T_in_2 = "T_%i"%(i_in_2)
+        self.Vdot_in_2 = "Vdot_%i"%(i_in_2)
+        self.p_in_3 = "p_%i"%(i_in_3)
+        self.T_in_3 = "T_%i"%(i_in_3)
+        self.Vdot_in_3 = "Vdot_%i"%(i_in_3)
+        self.p_out = "p_%i"%(i_out)
+        self.T_out = "T_%i"%(i_out)
+        self.Vdot_out = "Vdot_%i"%(i_out)
+        self.c_p_in_1 = "c_p_in_1_%s"%(comp_name)
+        self.c_p_in_2 = "c_p_in_2_%s"%(comp_name)
+        self.c_p_in_3 = "c_p_in_3_%s"%(comp_name)
+        self.c_p_out = "c_p_out_%s"%(comp_name)
+        self.nmix_1 = "nmix_1_%s"%(comp_name)
+        self.nmix_2 = "nmix_2_%s"%(comp_name)
+        self.nmix_3 = "nmix_3_%s"%(comp_name)
 
 
     def set_eq(self):
@@ -1088,46 +1014,34 @@ class ConnectorPassive2to2:
     - mass flow conservation
 
     Args:
-    - p_in_1: Name string for input 1 pressure in bar.
-    - T_in_1: Name string for input 1 temperature in Kelvin.
-    - Vdot_in_1: Name string for input 1 volume flow in liters per second.
-    - p_in_2: Name string for input 2 pressure in bar.
-    - T_in_2: Name string for input 2 temperature in Kelvin.
-    - Vdot_in_2: Name string for input 2 volume flow in liters per second.
-    - p_out_1: Name string for output 1 pressure in bar.
-    - T_out_1: Name string for output 1 temperature in Kelvin.
-    - Vdot_out_1: Name string for output 1 volume flow in liters per second.
-    - p_out_2: Name string for output 2 pressure in bar.
-    - T_out_2: Name string for output 2 temperature in Kelvin.
-    - Vdot_out_2: Name string for output 2 volume flow in liters per second.
-    - c_p_in_1: Name string for specific heat capacity of coolant at input 1 in Joule per kilogram and Kelvin.
-    - c_p_in_2: Name string for specific heat capacity of coolant at input 2 in Joule per kilogram and Kelvin.
-    - c_p_out: Name string for specific heat capacity of coolant at output in Joule per kilogram and Kelvin.
-    - nmix_1: Name string for mixing ratio of input 1.
-    - nmix_2: Name string for mixing ratio of input 2.
+    - i_in_1: Integer for identifier of input 1.
+    - i_in_2: Integer for identifier of input 2.
+    - i_out_1: Integer for identifier of output 1.
+    - i_out_2: Integer for identifier of output 2.
+    - comp_name: String for name of component.
     """
 
-    def __init__(self, p_in_1, T_in_1, Vdot_in_1, p_in_2, T_in_2, Vdot_in_2, p_out_1, T_out_1, Vdot_out_1, p_out_2, T_out_2, Vdot_out_2, c_p_in_1, c_p_in_2, c_p_out_1, c_p_out_2, nmix_1, nmix_2, nsplit_1, nsplit_2):
-        self.p_in_1 = p_in_1
-        self.T_in_1 = T_in_1
-        self.Vdot_in_1 = Vdot_in_1
-        self.p_in_2 = p_in_2
-        self.T_in_2 = T_in_2
-        self.Vdot_in_2 = Vdot_in_2
-        self.p_out_1 = p_out_1
-        self.T_out_1 = T_out_1
-        self.Vdot_out_1 = Vdot_out_1
-        self.p_out_2 = p_out_2
-        self.T_out_2 = T_out_2
-        self.Vdot_out_2 = Vdot_out_2
-        self.c_p_in_1 = c_p_in_1
-        self.c_p_in_2 = c_p_in_2
-        self.c_p_out_1 = c_p_out_1
-        self.c_p_out_2 = c_p_out_2
-        self.nmix_1 = nmix_1
-        self.nmix_2 = nmix_2
-        self.nsplit_1 = nsplit_1
-        self.nsplit_2 = nsplit_2
+    def __init__(self, i_in_1, i_in_2, i_out_1, i_out_2, comp_name):
+        self.p_in_1 = "p_%i"%(i_in_1)
+        self.T_in_1 = "T_%i"%(i_in_1)
+        self.Vdot_in_1 = "Vdot_%i"%(i_in_1)
+        self.p_in_2 = "p_%i"%(i_in_2)
+        self.T_in_2 = "T_%i"%(i_in_2)
+        self.Vdot_in_2 = "Vdot_%i"%(i_in_2)
+        self.p_out_1 = "p_%i"%(i_out_1)
+        self.T_out_1 = "T_%i"%(i_out_1)
+        self.Vdot_out_1 = "Vdot_%i"%(i_out_1)
+        self.p_out_2 = "p_%i"%(i_out_2)
+        self.T_out_2 = "T_%i"%(i_out_2)
+        self.Vdot_out_2 = "Vdot_%i"%(i_out_2)
+        self.c_p_in_1 = "c_p_in_1_%s"%(comp_name)
+        self.c_p_in_2 = "c_p_in_2_%s"%(comp_name)
+        self.c_p_out_1 = "c_p_out_1_%s"%(comp_name)
+        self.c_p_out_2 = "c_p_out_2_%s"%(comp_name)
+        self.nmix_1 = "nmix_1_%s"%(comp_name)
+        self.nmix_2 = "nmix_2_%s"%(comp_name)
+        self.nsplit_1 = "nsplit_1_%s"%(comp_name)
+        self.nsplit_2 = "nsplit_2_%s"%(comp_name)
 
 
     def set_eq(self):
