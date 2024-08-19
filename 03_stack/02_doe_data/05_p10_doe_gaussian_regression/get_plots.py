@@ -386,7 +386,8 @@ def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
 
     # Create a figure and axis
     fig, ax = plt.subplots(figsize=(12, 8))
-
+    fig.tight_layout()
+    
     # Create a colormap and normalize for the color gradient
     norm = mcolors.Normalize(vmin=125, vmax=175)
     cmap = cm.ScalarMappable(norm=norm, cmap='plasma')
