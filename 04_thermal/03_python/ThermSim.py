@@ -8,6 +8,7 @@ import ast
 import numpy as np
 import CoolProp.CoolProp as cp
 
+
 class Circuit:
     """
     Set up a closed circuit to evaluate thermal properties across multiple connected components.

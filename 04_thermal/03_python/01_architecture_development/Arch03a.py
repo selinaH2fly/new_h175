@@ -5,7 +5,21 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 import ThermSim
 
-# Input on architecture
+
+"""
+Provide input on architecture
+
+                  .------------> throttle1 --> bop1 --------------.
+                  | 3                       4                   5 |
+                  |                                               v
+.-> pump1 --> splitter1 --> mixer1 --> stack1 --> splitter2 --> mixer2
+|          2             6    ^     7          8      |      9    |
+|                             | 11                 10 |           |
+|                             '-------- pump2 <-------'           |
+|                                                                 |
+| 1                                                            12 |
+'--------------------------- radiator1 <--------------------------'
+"""
 
 circ = ThermSim.Circuit()
 pump1 = ThermSim.Pump("p_1", "T_1", "Vdot_1", "p_2", "T_2", "Vdot_2", "delta_p_pump1")
@@ -30,7 +44,9 @@ radiator1 = ThermSim.Heatsink("p_12", "T_12", "Vdot_12", "p_1", "T_1", "Vdot_1",
 circ.add_comp(radiator1)
 
 
-# Input on boundary conditions
+"""
+Provide input on boundary conditions
+"""
 
 circ.add_bc("p_1 = 1.0")
 # circ.add_bc("delta_p_bop1 = - (0.0014 + 0.0023 - 0.0028 + 0.0052 + 0.0022 + 0.0013 + 0.001) * 60.0 * Vdot_3 - (0.0001 + 0.0004 + 0.0035 + 0.0028 + 0.001 + 0.0003 + 0.001) * 60.0 ** 2 * Vdot_3 **2")
@@ -48,6 +64,8 @@ circ.add_bc("Qdot_stack1 = 180000.0")
 circ.add_bc("Vdot_4 = 0.1")
 
 
-# Evaluation and output
+"""
+Evaluate and generate output
+"""
 
 circ.evaluate()
