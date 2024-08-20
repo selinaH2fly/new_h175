@@ -24,7 +24,6 @@ class Recirculation_Pump:
         - reci_electric_power_W: Electrical power consumed by the recirculation pump in Watts.
         """
         
-        # TODO: Use SI units for all parameters!
         self.params_physics = params_physics
         self.isentropic_efficiency = isentropic_efficiency
         self.electric_efficiency = electric_efficiency
