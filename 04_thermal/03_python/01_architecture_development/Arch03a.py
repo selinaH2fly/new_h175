@@ -50,7 +50,7 @@ Provide input on boundary conditions
 
 circ.add_bc("p_1 = 1.0")
 # circ.add_bc("delta_p_bop1 = - (0.0014 + 0.0023 - 0.0028 + 0.0052 + 0.0022 + 0.0013 + 0.001) * 60.0 * Vdot_3 - (0.0001 + 0.0004 + 0.0035 + 0.0028 + 0.001 + 0.0003 + 0.001) * 60.0 ** 2 * Vdot_3 **2")
-circ.add_bc("delta_p_bop1 = - (0.0014 + 0.0023) * 60.0 * Vdot_3 - (0.0001 + 0.0004) * 60.0 ** 2 * Vdot_3 **2")
+circ.add_bc("delta_p_bop1 = - (0.0014 + 0.0023) * 60.0 * Vdot_4 - (0.0001 + 0.0004) * 60.0 ** 2 * Vdot_4 **2")
 circ.add_bc("delta_p_stack1 = - 0.6")
 circ.add_bc("delta_p_radiator1 = - 0.4")
 
