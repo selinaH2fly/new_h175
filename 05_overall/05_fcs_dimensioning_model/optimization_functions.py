@@ -168,7 +168,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         coolant_pump.coolant_flow_m3_s = coolant_flow_rate_m3_s
         coolant_flow_rate_l_min = coolant_flow_rate_m3_s * 60 * 1000
         stack_pressure_drop_mbar = 6.5e-3*(coolant_flow_rate_l_min ** 2) + 0.477*coolant_flow_rate_l_min  # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
-        coolant_pump.head_Pa = stack_pressure_drop_mbar*1e-3*1e5 + radiator.calculate_pressure_drop(coolant_flow_m3_s=coolant_flow_rate_m3_s) + 0.1*1e5 + 0.5*1e5 # coolant_pump.head_Pa = stack_pressure_drop + radiator_pressure_drop + 0.1 bar + 0.5 bar (additional HT + LT pressure drop)
+        coolant_pump.head_Pa = stack_pressure_drop_mbar*1e-3*1e5 + radiator.calculate_pressure_drop(coolant_flow_m3_s=coolant_flow_rate_m3_s) + 0.5*1e5 # coolant_pump.head_Pa = stack_pressure_drop + radiator_pressure_drop + 0.1 bar (additional HT pressure drop) + 0.5 bar (additional LT pressure drop)
         coolant_pump_power_W = coolant_pump.calculate_power()
 
         # Compute the hydrogen mass flow rate
