@@ -12,7 +12,7 @@ import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 
 # Read the data from the CSV file
-file_path = r"consolidated_20.0-175.0kW_500-500_120-120ft__2\optimized_parameters_20.0-175.0kW_500-500_120-120ft.csv"
+file_path = r"consolidated\optimized_parameters_20-175kW_400-500_0-150ft.csv"
 
 df = pd.read_csv(file_path)
 
@@ -396,8 +396,9 @@ _eol = False
 
 # Split the data based on 'Specified Cell Count', turbine and eol
 df = df1[(df1['Specified Cell Count'] == 500) 
-             & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["Turbine (t/f)"] == _turbine)
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 
 
@@ -463,15 +464,18 @@ _eol = False
 # Split the data based on 'Specified Cell Count', turbine and eol
 df_400 = df1[(df1['Specified Cell Count'] == 400) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 df_450 = df1[(df1['Specified Cell Count'] == 450) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 df_500 = df1[(df1['Specified Cell Count'] == 500) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 data = [df_400, df_450, df_500]
 
@@ -512,15 +516,18 @@ _eol = True
 # Split the data based on 'Specified Cell Count', turbine and eol
 df_400_eol = df1[(df1['Specified Cell Count'] == 400) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 df_450_eol = df1[(df1['Specified Cell Count'] == 450) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 df_500_eol = df1[(df1['Specified Cell Count'] == 500) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 data = [df_400_eol, df_450_eol, df_500_eol]
 
@@ -591,15 +598,18 @@ _eol = False
 # Split the data based on 'Specified Cell Count', turbine and eol
 df_400 = df1[(df1['Specified Cell Count'] == 400) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 df_450 = df1[(df1['Specified Cell Count'] == 450) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 df_500 = df1[(df1['Specified Cell Count'] == 500) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 data = [df_400, df_450, df_500]
 
@@ -643,15 +653,18 @@ _eol = True
 # Split the data based on 'Specified Cell Count', turbine and eol
 df_400_eol = df1[(df1['Specified Cell Count'] == 400) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 df_450_eol = df1[(df1['Specified Cell Count'] == 450) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 df_500_eol = df1[(df1['Specified Cell Count'] == 500) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 data = [df_400_eol, df_450_eol, df_500_eol]
 
@@ -715,7 +728,8 @@ def load_and_filter_data(file_path, turbine, eol, cell_counts):
     for count in cell_counts:
         filtered_data[count] = df[(df['Specified Cell Count'] == count) 
                                   & (df["turbine (t/f)"] == turbine)
-                                  & (df["eol (t/f)"] == eol)]
+                                  & (df["eol (t/f)"] == eol)
+                                  & (df1["converged (t/f)"] == True)]
     
     return filtered_data
 
@@ -786,12 +800,15 @@ def load_and_filter_data(file_path, turbine, eol, cell_counts):
     for count in cell_counts:
         filtered_data[count] = df[(df['Specified Cell Count'] == count) 
                                   & (df["turbine (t/f)"] == turbine)
-                                  & (df["eol (t/f)"] == eol)]
+                                  & (df["eol (t/f)"] == eol)
+                                  & (df1["converged (t/f)"] == True)]
     
     return filtered_data
 
 #file_path = r"consolidated_20-175kW_400-500_120-120ft__2\optimized_parameters_20-175kW_400-500_120-120ft.csv"
-file_path = r"consolidated_20-175kW_400-500_120-120ft__1\optimized_parameters_20-175kW_400-500_120-120ft.csv"
+# file_path = r"consolidated_20-175kW_400-500_120-120ft__1\optimized_parameters_20-175kW_400-500_120-120ft.csv"
+file_path = r"consolidated\optimized_parameters_20-175kW_400-500_0-150ft.csv"
+
 cell_counts = [400, 450, 500]
 
 # Load and filter data for different scenarios
@@ -874,15 +891,18 @@ _eol = True
 # Split the data based on 'Specified Cell Count', turbine and eol
 df_400 = df1[(df1['Specified Cell Count'] == 400) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 df_450 = df1[(df1['Specified Cell Count'] == 450) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 df_500 = df1[(df1['Specified Cell Count'] == 500) 
              & (df1["turbine (t/f)"] == _turbine)
-             & (df1["eol (t/f)"] == _eol)]
+             & (df1["eol (t/f)"] == _eol)
+             & (df1["converged (t/f)"] == True)]
 
 data_sets = [df_400, df_450, df_500]
 

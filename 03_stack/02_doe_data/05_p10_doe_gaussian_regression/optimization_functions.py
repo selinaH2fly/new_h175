@@ -167,7 +167,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         coolant_pump.coolant_flow_m3_s = coolant_flow_rate_m3_s
         coolant_flow_rate_l_min = coolant_flow_rate_m3_s * 60 * 1000
         stack_pressure_drop_mbar = 6.5e-3*(coolant_flow_rate_l_min ** 2) + 0.477*coolant_flow_rate_l_min  # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
-        coolant_pump.head_Pa = stack_pressure_drop_mbar*1e-3*1e5  + radiator.pressure_drop_Pa + 0.1*1e5 + 0.5*1e5 # coolant_pump.head_Pa = stack_pressure_drop + radiator_pressure_drop + 0.1 bar + 0.5 bar (additional HT + LT pressure drop)
+        coolant_pump.head_Pa = stack_pressure_drop_mbar*1e-3*1e5 + radiator.pressure_drop_Pa + 0.1*1e5 + 0.5*1e5 # coolant_pump.head_Pa = stack_pressure_drop + radiator_pressure_drop + 0.1 bar + 0.5 bar (additional HT + LT pressure drop)
         coolant_pump_power_W = coolant_pump.calculate_power()
 
         # Compute the hydrogen mass flow rate
@@ -208,7 +208,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
     # Perform the optimization using differential evolution
     result = differential_evolution(objective_function, normalized_bounds, constraints=nonlinear_constraint, maxiter=1000, popsize=30, recombination=0.9, polish=False, disp=False, seed=None)
-    print(f'{result.message}') #TODO: Evaluate the message and store success/failure to .csv file
+    optimization_converged = result.success
+    print(f'{result.message}')
 
     # Evaluate the models with the optimal input
     optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(result.x)
@@ -217,4 +218,4 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     stack_power_kW = optimal_input[0] * cell_voltage * cellcount / 1000
 
     return optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_W / 1000, turbine_power_W / 1000, \
-        reci_pump_power_W / 1000, coolant_pump_power_W / 1000
+        reci_pump_power_W / 1000, coolant_pump_power_W / 1000, optimization_converged
