@@ -40,11 +40,11 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     # Optimize the input variables
     optimal_input, cell_voltage, hydrogen_mass_flow_g_s, \
         stack_power_kW, compressor_power_kW, turbine_power_kW, \
-            reci_pump_power_kW, coolant_pump_power_kW = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
-                                                                                     flight_level_100ft, cellcount=specified_cell_count,
-                                                                                     bounds=_params_optimization.bounds, power_constraint_kW=power_constraint_kW,
-                                                                                     penalty_weight=1e-7, params_physics=_params_pyhsics,
-                                                                                     consider_turbine=consider_turbine, end_of_life=end_of_life)
+            reci_pump_power_kW, coolant_pump_power_kW, converged = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
+                                                                                                flight_level_100ft, cellcount=specified_cell_count,
+                                                                                                bounds=_params_optimization.bounds, power_constraint_kW=power_constraint_kW,
+                                                                                                penalty_weight=1e-7, params_physics=_params_pyhsics,
+                                                                                                consider_turbine=consider_turbine, end_of_life=end_of_life)
     
     system_power_kW = stack_power_kW - compressor_power_kW + turbine_power_kW - reci_pump_power_kW - coolant_pump_power_kW
 
@@ -72,7 +72,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     # Save results to a .csv file 
     export_to_csv(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds, hydrogen_mass_flow_g_s, cell_voltage, 
                       system_power_kW, compressor_power_kW, turbine_power_kW, reci_pump_power_kW, coolant_pump_power_kW, stack_power_kW,
-                      power_constraint_kW, specified_cell_count, flight_level_100ft, consider_turbine, end_of_life, filename='optimized_input_data.csv')
+                      power_constraint_kW, specified_cell_count, flight_level_100ft, consider_turbine, end_of_life, converged, filename='optimized_input_data.csv')
     
 # Entry point of the script
 if __name__ == '__main__':
