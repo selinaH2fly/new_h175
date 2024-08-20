@@ -12,7 +12,7 @@ from sklearn.metrics import r2_score
 # %% Plot functions:
 
 # PLOT: Polcurve single bol
-def plot_polarization_curves(data, titles, saving=True):
+def plot_polarization_curves(data, titles, fl_set, saving=True):
     """
     Plots the polarization curves for multiple datasets.
 
@@ -22,7 +22,7 @@ def plot_polarization_curves(data, titles, saving=True):
     - saving: Boolean, if True, saves the plots as PNG files.
     """
     for df, title in zip(data, titles):
-        df = df[df['Flight Level (100x ft)'] == 120]
+        df = df[df['Flight Level (100x ft)'] == fl_set]
         fig, ax = plt.subplots(figsize=(12, 8))
         
         # Create a colormap and normalize for the color gradient
@@ -44,7 +44,7 @@ def plot_polarization_curves(data, titles, saving=True):
         ax.axvspan(700, 800, color='red', alpha=0.3)
         
         # Set title and labels
-        ax.set_title(f'System Polarization Curve, FL 120, {title}', fontsize=14)
+        ax.set_title(f'System Polarization Curve, FL {fl_set}, {title}', fontsize=14)
         ax.set_xlabel('Current [A]')
         ax.set_ylabel('Cell Voltage [V]')
         ax.grid(True)
@@ -74,10 +74,10 @@ def plot_polarization_curves(data, titles, saving=True):
         plt.show()
                 
 # PLOT: Polcurve bol vs eol connectde points
-def plot_polarization_curves_bol_eol(df1, titles,colors, saving=True):
+def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
     
     def load_and_filter_data(df1, eol, cell_counts):
-        df = df1[df1['Flight Level (100x ft)'] == 120]
+        df = df1[df1['Flight Level (100x ft)'] == fl_set]
         
         filtered_data = {}
         for count in cell_counts:
@@ -132,7 +132,7 @@ def plot_polarization_curves_bol_eol(df1, titles,colors, saving=True):
     ax.axvspan(700, 1300, color='red', alpha=0.2)
 
     # Set title and labels
-    ax.set_title("System Polarization Curve, FL 120, eol vs bol")
+    ax.set_title(f"System Polarization Curve, {fl_set}, eol vs bol")
     ax.set_xlabel('Current [A]')
     ax.set_xlim([0, 1300])
     ax.set_ylabel('Cell Voltage [V]')
@@ -177,7 +177,7 @@ def annotate_boxes(ax, df, cell_width=1, cell_height=2):
                 ax.text(col_pos + cell_width / 2, y_pos + cell_height / 2, 
                         str(cell_value), color='black', ha='center', va='center')
             
-def format_data_for_plot(df, components, eol_col='eol (t/f)', tolerance=0.01):
+def format_data_for_plot(df, components, fl_set, eol_col='eol (t/f)', tolerance=0.01):
     """
     Formats the DataFrame for plotting by separating components based on the eol (t/f) column.
     Also checks if 'Power Constraint (kW)_bol' matches the stack power values within a tolerance and sets NaN if not.
@@ -194,7 +194,7 @@ def format_data_for_plot(df, components, eol_col='eol (t/f)', tolerance=0.01):
     # Create an empty DataFrame to store formatted data
     formatted_df = pd.DataFrame()
     #current = df["current_A (Value)"]
-    df = df[df['Flight Level (100x ft)'] == 120]
+    df = df[df['Flight Level (100x ft)'] == fl_set]
     for component in components:
         # Filter out the columns related to the component
         component_df = df[[component, eol_col]].copy()
@@ -227,7 +227,7 @@ def format_data_for_plot(df, components, eol_col='eol (t/f)', tolerance=0.01):
 
     return formatted_df
 
-def plot_power_needs(data, titles, saving=False):
+def plot_power_needs(data, titles, fl_set, saving=False):
     """
     Plot a heatmap-like representation of power needs by components, with specific formatting.
 
@@ -247,7 +247,7 @@ def plot_power_needs(data, titles, saving=False):
     for df1, title in zip(data, titles):
         
         #Formate the data to the needed formate:
-        df = format_data_for_plot(df1, components, eol_col='eol (t/f)')
+        df = format_data_for_plot(df1, components, fl_set, eol_col='eol (t/f)')
         
         # Set up the figure and axis
         fig, ax = plt.subplots(figsize=(10, 8))
@@ -302,7 +302,7 @@ def plot_power_needs(data, titles, saving=False):
         cbar.set_label('Power (kW)')
     
         # Set the title centered between the colored boxes
-        title = f"Power Consumption of Components [kW] {title}"
+        title = f"Power Consumption of Components [kW] {title}, FL {fl_set}"
         ax.set_title(title, pad=30, loc='center')
     
         # Save or show the plot
@@ -312,7 +312,7 @@ def plot_power_needs(data, titles, saving=False):
             plt.show()
 
 # PLOT: h2_consumption
-def plot_h2_consumption(data, titles, colors, weights, saving=True):
+def plot_h2_consumption(data, titles, colors, weights, fl_set, saving=True):
     
     fig, ax = plt.subplots(figsize=(12, 8))
     fig.tight_layout()
@@ -321,10 +321,11 @@ def plot_h2_consumption(data, titles, colors, weights, saving=True):
     labels = []
 
     for df, title, color, weight in zip(data, titles, colors, weights):
-        df = df[df['Flight Level (100x ft)'] == 120]
+        df = df[df['Flight Level (100x ft)'] == fl_set]
         for filter_eol, linestyle, marker, label_suffix in [(False, '-', 'p', 'Normal'), (True, '--', 'X', 'EOL')]:
             # Apply the filter based on the function argument
-            filtered_df = df[df["eol (t/f)"] == filter_eol]
+            filtered_df = df[(df["eol (t/f)"] == filter_eol) 
+                             &(df["current_A (Value)"] <= 700)]
             
             # Scatter plot for each dataset
             scatter = ax.scatter(filtered_df['System Power (kW)'], 
@@ -363,7 +364,7 @@ def plot_h2_consumption(data, titles, colors, weights, saving=True):
     ax.legend(handles, labels, loc='best')
 
     # Set title and labels
-    ax.set_title('Hydrogen Consumption vs System Power, FL 120')
+    ax.set_title(f'Hydrogen Consumption vs System Power, {fl_set}')
     ax.set_xlabel('System Power [kW]')
     ax.set_ylabel('Hydrogen Consumption [g/s]')
     ax.grid(True)
@@ -373,7 +374,7 @@ def plot_h2_consumption(data, titles, colors, weights, saving=True):
     plt.show()
     
 # PLOT: H2 consumption over flight level all in one
-def H2_consumption_vs_FL(df1, markers, saving=True, mode="eol"):
+def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
 
     # List of cell counts and corresponding icons
     cells = [400, 450, 500]
@@ -385,7 +386,8 @@ def H2_consumption_vs_FL(df1, markers, saving=True, mode="eol"):
 
     # Create a figure and axis
     fig, ax = plt.subplots(figsize=(12, 8))
-
+    fig.tight_layout()
+    
     # Create a colormap and normalize for the color gradient
     norm = mcolors.Normalize(vmin=125, vmax=175)
     cmap = cm.ScalarMappable(norm=norm, cmap='plasma')
@@ -424,7 +426,12 @@ def H2_consumption_vs_FL(df1, markers, saving=True, mode="eol"):
     # Set title and labels
     ax.set_title(f'System Hydrogen Consumption over FL for Different Cell Counts at {mode_name}', fontsize=14, pad=20)
     ax.set_xlabel('Flight Level [100x ft]')
-    ax.set_xlim([-1, 121])
+    # Set x-range from 0 to 140 in steps of 20, and include 150
+    x_ticks = list(range(0, fl_max, 20))
+    ax.set_xlim([0, fl_max])
+    ax.set_xticks(x_ticks)
+
+    ax.set_xlim([-1, fl_max+1])
     ax.set_ylabel('Hydrogen Consumption [g/s]')
     ax.set_ylim([1, 6])
     ax.grid(True)
@@ -476,7 +483,8 @@ def plot_weight_estimate(data, titles, colors, components_dict, components_sd_di
     # Extract Power of components and calculate total weight for each cell count
     for df, title, color, m_stack_value, marker in zip(data, titles, colors, m_stack_values, markers):
         # Filter the df for eol or bol
-        df = df[df["eol (t/f)"] == filter_mode]
+        df = df[(df["eol (t/f)"] == filter_mode) & (df["current_A (Value)"] <= 700)]
+
         system_weights_of_points = []
         system_errors_of_points = []
         for point in points:
@@ -536,9 +544,7 @@ def plot_weight_estimate(data, titles, colors, components_dict, components_sd_di
     else:
         plt.show()
 
-
-
-    
+   
 #%%  
  
 def analyze_data(_file_path1, saving=True):
@@ -566,23 +572,26 @@ def analyze_data(_file_path1, saving=True):
     titles = ['400 Cells',  '450 Cells','500 Cells']
     colors = [ "tab:blue", "tab:orange",  "tab:red"]
     markers= ["o", "v", "s"]
+    
+    fl_set = 125
+    fl_max = max(df1["Flight Level (100x ft)"])
+    
     ###########PLOT: Polcurves
-    plot_polarization_curves(data, titles, saving=saving)    
+    plot_polarization_curves(data, titles, fl_set, saving=True)
+    
+    ############PLOT: Polcurves eol vs bol connected
+    plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
+    
+    ############PLOT: System Power Grid Plot
+    plot_power_needs(data, titles, fl_set, saving=saving)
     
     ###########PLOT: H2 consumption
     weights = [1,1,1]#[39.92+ 6.26,43.75+6.01,47.58+5.77] #stack + compressor gewicht
-    plot_h2_consumption(data, titles, colors, weights, saving=saving)
+    plot_h2_consumption(data, titles, colors, weights, fl_set, saving=saving)
         
-    ############PLOT: System Power Grid Plot
-    plot_power_needs(data, titles, saving=saving)
-    
-    ############PLOT: Polcurves eol vs bol connected
-    plot_polarization_curves_bol_eol(df1, titles,colors, saving=saving)
-
     #############PLOT: H2 consumption vs Flightlevel:
-    H2_consumption_vs_FL(df1, markers, saving=saving, mode="bol")
-    H2_consumption_vs_FL(df1, markers, saving=saving, mode="eol")
-
+    H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="bol")
+    H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="eol")
 
     ############Plot Weight estimate
     #Weight/Power Factor
@@ -597,12 +606,12 @@ def analyze_data(_file_path1, saving=True):
     
     plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=True, mode="bol")
     plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=True, mode="eol")
+    
 # Go back to origin dir
     os.chdir("../../")
 # %%    
 
 
-analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-120ft__1\optimized_parameters_20-175kW_400-500_0-120ft.csv", saving=True)    
-
+analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__1\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
 
 #TODO write init:

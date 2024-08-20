@@ -2,14 +2,17 @@
 
 import subprocess
 import argparse
-import json
+#import json
 import numpy as np
 import itertools
 from collect_data import consolidate_experiment_data
 from get_plots import analyze_data
 from tqdm import tqdm
 
-
+def save_failed_case(parameter, error_message):
+    with open("failed_cases.txt", "a") as file:
+        file.write(f"Parameter: {parameter}, Error: {error_message}\n")
+        
 def build_command(parameter):
     command = [
         "python", "optimize_input_variables.py",
@@ -22,20 +25,20 @@ def build_command(parameter):
     return command
  
 if __name__ == '__main__':
-    import argparse
+    #import argparse
 
     parser = argparse.ArgumentParser(description="Main script to call optimize_input_variables.py")
     parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[20,175])
     parser.add_argument("-n", "--cellcount", type=float, nargs='+', help="Stack cell number for optimizing subject to power constraint", default=[400,500])
-    parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[120, 120])
-    parser.add_argument("-t", "--turbine", type=str, choices=["true", "false"], default="true", help="Specifies whether recuperation shall be taken into account (default: True).")
-    parser.add_argument("--eol", type=str, choices=["true", "false"], default="false", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
+    parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[0, 150])
+    parser.add_argument("-t", "--turbine", type=str, choices=["True"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
+    parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
 
     args = parser.parse_args()
     
     _step_p = 30
     _step_c = 50
-    _step_fl = 20
+    _step_fl = 25
     #TODO: range_power is ugly deined atm. due to not starting at 0 and want to have inclusive bounds.... maybe there is a better way?
     #range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
     range_power = np.array([20, 50, 80, 125, 150, 175])
@@ -43,12 +46,11 @@ if __name__ == '__main__':
     range_fl = np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
     
     # Convert turbine and eol to boolean lists
-    range_turbine = [True]#[args.turbine.lower() == "true", args.turbine.lower() == "false"]
-    range_eol = [args.eol.lower() == "true", args.eol.lower() == "false"]
+    range_turbine =[args.turbine == "True"]#, args.turbine.lower() == "false"]
+    range_eol = [args.eol == "True", args.eol == "False"]
 
     # Generate all combinations of parameters
     parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_eol))
-
     
     for parameter in tqdm(parameters, desc="Optimization Progress", unit="parameter"):
         
@@ -56,8 +58,14 @@ if __name__ == '__main__':
         command = build_command(parameter)
         print('\n',command, "\n")
         result = subprocess.run(command, capture_output=True, text=True)
+        
+        if result.returncode != 0:
+            print("\nError occurred:", result.stderr, "\n")
+            save_failed_case(parameter, result.stderr)
+        
         # Print the output and error (if any) from the subprocess call
         print( "\n", result.stdout, "\n")
+        #error
     print("Done with Optimization")
         
     path_to_data = consolidate_experiment_data(parameters)
