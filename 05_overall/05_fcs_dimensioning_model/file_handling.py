@@ -3,7 +3,7 @@ import shutil
 
 import torch
 import gpytorch
-from gpr_model import ExactGPModel, GPRModelContainer
+from Trained_Models.gpr_model import ExactGPModel, GPRModelContainer
 
 # Create and browse to folder for storing experiment results
 def create_experiment_folder(_params_model=None, _params_training=None, _params_logging=None, _params_optimization=None, type='training'):
