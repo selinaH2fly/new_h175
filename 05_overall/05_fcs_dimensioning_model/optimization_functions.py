@@ -161,14 +161,16 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         reci_pump_power_W = reci_pump.calculate_power()
 
         # Compute the coolant pump power
-        coolant_flow_rate_m3_s = compute_coolant_flow(optimized_current_A, optimized_cell_voltage_V,
-                                                      optimized_temp_coolant_inlet_degC, optimized_temp_coolant_outlet_degC,
-                                                      flight_level_100ft=flight_level_100ft, cellcount=cellcount)
+        coolant_ht_flow_rate_m3_s = compute_coolant_flow(optimized_current_A, optimized_cell_voltage_V,
+                                                         optimized_temp_coolant_inlet_degC, optimized_temp_coolant_outlet_degC,
+                                                         flight_level_100ft=flight_level_100ft, cellcount=cellcount)
         
-        coolant_pump.coolant_flow_m3_s = coolant_flow_rate_m3_s
-        coolant_flow_rate_l_min = coolant_flow_rate_m3_s * 60 * 1000
-        stack_pressure_drop_mbar = 6.5e-3*(coolant_flow_rate_l_min ** 2) + 0.477*coolant_flow_rate_l_min  # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
-        coolant_pump.head_Pa = stack_pressure_drop_mbar*1e-3*1e5 + radiator.calculate_pressure_drop(coolant_flow_m3_s=coolant_flow_rate_m3_s) + 0.5*1e5 # coolant_pump.head_Pa = stack_pressure_drop + radiator_pressure_drop + 0.1 bar (additional HT pressure drop) + 0.5 bar (additional LT pressure drop)
+        coolant_ht_flow_rate_l_min = coolant_ht_flow_rate_m3_s * 60 * 1000
+        stack_pressure_drop_mbar = 6.5e-3*(coolant_ht_flow_rate_l_min ** 2) + 0.477*coolant_ht_flow_rate_l_min  # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
+        coolant_pump.coolant_flow_m3_s = coolant_ht_flow_rate_m3_s
+
+        #TODO: Normalize LT pressure drop to flow ratio (-> 500 mbar for LT flow = 10 l/min -> P_drop_lt = 0.5*1e5 * 10/(1000*60))
+        coolant_pump.head_Pa = stack_pressure_drop_mbar*1e-3*1e5 + radiator.calculate_pressure_drop(coolant_flow_m3_s=coolant_ht_flow_rate_m3_s) + 0.5*1e5 # coolant_pump.head_Pa = stack_pressure_drop + radiator_pressure_drop + 0.1 bar (additional HT pressure drop) + 0.5 bar (additional LT pressure drop)
         coolant_pump_power_W = coolant_pump.calculate_power()
 
         # Compute the hydrogen mass flow rate
