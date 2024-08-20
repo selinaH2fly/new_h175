@@ -69,7 +69,9 @@ class Radiator_Parameters:
 
     def __init__(self):
 
-        self.pressure_drop_Pa = 0.3*1e5 # roughly 300 mbar constant pressure drop according to Chris B.
+        # Assumption: ~0.3 bar pressure drop at 300 l/min coolant
+        self.nominal_pressure_drop_Pa = 0.3*1e5
+        self.nominal_coolant_flow_m3_s = 300/(1000*60)
 
 class Eol_Parameter:
 
