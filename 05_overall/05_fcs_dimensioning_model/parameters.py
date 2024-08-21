@@ -7,7 +7,7 @@ class Optimization_Parameters:
         to prevent extrapolation. This is a good idea, but requires a bit more effort. Idea: Make it a constraint in the optimization problem.
         TODO: Include parameters for optimization function (such as maxiter, popsize, etc.)
         '''
-        self.bounds = [(50, 1e6),       # current_A
+        self.bounds = [(50, 2e3),       # current_A
                         (30, 100),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
                         (1.6, 5),       # stoich_cathode (lambda_min = 1.6 according to P10 manual)
                         (1.1, 3.3),     # pressure_cathode_in_bara (p_max = 2.3 barg according to P10 manual)
