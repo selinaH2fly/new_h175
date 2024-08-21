@@ -5,7 +5,8 @@ class Recirculation_Pump:
     
     def __init__(self, params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95, 
                  current_A=100, temperature_in_K=293.15, pressure_in_Pa=1e5, pressure_out_Pa=1e5,
-                 n_cell=455, cell_area_m2=300*1e-4, stoich_anode=1.5, fixed_recirculation_ratio=None): 
+                 n_cell=455, cell_area_m2=300*1e-4, stoich_anode=1.5, nominal_BoP_pressure_drop_Pa=0.1*1e5,
+                 fixed_recirculation_ratio=None): 
         """
         Initialize the recirculation pump with a given efficiency and operating conditions.
 
@@ -24,6 +25,7 @@ class Recirculation_Pump:
         - reci_electric_power_W: Electrical power consumed by the recirculation pump in Watts.
         """
         
+        # TODO: No constant parameters in the class definition. Move to parameters.py
         self.params_physics = params_physics
         self.isentropic_efficiency = isentropic_efficiency
         self.electric_efficiency = electric_efficiency
@@ -37,8 +39,7 @@ class Recirculation_Pump:
         self.stoich_0 = 1.05                            # stoich_0 1.02-1.05 "lost als H2 aus system = ~5%" TODO: rather specify the recirculation ratio!
         self.hydrogen_concentration_supply = 1          # H2 concentration in tank
         self.fixed_recirculation_ratio = fixed_recirculation_ratio
-        self.nominal_BoP_pressure_drop = 0.1*1e5        # nominal pressure drop across BoP components in the recirculation loop
-        # self.nominal_flow_m3_s = 0.0547                 # lambda = 1.5 @ 450 Amps, 455 cells; hydrogen/nitrogen ratio = 70/30        self.fixed_recirculation_ratio = fixed_recirculation_ratio
+        self.nominal_BoP_pressure_drop = nominal_BoP_pressure_drop_Pa
     
     def calculate_power(self)->float:
 
@@ -132,7 +133,7 @@ class Recirculation_Pump:
         return pressure_drop_Pa
         
  
-# %% Example usage:
+# %% Example Usage:
 import parameters   
 params_physics = parameters.Physical_Parameters() 
 

@@ -45,26 +45,34 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_recirculation_pump = parameters.Recirculation_Pump_Parameters()
     _params_coolant_pump = parameters.Coolant_Pump_Parameters()
     _params_radiator = parameters.Radiator_Parameters()
-    # _params_stack = parameters.Stack_Parameters()
+    _params_stack = parameters.Stack_Parameters()
     _params_Eol = parameters.Eol_Parameter()
 
-     # Instantiate components
+    # Instantiate components
     compressor      =   Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency,
                                    electric_efficiency=_params_compressor.electric_efficiency,
                                    nominal_BoP_pressure_drop_Pa=_params_compressor.nominal_BoP_pressure_drop_Pa,
                                    nominal_air_flow_kg_s=_params_compressor.nominal_air_flow_kg_s)
+    
     turbine         =   Turbine(_params_physics, isentropic_efficiency=_params_turbine.isentropic_efficiency,
                                 nominal_BoP_pressure_drop_Pa=_params_turbine.nominal_BoP_pressure_drop_Pa,
                                 nominal_air_flow_kg_s=_params_turbine.nominal_air_flow_kg_s)
+    
     reci_pump       =   Recirculation_Pump(_params_physics, isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
-                                           n_cell=cellcount, cell_area_m2=300*1e-4, electric_efficiency=_params_recirculation_pump.electric_efficiency,
-                                           fixed_recirculation_ratio=70/30)
+                                           electric_efficiency=_params_recirculation_pump.electric_efficiency,
+                                           n_cell=cellcount, cell_area_m2=_params_stack.cell_area_m2,
+                                           fixed_recirculation_ratio=_params_recirculation_pump.fixed_recirculation_ratio,
+                                           nominal_BoP_pressure_drop_Pa=_params_recirculation_pump.nominal_BoP_pressure_drop_Pa)
+    
     coolant_pump_ht =   Coolant_Pump(isentropic_efficiency=_params_coolant_pump.isentropic_efficiency,
                                      electric_efficiency=_params_coolant_pump.electric_efficiency)
+    
     coolant_pump_lt =   Coolant_Pump(isentropic_efficiency=_params_coolant_pump.isentropic_efficiency,
                                      electric_efficiency=_params_coolant_pump.electric_efficiency) # virtual LT coolant pump for straight-forward power computation
+    
     radiator        =   Radiator(nominal_pressure_drop_Pa=_params_radiator.nominal_pressure_drop_Pa,
                                  nominal_coolant_flow_m3_s=_params_radiator.nominal_coolant_flow_m3_s)
+    
     stack           =   Stack(cellcount=cellcount)
 
     def evaluate_models(x): # TODO: refactor this function that became too long and complex
