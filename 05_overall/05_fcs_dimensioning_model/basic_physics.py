@@ -31,15 +31,16 @@ def compute_air_mass_flow(stoichiometry, current_A, cellcount=275):
     # Load the physical parameters
     params_physics = Physical_Parameters()
 
-    # Calculate the air mass flow rate
-    air_mass_flow_kg_s = current_A * cellcount * stoichiometry * params_physics.air_molar_mass / \
-        (4 * params_physics.faraday * params_physics.oxygen_mol_fraction)
+    # Calculate the air flow rates
+    air_flow_mol_s = current_A * cellcount * stoichiometry / (4 * params_physics.faraday * params_physics.oxygen_mol_fraction)
+    air_flow_kg_s = air_flow_mol_s * params_physics.air_molar_mass
 
-    return air_mass_flow_kg_s
+    return air_flow_kg_s
 
 def compute_coolant_flow(current_A, cell_voltage_V, temp_coolant_in_degC, temp_coolant_out_degC, cellcount=275, flight_level_100ft=50):
     """
     Compute the coolant flow rate in kg/s.
+    # TODO: move to stack component
     """
 
     # Load the physical parameters

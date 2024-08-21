@@ -51,8 +51,8 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     # Print the optimal input, target variables, and bounds including feature names and target variable
     print("\nOptimized Input Variables:")
     for name, value, bound in zip(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds):
-        lower_bound_formatted = f"{bound[0]}" if abs(bound[0]) < 1000 else f"{bound[0]:.1e}"
-        upper_bound_formatted = f"{bound[1]}" if abs(bound[1]) < 1000 else f"{bound[1]:.1e}"
+        lower_bound_formatted = f"{bound[0]}" if abs(bound[0]) < 1e3 else f"{bound[0]:.1e}"
+        upper_bound_formatted = f"{bound[1]}" if abs(bound[1]) < 1e3 else f"{bound[1]:.1e}"
         print(f"  {name}: {value:.4f} (Bounds: [{lower_bound_formatted}, {upper_bound_formatted}])")
     print(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  Hydrogen Consumption: {hydrogen_mass_flow_g_s:.4f} g/s\n")
     print(f"Cell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {cell_voltage:.4f} V\n")
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=455)
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=120)
     parser.add_argument("-t", "--turbine", type=str, choices=["True", "False"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
-    parser.add_argument("--eol", type=str, choices=["True", "False"], default="True", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
+    parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
 
     args = parser.parse_args()
 

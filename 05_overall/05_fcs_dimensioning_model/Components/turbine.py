@@ -3,7 +3,8 @@ from basic_physics import icao_atmosphere
 
 class Turbine:
     def __init__(self, params_physics, isentropic_efficiency=0.85,
-                 air_mass_flow_kg_s=1,pressure_in_Pa=1e5,temperature_in_K=80+273.15,flight_level_100ft=50):
+                 air_mass_flow_kg_s=1, pressure_in_Pa=1e5, temperature_in_K=80+273.15, flight_level_100ft=50,
+                 nominal_BoP_pressure_drop_Pa=0.15*1e5, nominal_air_flow_kg_s=0.130):
 
         self.isentropic_efficiency = isentropic_efficiency
         self.params_physics = params_physics
@@ -11,6 +12,8 @@ class Turbine:
         self.pressure_in_Pa = pressure_in_Pa
         self.temperature_in_K = temperature_in_K
         self.flight_level_100ft = flight_level_100ft
+        self.nominal_pressure_drop_Pa = nominal_BoP_pressure_drop_Pa
+        self.nominal_air_flow_kg_s = nominal_air_flow_kg_s
 
     def calculate_power(self):
         """
@@ -45,6 +48,20 @@ class Turbine:
         turbine_power_W = specific_turbine_work * self.air_mass_flow_kg_s
 
         return turbine_power_W
+    
+    def calculate_BoP_pressure_drop(self, air_flow_kg_s: float)->float:
+        """
+        Calculate the pressure drop across the BoP components upstream the turbine for a given air mass flow rate.
+        The "model" is a simple quadratic relationship between pressure drop and air mass flow rate.
+
+        :param air_flow_kg_s: Air mass flow rate in [kg/s]
+        :return: Pressure drop across the BoP components (cathode out -> turbine in) in [Pa]
+        """
+
+        pressure_drop_coefficient = self.nominal_pressure_drop_Pa / (self.nominal_air_flow_kg_s**2)
+        pressure_drop_Pa = pressure_drop_coefficient * air_flow_kg_s**2
+
+        return pressure_drop_Pa
     
 # %% Example usage:
 import parameters   

@@ -7,7 +7,7 @@ class Optimization_Parameters:
         to prevent extrapolation. This is a good idea, but requires a bit more effort. Idea: Make it a constraint in the optimization problem.
         TODO: Include parameters for optimization function (such as maxiter, popsize, etc.)
         '''
-        self.bounds = [(50, 1e6),       # current_A
+        self.bounds = [(50, 2e3),       # current_A
                         (30, 100),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
                         (1.6, 5),       # stoich_cathode (lambda_min = 1.6 according to P10 manual)
                         (1.1, 3.3),     # pressure_cathode_in_bara (p_max = 2.3 barg according to P10 manual)
@@ -19,6 +19,8 @@ class Optimization_Parameters:
 class Physical_Parameters:
      
     def __init__(self):
+
+        # TODO: Make all variable names indicative of their units
         self.hydrogen_lhv_voltage_equivalent = 1.253
         self.hydrogen_hhv_voltage_equivalent = 1.481
         self.hydrogen_molar_mass = 2.016 * 1e-3         # kg/mol
@@ -45,11 +47,19 @@ class Compressor_Parameters:
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
 
+        # Assumption: ~0.3 bar BoP pressure drop downstream the compressor at 130 g/s air flow rate
+        self.nominal_BoP_pressure_drop_Pa = 0.3*1e5
+        self.nominal_air_flow_kg_s = 0.130
+
 class Turbine_Parameters:
 
     def __init__(self):
 
         self.isentropic_efficiency = 0.75
+
+        # Assumption: ~0.15 bar BoP pressure drop upstream the turbine at 130 g/s air flow rate
+        self.nominal_BoP_pressure_drop_Pa = 0.15*1e5
+        self.nominal_air_flow_kg_s = 0.130
 
 class Recirculation_Pump_Parameters:
     
@@ -65,11 +75,22 @@ class Coolant_Pump_Parameters:
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
 
+        # Assumption: ~0.5 bar pressure drop at 10 l/min coolant in LT cooling circuit
+        self.nominal_pressure_drop_lt_Pa = 0.5*1e5
+        self.nominal_coolant_flow_lt_m3_s = 10/(1000*60)
+
 class Radiator_Parameters:
 
     def __init__(self):
 
-        self.pressure_drop_Pa = 0.3*1e5 # roughly 300 mbar constant pressure drop according to Chris B.
+        # Assumption: ~0.4 bar pressure drop at 250 l/min coolant in HT cooling circuit (including hoses and valves)
+        self.nominal_pressure_drop_Pa = 0.4*1e5
+        self.nominal_coolant_flow_m3_s = 250/(1000*60)
+
+# class Stack_Parameters:
+
+#     def __init__(self):
+
 
 class Eol_Parameter:
 
