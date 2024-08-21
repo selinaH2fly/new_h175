@@ -53,8 +53,10 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     reci_pump       =   Recirculation_Pump(_params_physics, isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
                                            n_cell=cellcount, cell_area_m2=300*1e-4, electric_efficiency=_params_recirculation_pump.electric_efficiency,
                                            fixed_recirculation_ratio=70/30)
-    coolant_pump    =   Coolant_Pump(isentropic_efficiency=_params_coolant_pump.isentropic_efficiency,
+    coolant_pump_ht =   Coolant_Pump(isentropic_efficiency=_params_coolant_pump.isentropic_efficiency,
                                      electric_efficiency=_params_coolant_pump.electric_efficiency)
+    coolant_pump_lt =   Coolant_Pump(isentropic_efficiency=_params_coolant_pump.isentropic_efficiency,
+                                     electric_efficiency=_params_coolant_pump.electric_efficiency) # virtual LT coolant pump for straight-forward power computation
     radiator        =   Radiator(nominal_pressure_drop_Pa=_params_radiator.nominal_pressure_drop_Pa,
                                  nominal_coolant_flow_m3_s=_params_radiator.nominal_coolant_flow_m3_s)
 
@@ -160,18 +162,21 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Compute the recirculation pump power
         reci_pump_power_W = reci_pump.calculate_power()
 
-        # Compute the coolant pump power
-        coolant_ht_flow_rate_m3_s = compute_coolant_flow(optimized_current_A, optimized_cell_voltage_V,
+        # Compute the coolant pump power for the HT circuit
+        coolant_flow_rate_ht_m3_s = compute_coolant_flow(optimized_current_A, optimized_cell_voltage_V,
                                                          optimized_temp_coolant_inlet_degC, optimized_temp_coolant_outlet_degC,
                                                          flight_level_100ft=flight_level_100ft, cellcount=cellcount)
+        coolant_flow_rate_ht_l_min = coolant_flow_rate_ht_m3_s * 60 * 1000
+        stack_pressure_drop_mbar = 6.5e-3*(coolant_flow_rate_ht_l_min ** 2) + 0.477*coolant_flow_rate_ht_l_min # TODO: 1. move to stack component 2. include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
+        coolant_pump_ht.coolant_flow_m3_s = coolant_flow_rate_ht_m3_s
+        coolant_pump_ht.head_Pa = stack_pressure_drop_mbar*1e-3*1e5 + radiator.calculate_pressure_drop(coolant_flow_m3_s=coolant_flow_rate_ht_m3_s) # coolant_pump.head_Pa = stack_pressure_drop + radiator_pressure_drop (including 0.1 bar additional HT pressure drop)
         
-        coolant_ht_flow_rate_l_min = coolant_ht_flow_rate_m3_s * 60 * 1000
-        stack_pressure_drop_mbar = 6.5e-3*(coolant_ht_flow_rate_l_min ** 2) + 0.477*coolant_ht_flow_rate_l_min  # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
-        coolant_pump.coolant_flow_m3_s = coolant_ht_flow_rate_m3_s
+        # Compute the (virtual) coolant pump power for the LT circuit (assuming a constant flow rate)
+        coolant_pump_lt.coolant_flow_m3_s = _params_coolant_pump.nominal_coolant_flow_lt_m3_s
+        coolant_pump_lt.head_Pa = _params_coolant_pump.nominal_pressure_drop_lt_Pa
 
-        #TODO: Normalize LT pressure drop to flow ratio (-> 500 mbar for LT flow = 10 l/min -> P_drop_lt = 0.5*1e5 * 10/(1000*60))
-        coolant_pump.head_Pa = stack_pressure_drop_mbar*1e-3*1e5 + radiator.calculate_pressure_drop(coolant_flow_m3_s=coolant_ht_flow_rate_m3_s) + 0.5*1e5 # coolant_pump.head_Pa = stack_pressure_drop + radiator_pressure_drop + 0.1 bar (additional HT pressure drop) + 0.5 bar (additional LT pressure drop)
-        coolant_pump_power_W = coolant_pump.calculate_power()
+        # Compute the actual coolant pump power
+        coolant_pump_power_W = coolant_pump_ht.calculate_power() + coolant_pump_lt.calculate_power()
 
         # Compute the hydrogen mass flow rate
         hydrogen_mass_flow_g_s = optimized_input[0] * cellcount * params_physics.hydrogen_molar_mass / \
