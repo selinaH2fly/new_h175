@@ -50,9 +50,10 @@ class Recirculation_Pump:
 
         reci_total_flow_mol_s = hydrogen_recirculated_mol_s + nitrogen_recirculated_mol_s
 
-        # Ideal gas law (expectation: \dot{m} = 15...20 g/s (!) (@450 cells, 600 Amps, 70/30 ratio at stack outlet))
-        reci_total_flow_m3_s = reci_total_flow_mol_s*self.params_physics.ideal_gas_constant*temperature_out_K/self.pressure_out_Pa
+        # Ideal gas law to calculate the total flow rate
+        reci_total_flow_m3_s = reci_total_flow_mol_s*self.params_physics.ideal_gas_constant*temperature_out_K/self.pressure_out_Pa # expectation: \dot{m} = 15...20 g/s (!) (@450 cells, 600 Amps, 70/30 ratio at stack outlet)
 
+        # TODO: Back to isentropic compression equation for consistent power calculation to compressor
         reci_isentropic_power_W = (self.pressure_out_Pa - self.pressure_in_Pa)*reci_total_flow_m3_s
         reci_shaft_power_W = reci_isentropic_power_W/self.isentropic_efficiency
         reci_electric_power_W = reci_shaft_power_W/self.electric_efficiency

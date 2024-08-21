@@ -34,8 +34,7 @@ class Coolant_Pump:
         return pump_electrical_power_W
     
     def calculate_weight(self)->float:
-        #TODO:
-        #Do weight estimation here.
+        #TODO: Do weight estimation here.
         # Placeholder implementation, update with actual logic
         return None
 

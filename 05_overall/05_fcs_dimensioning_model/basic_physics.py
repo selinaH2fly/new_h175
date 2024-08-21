@@ -40,6 +40,7 @@ def compute_air_mass_flow(stoichiometry, current_A, cellcount=275):
 def compute_coolant_flow(current_A, cell_voltage_V, temp_coolant_in_degC, temp_coolant_out_degC, cellcount=275, flight_level_100ft=50):
     """
     Compute the coolant flow rate in kg/s.
+    # TODO: move to stack component
     """
 
     # Load the physical parameters
