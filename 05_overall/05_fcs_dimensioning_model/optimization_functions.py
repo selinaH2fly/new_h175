@@ -11,6 +11,7 @@ from Components.turbine import Turbine
 from Components.recirculation_pump import Recirculation_Pump
 from Components.coolant_pump import Coolant_Pump
 from Components.radiator import Radiator
+from Components.stack import Stack
 from basic_physics import compute_air_mass_flow, compute_coolant_flow
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275,
@@ -44,6 +45,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_recirculation_pump = parameters.Recirculation_Pump_Parameters()
     _params_coolant_pump = parameters.Coolant_Pump_Parameters()
     _params_radiator = parameters.Radiator_Parameters()
+    _params_stack = parameters.Stack_Parameters()
     _params_Eol = parameters.Eol_Parameter()
 
      # Instantiate components
@@ -59,8 +61,10 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                                      electric_efficiency=_params_coolant_pump.electric_efficiency) # virtual LT coolant pump for straight-forward power computation
     radiator        =   Radiator(nominal_pressure_drop_Pa=_params_radiator.nominal_pressure_drop_Pa,
                                  nominal_coolant_flow_m3_s=_params_radiator.nominal_coolant_flow_m3_s)
+    stack           =   Stack(nominal_pressure_drop_anode_Pa=_params_stack.nominal_pressure_drop_anode_Pa,
+                             nominal_flow_anode_m3_s=_params_stack.nominal_flow_anode_m3_s)
 
-    def evaluate_models(x):
+    def evaluate_models(x): # TODO: refactor this function that became too long and complex
         """
         Helper function to evaluate models and compute necessary values.
 
@@ -72,8 +76,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         - cell_voltage: Denormalized cell voltage.
         - compressor_power_W: Computed compressor power.
         - turbine_power_W: Computed turbine power.
+        - reci_pump_power_W: Computed recirculation pump power.
+        - coolant_pump_power_W: Computed coolant pump power.
         - hydrogen_mass_flow_g_s: Computed hydrogen mass flow rate.
         """
+
+        # %% Cell Voltage Model
 
         # Evaluate the cell voltage model
         x_tensor = torch.tensor(x, dtype=torch.float).unsqueeze(0)
@@ -96,6 +104,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Consider the end of life derating factor
         if end_of_life:
             optimized_cell_voltage_V *= _params_Eol.eol_factor
+
+        # %% Compressor and Turbine
 
         # Compute air massflow
         air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A,
@@ -152,15 +162,26 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         else:
             turbine_power_W = 0
 
-        # Set parameters for recirculation pump
+        # %% Recirculation Pump
+
+        # Set recirculation pump attributes
         reci_pump.current_A = optimized_current_A
         reci_pump.temperature_in_K = max(optimized_temp_coolant_outlet_degC + 273.15, 1e-9)
         reci_pump.pressure_out_Pa = 1e5*(optimized_pressure_cathode_in_bara + 0.200)    # reci_out == anode_in \approx: cathode_in + 0.2 bar (cf. PowerLayout); TODO: include p_anode_in in cell voltage model
-        reci_pump.pressure_in_Pa = max(reci_pump.pressure_out_Pa - 0.200*1e5 - 0.1*1e5, 1e-9)      # reci_in == anode_out \approx: anode_in - 0.2 bar (cf. PowerLayout) - 0.1 bar (BoP); TODO: include anode pressure drop model
         reci_pump.stoich_anode = 1.5                                                    # TODO: include anode stoichiometry in cell voltage model
+
+        # Estimate the anode pressure drop
+        anode_flow_m3_s = reci_pump.stoich_anode*optimized_current_A*cellcount/(2*_params_physics.faraday)*(1 + 30/70) \
+            *_params_physics.ideal_gas_constant*max(optimized_temp_coolant_inlet_degC + 273.15, 1e-9)/reci_pump.pressure_out_Pa
+        anode_pressure_drop_Pa = stack.calculate_pressure_drop_anode(flow_anode_m3_s=anode_flow_m3_s)
+
+        # Compute the pressure at the anode outlet
+        reci_pump.pressure_in_Pa = max(reci_pump.pressure_out_Pa - anode_pressure_drop_Pa, 1e-9) # reci_in == anode_out \approx: anode_in - dp_anode (including BoP); TODO: include DoE data-based anode pressure drop model
 
         # Compute the recirculation pump power
         reci_pump_power_W = reci_pump.calculate_power()
+
+        # %% Coolant Pump
 
         # Compute the coolant pump power for the HT circuit
         coolant_flow_rate_ht_m3_s = compute_coolant_flow(optimized_current_A, optimized_cell_voltage_V,
@@ -178,12 +199,17 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Compute the actual coolant pump power
         coolant_pump_power_W = coolant_pump_ht.calculate_power() + coolant_pump_lt.calculate_power()
 
+        # %% Consumed hydrogen mass flow rate
+
         # Compute the hydrogen mass flow rate
         hydrogen_mass_flow_g_s = optimized_input[0] * cellcount * params_physics.hydrogen_molar_mass / \
             (2 * params_physics.faraday) * 1000
 
         return optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
             coolant_pump_power_W, hydrogen_mass_flow_g_s
+
+
+# %% Optimization
 
     # Define the objective function for optimization
     def objective_function(x):
