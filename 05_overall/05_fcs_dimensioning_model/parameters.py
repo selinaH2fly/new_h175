@@ -57,6 +57,10 @@ class Turbine_Parameters:
 
         self.isentropic_efficiency = 0.75
 
+        # Assumption: ~0.15 bar BoP pressure drop upstream the turbine at 130 g/s air flow rate
+        self.nominal_BoP_pressure_drop_Pa = 0.15*1e5
+        self.nominal_air_flow_kg_s = 0.130
+
 class Recirculation_Pump_Parameters:
     
     def __init__(self):

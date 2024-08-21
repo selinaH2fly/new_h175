@@ -50,13 +50,13 @@ class Compressor:
 
         return compressor_el_power_W
     
-    def calculate_pressure_drop(self, air_flow_kg_s: float)->float:
+    def calculate_BoP_pressure_drop(self, air_flow_kg_s: float)->float:
         """
         Calculate the pressure drop across the BoP components downstream the compressor for a given air mass flow rate.
         The "model" is a simple quadratic relationship between pressure drop and air mass flow rate.
 
         :param air_flow_kg_s: Air mass flow rate in [kg/s]
-        :return: Pressure drop across the BoP components (compressor out -> stack in) in [Pa]
+        :return: Pressure drop across the BoP components (compressor out -> cathode in) in [Pa]
         """
 
         pressure_drop_coefficient = self.nominal_pressure_drop_Pa / (self.nominal_air_flow_kg_s**2)
@@ -64,7 +64,7 @@ class Compressor:
 
         return pressure_drop_Pa
     
-# %% Example usage:
+# %% Example Usage:
 import parameters   
 params_physics = parameters.Physical_Parameters()
 

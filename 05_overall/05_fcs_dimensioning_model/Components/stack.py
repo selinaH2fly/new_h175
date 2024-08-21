@@ -38,4 +38,4 @@ stack = Stack()
 stack.current_A = 400
 stack_pressure_drop_anode_Pa = stack.calculate_pressure_drop_anode()
 
-print(f"Pressure drop across the anode: {stack_pressure_drop_anode_Pa*1e-5:.2f} bar")
+# print(f"Pressure drop across the anode: {stack_pressure_drop_anode_Pa*1e-5:.2f} bar")
