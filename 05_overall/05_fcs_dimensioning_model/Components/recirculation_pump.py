@@ -25,7 +25,6 @@ class Recirculation_Pump:
         - reci_electric_power_W: Electrical power consumed by the recirculation pump in Watts.
         """
         
-        # TODO: No constant parameters in the class definition. Move to parameters.py
         self.params_physics = params_physics
         self.isentropic_efficiency = isentropic_efficiency
         self.electric_efficiency = electric_efficiency
@@ -36,10 +35,12 @@ class Recirculation_Pump:
         self.n_cell = n_cell
         self.cell_area_m2 = cell_area_m2
         self.stoich_anode = stoich_anode
+        self.nominal_BoP_pressure_drop = nominal_BoP_pressure_drop_Pa
+        self.fixed_recirculation_ratio = fixed_recirculation_ratio
+
+        # TODO: No constant parameters in the class definition. Move to parameters.py
         self.stoich_0 = 1.05                            # stoich_0 1.02-1.05 "lost als H2 aus system = ~5%" TODO: rather specify the recirculation ratio!
         self.hydrogen_concentration_supply = 1          # H2 concentration in tank
-        self.fixed_recirculation_ratio = fixed_recirculation_ratio
-        self.nominal_BoP_pressure_drop = nominal_BoP_pressure_drop_Pa
     
     def calculate_power(self)->float:
 

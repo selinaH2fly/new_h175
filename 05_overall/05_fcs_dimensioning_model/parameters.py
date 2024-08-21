@@ -97,7 +97,9 @@ class Stack_Parameters:
      def __init__(self):
              
         self.cell_area_m2 = 300*1e-4
-         
+
+        self.anode_pressure_drop_coefficients = [4*1e-4, 9.4*1e-3, 49.7] # cf. PowerLayout, DoE Evaluation
+        self.cooling_pressure_drop_coefficients = [6.5e-3, 0.477, 0] # cf. PowerLayout, DoE Evaluation
 
 
 

@@ -3,7 +3,8 @@ class Stack:
     A class to model a fuel cell stack
     """
 
-    def __init__(self, cellcount=455, current_A=400):
+    def __init__(self, cellcount=455, current_A=400, coolant_flow_m3_s=0.0, anode_pressure_drop_coefficients=[0, 0, 0],
+                 cooling_pressure_drop_coefficients=[0, 0, 0]):
         """
         Initialize the radiator with a given pressure drop and coolant flow rate.
 
@@ -12,7 +13,9 @@ class Stack:
 
         self.cellcount = cellcount
         self.current_A = current_A
-        self.anode_pressure_drop_coefficients = [4*1e-4, 9.4*1e-3, 49.7] # cf. PowerLayout, DoE Evaluation
+        self.coolant_flow_m3_s = coolant_flow_m3_s
+        self.anode_pressure_drop_coefficients = anode_pressure_drop_coefficients
+        self.cooling_pressure_drop_coefficients = cooling_pressure_drop_coefficients
 
     def calculate_pressure_drop_anode(self)->float:
         """
@@ -23,6 +26,20 @@ class Stack:
         pressure_drop_Pa = (self.anode_pressure_drop_coefficients[0]*self.current_A**2 + 
                             self.anode_pressure_drop_coefficients[1]*self.current_A + 
                             self.anode_pressure_drop_coefficients[2])*100
+
+        return pressure_drop_Pa
+    
+    def calculate_pressure_drop_cooling(self)->float:
+        """
+        Calculate the pressure drop across the cooling channels for a given coolant flow.
+        The "model" is a simple quadratic relationship between pressure drop and coolant flow.
+        """
+
+        coolant_flow_l_min = self.coolant_flow_m3_s * 1000 * 60
+
+        pressure_drop_Pa = (self.cooling_pressure_drop_coefficients[0]*coolant_flow_l_min**2 + 
+                            self.cooling_pressure_drop_coefficients[1]*coolant_flow_l_min + 
+                            self.cooling_pressure_drop_coefficients[2])*100
 
         return pressure_drop_Pa
 

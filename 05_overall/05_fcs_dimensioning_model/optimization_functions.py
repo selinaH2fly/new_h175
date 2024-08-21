@@ -73,7 +73,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     radiator        =   Radiator(nominal_pressure_drop_Pa=_params_radiator.nominal_pressure_drop_Pa,
                                  nominal_coolant_flow_m3_s=_params_radiator.nominal_coolant_flow_m3_s)
     
-    stack           =   Stack(cellcount=cellcount)
+    stack           =   Stack(cellcount=cellcount, anode_pressure_drop_coefficients=_params_stack.anode_pressure_drop_coefficients,
+                              cooling_pressure_drop_coefficients=_params_stack.cooling_pressure_drop_coefficients)
 
     def evaluate_models(x): # TODO: refactor this function that became too long and complex
         """
@@ -133,8 +134,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Calculate compressor power
         compressor_power_W = compressor.calculate_power()
 
+        # TODO: Move the turbine computations to a separate function
         if consider_turbine:
-            # TODO: Move the turbine computations to a separate function
 
             # Normalize current, stoichiometry, and pressure and temperature for evaluating the cathode pressure drop model
             current_for_dp_normalized = (optimized_current_A - cathode_pressure_drop_model.input_data_mean[0]) / \
@@ -210,10 +211,10 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         coolant_flow_rate_ht_m3_s = compute_coolant_flow(optimized_current_A, optimized_cell_voltage_V,
                                                          optimized_temp_coolant_inlet_degC, optimized_temp_coolant_outlet_degC,
                                                          flight_level_100ft=flight_level_100ft, cellcount=cellcount)
-        coolant_flow_rate_ht_l_min = coolant_flow_rate_ht_m3_s * 60 * 1000
-        stack_pressure_drop_mbar = 6.5e-3*(coolant_flow_rate_ht_l_min ** 2) + 0.477*coolant_flow_rate_ht_l_min # TODO: 1. move to stack component 2. include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
+        stack.coolant_flow_m3_s = coolant_flow_rate_ht_m3_s.item()
+        stack_pressure_drop_Pa = stack.calculate_pressure_drop_cooling() # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
         coolant_pump_ht.coolant_flow_m3_s = coolant_flow_rate_ht_m3_s
-        coolant_pump_ht.head_Pa = stack_pressure_drop_mbar*1e-3*1e5 + radiator.calculate_pressure_drop(coolant_flow_m3_s=coolant_flow_rate_ht_m3_s) # coolant_pump.head_Pa = stack_pressure_drop + radiator_pressure_drop (including 0.1 bar additional HT pressure drop)
+        coolant_pump_ht.head_Pa = stack_pressure_drop_Pa + radiator.calculate_pressure_drop(coolant_flow_m3_s=coolant_flow_rate_ht_m3_s) # coolant_pump.head_Pa = stack_pressure_drop + radiator_pressure_drop (including 0.1 bar additional HT pressure drop)
         
         # Compute the (virtual) coolant pump power for the LT circuit (assuming a constant flow rate)
         coolant_pump_lt.coolant_flow_m3_s = _params_coolant_pump.nominal_coolant_flow_lt_m3_s
