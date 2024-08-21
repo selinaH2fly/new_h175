@@ -58,4 +58,4 @@ def compute_coolant_flow(current_A, cell_voltage_V, temp_coolant_in_degC, temp_c
     coolant_flow_kg_s = heat_generated_W / (coolant_cp_J_kgK * (temp_coolant_out_degC - temp_coolant_in_degC))
     coolant_flow_m3_s = coolant_flow_kg_s / CP.PropsSI('D', 'T', (temp_coolant_in_degC + temp_coolant_out_degC) / 2 + 273.15, 'P', pressure_ambient_Pa, coolant)
 
-    return coolant_flow_m3_s
+    return coolant_flow_m3_s.item()

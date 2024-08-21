@@ -68,6 +68,11 @@ class Recirculation_Pump_Parameters:
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
 
+        self.fixed_recirculation_ratio = 70/30
+
+        # Assumption: ~0.1 bar constant pressure drop in the recirculation loop
+        self.nominal_BoP_pressure_drop_Pa = 0.1*1e5
+
 class Coolant_Pump_Parameters:
 
     def __init__(self):
@@ -87,9 +92,15 @@ class Radiator_Parameters:
         self.nominal_pressure_drop_Pa = 0.4*1e5
         self.nominal_coolant_flow_m3_s = 250/(1000*60)
 
-# class Stack_Parameters:
+class Stack_Parameters:
 
-#     def __init__(self):
+     def __init__(self):
+             
+        self.cell_area_m2 = 300*1e-4
+
+        self.anode_pressure_drop_coefficients = [4*1e-4, 9.4*1e-3, 49.7] # cf. PowerLayout, DoE Evaluation
+        self.cooling_pressure_drop_coefficients = [6.5e-3, 0.477, 0] # cf. PowerLayout, DoE Evaluation
+
 
 
 class Eol_Parameter:
