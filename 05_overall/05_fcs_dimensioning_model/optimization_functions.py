@@ -50,7 +50,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
      # Instantiate components
     compressor      =   Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency,
-                                   electric_efficiency=_params_compressor.electric_efficiency)
+                                   electric_efficiency=_params_compressor.electric_efficiency,
+                                   nominal_BoP_pressure_drop_Pa=_params_compressor.nominal_BoP_pressure_drop_Pa,
+                                   nominal_air_flow_kg_s=_params_compressor.nominal_air_flow_kg_s)
     turbine         =   Turbine(_params_physics, isentropic_efficiency=_params_turbine.isentropic_efficiency)
     reci_pump       =   Recirculation_Pump(_params_physics, isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
                                            n_cell=cellcount, cell_area_m2=300*1e-4, electric_efficiency=_params_recirculation_pump.electric_efficiency,
@@ -107,14 +109,17 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # %% Compressor and Turbine
 
         # Compute air massflow
-        air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A,
-                                                   cellcount=cellcount)
+        air_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode,
+                                              current_A=optimized_current_A,cellcount=cellcount)
         
-        # Set parameters for compressor
-        compressor.air_mass_flow_kg_s = air_mass_flow_kg_s
-        compressor.pressure_out_Pa = optimized_pressure_cathode_in_bara*1e5 + 0.3*1e5 # compressor_out == cathode_in + 0.3 bar (BoP pressure drop)
+        # Estimate the cathode BoP pressure drop downstream the compressor (compressor out -> stack in)
+        cathode_BoP_pressure_drop_Pa = compressor.calculate_pressure_drop(air_flow_kg_s=air_flow_kg_s)
+        
+        # Set compressor attributes
+        compressor.air_mass_flow_kg_s = air_flow_kg_s
         compressor.flight_level_100ft = flight_level_100ft
-        
+        compressor.pressure_out_Pa = optimized_pressure_cathode_in_bara*1e5 + cathode_BoP_pressure_drop_Pa # compressor_out == cathode_in + BoP_pressure_drop
+
         # Calculate compressor power
         compressor_power_W = compressor.calculate_power()
 
@@ -148,7 +153,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             cathode_pressure_out_bar = optimized_input[3] - cathode_pressure_drop_bar
 
             #Set Parameters for turbine
-            turbine.air_mass_flow_kg_s = air_mass_flow_kg_s
+            turbine.air_mass_flow_kg_s = air_flow_kg_s
             turbine.pressure_in_Pa     = max(cathode_pressure_out_bar*1e5 - 0.15*1e5, 1e-9) # turbine_in == cathode_out - 0.15 bar (BoP pressure drop)
             turbine.temperature_in_K   = max(optimized_temp_coolant_outlet_degC + 273.15, 1e-9) 
             turbine.flight_level_100ft = flight_level_100ft

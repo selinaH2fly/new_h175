@@ -3,7 +3,8 @@ from basic_physics import icao_atmosphere
 
 class Compressor:
     def __init__(self, params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95,
-                 air_mass_flow_kg_s=1, pressure_out_Pa=1e5,flight_level_100ft=50):
+                 air_mass_flow_kg_s=1, pressure_out_Pa=1e5, flight_level_100ft=50,
+                 nominal_BoP_pressure_drop_Pa=0.3*1e5, nominal_air_flow_kg_s=0.130):
 
         self.isentropic_efficiency = isentropic_efficiency
         self.electric_efficiency = electric_efficiency
@@ -11,6 +12,8 @@ class Compressor:
         self.air_mass_flow_kg_s = air_mass_flow_kg_s
         self.pressure_out_Pa = pressure_out_Pa
         self.flight_level_100ft = flight_level_100ft
+        self.nominal_pressure_drop_Pa = nominal_BoP_pressure_drop_Pa
+        self.nominal_air_flow_kg_s = nominal_air_flow_kg_s
 
     def calculate_power(self):
         """
@@ -46,6 +49,20 @@ class Compressor:
         compressor_el_power_W = compressor_power_W / self.electric_efficiency
 
         return compressor_el_power_W
+    
+    def calculate_pressure_drop(self, air_flow_kg_s: float)->float:
+        """
+        Calculate the pressure drop across the BoP components downstream the compressor for a given air mass flow rate.
+        The "model" is a simple quadratic relationship between pressure drop and air mass flow rate.
+
+        :param air_flow_kg_s: Air mass flow rate in [kg/s]
+        :return: Pressure drop across the BoP components (compressor out -> stack in) in [Pa]
+        """
+
+        pressure_drop_coefficient = self.nominal_pressure_drop_Pa / (self.nominal_air_flow_kg_s**2)
+        pressure_drop_Pa = pressure_drop_coefficient * air_flow_kg_s**2
+
+        return pressure_drop_Pa
     
 # %% Example usage:
 import parameters   

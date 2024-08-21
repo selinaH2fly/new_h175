@@ -19,6 +19,8 @@ class Optimization_Parameters:
 class Physical_Parameters:
      
     def __init__(self):
+
+        # TODO: Make all variable names indicative of their units
         self.hydrogen_lhv_voltage_equivalent = 1.253
         self.hydrogen_hhv_voltage_equivalent = 1.481
         self.hydrogen_molar_mass = 2.016 * 1e-3         # kg/mol
@@ -44,6 +46,10 @@ class Compressor_Parameters:
 
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
+
+        # Assumption: ~0.3 bar BoP pressure drop downstream the compressor at 130 g/s air flow rate
+        self.nominal_BoP_pressure_drop_Pa = 0.3*1e5
+        self.nominal_air_flow_kg_s = 0.130
 
 class Turbine_Parameters:
 
