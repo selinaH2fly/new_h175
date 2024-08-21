@@ -887,6 +887,109 @@ class ConnectorActive2to1:
         return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10, self.var11, self.var12, self.var13, self.var14, self.var15, self.var16]
 
 
+class ConnectorPassive1to3:
+    """
+    Set up a component with splitter characteristics for 1 input and 3 outputs without active control:
+    - pressure conservation
+    - thermal energy flux conservation
+    - mass flow conservation
+
+    Args:
+    - i_in: Integer for identifier of input.
+    - i_out_1: Integer for identifier of output 1.
+    - i_out_2: Integer for identifier of output 2.
+    - i_out_3: Integer for identifier of output 3.
+    - comp_name: String for name of component.
+    """
+
+    def __init__(self, i_in, i_out_1, i_out_2, i_out_3, comp_name):
+        self.p_in = "p_%i"%(i_in)
+        self.T_in = "T_%i"%(i_in)
+        self.Vdot_in = "Vdot_%i"%(i_in)
+        self.p_out_1 = "p_%i"%(i_out_1)
+        self.T_out_1 = "T_%i"%(i_out_1)
+        self.Vdot_out_1 = "Vdot_%i"%(i_out_1)
+        self.p_out_2 = "p_%i"%(i_out_2)
+        self.T_out_2 = "T_%i"%(i_out_2)
+        self.Vdot_out_2 = "Vdot_%i"%(i_out_2)
+        self.p_out_3 = "p_%i"%(i_out_3)
+        self.T_out_3 = "T_%i"%(i_out_3)
+        self.Vdot_out_3 = "Vdot_%i"%(i_out_3)
+        self.nsplit_1 = "nsplit_1_%s"%(comp_name)
+        self.nsplit_2 = "nsplit_2_%s"%(comp_name)
+        self.nsplit_3 = "nsplit_3_%s"%(comp_name)
+
+
+    def set_eq(self):
+        """
+        Set up equations for component.
+
+        Returns:
+        - eq1: Equation for pressure characteristics between input and output 1.
+        - eq2: Equation for pressure characteristics between input and output 2.
+        - eq3: Equation for pressure characteristics between input and output 3.
+        - eq4: Equation for thermal energy flux characteristics between input and output 1.
+        - eq5: Equation for thermal energy flux characteristics between input and output 2.
+        - eq6: Equation for thermal energy flux characteristics between input and output 3.
+        - eq7: Equation for mass flow characteristics.
+        - eq8: Equation for splitting ration characteristics of output 1.
+        - eq9: Equation for splitting ration characteristics of output 2.
+        - eq10: Equation for splitting ration characteristics of output 3.
+        """
+
+        self.eq1 = "%s = %s"%(self.p_in, self.p_out_1)
+        self.eq2 = "%s = %s"%(self.p_in, self.p_out_2)
+        self.eq3 = "%s = %s"%(self.p_in, self.p_out_3)
+        self.eq4 = "%s = %s"%(self.T_in, self.T_out_1)
+        self.eq5 = "%s = %s"%(self.T_in, self.T_out_2)
+        self.eq6 = "%s = %s"%(self.T_in, self.T_out_3)
+        self.eq7 = "%s = %s + %s + %s"%(self.Vdot_in, self.Vdot_out_1, self.Vdot_out_2, self.Vdot_out_3)
+        self.eq8 = "%s = %s / %s"%(self.nsplit_1, self.Vdot_out_1, self.Vdot_in)
+        self.eq9 = "%s = %s / %s"%(self.nsplit_2, self.Vdot_out_2, self.Vdot_in)
+        self.eq10 = "%s = %s / %s"%(self.nsplit_3, self.Vdot_out_3, self.Vdot_in)
+        return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6, self.eq7, self.eq8, self.eq9, self.eq10]
+    
+
+    def set_var(self):
+        """
+        Set up variables for component.
+        
+        Returns:
+        - var1: Name string, initialization value, minimum, maximum and unit string for input pressure.
+        - var2: Name string, initialization value, minimum, maximum and unit string for input temperature.
+        - var3: Name string, initialization value, minimum, maximum and unit string for input volume flow.
+        - var4: Name string, initialization value, minimum, maximum and unit string for output 1 pressure.
+        - var5: Name string, initialization value, minimum, maximum and unit string for output 1 temperature.
+        - var6: Name string, initialization value, minimum, maximum and unit string for output 1 volume flow.
+        - var7: Name string, initialization value, minimum, maximum and unit string for output 2 pressure.
+        - var8: Name string, initialization value, minimum, maximum and unit string for output 2 temperature.
+        - var9: Name string, initialization value, minimum, maximum and unit string for output 2 volume flow.
+        - var10: Name string, initialization value, minimum, maximum and unit string for output 3 pressure.
+        - var11: Name string, initialization value, minimum, maximum and unit string for output 3 temperature.
+        - var12: Name string, initialization value, minimum, maximum and unit string for output 3 volume flow.
+        - var13: Name string, initialization value, minimum, maximum and unit string for output 1 splitting ratio.
+        - var14: Name string, initialization value, minimum, maximum and unit string for output 2 splitting ratio.
+        - var15: Name string, initialization value, minimum, maximum and unit string for output 3 splitting ratio.
+        """
+
+        self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
+        self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
+        self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
+        self.var4 = [self.p_out_1, 1.0, 0.0, np.inf, "bar"]
+        self.var5 = [self.T_out_1, 273.15, 0.0, np.inf, "K"]
+        self.var6 = [self.Vdot_out_1, 1.0, 0.0, np.inf, "l/s"]
+        self.var7 = [self.p_out_2, 1.0, 0.0, np.inf, "bar"]
+        self.var8 = [self.T_out_2, 273.15, 0.0, np.inf, "K"]
+        self.var9 = [self.Vdot_out_2, 1.0, 0.0, np.inf, "l/s"]
+        self.var10 = [self.p_out_3, 1.0, 0.0, np.inf, "bar"]
+        self.var11 = [self.T_out_3, 273.15, 0.0, np.inf, "K"]
+        self.var12 = [self.Vdot_out_3, 1.0, 0.0, np.inf, "l/s"]
+        self.var13 = [self.nsplit_1, 0.5, 0.0, 1.0, "-"]
+        self.var14 = [self.nsplit_2, 0.5, 0.0, 1.0, "-"]
+        self.var15 = [self.nsplit_3, 0.5, 0.0, 1.0, "-"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10, self.var11, self.var12, self.var13, self.var14, self.var15]
+
+
 class ConnectorPassive3to1:
     """
     Set up a component with mixer characteristics for 3 inputs and 1 output without active control:
