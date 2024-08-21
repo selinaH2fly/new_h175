@@ -177,8 +177,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         anode_BoP_pressure_drop_Pa = reci_pump.calculate_BoP_pressure_drop()
 
         # Compute the pressure at the anode outlet
-        # reci_pump.pressure_in_Pa = max(reci_pump.pressure_out_Pa - anode_pressure_drop_Pa - reci_pump.calculate_BoP_pressure_drop, 1e-9) # reci_in == anode_out \approx: anode_in - dp_anode - dp_BoP; TODO: include DoE data-based GPR anode pressure drop model
-        reci_pump.pressure_in_Pa = max(reci_pump.pressure_out_Pa - anode_pressure_drop_Pa, 1e-9) # reci_in == anode_out \approx: anode_in - dp_anode; TODO: include DoE data-based GPR anode pressure drop model
+        reci_pump.pressure_in_Pa = max(reci_pump.pressure_out_Pa -
+                                       anode_pressure_drop_Pa -
+                                       anode_BoP_pressure_drop_Pa, 1e-9) # reci_in == anode_out \approx: anode_in - dp_anode; TODO: include DoE data-based GPR anode pressure drop model
         
         # Compute the recirculation pump power
         reci_pump_power_W = reci_pump.calculate_power()

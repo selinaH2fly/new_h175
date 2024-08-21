@@ -38,7 +38,7 @@ class Recirculation_Pump:
         self.hydrogen_concentration_supply = 1          # H2 concentration in tank
         self.fixed_recirculation_ratio = fixed_recirculation_ratio
         self.nominal_BoP_pressure_drop = 0.1*1e5        # nominal pressure drop across BoP components in the recirculation loop
-        self.nominal_flow_m3_s = 0.0547                 # lambda = 1.5 @ 450 Amps, 455 cells; hydrogen/nitrogen ratio = 70/30        self.fixed_recirculation_ratio = fixed_recirculation_ratio
+        # self.nominal_flow_m3_s = 0.0547                 # lambda = 1.5 @ 450 Amps, 455 cells; hydrogen/nitrogen ratio = 70/30        self.fixed_recirculation_ratio = fixed_recirculation_ratio
     
     def calculate_power(self)->float:
 
@@ -114,17 +114,20 @@ class Recirculation_Pump:
         Calculate the pressure drop across the BoP components in the recirculation loop.
         """
 
-        # TODO: refactor as this a largely copy-paste from calculate_power
-        recirculation_ratio = 70/30
-        hydrogen_recirculated_mol_s, nitrogen_recirculated_mol_s = self.calculate_flows_fixed_recirculation_ratio(recirculation_ratio)
-        reci_total_flow_mol_s = hydrogen_recirculated_mol_s + nitrogen_recirculated_mol_s
+        # # TODO: refactor as this a largely copy-paste from calculate_power
+        # recirculation_ratio = 70/30
+        # hydrogen_recirculated_mol_s, nitrogen_recirculated_mol_s = self.calculate_flows_fixed_recirculation_ratio(recirculation_ratio)
+        # reci_total_flow_mol_s = hydrogen_recirculated_mol_s + nitrogen_recirculated_mol_s
 
-        # Ideal gas law to calculate the total flow rate
-        temperature_out_K = self.calculate_outlet_temperature()
-        reci_total_flow_m3_s = reci_total_flow_mol_s*self.params_physics.ideal_gas_constant*temperature_out_K/self.pressure_out_Pa # expectation: \dot{m} = 15...20 g/s (!) (@450 cells, 600 Amps, 70/30 ratio at stack outlet)
+        # # Ideal gas law to calculate the total flow rate
+        # temperature_out_K = self.calculate_outlet_temperature()
+        # reci_total_flow_m3_s = reci_total_flow_mol_s*self.params_physics.ideal_gas_constant*temperature_out_K/self.pressure_out_Pa # expectation: \dot{m} = 15...20 g/s (!) (@450 cells, 600 Amps, 70/30 ratio at stack outlet)
 
-        pressure_drop_coefficient = self.nominal_BoP_pressure_drop / (self.nominal_flow_m3_s**2)
-        pressure_drop_Pa = pressure_drop_coefficient * reci_total_flow_m3_s**2
+        # pressure_drop_coefficient = self.nominal_BoP_pressure_drop / (self.nominal_flow_m3_s**2)
+        # pressure_drop_Pa = pressure_drop_coefficient * reci_total_flow_m3_s**2
+
+        # Constant pressure drop assumed since, for whatever reason, the shit above doesn't give meaningful results :-(
+        pressure_drop_Pa = self.nominal_BoP_pressure_drop
 
         return pressure_drop_Pa
         
