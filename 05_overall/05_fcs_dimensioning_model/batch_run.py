@@ -15,7 +15,7 @@ def save_failed_case(parameter, error_message):
         
 def build_command(parameter):
     command = [
-        "python", "optimize_input_variables.py",
+        "python", "model_run.py",
         "--power", str(parameter[0]),
         "--cellcount", str(parameter[1]),
         "--flightlevel", str(parameter[2]),
@@ -33,21 +33,43 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[0, 150])
     parser.add_argument("-t", "--turbine", type=str, choices=["True"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
     parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
-
+    parser.add_argument("--testing", type=str, choices=["True", "False"], default="False", help="Specifies whether a short test run is initiated.")
+    
     args = parser.parse_args()
     
-    _step_p = 30
-    _step_c = 50
-    _step_fl = 25
-    #TODO: range_power is ugly deined atm. due to not starting at 0 and want to have inclusive bounds.... maybe there is a better way?
-    #range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
-    range_power = np.array([20, 50, 80, 125, 150, 175])
-    range_cellcount = np.arange(args.cellcount[0],args.cellcount[1]+_step_c,_step_c)
-    range_fl = np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
-    
-    # Convert turbine and eol to boolean lists
-    range_turbine =[args.turbine == "True"]#, args.turbine.lower() == "false"]
-    range_eol = [args.eol == "True", args.eol == "False"]
+    if args.testing == "True":
+        range_power = np.array([20,175])
+        range_cellcount = np.array([400,500])
+        range_fl = np.array([0,150])
+        # Convert turbine and eol to boolean lists
+        range_turbine =[args.turbine == "True"]#, args.turbine.lower() == "false"]
+        range_eol = [args.eol == "True", args.eol == "False"]
+        
+        #Handle downstream data and plots
+        saving = False
+        dir_prefix = "testing__"
+
+    elif args.testing == "False":
+      
+        _step_p = 30
+        _step_c = 50
+        _step_fl = 25
+        #TODO: range_power is ugly deined atm. due to not starting at 0 and want to have inclusive bounds.... maybe there is a better way?
+        #range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
+        range_power = np.array([20, 50, 80, 125, 150, 175])
+        range_cellcount = np.arange(args.cellcount[0],args.cellcount[1]+_step_c,_step_c)
+        range_fl = np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
+        
+        # Convert turbine and eol to boolean lists
+        range_turbine =[args.turbine == "True"]#, args.turbine.lower() == "false"]
+        range_eol = [args.eol == "True", args.eol == "False"]
+        
+        #Handle downstream data and plots
+        saving = True
+        dir_prefix =""
+        
+    else:
+        print("User Error: wrong input for --testing, sould be True/False")
 
     # Generate all combinations of parameters
     parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_eol))
@@ -65,8 +87,8 @@ if __name__ == '__main__':
         
         # Print the output and error (if any) from the subprocess call
         print( "\n", result.stdout, "\n")
-        #error
-    print("Done with Optimization")
         
-    path_to_data = consolidate_experiment_data(parameters)
-    analyze_data(_file_path1=path_to_data, saving=True)
+    print("Done with batchrun.. \n geather data and start plotting...")
+        
+    path_to_data = consolidate_experiment_data(parameters,dir_prefix)
+    analyze_data(_file_path1=path_to_data, saving=saving)
