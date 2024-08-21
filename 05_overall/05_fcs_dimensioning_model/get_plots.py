@@ -548,7 +548,7 @@ def plot_weight_estimate(data, titles, colors, components_dict, components_sd_di
 #%%  
  
 def analyze_data(_file_path1, saving=True):
-    saving = saving
+    
     # Load the CSV file into a DataFrame
     df1 = pd.read_csv(_file_path1)
 
