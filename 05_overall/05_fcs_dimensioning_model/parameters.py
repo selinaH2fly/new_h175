@@ -65,11 +65,15 @@ class Coolant_Pump_Parameters:
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
 
+        # Assumption: ~0.5 bar pressure drop at 10 l/min coolant in LT cooling circuit
+        self.nominal_pressure_drop_lt_Pa = 0.5*1e5
+        self.nominal_coolant_flow_lt_m3_s = 10/(1000*60)
+
 class Radiator_Parameters:
 
     def __init__(self):
 
-        # Assumption: ~0.4 bar pressure drop at 250 l/min coolant (including HT hoses and valves)
+        # Assumption: ~0.4 bar pressure drop at 250 l/min coolant in HT cooling circuit (including hoses and valves)
         self.nominal_pressure_drop_Pa = 0.4*1e5
         self.nominal_coolant_flow_m3_s = 250/(1000*60)
 
