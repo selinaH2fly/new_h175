@@ -45,7 +45,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_recirculation_pump = parameters.Recirculation_Pump_Parameters()
     _params_coolant_pump = parameters.Coolant_Pump_Parameters()
     _params_radiator = parameters.Radiator_Parameters()
-    _params_stack = parameters.Stack_Parameters()
+    # _params_stack = parameters.Stack_Parameters()
     _params_Eol = parameters.Eol_Parameter()
 
      # Instantiate components
@@ -61,8 +61,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                                      electric_efficiency=_params_coolant_pump.electric_efficiency) # virtual LT coolant pump for straight-forward power computation
     radiator        =   Radiator(nominal_pressure_drop_Pa=_params_radiator.nominal_pressure_drop_Pa,
                                  nominal_coolant_flow_m3_s=_params_radiator.nominal_coolant_flow_m3_s)
-    stack           =   Stack(nominal_pressure_drop_anode_Pa=_params_stack.nominal_pressure_drop_anode_Pa,
-                             nominal_flow_anode_m3_s=_params_stack.nominal_flow_anode_m3_s)
+    stack           =   Stack(cellcount=cellcount)
 
     def evaluate_models(x): # TODO: refactor this function that became too long and complex
         """
@@ -171,13 +170,16 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         reci_pump.stoich_anode = 1.5                                                    # TODO: include anode stoichiometry in cell voltage model
 
         # Estimate the anode pressure drop
-        anode_flow_m3_s = reci_pump.stoich_anode*optimized_current_A*cellcount/(2*_params_physics.faraday)*(1 + 30/70) \
-            *_params_physics.ideal_gas_constant*max(optimized_temp_coolant_inlet_degC + 273.15, 1e-9)/reci_pump.pressure_out_Pa
-        anode_pressure_drop_Pa = stack.calculate_pressure_drop_anode(flow_anode_m3_s=anode_flow_m3_s)
+        stack.current_A = optimized_current_A
+        anode_pressure_drop_Pa = stack.calculate_pressure_drop_anode()
+
+        # Estimate the BoP pressure drop in the recirculation loop
+        anode_BoP_pressure_drop_Pa = reci_pump.calculate_BoP_pressure_drop()
 
         # Compute the pressure at the anode outlet
-        reci_pump.pressure_in_Pa = max(reci_pump.pressure_out_Pa - anode_pressure_drop_Pa, 1e-9) # reci_in == anode_out \approx: anode_in - dp_anode (including BoP); TODO: include DoE data-based anode pressure drop model
-
+        # reci_pump.pressure_in_Pa = max(reci_pump.pressure_out_Pa - anode_pressure_drop_Pa - reci_pump.calculate_BoP_pressure_drop, 1e-9) # reci_in == anode_out \approx: anode_in - dp_anode - dp_BoP; TODO: include DoE data-based GPR anode pressure drop model
+        reci_pump.pressure_in_Pa = max(reci_pump.pressure_out_Pa - anode_pressure_drop_Pa, 1e-9) # reci_in == anode_out \approx: anode_in - dp_anode; TODO: include DoE data-based GPR anode pressure drop model
+        
         # Compute the recirculation pump power
         reci_pump_power_W = reci_pump.calculate_power()
 

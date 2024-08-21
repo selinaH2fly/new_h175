@@ -77,12 +77,9 @@ class Radiator_Parameters:
         self.nominal_pressure_drop_Pa = 0.4*1e5
         self.nominal_coolant_flow_m3_s = 250/(1000*60)
 
-class Stack_Parameters:
+# class Stack_Parameters:
 
-    def __init__(self):
-
-        self.nominal_pressure_drop_anode_Pa = 0.2*1e5
-        self.nominal_flow_anode_m3_s = 0.0547 # lambda = 1.5 @ 450 Amps, 455 cells; hydrogen/nitrogen ratio = 70/30
+#     def __init__(self):
 
 
 class Eol_Parameter:
