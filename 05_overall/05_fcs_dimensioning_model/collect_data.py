@@ -5,7 +5,7 @@ import pandas as pd
 #working_directory = os.getcwd()
 #parameters = [(20, 300, 50), (170, 300, 50), (320, 300, 50), (470, 300, 50), (600, 300, 50)]
 
-def consolidate_experiment_data(parameters):    
+def consolidate_experiment_data(parameters, dir_prefix):    
     """
     This function will clean up after the loop run of optimize_input_variables.py
     It will:
@@ -30,7 +30,7 @@ def consolidate_experiment_data(parameters):
         # Define the new directory with the current experimentID
         new_dir = os.path.join(
             working_directory, 
-            f'consolidated_{parameters[0][0]}-{parameters[-1][0]}kW_{parameters[0][1]}-{parameters[-1][1]}_{parameters[0][2]}-{parameters[-1][2]}ft__{experimentID}'
+            f'{dir_prefix}consolidated_{parameters[0][0]}-{parameters[-1][0]}kW_{parameters[0][1]}-{parameters[-1][1]}_{parameters[0][2]}-{parameters[-1][2]}ft__{experimentID}'
         )
         
         # Check if the directory already exists
