@@ -64,10 +64,12 @@ class Recirculation_Pump:
         # Compute the specific enthalpies at the inlet
         specific_enthalpy_in_J_kg = CP.PropsSI('H', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, gas_mixture_recirculated)
 
-        # Compute the specific enthalpies at the inlet
-        specific_entropy_in_J_kgK = CP.PropsSI('S', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, gas_mixture_recirculated)
-        temperature_isentropic_out_K = CP.PropsSI('T', 'P', self.pressure_out_Pa, 'S', specific_entropy_in_J_kgK, gas_mixture_recirculated)
-        specific_enthalpy_isentropic_out_J_kg = CP.PropsSI('H', 'T', temperature_isentropic_out_K, 'P', self.pressure_out_Pa, gas_mixture_recirculated)
+        # Compute the isentropic outlet temperature
+        kappa = self.params_physics.specific_heat_ratio # specific heat ratio for H2 and N2 almost equal to air (i.e., 1.4) TODO: snack from coolprop
+        isentropic_outlet_temperature_K = self.temperature_in_K * (self.pressure_out_Pa/self.pressure_in_Pa)**((kappa-1)/kappa)
+
+        # Compute the specific enthalpies at the outlet
+        specific_enthalpy_isentropic_out_J_kg = CP.PropsSI('H', 'T', isentropic_outlet_temperature_K, 'P', self.pressure_out_Pa, gas_mixture_recirculated)
 
         # Compute the power
         reci_isentropic_power_W = (hydrogen_recirculated_kg_s + nitrogen_recirculated_kg_s)\
@@ -137,7 +139,7 @@ class Recirculation_Pump:
         pressure_drop_Pa = self.nominal_BoP_pressure_drop
 
         return pressure_drop_Pa
-        
+    
  
 # %% Example Usage:
 import parameters   
