@@ -386,7 +386,8 @@ def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
 
     # Create a figure and axis
     fig, ax = plt.subplots(figsize=(12, 8))
-
+    fig.tight_layout()
+    
     # Create a colormap and normalize for the color gradient
     norm = mcolors.Normalize(vmin=125, vmax=175)
     cmap = cm.ScalarMappable(norm=norm, cmap='plasma')
@@ -547,7 +548,7 @@ def plot_weight_estimate(data, titles, colors, components_dict, components_sd_di
 #%%  
  
 def analyze_data(_file_path1, saving=True):
-    saving = saving
+    
     # Load the CSV file into a DataFrame
     df1 = pd.read_csv(_file_path1)
 
@@ -559,7 +560,8 @@ def analyze_data(_file_path1, saving=True):
     os.makedirs("00_Plots", exist_ok=True)
     os.chdir("00_Plots")
     
-    # Sort data by index
+    # Sort and prefilter data by index and current
+    df1 =df1[df1["converged (t/f)"] == True]
     df1 = df1.sort_values(by=['idx'])
         
     # Split the data based on 'Specified Cell Count'
@@ -576,7 +578,7 @@ def analyze_data(_file_path1, saving=True):
     fl_max = max(df1["Flight Level (100x ft)"])
     
     ###########PLOT: Polcurves
-    plot_polarization_curves(data, titles, fl_set, saving=True)
+    plot_polarization_curves(data, titles, fl_set, saving=saving)
     
     ############PLOT: Polcurves eol vs bol connected
     plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
@@ -603,14 +605,14 @@ def analyze_data(_file_path1, saving=True):
                         "Recirculation Pump Power (kW)":    4.04,
                         "Coolant Pump Power (kW)": 1.66}
     
-    plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=True, mode="bol")
-    plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=True, mode="eol")
+    plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="bol")
+    plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="eol")
     
 # Go back to origin dir
     os.chdir("../../")
 # %%    
 
 
-analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__1\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
+#analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__1\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
 
 #TODO write init:

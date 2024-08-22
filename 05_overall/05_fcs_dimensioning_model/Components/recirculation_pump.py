@@ -5,7 +5,8 @@ class Recirculation_Pump:
     
     def __init__(self, params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95, 
                  current_A=100, temperature_in_K=293.15, pressure_in_Pa=1e5, pressure_out_Pa=1e5,
-                 n_cell=455, cell_area_m2=300*1e-4, stoich_anode=1.5, fixed_recirculation_ratio=None): 
+                 n_cell=455, cell_area_m2=300*1e-4, stoich_anode=1.5, nominal_BoP_pressure_drop_Pa=0.1*1e5,
+                 fixed_recirculation_ratio=None): 
         """
         Initialize the recirculation pump with a given efficiency and operating conditions.
 
@@ -24,7 +25,6 @@ class Recirculation_Pump:
         - reci_electric_power_W: Electrical power consumed by the recirculation pump in Watts.
         """
         
-        # TODO: Use SI units for all parameters!
         self.params_physics = params_physics
         self.isentropic_efficiency = isentropic_efficiency
         self.electric_efficiency = electric_efficiency
@@ -35,9 +35,12 @@ class Recirculation_Pump:
         self.n_cell = n_cell
         self.cell_area_m2 = cell_area_m2
         self.stoich_anode = stoich_anode
+        self.nominal_BoP_pressure_drop = nominal_BoP_pressure_drop_Pa
+        self.fixed_recirculation_ratio = fixed_recirculation_ratio
+
+        # TODO: No constant parameters in the class definition. Move to parameters.py
         self.stoich_0 = 1.05                            # stoich_0 1.02-1.05 "lost als H2 aus system = ~5%" TODO: rather specify the recirculation ratio!
         self.hydrogen_concentration_supply = 1          # H2 concentration in tank
-        self.fixed_recirculation_ratio = fixed_recirculation_ratio
     
     def calculate_power(self)->float:
 
@@ -51,9 +54,10 @@ class Recirculation_Pump:
 
         reci_total_flow_mol_s = hydrogen_recirculated_mol_s + nitrogen_recirculated_mol_s
 
-        # Ideal gas law (expectation: \dot{m} = 15...20 g/s (!) (@450 cells, 600 Amps, 70/30 ratio at stack outlet))
-        reci_total_flow_m3_s = reci_total_flow_mol_s*self.params_physics.ideal_gas_constant*temperature_out_K/self.pressure_out_Pa
+        # Ideal gas law to calculate the total flow rate
+        reci_total_flow_m3_s = reci_total_flow_mol_s*self.params_physics.ideal_gas_constant*temperature_out_K/self.pressure_out_Pa # expectation: \dot{m} = 15...20 g/s (!) (@450 cells, 600 Amps, 70/30 ratio at stack outlet)
 
+        # TODO: Back to isentropic compression equation for consistent power calculation to compressor
         reci_isentropic_power_W = (self.pressure_out_Pa - self.pressure_in_Pa)*reci_total_flow_m3_s
         reci_shaft_power_W = reci_isentropic_power_W/self.isentropic_efficiency
         reci_electric_power_W = reci_shaft_power_W/self.electric_efficiency
@@ -106,9 +110,31 @@ class Recirculation_Pump:
         isentropic_outlet_temperature_K = ((self.temperature_in_K) * pressure_ratio**((kappa-1)/kappa))
 
         return isentropic_outlet_temperature_K
+    
+    def calculate_BoP_pressure_drop(self):
+        """
+        Calculate the pressure drop across the BoP components in the recirculation loop.
+        """
+
+        # # TODO: refactor as this a largely copy-paste from calculate_power
+        # recirculation_ratio = 70/30
+        # hydrogen_recirculated_mol_s, nitrogen_recirculated_mol_s = self.calculate_flows_fixed_recirculation_ratio(recirculation_ratio)
+        # reci_total_flow_mol_s = hydrogen_recirculated_mol_s + nitrogen_recirculated_mol_s
+
+        # # Ideal gas law to calculate the total flow rate
+        # temperature_out_K = self.calculate_outlet_temperature()
+        # reci_total_flow_m3_s = reci_total_flow_mol_s*self.params_physics.ideal_gas_constant*temperature_out_K/self.pressure_out_Pa # expectation: \dot{m} = 15...20 g/s (!) (@450 cells, 600 Amps, 70/30 ratio at stack outlet)
+
+        # pressure_drop_coefficient = self.nominal_BoP_pressure_drop / (self.nominal_flow_m3_s**2)
+        # pressure_drop_Pa = pressure_drop_coefficient * reci_total_flow_m3_s**2
+
+        # Constant pressure drop assumed since, for whatever reason, the shit above doesn't give meaningful results :-(
+        pressure_drop_Pa = self.nominal_BoP_pressure_drop
+
+        return pressure_drop_Pa
         
  
-# %% Example usage:
+# %% Example Usage:
 import parameters   
 params_physics = parameters.Physical_Parameters() 
 

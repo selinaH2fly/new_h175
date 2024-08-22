@@ -6,12 +6,12 @@
     "configurations": [
         
         {
-            "name": "Python Debugger: Train GPR Model",
+            "name": "Python Debugger: Optimize Input Variables",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--target", "voltage", "--cutoff", "50"],
+            "args": ["--power", "125", "--cellcount", "350", "--flightlevel", "50", "--turbine", "false", "--eol", "true"],    
         }
     ]
 }
