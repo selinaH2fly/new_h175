@@ -169,7 +169,7 @@ def annotate_boxes(ax, df, cell_width=1, cell_height=2):
                     ax.text(col_pos + cell_width / 2, y_pos + cell_height / 2, 
                             str(cell_value), color='black', ha='center', va='center')
             else:
-                #Write X to the Box because the value was Nan
+                # if it is NaN make it an X
                 cell_value = "X"
                 
                 # Annotate the cell with the value
@@ -194,9 +194,6 @@ def format_data_for_plot(df, components, fl_set, eol_col='eol (t/f)', tolerance=
     formatted_df = pd.DataFrame()
     #current = df["current_A (Value)"]
     df = df[df['Flight Level (100x ft)'] == fl_set]
-    #Create a DF which has all the powerlevels saved for y axis labels.:
-    power_levels = df[df['eol (t/f)'] == False]["Power Constraint (kW)"]
-    
     for component in components:
         # Filter out the columns related to the component
         component_df = df[[component, eol_col]].copy()
@@ -211,14 +208,27 @@ def format_data_for_plot(df, components, fl_set, eol_col='eol (t/f)', tolerance=
         # Append to the formatted DataFrame
         formatted_df = pd.concat([formatted_df, df_false, df_true], axis=1)
 
-    if 'current_A (Value)_bol' in formatted_df.columns and 'current_A (Value)_eol' in formatted_df.columns:
-        current_bol = formatted_df['current_A (Value)_bol']
-        current_eol = formatted_df['current_A (Value)_eol']
-        current_caint = 700 # Threshold value for current
 
-        # Set NaN where values are above 700 current_cait
-        formatted_df.loc[current_bol > current_caint, :] = np.nan
-        formatted_df.loc[current_eol > current_caint, :] = np.nan
+    # Convert to numeric, coercing errors to NaN
+    formatted_df['current_A (Value)_bol'] = pd.to_numeric(formatted_df['current_A (Value)_bol'], errors='coerce')
+    formatted_df['current_A (Value)_eol'] = pd.to_numeric(formatted_df['current_A (Value)_eol'], errors='coerce')
+    
+    current_caint = 700  # Threshold value for current
+
+    # Identify rows where current exceeds threshold for BOL and EOL
+    bol_exceeds_threshold = formatted_df['current_A (Value)_bol'] > current_caint
+    eol_exceeds_threshold = formatted_df['current_A (Value)_eol'] > current_caint
+
+    # Set all component power values to NaN if their corresponding current exceeds the threshold
+    for component in components:
+        bol_col = f'{component}_bol'
+        eol_col = f'{component}_eol'
+
+        if bol_col in formatted_df.columns:
+            formatted_df.loc[bol_exceeds_threshold, bol_col] = np.nan
+
+        if eol_col in formatted_df.columns:
+            formatted_df.loc[eol_exceeds_threshold, eol_col] = np.nan
     
     
 # Drop columns that should not be in the final DataFrame
@@ -227,7 +237,7 @@ def format_data_for_plot(df, components, fl_set, eol_col='eol (t/f)', tolerance=
         if drop_column in formatted_df.columns:
             formatted_df.drop(drop_column, axis=1, inplace=True)
 
-    return formatted_df, power_levels
+    return formatted_df
 
 def plot_power_needs(data, titles, fl_set, saving=False):
     """
@@ -249,7 +259,7 @@ def plot_power_needs(data, titles, fl_set, saving=False):
     for df1, title in zip(data, titles):
         
         #Formate the data to the needed formate:
-        df, power_levels = format_data_for_plot(df1, components, fl_set, eol_col='eol (t/f)')
+        df = format_data_for_plot(df1, components, fl_set, eol_col='eol (t/f)')
         
         # Set up the figure and axis
         fig, ax = plt.subplots(figsize=(10, 8))
@@ -284,7 +294,8 @@ def plot_power_needs(data, titles, fl_set, saving=False):
         # Adjust y-ticks to be centered on the colored boxes
         y_tick_positions = np.arange(1, len(df) * 2, 2) - 0.5  # Center y-ticks by shifting them down
         ax.set_yticks(y_tick_positions)
-        ax.set_yticklabels([f'{round(level)} kW' for level in power_levels.values])
+        power_range = [20,50,80,125,150,175]
+        ax.set_yticklabels([f'{power_range[i]} kW' for i in range(len(power_range))])
         ax.set_ylim(-0.5, len(df) * 2 - 0.5)
     
         # Add secondary x-axis on top, with centered labels above each pair of boxes
@@ -583,7 +594,7 @@ def analyze_data(_file_path1, saving=True):
     #plot_polarization_curves(data, titles, fl_set, saving=saving)
     
     ############PLOT: Polcurves eol vs bol connected
-    #plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
+    plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
     
     ############PLOT: System Power Grid Plot
     plot_power_needs(data, titles, fl_set, saving=saving)
