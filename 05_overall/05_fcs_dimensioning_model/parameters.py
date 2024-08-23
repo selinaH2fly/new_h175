@@ -23,7 +23,7 @@ class Optimization_Parameters:
         self.recombination = 0.9        # recombination rate \in [0, 1];
         self.seed = None
 
-        self.penalty_weight = 0.1       # penalty factor for power constraint violation TODO: try making this a constraint (instead of a penalty)
+        self.penalty_weight = 1e-7      # penalty factor for power constraint violation TODO: try making this a constraint (instead of a penalty) -> probably needs to define the cell voltage as an input variable!?
 
 
 
