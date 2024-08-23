@@ -143,10 +143,7 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
         plt.savefig('Hydrogen_Consumption.png')
     plt.show()
 
-# Example usage with some mock data:
-# plot_polarization_curves_bol_eol(df, titles=['400 Cells', '
 
-        
 # PLOT: Power Grid, fancy
 def annotate_boxes(ax, df, cell_width=1, cell_height=2):
     """
@@ -197,6 +194,9 @@ def format_data_for_plot(df, components, fl_set, eol_col='eol (t/f)', tolerance=
     formatted_df = pd.DataFrame()
     #current = df["current_A (Value)"]
     df = df[df['Flight Level (100x ft)'] == fl_set]
+    #Create a DF which has all the powerlevels saved for y axis labels.:
+    power_levels = df[df['eol (t/f)'] == False]["Power Constraint (kW)"]
+    
     for component in components:
         # Filter out the columns related to the component
         component_df = df[[component, eol_col]].copy()
@@ -227,7 +227,7 @@ def format_data_for_plot(df, components, fl_set, eol_col='eol (t/f)', tolerance=
         if drop_column in formatted_df.columns:
             formatted_df.drop(drop_column, axis=1, inplace=True)
 
-    return formatted_df
+    return formatted_df, power_levels
 
 def plot_power_needs(data, titles, fl_set, saving=False):
     """
@@ -249,7 +249,7 @@ def plot_power_needs(data, titles, fl_set, saving=False):
     for df1, title in zip(data, titles):
         
         #Formate the data to the needed formate:
-        df = format_data_for_plot(df1, components, fl_set, eol_col='eol (t/f)')
+        df, power_levels = format_data_for_plot(df1, components, fl_set, eol_col='eol (t/f)')
         
         # Set up the figure and axis
         fig, ax = plt.subplots(figsize=(10, 8))
@@ -284,7 +284,7 @@ def plot_power_needs(data, titles, fl_set, saving=False):
         # Adjust y-ticks to be centered on the colored boxes
         y_tick_positions = np.arange(1, len(df) * 2, 2) - 0.5  # Center y-ticks by shifting them down
         ax.set_yticks(y_tick_positions)
-        ax.set_yticklabels([f'{int(df["Power Constraint (kW)_bol"][i].round())} kW' for i in range(len(df))])
+        ax.set_yticklabels([f'{round(level)} kW' for level in power_levels.values])
         ax.set_ylim(-0.5, len(df) * 2 - 0.5)
     
         # Add secondary x-axis on top, with centered labels above each pair of boxes
@@ -583,10 +583,10 @@ def analyze_data(_file_path1, saving=True):
     #plot_polarization_curves(data, titles, fl_set, saving=saving)
     
     ############PLOT: Polcurves eol vs bol connected
-    plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
+    #plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
     
     ############PLOT: System Power Grid Plot
-    #plot_power_needs(data, titles, fl_set, saving=saving)
+    plot_power_needs(data, titles, fl_set, saving=saving)
     
     ###########PLOT: H2 consumption
     #weights = [1,1,1]#[39.92+ 6.26,43.75+6.01,47.58+5.77] #stack + compressor gewicht
