@@ -42,8 +42,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
         stack_power_kW, compressor_power_kW, turbine_power_kW, \
             reci_pump_power_kW, coolant_pump_power_kW, converged = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
                                                                                                 flight_level_100ft, cellcount=specified_cell_count,
-                                                                                                bounds=_params_optimization.bounds, power_constraint_kW=power_constraint_kW,
-                                                                                                penalty_weight=1e-7, params_physics=_params_pyhsics,
+                                                                                                power_constraint_kW=power_constraint_kW,
                                                                                                 consider_turbine=consider_turbine, end_of_life=end_of_life)
     
     system_power_kW = stack_power_kW - compressor_power_kW + turbine_power_kW - reci_pump_power_kW - coolant_pump_power_kW
