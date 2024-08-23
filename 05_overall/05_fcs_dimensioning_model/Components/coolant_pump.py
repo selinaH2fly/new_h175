@@ -35,13 +35,25 @@ class Coolant_Pump:
         return pump_electrical_power_W
     
     def calculate_weight(self)->float:
-        #TODO: Do weight estimation here.
-        # Placeholder implementation, update with actual logic
-        return None
+        """
+        Calculate predicted mass of the pump.
+        
+        Args:
+        - weight_by_power: The ratio of mass to electrical power in kg/kW.
+        
+        Returns:
+        - pump_weight: The mass in kg.
+
+        """
+        pump_el_power_W = self.calculate_power()
+        pump_weight = self.weight_by_power * pump_el_power_W / 1000
+        return pump_weight
 
 # %% Example USsage:
 
     
 coolant_pump = Coolant_Pump(isentropic_efficiency=0.75, electric_efficiency=0.95, head_Pa=2e7, coolant_flow_m3_s=0.5)
 coolant_pump_power_W = coolant_pump.calculate_power()
+coolant_pump_mass = coolant_pump.calculate_weight()
+
 

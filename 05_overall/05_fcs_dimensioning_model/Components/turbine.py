@@ -64,6 +64,21 @@ class Turbine:
 
         return pressure_drop_Pa
     
+    def calculate_weight(self)->float:
+        """
+        Calculate predicted mass of the turbine.
+        
+        Args:
+        - weight_by_power: The ratio of mass to electrical power in kg/kW.
+        
+        Returns:
+        - turbine_weight: The mass in kg.
+
+        """
+        turbine_el_power_W = self.calculate_power()
+        turbine_weight = self.weight_by_power * turbine_el_power_W / 1000
+        return turbine_weight
+    
 # %% Example usage:
 import parameters   
 params_physics = parameters.Physical_Parameters() 
@@ -72,3 +87,6 @@ C1 = Turbine(params_physics, isentropic_efficiency=0.85)
 
 #electrical power
 power_el = C1.calculate_power()
+
+#mass
+mass = C1.calculate_weight()

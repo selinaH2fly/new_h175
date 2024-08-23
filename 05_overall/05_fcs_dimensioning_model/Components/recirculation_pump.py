@@ -133,6 +133,21 @@ class Recirculation_Pump:
         pressure_drop_Pa = self.nominal_BoP_pressure_drop
 
         return pressure_drop_Pa
+    
+    def calculate_weight(self)->float:
+        """
+        Calculate predicted mass of the pump.
+        
+        Args:
+        - weight_by_power: The ratio of mass to electrical power in kg/kW.
+        
+        Returns:
+        - pump_weight: The mass in kg.
+
+        """
+        pump_el_power_W = self.calculate_power()
+        pump_weight = self.weight_by_power * pump_el_power_W / 1000
+        return pump_weight
         
  
 # %% Example Usage:
@@ -144,3 +159,6 @@ R1 = Recirculation_Pump(params_physics, current_A=200,temperature_in_K=343.15, p
 
 #electrical power
 power_el_smart = R1.calculate_power()
+
+#mass
+pump_mass = R1.calculate_weight()

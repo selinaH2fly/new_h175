@@ -65,6 +65,21 @@ class Compressor:
 
         return pressure_drop_Pa
     
+    def calculate_weight(self)->float:
+        """
+        Calculate predicted mass of the compressor.
+        
+        Args:
+        - weight_by_power: The ratio of mass to electrical power in kg/kW.
+        
+        Returns:
+        - compressor_weight: The mass in kg.
+
+        """
+        compressor_el_power_W = self.calculate_power()
+        compressor_weight = self.weight_by_power * compressor_el_power_W / 1000
+        return compressor_weight
+    
 # %% Example Usage:
 import parameters   
 params_physics = parameters.Physical_Parameters()
@@ -74,3 +89,4 @@ C1 = Compressor(params_physics, isentropic_efficiency=0.75, electric_efficiency=
 
 #electrical power
 power_el = C1.calculate_power()
+mass = C1.calculate_weight()
