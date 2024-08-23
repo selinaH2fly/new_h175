@@ -33,7 +33,7 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[0, 150])
     parser.add_argument("-t", "--turbine", type=str, choices=["True"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
     parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
-    parser.add_argument("--testing", type=str, choices=["True", "False"], default="True", help="Specifies whether a short test run is initiated.")
+    parser.add_argument("--testing", type=str, choices=["True", "False"], default="False", help="Specifies whether a short test run is initiated.")
     
     args = parser.parse_args()
     

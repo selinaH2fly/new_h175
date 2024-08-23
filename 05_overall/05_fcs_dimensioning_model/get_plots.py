@@ -73,77 +73,79 @@ def plot_polarization_curves(data, titles, fl_set, saving=True):
         # Show the plot
         plt.show()
                 
-# PLOT: Polcurve bol vs eol connectde points
-def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
-    
-    def load_and_filter_data(df1, eol, cell_counts):
-        df = df1[df1['Flight Level (100x ft)'] == fl_set]
-        
-        filtered_data = {}
-        for count in cell_counts:
-            filtered_data[count] = df[(df['Specified Cell Count'] == count)
-                                      & (df["eol (t/f)"] == eol)]
-        return filtered_data
 
-    # Define plotting and annotation function
-    def plot_and_annotate_data(ax, bol_data, eol_data, titles, colors, highlight_powers, highlight_range=5):
+# PLOT: Polcurve bol vs eol connectede points
+def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
+    def filter_data(df, eol, cell_counts):
+        # Filter data for the specified flight level and EOL condition
+        return {
+            count: df[(df['Flight Level (100x ft)'] == fl_set) & 
+                      (df['Specified Cell Count'] == count) & 
+                      (df['eol (t/f)'] == eol)]
+            for count in cell_counts
+        }
+
+    def plot_data(ax, bol_data, eol_data, titles, colors, highlight_powers, highlight_range=3):
         for count, title, color in zip(bol_data.keys(), titles, colors):
-            bol_df = bol_data[count]
-            eol_df = eol_data[count]
-            
-            # Plot BOL data
+            bol_df, eol_df = bol_data[count], eol_data[count]
+
+            # Plot BOL and EOL data
             ax.scatter(bol_df['current_A (Value)'], bol_df['Cell Voltage (V)'], color=color, label=f'{title} bol', marker="p")
-            
-            # Plot EOL data
             ax.scatter(eol_df['current_A (Value)'], eol_df['Cell Voltage (V)'], color=color, label=f'{title} eol', marker='X')
-            
-            # Connect corresponding BOL and EOL points
+
+            # Connect corresponding BOL and EOL points and annotate
             for power in highlight_powers:
-                bol_highlight = bol_df[bol_df["System Power (kW)"].between(power - highlight_range, power + highlight_range)]
-                eol_highlight = eol_df[eol_df["System Power (kW)"].between(power - highlight_range, power + highlight_range)]
+                bol_highlight = bol_df[bol_df["Power Constraint (kW)"].between(power - highlight_range, power + highlight_range)]
+                eol_highlight = eol_df[eol_df["Power Constraint (kW)"].between(power - highlight_range, power + highlight_range)]
                 
-                for (_, bol_row), (_, eol_row) in zip(bol_highlight.iterrows(), eol_highlight.iterrows()):
-                    ax.plot([bol_row['current_A (Value)'], eol_row['current_A (Value)']], 
+                # Ensure both BOL and EOL points are available
+                if not bol_highlight.empty and not eol_highlight.empty:
+                    bol_row = bol_highlight.iloc[0]
+                    eol_row = eol_highlight.iloc[0]
+                    
+                    # Draw connection line
+                    ax.plot([bol_row['current_A (Value)'], eol_row['current_A (Value)']],
                             [bol_row['Cell Voltage (V)'], eol_row['Cell Voltage (V)']],
                             color=color, alpha=0.5, linestyle='--')
                     
-                    # Annotate points
+                    # Determine annotation color (gray if current > 700 A)
+                    if bol_row['current_A (Value)'] > 700:
+                        annotation_color = 'gray'
+                    else:
+                        annotation_color = color
+                    
+                    # Annotate the points with power levels
                     ax.annotate(f'{bol_row["Power Constraint (kW)"]:.0f} kW', 
                                 (bol_row['current_A (Value)'], bol_row['Cell Voltage (V)']),
-                                textcoords="offset points", xytext=(0, 40), ha='center', color=color,
-                                arrowprops=dict(facecolor=color, shrink=0.1))
+                                textcoords="offset points", xytext=(0, 40), ha='center', color=annotation_color,
+                                arrowprops=dict(facecolor=annotation_color, shrink=0.1))
 
-    # Power levels to highlight and annotate
-    highlight_powers = [20, 50, 80, 125, 150, 175]#[125, 150, 175]
-
+    # Highlight power levels
+    highlight_powers = [20, 50, 80, 125, 150, 175]
     cell_counts = [400, 450, 500]
 
-    # Load and filter data for different scenarios
-    bol_data = load_and_filter_data(df1, eol=False, cell_counts=cell_counts)
-    eol_data = load_and_filter_data(df1, eol=True, cell_counts=cell_counts)
-    
-    # Create a plot
+    # Filter data for BOL and EOL
+    bol_data = filter_data(df1, eol=False, cell_counts=cell_counts)
+    eol_data = filter_data(df1, eol=True, cell_counts=cell_counts)
+
+    # Create the plot
     fig, ax = plt.subplots(figsize=(12, 8))
-    
-    # Plot, annotate, and connect BOL and EOL data
-    plot_and_annotate_data(ax, bol_data, eol_data, titles, colors, highlight_powers)
+    plot_data(ax, bol_data, eol_data, titles, colors, highlight_powers)
 
-    # Add a red shaded area from 700 A to 1300 A
+    # Add red shaded area and labels
     ax.axvspan(700, 1300, color='red', alpha=0.2)
-
-    # Set title and labels
-    ax.set_title(f"System Polarization Curve, {fl_set}, eol vs bol")
-    ax.set_xlabel('Current [A]')
-    ax.set_xlim([0, 1300])
-    ax.set_ylabel('Cell Voltage [V]')
-    ax.set_ylim([0.3, 1])
+    ax.set(title=f"System Polarization Curve, {fl_set}, eol vs bol", xlabel='Current [A]', xlim=[0, 1300], ylabel='Cell Voltage [V]', ylim=[0.3, 1])
     ax.grid(True)
     ax.legend(loc='upper right')
 
-    # Show plot
+    # Save and show plot
     if saving:
         plt.savefig('Hydrogen_Consumption.png')
     plt.show()
+
+# Example usage with some mock data:
+# plot_polarization_curves_bol_eol(df, titles=['400 Cells', '
+
         
 # PLOT: Power Grid, fancy
 def annotate_boxes(ax, df, cell_width=1, cell_height=2):
@@ -170,7 +172,7 @@ def annotate_boxes(ax, df, cell_width=1, cell_height=2):
                     ax.text(col_pos + cell_width / 2, y_pos + cell_height / 2, 
                             str(cell_value), color='black', ha='center', va='center')
             else:
-                # Round the value to the nearest integer if it is not NaN
+                #Write X to the Box because the value was Nan
                 cell_value = "X"
                 
                 # Annotate the cell with the value
@@ -215,8 +217,8 @@ def format_data_for_plot(df, components, fl_set, eol_col='eol (t/f)', tolerance=
         current_caint = 700 # Threshold value for current
 
         # Set NaN where values are above 700 current_cait
-        formatted_df.loc[current_bol > current_caint, 'Stack Power (kW)_eol'] = np.nan
-        formatted_df.loc[current_eol > current_caint, 'Stack Power (kW)_eol'] = np.nan
+        formatted_df.loc[current_bol > current_caint, :] = np.nan
+        formatted_df.loc[current_eol > current_caint, :] = np.nan
     
     
 # Drop columns that should not be in the final DataFrame
@@ -578,21 +580,21 @@ def analyze_data(_file_path1, saving=True):
     fl_max = max(df1["Flight Level (100x ft)"])
     
     ###########PLOT: Polcurves
-    plot_polarization_curves(data, titles, fl_set, saving=saving)
+    #plot_polarization_curves(data, titles, fl_set, saving=saving)
     
     ############PLOT: Polcurves eol vs bol connected
     plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
     
     ############PLOT: System Power Grid Plot
-    plot_power_needs(data, titles, fl_set, saving=saving)
+    #plot_power_needs(data, titles, fl_set, saving=saving)
     
     ###########PLOT: H2 consumption
-    weights = [1,1,1]#[39.92+ 6.26,43.75+6.01,47.58+5.77] #stack + compressor gewicht
-    plot_h2_consumption(data, titles, colors, weights, fl_set, saving=saving)
+    #weights = [1,1,1]#[39.92+ 6.26,43.75+6.01,47.58+5.77] #stack + compressor gewicht
+    #plot_h2_consumption(data, titles, colors, weights, fl_set, saving=saving)
         
     #############PLOT: H2 consumption vs Flightlevel:
-    H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="bol")
-    H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="eol")
+    #H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="bol")
+    #H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="eol")
 
     ############Plot Weight estimate
     #Weight/Power Factor
@@ -605,14 +607,14 @@ def analyze_data(_file_path1, saving=True):
                         "Recirculation Pump Power (kW)":    4.04,
                         "Coolant Pump Power (kW)": 1.66}
     
-    plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="bol")
-    plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="eol")
+    #plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="bol")
+    #plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="eol")
     
 # Go back to origin dir
     os.chdir("../../")
 # %%    
 
 
-#analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__1\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
+analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__1\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
 
 #TODO write init:
