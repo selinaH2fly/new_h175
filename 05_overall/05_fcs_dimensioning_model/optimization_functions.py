@@ -15,7 +15,7 @@ from Components.stack import Stack
 from basic_physics import compute_air_mass_flow, compute_coolant_flow
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275,
-                                 power_constraint_kW=None, penalty_weight=0.1, consider_turbine=True, end_of_life=False):
+                                 power_constraint_kW=None, consider_turbine=True, end_of_life=False):
     """
     Optimize the (cell) voltage predicted by the GPyTorch model with a (cell) power constraint using differential evolution.
 
@@ -25,7 +25,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     - flight_level_100ft: Flight level in 100 feet units.
     - cellcount: Number of cells.
     - power_constraint_kW: Power constraint in kilowatts.
-    - penalty_weight: Weight for the penalty term in the objective function.
     - consider_turbine: Whether to consider power recuperation in the optimization.
     - end_of_life: Whether to consider the end of life derating factor.
 
@@ -253,7 +252,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             power_constraint = cell_voltage * cellcount * optimal_input[0] \
                 - compressor_power_W + turbine_power_W - reci_pump_power_W  - coolant_pump_power_W \
                     - power_constraint_kW * 1000
-            penalty = penalty_weight * (power_constraint**2)
+            penalty = _params_optimization.penalty_weight * (power_constraint**2)
         else:
             penalty = 0
         

@@ -17,13 +17,13 @@ class Optimization_Parameters:
                         (60, 90)]       # temp_coolant_outlet_degC
         
         # Evolutionary algorithm settings: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html
-        self.tol = 1e-3                 # tolerance for the optimization: np.std(pop) <= atol + tol * np.abs(np.mean(population_energies))
+        self.tol = 1e-2                 # tolerance for the optimization: np.std(pop) <= atol + tol * np.abs(np.mean(population_energies))
         self.maxiter = 1000             # maximum number of iterations
         self.popsize = 30               # population size for the evolutionary algorithm
         self.recombination = 0.9        # recombination rate \in [0, 1];
         self.seed = None
 
-        self.penalty = 1e6              # penalty factor for power constraint violation
+        self.penalty_weight = 0.1       # penalty factor for power constraint violation TODO: try making this a constraint (instead of a penalty)
 
 
 
