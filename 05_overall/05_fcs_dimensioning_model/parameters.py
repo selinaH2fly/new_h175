@@ -7,15 +7,25 @@ class Optimization_Parameters:
         to prevent extrapolation. This is a good idea, but requires a bit more effort. Idea: Make it a constraint in the optimization problem.
         TODO: Include parameters for optimization function (such as maxiter, popsize, etc.)
         '''
+
+        # Bounds for the optimization problem
         self.bounds = [(50, 2e3),       # current_A
                         (30, 100),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
                         (1.6, 5),       # stoich_cathode (lambda_min = 1.6 according to P10 manual)
                         (1.1, 3.3),     # pressure_cathode_in_bara (p_max = 2.3 barg according to P10 manual)
                         (60, 90),       # temp_coolant_inlet_degC
                         (60, 90)]       # temp_coolant_outlet_degC
-        self.seed = None
-
         
+        # Evolutionary algorithm settings: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html
+        self.tol = 1e-4                 # tolerance for the optimization: np.std(pop) <= atol + tol * np.abs(np.mean(population_energies))
+        self.maxiter = 1000             # maximum number of iterations
+        self.popsize = 30               # population size for the evolutionary algorithm
+        self.recombination = 0.9        # recombination rate \in [0, 1];
+        self.seed = None                # set random seed for reproducibility
+
+        self.penalty_weight = 1e-6      # penalty factor for power constraint violation TODO: try making this a constraint (instead of a penalty) -> probably needs to define the cell voltage as an input variable!?
+
+
 class Physical_Parameters:
      
     def __init__(self):
