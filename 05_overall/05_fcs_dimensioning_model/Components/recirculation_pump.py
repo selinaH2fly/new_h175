@@ -54,26 +54,21 @@ class Recirculation_Pump:
         hydrogen_recirculated_kg_s = hydrogen_recirculated_mol_s*self.params_physics.hydrogen_molar_mass
         nitrogen_recirculated_kg_s = nitrogen_recirculated_mol_s*self.params_physics.nitrogen_molar_mass
 
-        # Compute the flow fractions
-        flow_fraction_hydrogen = hydrogen_recirculated_mol_s/(hydrogen_recirculated_mol_s + nitrogen_recirculated_mol_s)
-        flow_fraction_nitrogen = nitrogen_recirculated_mol_s/(hydrogen_recirculated_mol_s + nitrogen_recirculated_mol_s)
-
-        # Define the gas mixture
-        gas_mixture_recirculated = f'HEOS::Hydrogen[{flow_fraction_hydrogen}]&Nitrogen[{flow_fraction_nitrogen}]'
-
-        # Compute the specific enthalpies at the inlet
-        specific_enthalpy_in_J_kg = CP.PropsSI('H', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, gas_mixture_recirculated)
-
         # Compute the isentropic outlet temperature
         kappa = self.params_physics.specific_heat_ratio # specific heat ratio for H2 and N2 almost equal to air (i.e., 1.4) TODO: snack from coolprop
         isentropic_outlet_temperature_K = self.temperature_in_K * (self.pressure_out_Pa/self.pressure_in_Pa)**((kappa-1)/kappa)
 
-        # Compute the specific enthalpies at the outlet
-        specific_enthalpy_isentropic_out_J_kg = CP.PropsSI('H', 'T', isentropic_outlet_temperature_K, 'P', self.pressure_out_Pa, gas_mixture_recirculated)
+        # Compute the specific enthalpies of the species
+        specific_enthalpy_hydrogen_in_J_kg = CP.PropsSI('H', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Hydrogen')
+        specific_enthalpy_nitrogen_in_J_kg = CP.PropsSI('H', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Nitrogen')
+        specific_enthalpy_hydrogen_out_J_kg = CP.PropsSI('H', 'T', isentropic_outlet_temperature_K, 'P', self.pressure_out_Pa, 'Hydrogen')
+        specific_enthalpy_nitrogen_out_J_kg = CP.PropsSI('H', 'T', isentropic_outlet_temperature_K, 'P', self.pressure_out_Pa, 'Nitrogen')
 
-        # Compute the power
-        reci_isentropic_power_W = (hydrogen_recirculated_kg_s + nitrogen_recirculated_kg_s)\
-            *(specific_enthalpy_isentropic_out_J_kg - specific_enthalpy_in_J_kg)/self.isentropic_efficiency
+        # Compute the isentropic power
+        reci_isentropic_power_W = hydrogen_recirculated_kg_s*(specific_enthalpy_hydrogen_out_J_kg - specific_enthalpy_hydrogen_in_J_kg) + \
+            nitrogen_recirculated_kg_s*(specific_enthalpy_nitrogen_out_J_kg - specific_enthalpy_nitrogen_in_J_kg)        
+
+        # Compute the electric power
         reci_shaft_power_W = reci_isentropic_power_W/self.isentropic_efficiency
         reci_electric_power_W = reci_shaft_power_W/self.electric_efficiency
 
