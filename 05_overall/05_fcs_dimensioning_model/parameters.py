@@ -17,18 +17,15 @@ class Optimization_Parameters:
                         (60, 90)]       # temp_coolant_outlet_degC
         
         # Evolutionary algorithm settings: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html
-        self.tol = 1e-2                 # tolerance for the optimization: np.std(pop) <= atol + tol * np.abs(np.mean(population_energies))
+        self.tol = 1e-4                 # tolerance for the optimization: np.std(pop) <= atol + tol * np.abs(np.mean(population_energies))
         self.maxiter = 1000             # maximum number of iterations
         self.popsize = 30               # population size for the evolutionary algorithm
         self.recombination = 0.9        # recombination rate \in [0, 1];
-        self.seed = None
+        self.seed = None                # set random seed for reproducibility
 
-        self.penalty_weight = 1e-7      # penalty factor for power constraint violation TODO: try making this a constraint (instead of a penalty) -> probably needs to define the cell voltage as an input variable!?
-
-
+        self.penalty_weight = 1e-6      # penalty factor for power constraint violation TODO: try making this a constraint (instead of a penalty) -> probably needs to define the cell voltage as an input variable!?
 
 
-        
 class Physical_Parameters:
      
     def __init__(self):
