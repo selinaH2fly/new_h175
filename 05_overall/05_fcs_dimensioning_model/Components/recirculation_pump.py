@@ -44,21 +44,31 @@ class Recirculation_Pump:
     
     def calculate_power(self)->float:
 
-        temperature_out_K = self.calculate_outlet_temperature()
-
-        # Calculate flows (either based on fixed recirculation ratio or based on nitrogen and hydrogen flow balances)
+        # Calculate the recirculated flows (either based on fixed recirculation ratio or based on nitrogen and hydrogen flow balances)
         if self.fixed_recirculation_ratio is None:
             hydrogen_recirculated_mol_s, nitrogen_recirculated_mol_s = self.calculate_flows()
         else:
             hydrogen_recirculated_mol_s, nitrogen_recirculated_mol_s = self.calculate_flows_fixed_recirculation_ratio(self.fixed_recirculation_ratio)
 
-        reci_total_flow_mol_s = hydrogen_recirculated_mol_s + nitrogen_recirculated_mol_s
+        # Compute the mass flows
+        hydrogen_recirculated_kg_s = hydrogen_recirculated_mol_s*self.params_physics.hydrogen_molar_mass
+        nitrogen_recirculated_kg_s = nitrogen_recirculated_mol_s*self.params_physics.nitrogen_molar_mass
 
-        # Ideal gas law to calculate the total flow rate
-        reci_total_flow_m3_s = reci_total_flow_mol_s*self.params_physics.ideal_gas_constant*temperature_out_K/self.pressure_out_Pa # expectation: \dot{m} = 15...20 g/s (!) (@450 cells, 600 Amps, 70/30 ratio at stack outlet)
+        # Compute the isentropic outlet temperature
+        kappa = self.params_physics.specific_heat_ratio # specific heat ratio for H2 and N2 almost equal to air (i.e., 1.4) TODO: snack from coolprop
+        isentropic_outlet_temperature_K = self.temperature_in_K * (self.pressure_out_Pa/self.pressure_in_Pa)**((kappa-1)/kappa)
 
-        # TODO: Back to isentropic compression equation for consistent power calculation to compressor
-        reci_isentropic_power_W = (self.pressure_out_Pa - self.pressure_in_Pa)*reci_total_flow_m3_s
+        # Compute the specific enthalpies of the species
+        specific_enthalpy_hydrogen_in_J_kg = CP.PropsSI('H', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Hydrogen')
+        specific_enthalpy_nitrogen_in_J_kg = CP.PropsSI('H', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Nitrogen')
+        specific_enthalpy_hydrogen_out_J_kg = CP.PropsSI('H', 'T', isentropic_outlet_temperature_K, 'P', self.pressure_out_Pa, 'Hydrogen')
+        specific_enthalpy_nitrogen_out_J_kg = CP.PropsSI('H', 'T', isentropic_outlet_temperature_K, 'P', self.pressure_out_Pa, 'Nitrogen')
+
+        # Compute the isentropic power
+        reci_isentropic_power_W = hydrogen_recirculated_kg_s*(specific_enthalpy_hydrogen_out_J_kg - specific_enthalpy_hydrogen_in_J_kg) + \
+            nitrogen_recirculated_kg_s*(specific_enthalpy_nitrogen_out_J_kg - specific_enthalpy_nitrogen_in_J_kg)        
+
+        # Compute the electric power
         reci_shaft_power_W = reci_isentropic_power_W/self.isentropic_efficiency
         reci_electric_power_W = reci_shaft_power_W/self.electric_efficiency
 
@@ -102,14 +112,6 @@ class Recirculation_Pump:
         nitrogen_recirculated_mol_s = hydrogen_recirculated_mol_s/recirculation_ratio
 
         return hydrogen_recirculated_mol_s, nitrogen_recirculated_mol_s
-        
-    def calculate_outlet_temperature(self):
-
-        pressure_ratio = self.pressure_out_Pa/self.pressure_in_Pa
-        kappa = self.params_physics.specific_heat_ratio # specific heat ratio for H2 and N2 almost equal to air (i.e., 1.4) TODO: snack from coolprop
-        isentropic_outlet_temperature_K = ((self.temperature_in_K) * pressure_ratio**((kappa-1)/kappa))
-
-        return isentropic_outlet_temperature_K
     
     def calculate_BoP_pressure_drop(self):
         """
@@ -132,7 +134,7 @@ class Recirculation_Pump:
         pressure_drop_Pa = self.nominal_BoP_pressure_drop
 
         return pressure_drop_Pa
-        
+    
  
 # %% Example Usage:
 import parameters   
@@ -141,5 +143,8 @@ params_physics = parameters.Physical_Parameters()
 R1 = Recirculation_Pump(params_physics, current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
                         cell_area_m2=300*1e-4, stoich_anode = 2.4)
 
-#electrical power
-power_el_smart = R1.calculate_power()
+R2 = Recirculation_Pump(params_physics, current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
+                        cell_area_m2=300*1e-4, stoich_anode = 2.4, fixed_recirculation_ratio=70/30)
+
+# Calculate electrical power
+electrical_power_W = R2.calculate_power()

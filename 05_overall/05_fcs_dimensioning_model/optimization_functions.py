@@ -15,8 +15,7 @@ from Components.stack import Stack
 from basic_physics import compute_air_mass_flow, compute_coolant_flow
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275,
-                                 bounds=None, power_constraint_kW=None, penalty_weight=0.1, params_physics=None,
-                                 consider_turbine=True, end_of_life=False):
+                                 power_constraint_kW=None, consider_turbine=True, end_of_life=False):
     """
     Optimize the (cell) voltage predicted by the GPyTorch model with a (cell) power constraint using differential evolution.
 
@@ -25,10 +24,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     - cathode_pressure_drop_model: The trained GPyTorch model for the cathode pressure drop. (alongside likelihood and input/target data statistics).
     - flight_level_100ft: Flight level in 100 feet units.
     - cellcount: Number of cells.
-    - bounds: Bounds for each feature as a list of tuples [(min1, max1), (min2, max2), ...].
     - power_constraint_kW: Power constraint in kilowatts.
-    - penalty_weight: Weight for the penalty term in the objective function.
-    - params_physics: Physical parameters.
     - consider_turbine: Whether to consider power recuperation in the optimization.
     - end_of_life: Whether to consider the end of life derating factor.
 
@@ -40,6 +36,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     # Load parameters
     _params_physics = parameters.Physical_Parameters()
+    _params_optimization = parameters.Optimization_Parameters()
     _params_compressor = parameters.Compressor_Parameters()
     _params_turbine = parameters.Turbine_Parameters()
     _params_recirculation_pump = parameters.Recirculation_Pump_Parameters()
@@ -234,8 +231,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # %% Consumed hydrogen mass flow rate
 
         # Compute the hydrogen mass flow rate
-        hydrogen_mass_flow_g_s = optimized_input[0] * cellcount * params_physics.hydrogen_molar_mass / \
-            (2 * params_physics.faraday) * 1000
+        hydrogen_mass_flow_g_s = optimized_input[0] * cellcount * _params_physics.hydrogen_molar_mass / \
+            (2 * _params_physics.faraday) * 1000
 
         return optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
             coolant_pump_power_W, hydrogen_mass_flow_g_s
@@ -255,7 +252,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             power_constraint = cell_voltage * cellcount * optimal_input[0] \
                 - compressor_power_W + turbine_power_W - reci_pump_power_W  - coolant_pump_power_W \
                     - power_constraint_kW * 1000
-            penalty = penalty_weight * (power_constraint**2)
+            penalty = _params_optimization.penalty_weight * (power_constraint**2)
         else:
             penalty = 0
         
@@ -270,10 +267,13 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
     # Normalize the bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
-                         zip(bounds, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
+                         zip(_params_optimization.bounds, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
 
     # Perform the optimization using differential evolution
-    result = differential_evolution(objective_function, normalized_bounds, constraints=nonlinear_constraint, maxiter=1000, popsize=30, recombination=0.9, polish=False, disp=False, seed=None)
+    result = differential_evolution(objective_function, normalized_bounds, constraints=nonlinear_constraint,
+                                    maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
+                                    seed=_params_optimization.seed, recombination=_params_optimization.recombination,
+                                    tol=_params_optimization.tol, polish=False, disp=False)
     optimization_converged = result.success
     print(f'{result.message}')
 
