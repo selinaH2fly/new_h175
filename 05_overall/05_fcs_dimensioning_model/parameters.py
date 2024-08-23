@@ -21,6 +21,7 @@ class Physical_Parameters:
     def __init__(self):
 
         # TODO: Make all variable names indicative of their units
+        # TODO: Don't define constants here that we can get from CoolProp (e.g., molar masses)
         self.hydrogen_lhv_voltage_equivalent = 1.253
         self.hydrogen_hhv_voltage_equivalent = 1.481
         self.hydrogen_molar_mass = 2.016 * 1e-3         # kg/mol
