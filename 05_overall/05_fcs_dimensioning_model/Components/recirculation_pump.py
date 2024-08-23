@@ -6,7 +6,7 @@ class Recirculation_Pump:
     def __init__(self, params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95, 
                  current_A=100, temperature_in_K=293.15, pressure_in_Pa=1e5, pressure_out_Pa=1e5,
                  n_cell=455, cell_area_m2=300*1e-4, stoich_anode=1.5, nominal_BoP_pressure_drop_Pa=0.1*1e5,
-                 fixed_recirculation_ratio=None): 
+                 fixed_recirculation_ratio=None, weight_by_power=1): 
         """
         Initialize the recirculation pump with a given efficiency and operating conditions.
 
@@ -37,6 +37,7 @@ class Recirculation_Pump:
         self.stoich_anode = stoich_anode
         self.nominal_BoP_pressure_drop = nominal_BoP_pressure_drop_Pa
         self.fixed_recirculation_ratio = fixed_recirculation_ratio
+        self.weight_by_power = weight_by_power
 
         # TODO: No constant parameters in the class definition. Move to parameters.py
         self.stoich_0 = 1.05                            # stoich_0 1.02-1.05 "lost als H2 aus system = ~5%" TODO: rather specify the recirculation ratio!

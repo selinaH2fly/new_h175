@@ -3,7 +3,7 @@ class Radiator:
     A class to model a liquid/air radiator
     """
 
-    def __init__(self, coolant_flow_m3_s=0.0, nominal_pressure_drop_Pa=500*100, nominal_coolant_flow_m3_s=0.0):
+    def __init__(self, coolant_flow_m3_s=0.0, nominal_pressure_drop_Pa=500*100, nominal_coolant_flow_m3_s=0.0, weight_by_power=1):
         """
         Initialize the radiator with a given pressure drop and coolant flow rate.
 
@@ -15,6 +15,7 @@ class Radiator:
         self.coolant_flow_m3_s = coolant_flow_m3_s
         self.nominal_pressure_drop_Pa = nominal_pressure_drop_Pa
         self.nominal_coolant_flow_m3_s = nominal_coolant_flow_m3_s
+        self.weight_by_power = weight_by_power
 
     def calculate_pressure_drop(self)->float:
         """

@@ -46,6 +46,7 @@ class Compressor_Parameters:
 
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
+        self.weight_by_power = 1                        # kg/kW
 
         # Assumption: ~0.3 bar BoP pressure drop downstream the compressor at 130 g/s air flow rate
         self.nominal_BoP_pressure_drop_Pa = 0.3*1e5
@@ -56,6 +57,7 @@ class Turbine_Parameters:
     def __init__(self):
 
         self.isentropic_efficiency = 0.75
+        self.weight_by_power = 1                        # kg/kW
 
         # Assumption: ~0.15 bar BoP pressure drop upstream the turbine at 130 g/s air flow rate
         self.nominal_BoP_pressure_drop_Pa = 0.15*1e5
@@ -67,6 +69,7 @@ class Recirculation_Pump_Parameters:
 
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
+        self.weight_by_power = 1                        # kg/kW
 
         self.fixed_recirculation_ratio = 70/30
 
@@ -79,6 +82,7 @@ class Coolant_Pump_Parameters:
 
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
+        self.weight_by_power = 1                        # kg/kW
 
         # Assumption: ~0.5 bar pressure drop at 10 l/min coolant in LT cooling circuit
         self.nominal_pressure_drop_lt_Pa = 0.5*1e5
@@ -87,6 +91,7 @@ class Coolant_Pump_Parameters:
 class Radiator_Parameters:
 
     def __init__(self):
+        self.weight_by_power = 1                        # kg/kW
 
         # Assumption: ~0.4 bar pressure drop at 250 l/min coolant in HT cooling circuit (including hoses and valves)
         self.nominal_pressure_drop_Pa = 0.4*1e5

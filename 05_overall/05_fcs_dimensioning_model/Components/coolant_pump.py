@@ -6,7 +6,7 @@ class Coolant_Pump:
         power, coolant state, and volume flow.
     """
 
-    def __init__(self, isentropic_efficiency=0.75, electric_efficiency=0.95, head_Pa=0.0, coolant_flow_m3_s=0.0):
+    def __init__(self, isentropic_efficiency=0.75, electric_efficiency=0.95, head_Pa=0.0, coolant_flow_m3_s=0.0, weight_by_power=1):
         """
         Initialize the pump with a given efficiency and operating conditions.
 
@@ -20,6 +20,7 @@ class Coolant_Pump:
         self.electric_efficiency = electric_efficiency
         self.head_Pa = head_Pa
         self.coolant_flow_m3_s = coolant_flow_m3_s
+        self.weight_by_power = weight_by_power
 
     def calculate_power(self) -> float:
         """

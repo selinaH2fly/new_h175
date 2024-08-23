@@ -4,7 +4,7 @@ from basic_physics import icao_atmosphere
 class Turbine:
     def __init__(self, params_physics, isentropic_efficiency=0.85,
                  air_mass_flow_kg_s=1, pressure_in_Pa=1e5, temperature_in_K=80+273.15, flight_level_100ft=50,
-                 nominal_BoP_pressure_drop_Pa=0.15*1e5, nominal_air_flow_kg_s=0.130):
+                 nominal_BoP_pressure_drop_Pa=0.15*1e5, nominal_air_flow_kg_s=0.130, weight_by_power=1):
 
         self.isentropic_efficiency = isentropic_efficiency
         self.params_physics = params_physics
@@ -14,6 +14,7 @@ class Turbine:
         self.flight_level_100ft = flight_level_100ft
         self.nominal_pressure_drop_Pa = nominal_BoP_pressure_drop_Pa
         self.nominal_air_flow_kg_s = nominal_air_flow_kg_s
+        self.weight_by_power = weight_by_power
 
     def calculate_power(self):
         """
