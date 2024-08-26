@@ -53,7 +53,7 @@ if __name__ == '__main__':
       
         _step_p = 30
         _step_c = 50
-        _step_fl = 25
+        _step_fl = 30
         #range_power is ugly deined atm. due to not starting at 0 and want to have inclusive bounds.... maybe there is a better way?
         #range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
         range_power = np.array([20, 50, 80, 125, 150, 175])
