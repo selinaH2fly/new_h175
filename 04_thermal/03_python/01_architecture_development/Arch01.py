@@ -49,8 +49,8 @@ Provide input on boundary conditions
 circ.add_bc("p_9 = 1.0")
 # circ.add_bc("delta_p_bop1 = - (0.0014 + 0.0023 - 0.0028 + 0.0052 + 0.0022 + 0.0013 + 0.001) * 60.0 * Vdot_3 - (0.0001 + 0.0004 + 0.0035 + 0.0028 + 0.001 + 0.0003 + 0.001) * 60.0 ** 2 * Vdot_3 **2")
 circ.add_bc("delta_p_bop1 = - (0.0014 + 0.0023) * 60.0 * Vdot_3 - (0.0001 + 0.0004) * 60.0 ** 2 * Vdot_3 **2")
-circ.add_bc("delta_p_stack1 = - 0.6")
-circ.add_bc("delta_p_radiator1 = - 0.4")
+circ.add_bc("delta_p_stack1 = - (5.6629  * 10 ** (-6) * 60 ** 2 * Vdot_6 ** 2 + 6.3347 * 10 ** (-4) * 60 * Vdot_6)")
+circ.add_bc("delta_p_radiator1 = - (8.2958 * 10 ** (-6) * 60 ** 2 * Vdot_1 + 1.6622 * 10 ** (-3) * 60 * Vdot_1)")
 
 circ.add_bc("delta_p_1_tcv1 = 0.0")
 
