@@ -3,7 +3,7 @@ class Radiator:
     A class to model a liquid/air radiator
     """
 
-    def __init__(self, coolant_flow_m3_s=0.0, nominal_pressure_drop_Pa=500*100, nominal_coolant_flow_m3_s=0.0, weight_by_power=1, thermal_power_W=1000):
+    def __init__(self, coolant_flow_m3_s=0.0, nominal_pressure_drop_Pa=500*100, nominal_coolant_flow_m3_s=0.0, mass_by_power_kg_kW=1, thermal_power_W=1000):
         """
         Initialize the radiator with a given pressure drop and coolant flow rate.
 
@@ -15,7 +15,7 @@ class Radiator:
         self.coolant_flow_m3_s = coolant_flow_m3_s
         self.nominal_pressure_drop_Pa = nominal_pressure_drop_Pa
         self.nominal_coolant_flow_m3_s = nominal_coolant_flow_m3_s
-        self.weight_by_power = weight_by_power
+        self.mass_by_power_kg_kW = mass_by_power_kg_kW
         self.thermal_power_W = thermal_power_W
 
     def calculate_pressure_drop(self)->float:
@@ -31,20 +31,20 @@ class Radiator:
 
         return pressure_drop_Pa
 
-    def calculate_weight(self)->float:
+    def calculate_mass(self)->float:
         """
         Calculate predicted mass of the radiator.
         
         Args:
-        - weight_by_power: The ratio of mass to thermal power removed in kg/kW.
+        - mass_by_power_kg_kW: The ratio of mass to thermal power removed in kg/kW.
         - thermal_power_W: Required thermal power the radiator must remove in W.
         
         Returns:
-        - radiator_weight: The mass in kg.
+        - radiator_mass_kg: The mass in kg.
 
         """
-        radiator_weight = self.weight_by_power * self.thermal_power_W / 1000
-        return radiator_weight
+        radiator_mass_kg = self.mass_by_power_kg_kW * self.thermal_power_W / 1000
+        return radiator_mass_kg
 
 # %% Example Usage:
 
@@ -52,5 +52,4 @@ radiator = Radiator(nominal_pressure_drop_Pa=0.3*1e5, nominal_coolant_flow_m3_s=
 
 radiator.coolant_flow_m3_s = 100/(1000*60)  # 100 l/min in m3/s
 pressure_drop_Pa = radiator.calculate_pressure_drop()
-radiator_mass = radiator.calculate_weight()
-
+radiator_mass_kg = radiator.calculate_mass()

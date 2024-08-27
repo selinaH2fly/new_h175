@@ -6,7 +6,7 @@ class Coolant_Pump:
         power, coolant state, and volume flow.
     """
 
-    def __init__(self, isentropic_efficiency=0.75, electric_efficiency=0.95, head_Pa=0.0, coolant_flow_m3_s=0.0, weight_by_power=1):
+    def __init__(self, isentropic_efficiency=0.75, electric_efficiency=0.95, head_Pa=0.0, coolant_flow_m3_s=0.0, mass_by_power_kg_kW=1):
         """
         Initialize the pump with a given efficiency and operating conditions.
 
@@ -20,7 +20,7 @@ class Coolant_Pump:
         self.electric_efficiency = electric_efficiency
         self.head_Pa = head_Pa
         self.coolant_flow_m3_s = coolant_flow_m3_s
-        self.weight_by_power = weight_by_power
+        self.mass_by_power_kg_kW = mass_by_power_kg_kW
 
     def calculate_power(self) -> float:
         """
@@ -34,26 +34,26 @@ class Coolant_Pump:
 
         return pump_electrical_power_W
     
-    def calculate_weight(self)->float:
+    def calculate_mass(self)->float:
         """
         Calculate predicted mass of the pump.
         
         Args:
-        - weight_by_power: The ratio of mass to electrical power in kg/kW.
+        - mass_by_power_kg_kW: The ratio of mass to electrical power in kg/kW.
         
         Returns:
-        - pump_weight: The mass in kg.
+        - pump_mass_kg: The mass in kg.
 
         """
         pump_el_power_W = self.calculate_power()
-        pump_weight = self.weight_by_power * pump_el_power_W / 1000
-        return pump_weight
+        pump_mass_kg = self.mass_by_power_kg_kW * pump_el_power_W / 1000
+        return pump_mass_kg
 
 # %% Example USsage:
 
     
 coolant_pump = Coolant_Pump(isentropic_efficiency=0.75, electric_efficiency=0.95, head_Pa=2e7, coolant_flow_m3_s=0.5)
 coolant_pump_power_W = coolant_pump.calculate_power()
-coolant_pump_mass = coolant_pump.calculate_weight()
+coolant_pump_mass_kg = coolant_pump.calculate_mass()
 
 

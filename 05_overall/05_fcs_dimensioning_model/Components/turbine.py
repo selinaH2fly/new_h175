@@ -4,7 +4,7 @@ from basic_physics import icao_atmosphere
 class Turbine:
     def __init__(self, params_physics, isentropic_efficiency=0.85,
                  air_mass_flow_kg_s=1, pressure_in_Pa=1e5, temperature_in_K=80+273.15, flight_level_100ft=50,
-                 nominal_BoP_pressure_drop_Pa=0.15*1e5, nominal_air_flow_kg_s=0.130, weight_by_power=1):
+                 nominal_BoP_pressure_drop_Pa=0.15*1e5, nominal_air_flow_kg_s=0.130, mass_by_power_kg_kW=1):
 
         self.isentropic_efficiency = isentropic_efficiency
         self.params_physics = params_physics
@@ -14,7 +14,7 @@ class Turbine:
         self.flight_level_100ft = flight_level_100ft
         self.nominal_pressure_drop_Pa = nominal_BoP_pressure_drop_Pa
         self.nominal_air_flow_kg_s = nominal_air_flow_kg_s
-        self.weight_by_power = weight_by_power
+        self.mass_by_power_kg_kW = mass_by_power_kg_kW
 
     def calculate_power(self):
         """
@@ -64,20 +64,20 @@ class Turbine:
 
         return pressure_drop_Pa
     
-    def calculate_weight(self)->float:
+    def calculate_mass(self)->float:
         """
         Calculate predicted mass of the turbine.
         
         Args:
-        - weight_by_power: The ratio of mass to electrical power in kg/kW.
+        - mass_by_power_kg_kW: The ratio of mass to electrical power in kg/kW.
         
         Returns:
-        - turbine_weight: The mass in kg.
+        - turbine_mass_kg: The mass in kg.
 
         """
         turbine_el_power_W = self.calculate_power()
-        turbine_weight = self.weight_by_power * turbine_el_power_W / 1000
-        return turbine_weight
+        turbine_mass_kg = self.mass_by_power_kg_kW * turbine_el_power_W / 1000
+        return turbine_mass_kg
     
 # %% Example usage:
 import parameters   
@@ -89,4 +89,5 @@ C1 = Turbine(params_physics, isentropic_efficiency=0.85)
 power_el = C1.calculate_power()
 
 #mass
-mass = C1.calculate_weight()
+mass = C1.calculate_mass()
+

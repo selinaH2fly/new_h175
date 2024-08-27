@@ -6,7 +6,7 @@ class Recirculation_Pump:
     def __init__(self, params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95, 
                  current_A=100, temperature_in_K=293.15, pressure_in_Pa=1e5, pressure_out_Pa=1e5,
                  n_cell=455, cell_area_m2=300*1e-4, stoich_anode=1.5, nominal_BoP_pressure_drop_Pa=0.1*1e5,
-                 fixed_recirculation_ratio=None, weight_by_power=1): 
+                 fixed_recirculation_ratio=None, mass_by_power_kg_kW=1): 
         """
         Initialize the recirculation pump with a given efficiency and operating conditions.
 
@@ -37,7 +37,7 @@ class Recirculation_Pump:
         self.stoich_anode = stoich_anode
         self.nominal_BoP_pressure_drop = nominal_BoP_pressure_drop_Pa
         self.fixed_recirculation_ratio = fixed_recirculation_ratio
-        self.weight_by_power = weight_by_power
+        self.mass_by_power_kg_kW = mass_by_power_kg_kW
 
         # TODO: No constant parameters in the class definition. Move to parameters.py
         self.stoich_0 = 1.05                            # stoich_0 1.02-1.05 "lost als H2 aus system = ~5%" TODO: rather specify the recirculation ratio!
@@ -134,20 +134,20 @@ class Recirculation_Pump:
 
         return pressure_drop_Pa
     
-    def calculate_weight(self)->float:
+    def calculate_mass(self)->float:
         """
         Calculate predicted mass of the pump.
         
         Args:
-        - weight_by_power: The ratio of mass to electrical power in kg/kW.
+        - mass_by_power_kg_kW: The ratio of mass to electrical power in kg/kW.
         
         Returns:
-        - pump_weight: The mass in kg.
+        - pump_mass_kg: The mass in kg.
 
         """
         pump_el_power_W = self.calculate_power()
-        pump_weight = self.weight_by_power * pump_el_power_W / 1000
-        return pump_weight
+        pump_mass_kg = self.mass_by_power_kg_kW * pump_el_power_W / 1000
+        return pump_mass_kg
         
  
 # %% Example Usage:
@@ -161,4 +161,5 @@ R1 = Recirculation_Pump(params_physics, current_A=200,temperature_in_K=343.15, p
 power_el_smart = R1.calculate_power()
 
 #mass
-pump_mass = R1.calculate_weight()
+pump_mass = R1.calculate_mass()
+
