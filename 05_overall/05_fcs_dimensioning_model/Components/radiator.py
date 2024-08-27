@@ -3,7 +3,7 @@ class Radiator:
     A class to model a liquid/air radiator
     """
 
-    def __init__(self, coolant_flow_m3_s=0.0, nominal_pressure_drop_Pa=500*100, nominal_coolant_flow_m3_s=0.0, mass_by_power_kg_kW=1, thermal_power_W=1000):
+    def __init__(self, coolant_flow_m3_s=0.0, nominal_pressure_drop_Pa=500*100, nominal_coolant_flow_m3_s=0.0, mass_by_power_kg_kW={"mean": 1.0, "sd": 0.1}, thermal_power_W=1000):
         """
         Initialize the radiator with a given pressure drop and coolant flow rate.
 
@@ -31,20 +31,28 @@ class Radiator:
 
         return pressure_drop_Pa
 
-    def calculate_mass(self)->float:
+    def calculate_mass(self)->dict:
         """
         Calculate predicted mass of the radiator.
         
         Args:
-        - mass_by_power_kg_kW: The ratio of mass to thermal power removed in kg/kW.
-        - thermal_power_W: Required thermal power the radiator must remove in W.
+        - thermal_power_W: Required thermal power the radiator must remove in W.       
+        - mass_by_power_kg_kW: A dictionary containing:
+            - "mean": The mean ratio of mass to thermal power in kg/kW.
+            - "sd": The standard deviation of the ratio of mass to thermal power in kg/kW.
         
         Returns:
-        - radiator_mass_kg: The mass in kg.
+        - result: A dictionary containing:
+            - "mean": Radiator mass in kg based on the mean value of mass_by_power_kg_kW.
+            - "sd": Radiator mass in kg based on the standard deviation of mass_by_power_kg_kW.
 
         """
-        radiator_mass_kg = self.mass_by_power_kg_kW * self.thermal_power_W / 1000
-        return radiator_mass_kg
+        radiator_mass_mean_kg = self.mass_by_power_kg_kW["mean"] * self.thermal_power_W / 1000
+        radiator_mass_sd_kg = self.mass_by_power_kg_kW["sd"] * self.thermal_power_W / 1000
+        return {
+        "mean": radiator_mass_mean_kg,
+        "sd": radiator_mass_sd_kg
+        }
 
 # %% Example Usage:
 
@@ -53,3 +61,4 @@ radiator = Radiator(nominal_pressure_drop_Pa=0.3*1e5, nominal_coolant_flow_m3_s=
 radiator.coolant_flow_m3_s = 100/(1000*60)  # 100 l/min in m3/s
 pressure_drop_Pa = radiator.calculate_pressure_drop()
 radiator_mass_kg = radiator.calculate_mass()
+

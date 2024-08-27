@@ -6,7 +6,7 @@ class Coolant_Pump:
         power, coolant state, and volume flow.
     """
 
-    def __init__(self, isentropic_efficiency=0.75, electric_efficiency=0.95, head_Pa=0.0, coolant_flow_m3_s=0.0, mass_by_power_kg_kW=1):
+    def __init__(self, isentropic_efficiency=0.75, electric_efficiency=0.95, head_Pa=0.0, coolant_flow_m3_s=0.0, mass_by_power_kg_kW={"mean": 1.0, "sd": 0.1}):
         """
         Initialize the pump with a given efficiency and operating conditions.
 
@@ -34,20 +34,28 @@ class Coolant_Pump:
 
         return pump_electrical_power_W
     
-    def calculate_mass(self)->float:
+    def calculate_mass(self)->dict:
         """
         Calculate predicted mass of the pump.
         
-        Args:
-        - mass_by_power_kg_kW: The ratio of mass to electrical power in kg/kW.
+        Args:        
+        - mass_by_power_kg_kW: A dictionary containing:
+            - "mean": The mean ratio of mass to electrical power in kg/kW.
+            - "sd": The standard deviation of the ratio of mass to electrical power in kg/kW.
         
         Returns:
-        - pump_mass_kg: The mass in kg.
+        - result: A dictionary containing:
+            - "mean": Pump mass in kg based on the mean value of mass_by_power_kg_kW.
+            - "sd": Pump mass in kg based on the standard deviation of mass_by_power_kg_kW.
 
         """
         pump_el_power_W = self.calculate_power()
-        pump_mass_kg = self.mass_by_power_kg_kW * pump_el_power_W / 1000
-        return pump_mass_kg
+        pump_mass_mean_kg = self.mass_by_power_kg_kW["mean"] * pump_el_power_W / 1000
+        pump_mass_sd_kg = self.mass_by_power_kg_kW["sd"] * pump_el_power_W / 1000
+        return {
+        "mean": pump_mass_mean_kg,
+        "sd": pump_mass_sd_kg
+        }
 
 # %% Example USsage:
 
@@ -55,5 +63,6 @@ class Coolant_Pump:
 coolant_pump = Coolant_Pump(isentropic_efficiency=0.75, electric_efficiency=0.95, head_Pa=2e7, coolant_flow_m3_s=0.5)
 coolant_pump_power_W = coolant_pump.calculate_power()
 coolant_pump_mass_kg = coolant_pump.calculate_mass()
+
 
 
