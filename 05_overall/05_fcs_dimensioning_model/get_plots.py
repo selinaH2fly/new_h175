@@ -144,7 +144,7 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
 
     # Save and show plot
     if saving:
-        plt.savefig('bol_eol_polarization_curve.png')
+        plt.savefig('bol_eol_polarization_curve.png', bbox_inches='tight')
     plt.show()
 
 # PLOT: Power Grid, fancy
@@ -339,7 +339,7 @@ def plot_h2_consumption(data, titles, colors, weights, fl_set, saving=True):
 
     for df, title, color, weight in zip(data, titles, colors, weights):
         df = df[df['Flight Level (100x ft)'] == fl_set]
-        for filter_eol, linestyle, marker, label_suffix in [(False, '-', 'p', 'Normal'), (True, '--', 'X', 'EOL')]:
+        for filter_eol, linestyle, marker, label_suffix in [(False, '-', 'p', 'BoL'), (True, '--', 'X', 'EoL')]:
             # Apply the filter based on the function argument
             filtered_df = df[(df["eol (t/f)"] == filter_eol) 
                              &(df["current_A (Value)"] <= 700)]
