@@ -4,7 +4,7 @@ from basic_physics import icao_atmosphere
 class Turbine:
     def __init__(self, params_physics, isentropic_efficiency=0.85,
                  air_mass_flow_kg_s=1, pressure_in_Pa=1e5, temperature_in_K=80+273.15, flight_level_100ft=50,
-                 nominal_BoP_pressure_drop_Pa=0.15*1e5, nominal_air_flow_kg_s=0.130):
+                 nominal_BoP_pressure_drop_Pa=0.15*1e5, nominal_air_flow_kg_s=0.130, mass_by_power_kg_kW={"mean": 1.0, "sd": 0.1}):
 
         self.isentropic_efficiency = isentropic_efficiency
         self.params_physics = params_physics
@@ -14,6 +14,7 @@ class Turbine:
         self.flight_level_100ft = flight_level_100ft
         self.nominal_pressure_drop_Pa = nominal_BoP_pressure_drop_Pa
         self.nominal_air_flow_kg_s = nominal_air_flow_kg_s
+        self.mass_by_power_kg_kW = mass_by_power_kg_kW
 
     def calculate_power(self):
         """
@@ -63,6 +64,25 @@ class Turbine:
 
         return pressure_drop_Pa
     
+    def calculate_mass(self)->dict:
+        """
+        Calculate predicted mass of the tubine utilizing the mass_by_power_kg_kW dict of the class.
+        
+        Returns:
+        - result: A dictionary containing:
+            - "mean": Turbine mass in kg based on the mean value of mass_by_power_kg_kW.
+            - "sd": Turbine mass in kg based on the standard deviation of mass_by_power_kg_kW.
+
+
+        """
+        turbine_el_power_W = self.calculate_power()
+        turbine_mass_mean_kg = self.mass_by_power_kg_kW["mean"] * turbine_el_power_W / 1000
+        turbine_mass_sd_kg = self.mass_by_power_kg_kW["sd"] * turbine_el_power_W / 1000
+        return {
+        "mean": turbine_mass_mean_kg,
+        "sd": turbine_mass_sd_kg
+        }
+    
 # %% Example usage:
 import parameters   
 params_physics = parameters.Physical_Parameters() 
@@ -71,3 +91,8 @@ C1 = Turbine(params_physics, isentropic_efficiency=0.85)
 
 #electrical power
 power_el = C1.calculate_power()
+
+#mass
+mass = C1.calculate_mass()
+
+

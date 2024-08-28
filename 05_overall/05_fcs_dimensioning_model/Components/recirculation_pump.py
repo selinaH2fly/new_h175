@@ -6,7 +6,7 @@ class Recirculation_Pump:
     def __init__(self, params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95, 
                  current_A=100, temperature_in_K=293.15, pressure_in_Pa=1e5, pressure_out_Pa=1e5,
                  n_cell=455, cell_area_m2=300*1e-4, stoich_anode=1.5, nominal_BoP_pressure_drop_Pa=0.1*1e5,
-                 fixed_recirculation_ratio=None): 
+                 fixed_recirculation_ratio=None, mass_by_power_kg_kW={"mean": 1.0, "sd": 0.1}): 
         """
         Initialize the recirculation pump with a given efficiency and operating conditions.
 
@@ -37,6 +37,7 @@ class Recirculation_Pump:
         self.stoich_anode = stoich_anode
         self.nominal_BoP_pressure_drop = nominal_BoP_pressure_drop_Pa
         self.fixed_recirculation_ratio = fixed_recirculation_ratio
+        self.mass_by_power_kg_kW = mass_by_power_kg_kW
 
         # TODO: No constant parameters in the class definition. Move to parameters.py
         self.stoich_0 = 1.05                            # stoich_0 1.02-1.05 "lost als H2 aus system = ~5%" TODO: rather specify the recirculation ratio!
@@ -135,6 +136,28 @@ class Recirculation_Pump:
 
         return pressure_drop_Pa
     
+<<<<<<< HEAD
+=======
+    def calculate_mass(self)->dict:
+        """
+        Calculate predicted mass of the pump utilizing the mass_by_power_kg_kW dict of the class.
+        
+        Returns:
+        - result: A dictionary containing:
+            - "mean": Pump mass in kg based on the mean value of mass_by_power_kg_kW.
+            - "sd": Pump mass in kg based on the standard deviation of mass_by_power_kg_kW.
+
+
+        """
+        pump_el_power_W = self.calculate_power()
+        pump_mass_mean_kg = self.mass_by_power_kg_kW["mean"] * pump_el_power_W / 1000
+        pump_mass_sd_kg = self.mass_by_power_kg_kW["sd"] * pump_el_power_W / 1000
+        return {
+        "mean": pump_mass_mean_kg,
+        "sd": pump_mass_sd_kg
+        }
+        
+>>>>>>> weight_calc_to_components
  
 # %% Example Usage:
 import parameters   
@@ -143,8 +166,19 @@ params_physics = parameters.Physical_Parameters()
 R1 = Recirculation_Pump(params_physics, current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
                         cell_area_m2=300*1e-4, stoich_anode = 2.4)
 
+<<<<<<< HEAD
 R2 = Recirculation_Pump(params_physics, current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
                         cell_area_m2=300*1e-4, stoich_anode = 2.4, fixed_recirculation_ratio=70/30)
 
 # Calculate electrical power
 electrical_power_W = R2.calculate_power()
+=======
+#electrical power
+power_el_smart = R1.calculate_power()
+
+#mass
+pump_mass = R1.calculate_mass()
+
+
+
+>>>>>>> weight_calc_to_components

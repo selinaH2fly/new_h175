@@ -4,7 +4,7 @@ from basic_physics import icao_atmosphere
 class Compressor:
     def __init__(self, params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95,
                  air_mass_flow_kg_s=1, pressure_out_Pa=1e5, flight_level_100ft=50,
-                 nominal_BoP_pressure_drop_Pa=0.3*1e5, nominal_air_flow_kg_s=0.130):
+                 nominal_BoP_pressure_drop_Pa=0.3*1e5, nominal_air_flow_kg_s=0.130, mass_by_power_kg_kW= {"mean": 1.0, "sd": 0.1}):
 
         self.isentropic_efficiency = isentropic_efficiency
         self.electric_efficiency = electric_efficiency
@@ -14,6 +14,7 @@ class Compressor:
         self.flight_level_100ft = flight_level_100ft
         self.nominal_pressure_drop_Pa = nominal_BoP_pressure_drop_Pa
         self.nominal_air_flow_kg_s = nominal_air_flow_kg_s
+        self.mass_by_power_kg_kW = mass_by_power_kg_kW
 
     def calculate_power(self):
         """
@@ -64,6 +65,24 @@ class Compressor:
 
         return pressure_drop_Pa
     
+    def calculate_mass(self)->dict:
+        """
+        Calculate predicted mass of the compressor utilizing the mass_by_power_kg_kW dict of the class
+        
+        Returns:
+        - result: A dictionary containing:
+            - "mean": Compressor mass in kg based on the mean value of mass_by_power_kg_kW.
+            - "sd": Compressor mass in kg based on the standard deviation of mass_by_power_kg_kW.
+
+        """
+        compressor_el_power_W = self.calculate_power()
+        compressor_mass_mean_kg = self.mass_by_power_kg_kW["mean"] * compressor_el_power_W / 1000
+        compressor_mass_sd_kg = self.mass_by_power_kg_kW["sd"] * compressor_el_power_W / 1000
+        return {
+        "mean": compressor_mass_mean_kg,
+        "sd": compressor_mass_sd_kg
+        }
+    
 # %% Example Usage:
 import parameters   
 params_physics = parameters.Physical_Parameters()
@@ -73,3 +92,6 @@ C1 = Compressor(params_physics, isentropic_efficiency=0.75, electric_efficiency=
 
 #electrical power
 power_el = C1.calculate_power()
+mass = C1.calculate_mass()
+
+
