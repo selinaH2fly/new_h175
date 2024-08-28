@@ -136,8 +136,6 @@ class Recirculation_Pump:
 
         return pressure_drop_Pa
     
-<<<<<<< HEAD
-=======
     def calculate_mass(self)->dict:
         """
         Calculate predicted mass of the pump utilizing the mass_by_power_kg_kW dict of the class.
@@ -156,8 +154,6 @@ class Recirculation_Pump:
         "mean": pump_mass_mean_kg,
         "sd": pump_mass_sd_kg
         }
-        
->>>>>>> weight_calc_to_components
  
 # %% Example Usage:
 import parameters   
@@ -166,19 +162,14 @@ params_physics = parameters.Physical_Parameters()
 R1 = Recirculation_Pump(params_physics, current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
                         cell_area_m2=300*1e-4, stoich_anode = 2.4)
 
-<<<<<<< HEAD
 R2 = Recirculation_Pump(params_physics, current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
                         cell_area_m2=300*1e-4, stoich_anode = 2.4, fixed_recirculation_ratio=70/30)
 
 # Calculate electrical power
 electrical_power_W = R2.calculate_power()
-=======
+
 #electrical power
 power_el_smart = R1.calculate_power()
 
 #mass
 pump_mass = R1.calculate_mass()
-
-
-
->>>>>>> weight_calc_to_components

@@ -39,8 +39,8 @@ if __name__ == '__main__':
     
     if args.testing == "True":
         range_power = np.array([20,175])
-        range_cellcount = np.array([400,500])
-        range_fl = np.array([0,150])
+        range_cellcount = np.array([400])
+        range_fl = np.array([0])
         # Convert turbine and eol to boolean lists
         range_turbine =[args.turbine == "True"]#, args.turbine.lower() == "false"]
         range_eol = [args.eol == "True", args.eol == "False"]
