@@ -6,7 +6,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 import ThermSim
 """
-bop Architecture 2.1
+bop Architecture 2.3
                  8                9                  10                11
                  .---> HPDU ----------> Inverter -------> Compressor -----.
                  |                                                        |
