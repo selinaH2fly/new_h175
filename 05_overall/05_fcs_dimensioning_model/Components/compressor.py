@@ -67,12 +67,7 @@ class Compressor:
     
     def calculate_mass(self)->dict:
         """
-        Calculate predicted mass of the compressor.
-        
-        Args:        
-        - mass_by_power_kg_kW: A dictionary containing:
-            - "mean": The mean ratio of mass to electrical power in kg/kW.
-            - "sd": The standard deviation of the ratio of mass to electrical power in kg/kW.
+        Calculate predicted mass of the compressor utilizing the mass_by_power_kg_kW dict of the class
         
         Returns:
         - result: A dictionary containing:

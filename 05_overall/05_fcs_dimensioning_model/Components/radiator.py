@@ -33,13 +33,7 @@ class Radiator:
 
     def calculate_mass(self)->dict:
         """
-        Calculate predicted mass of the radiator.
-        
-        Args:
-        - thermal_power_W: Required thermal power the radiator must remove in W.       
-        - mass_by_power_kg_kW: A dictionary containing:
-            - "mean": The mean ratio of mass to thermal power in kg/kW.
-            - "sd": The standard deviation of the ratio of mass to thermal power in kg/kW.
+        Calculate predicted mass of the radiator by utilizing the mass_by_power_kg_kW dict of the class and the thermal_power_W attribute.
         
         Returns:
         - result: A dictionary containing:
