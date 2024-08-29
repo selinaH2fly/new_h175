@@ -84,7 +84,7 @@ for i in range(len(circ.eq_unsorted)):
     if circ.eq_unsorted[i] == ['Vdot_1 = 0']:
         circ.eq_unsorted[i] = ['Vdot_1 = 15']
         k = i
-vdot = [15, 20, 25, 30, 35, 40]
+vdot = [15, 20, 25, 30]
 for x in vdot:
     y = x / 60
     circ.eq_unsorted[k] = ['Vdot_1 = %f' %(y)]
@@ -110,6 +110,7 @@ for x in vdot:
         elif circ.var_name[j] == intercooler.T_in:
             t_in_intercooler.append(circ.var_res[j])
     circ.reset_to_startcond()
-plt.plot(x, vdot_3, '--', x, vdot_6)
+plt.plot(vdot, p_end)
 plt.ylabel('Flow over branches [l/s]')
 plt.xlabel('Entry Flow [l/s]')
+plt.show()

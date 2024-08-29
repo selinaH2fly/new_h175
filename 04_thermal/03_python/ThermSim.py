@@ -219,16 +219,17 @@ class Circuit:
 
     def reset_to_startcond(self):
         self.eq_unsorted = self.eq_unsorted_start
-        self.eq_sorted = self.eq_sorted_start
+        self.eq_sorted = []
         self.var_name = self.var_name_start
         self.var_init = self.var_init_start
         self.var_min = self.var_min_start
         self.var_max = self.var_max_start
         self.var_unit = self.var_unit_start 
-        self.var_removal = self.var_removal_start
-        self.var_replacement = self.var_replacement
-        self.var_res = self.var_res_start
+        self.var_removal = [] #self.var_removal_start
+        self.var_replacement = [] # self.var_replacement_start
+        self.var_res = []
         self.eq_sorted_eval = []
+    
 
     def save_startcond(self):
         self.eq_unsorted_start = self.eq_unsorted
@@ -239,7 +240,7 @@ class Circuit:
         self.var_max_start = self.var_max
         self.var_unit_start = self.var_unit 
         self.var_removal_start = self.var_removal
-        self.var_replacement = self.var_replacement
+        self.var_replacement_start = self.var_replacement
         self.var_res_start = self.var_res
 
 
