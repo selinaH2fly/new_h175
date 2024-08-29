@@ -44,6 +44,12 @@ class Recirculation_Pump:
         self.hydrogen_concentration_supply = 1          # H2 concentration in tank
     
     def calculate_power(self)->float:
+        """
+        Calculate the electrical power consumed by the recirculation pump.
+        
+        Returns:
+        - reci_electric_power_W: Electrical power consumed by the recirculation pump in Watts.
+        """
 
         # Calculate the recirculated flows (either based on fixed recirculation ratio or based on nitrogen and hydrogen flow balances)
         if self.fixed_recirculation_ratio is None:
