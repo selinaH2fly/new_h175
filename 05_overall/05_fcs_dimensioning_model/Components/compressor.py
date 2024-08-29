@@ -16,7 +16,7 @@ class Compressor:
         self.nominal_air_flow_kg_s = nominal_air_flow_kg_s
         self.mass_by_power_kg_kW = mass_by_power_kg_kW
 
-    def calculate_power(self):
+    def calculate_power(self)->float:
         """
         Calculate the electrical power consumed by the compressor.
 
@@ -33,23 +33,22 @@ class Compressor:
         # Evaluate the temperature and pressure at the given flight level
         temperature_in_K, pressure_in_Pa = icao_atmosphere(self.flight_level_100ft)
 
-        # Calculate the pressure ratio
-        pressure_ratio = self.pressure_out_Pa / pressure_in_Pa
+        # Compute the isentropic outlet temperature
+        kappa = self.params_physics.specific_heat_ratio # specific heat ratio for H2 and N2 almost equal to air (i.e., 1.4) TODO: snack from coolprop
+        isentropic_outlet_temperature_K = temperature_in_K * (self.pressure_out_Pa/pressure_in_Pa)**((kappa-1)/kappa)
 
-        # Calculate the specific work input to the compressor (isentropic work)
-        specific_compressor_work_isentropic = CP.PropsSI('C', 'T', temperature_in_K, 'P', pressure_in_Pa, 'Air') * temperature_in_K * \
-            ((pressure_ratio ** ((self.params_physics.specific_heat_ratio - 1) / self.params_physics.specific_heat_ratio)) - 1)
-        
-        # Adjust for isentropic efficiency
-        specific_compressor_work = specific_compressor_work_isentropic / self.isentropic_efficiency
+        # Compute the specific enthalpies before and after the compressor
+        specific_enthalpy_in_J_kg = CP.PropsSI('H', 'T', temperature_in_K, 'P', pressure_in_Pa, 'Air')
+        specific_enthalpy_out_J_kg = CP.PropsSI('H', 'T', isentropic_outlet_temperature_K, 'P', self.pressure_out_Pa, 'Air')
 
-        # Multiply by the flow rate to get the total power requirement
-        compressor_power_W = specific_compressor_work * self.air_mass_flow_kg_s
+        # Compute the isentropic power
+        compressor_isentopic_power_W = self.air_mass_flow_kg_s * (specific_enthalpy_out_J_kg - specific_enthalpy_in_J_kg)
 
-        # Calculate the electrical power required
-        compressor_el_power_W = compressor_power_W / self.electric_efficiency
+        # Compute the electric power
+        compressor_shaft_power_W = compressor_isentopic_power_W / self.isentropic_efficiency
+        compressor_electric_power_W = compressor_shaft_power_W / self.electric_efficiency
 
-        return compressor_el_power_W
+        return compressor_electric_power_W
     
     def calculate_BoP_pressure_drop(self, air_flow_kg_s: float)->float:
         """

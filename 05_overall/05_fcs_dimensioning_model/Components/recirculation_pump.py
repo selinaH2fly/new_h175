@@ -59,7 +59,7 @@ class Recirculation_Pump:
         kappa = self.params_physics.specific_heat_ratio # specific heat ratio for H2 and N2 almost equal to air (i.e., 1.4) TODO: snack from coolprop
         isentropic_outlet_temperature_K = self.temperature_in_K * (self.pressure_out_Pa/self.pressure_in_Pa)**((kappa-1)/kappa)
 
-        # Compute the specific enthalpies of the species
+        # Compute the specific enthalpies of the species before and after the recirculation pump
         specific_enthalpy_hydrogen_in_J_kg = CP.PropsSI('H', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Hydrogen')
         specific_enthalpy_nitrogen_in_J_kg = CP.PropsSI('H', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Nitrogen')
         specific_enthalpy_hydrogen_out_J_kg = CP.PropsSI('H', 'T', isentropic_outlet_temperature_K, 'P', self.pressure_out_Pa, 'Hydrogen')
