@@ -258,14 +258,15 @@ class Circuit:
 
             for j in range(len(self.var_name)):
                 for result_name in result_name_dict:
-                    if self.var_name[j] == "Vdot_3":
-                        result_name_dict[result_name].append(self.var_res[j])
+                    if self.var_name[j] == result_name:
+                        result_name_dict[result_name][1].append(self.var_res[j])
                 
             self.reset_to_startcond()
-        plt.plot(vdot, p_end)
-        plt.ylabel('Flow over branches [l/s]')
-        plt.xlabel('Entry Flow [l/s]')
-        plt.show()
+        for result_name in result_name_dict:
+            plt.plot(variable_list, result_name_dict[result_name][1])
+            plt.ylabel(result_name_dict[result_name][0])
+            plt.xlabel('Entry Flow [l/s]')
+            plt.show()
 
 
 class NodeRenamer(ast.NodeTransformer):

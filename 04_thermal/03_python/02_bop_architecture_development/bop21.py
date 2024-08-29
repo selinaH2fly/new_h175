@@ -70,52 +70,60 @@ circ.add_bc("Qdot_evap = - 13500")
 Evaluate and generate output
 """
 
-result_name_dict = {'Vdot3', [;]
-
-
+result_name_dict = {'Vdot_3' : ['Vdot3 in l/s', []], 
+                    'Vdot_6' : ['Vdot_6', []],
+                    lvdcdc.T_in : ['LV DCDC T_in in [°C]', []],
+                    hvdcdc.T_in : ['HV DCDC T_in in [°C]', []],
+                    inverter.T_in : ['Inverter T_in in [°C]', []],
+                    hpdu.T_in : ['HPDU T_in in [°C]', []],
+                    compressor.T_in : ['Compressor T_in in [°C]', []],
+                    intercooler.T_in : ['Intercooler T_in in [°C]', []],
+                    mixer1.T_out : ['BoP T_out in [°C]', []],
 }
+vdot1 = [15/60, 20/60, 25/60, 30/60]
+circ.analyse_vdot1(vdot1, result_name_dict)
 
-vdot_3 = []
-vdot_6 = []
-p_end = []
-t_in_lvdcdc = []
-t_in_hvdcdc = []
-t_in_hpdu = []
-t_in_inverter = []
-t_in_compressor = []
-t_in_intercooler = []
+#vdot_3 = []
+#vdot_6 = []
+#p_end = []
+#t_in_lvdcdc = []
+#t_in_hvdcdc = []
+#t_in_hpdu = []
+#t_in_inverter = []
+#t_in_compressor = []
+#t_in_intercooler = []
 
-for i in range(len(circ.eq_unsorted)):
-    if circ.eq_unsorted[i] == ['Vdot_1 = 0']:
-        circ.eq_unsorted[i] = ['Vdot_1 = 15']
-        k = i
-vdot = [15, 20, 25, 30]
-for x in vdot:
-    y = x / 60
-    circ.eq_unsorted[k] = ['Vdot_1 = %f' %(y)]
-    circ.evaluate()
-
-    for j in range(len(circ.var_name)):
-        if circ.var_name[j] == "Vdot_3":
-            vdot_3.append(circ.var_res[j])
-        elif circ.var_name[j] == "Vdot_6":
-            vdot_6.append(circ.var_res[j])
-        elif circ.var_name[j] == "p_12":
-            p_end.append(circ.var_res[j])
-        elif circ.var_name[j] == hvdcdc.T_in:
-            t_in_hvdcdc.append(circ.var_res[j])
-        elif circ.var_name[j] == hpdu.T_in:
-            t_in_hpdu.append(circ.var_res[j])
-        elif circ.var_name[j] == lvdcdc.T_in:
-            t_in_lvdcdc.append(circ.var_res[j])
-        elif circ.var_name[j] == inverter.T_in:
-            t_in_inverter.append(circ.var_res[j])
-        elif circ.var_name[j] == compressor.T_in:
-            t_in_compressor.append(circ.var_res[j])
-        elif circ.var_name[j] == intercooler.T_in:
-            t_in_intercooler.append(circ.var_res[j])
-    circ.reset_to_startcond()
-plt.plot(vdot, p_end)
-plt.ylabel('Flow over branches [l/s]')
-plt.xlabel('Entry Flow [l/s]')
-plt.show()
+#for i in range(len(circ.eq_unsorted)):
+ #   if circ.eq_unsorted[i] == ['Vdot_1 = 0']:
+  #      circ.eq_unsorted[i] = ['Vdot_1 = 15']
+   #     k = i
+#vdot = [15, 20, 25, 30]
+#for x in vdot:
+ #   y = x / 60
+  #  circ.eq_unsorted[k] = ['Vdot_1 = %f' %(y)]
+   # circ.evaluate()
+#
+ #   for j in range(len(circ.var_name)):
+  #      if circ.var_name[j] == "Vdot_3":
+   #         vdot_3.append(circ.var_res[j])
+    #    elif circ.var_name[j] == "Vdot_6":
+     #       vdot_6.append(circ.var_res[j])
+      #  elif circ.var_name[j] == "p_12":
+       #     p_end.append(circ.var_res[j])
+        #elif circ.var_name[j] == hvdcdc.T_in:
+         #   t_in_hvdcdc.append(circ.var_res[j])
+        #elif circ.var_name[j] == hpdu.T_in:
+         #   t_in_hpdu.append(circ.var_res[j])
+#        elif circ.var_name[j] == lvdcdc.T_in:
+ #           t_in_lvdcdc.append(circ.var_res[j])
+  #      elif circ.var_name[j] == inverter.T_in:
+   #         t_in_inverter.append(circ.var_res[j])
+    #    elif circ.var_name[j] == compressor.T_in:
+     #       t_in_compressor.append(circ.var_res[j])
+      #  elif circ.var_name[j] == intercooler.T_in:
+       #     t_in_intercooler.append(circ.var_res[j])
+    #circ.reset_to_startcond()
+#plt.plot(vdot, p_end)
+#plt.ylabel('Flow over branches [l/s]')
+#plt.xlabel('Entry Flow [l/s]')
+#plt.show()
