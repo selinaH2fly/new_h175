@@ -474,7 +474,7 @@ def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
             
 #PLOT: Weiht estmate wuth fit:
 def plot_weight_estimate(data, titles, colors, components_dict, components_sd_dict, markers, saving=True, mode="bol"):
-    
+    #TODO: Change up this plot to ref system weight and use dicts of Kate:
     # Function to perform linear regression and return the formula and R^2
     def linear_fit(x, y):
         x = np.array(x).reshape(-1, 1)
