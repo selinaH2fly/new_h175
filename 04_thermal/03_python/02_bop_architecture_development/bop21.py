@@ -70,6 +70,11 @@ circ.add_bc("Qdot_evap = - 13500")
 Evaluate and generate output
 """
 
+result_name_dict = {'Vdot3', [;]
+
+
+}
+
 vdot_3 = []
 vdot_6 = []
 p_end = []

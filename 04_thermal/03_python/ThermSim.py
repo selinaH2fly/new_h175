@@ -7,6 +7,7 @@ import scipy.optimize as sp
 import ast
 import numpy as np
 import CoolProp.CoolProp as cp
+import matplotlib.pyplot as plt
 
 
 class Circuit:
@@ -242,6 +243,29 @@ class Circuit:
         self.var_removal_start = self.var_removal
         self.var_replacement_start = self.var_replacement
         self.var_res_start = self.var_res
+
+    
+    def analyse_vdot1(self, variable_list, result_name_dict):
+
+        for i in range(len(self.eq_unsorted)):
+            if self.eq_unsorted[i] == ['Vdot_1 = 0']:
+                self.eq_unsorted[i] = ['Vdot_1 = 15']
+                k = i
+        
+        for y in variable_list:
+            self.eq_unsorted[k] = ['Vdot_1 = %f' %(y)]
+            self.evaluate()
+
+            for j in range(len(self.var_name)):
+                for result_name in result_name_dict:
+                    if self.var_name[j] == "Vdot_3":
+                        result_name_dict[result_name].append(self.var_res[j])
+                
+            self.reset_to_startcond()
+        plt.plot(vdot, p_end)
+        plt.ylabel('Flow over branches [l/s]')
+        plt.xlabel('Entry Flow [l/s]')
+        plt.show()
 
 
 class NodeRenamer(ast.NodeTransformer):
