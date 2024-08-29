@@ -1,5 +1,7 @@
 ''' This file contains the parameter definitions for the input variable optimization.'''
 
+import numpy as np
+
 class Optimization_Parameters:
     
     def __init__(self):
@@ -63,6 +65,47 @@ class Compressor_Parameters:
         self.nominal_BoP_pressure_drop_Pa = 0.3*1e5
         self.nominal_air_flow_kg_s = 0.130
 
+        # Compressor map parameters
+        self.compressor_map = {
+            'PR': np.array([1.2, 1.4, 1.6, 1.8, 2.0]),  # Example pressure ratio values
+            'mass_flow': np.array([0.5, 1.0, 1.5, 2.0, 2.5]),  # Example mass flow rates (kg/s)
+            
+            # Available speed lines (RPM)
+            'speed_lines': np.array([30000, 40000, 50000]),
+            
+            # Speed grids corresponding to pressure ratio and mass flow (simplified example)
+            'speed': np.array([
+                [30000, 30000, 30000, 30000, 30000],
+                [40000, 40000, 40000, 40000, 40000],
+                [50000, 50000, 50000, 50000, 50000]
+            ]),
+            
+            # Efficiency maps for each speed line, corresponding to the PR and mass flow grid
+            'efficiency_map': {
+                30000: np.array([
+                    [0.7, 0.72, 0.74, 0.75, 0.74],
+                    [0.75, 0.77, 0.78, 0.79, 0.78],
+                    [0.78, 0.80, 0.82, 0.83, 0.82],
+                    [0.79, 0.81, 0.83, 0.84, 0.83],
+                    [0.78, 0.80, 0.81, 0.82, 0.81]
+                ]),
+                40000: np.array([
+                    [0.75, 0.76, 0.77, 0.78, 0.77],
+                    [0.78, 0.79, 0.80, 0.81, 0.80],
+                    [0.81, 0.82, 0.83, 0.84, 0.83],
+                    [0.82, 0.83, 0.84, 0.85, 0.84],
+                    [0.81, 0.82, 0.83, 0.84, 0.83]
+                ]),
+                50000: np.array([
+                    [0.76, 0.77, 0.78, 0.79, 0.78],
+                    [0.79, 0.80, 0.81, 0.82, 0.81],
+                    [0.82, 0.83, 0.84, 0.85, 0.84],
+                    [0.83, 0.84, 0.85, 0.86, 0.85],
+                    [0.82, 0.83, 0.84, 0.85, 0.84]
+                ])
+            }
+        }
+
 class Turbine_Parameters:
 
     def __init__(self):
@@ -116,8 +159,6 @@ class Stack_Parameters:
 
         self.anode_pressure_drop_coefficients = [4*1e-4, 9.4*1e-3, 49.7] # cf. PowerLayout, DoE Evaluation
         self.cooling_pressure_drop_coefficients = [6.5e-3, 0.477, 0] # cf. PowerLayout, DoE Evaluation
-
-
 
 class Eol_Parameter:
 
