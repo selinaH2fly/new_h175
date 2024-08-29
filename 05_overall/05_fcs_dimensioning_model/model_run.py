@@ -16,7 +16,6 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     
     # Load parameters
     _params_optimization = parameters.Optimization_Parameters()  
-    _params_pyhsics = parameters.Physical_Parameters()
 
     # Set the random seed for reproducibility
     if _params_optimization.seed is not None:
@@ -81,7 +80,7 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=455)
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=120)
     parser.add_argument("-t", "--turbine", type=str, choices=["True", "False"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
-    parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
+    parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.85 to account for end of life (default: False).")
 
     args = parser.parse_args()
 
