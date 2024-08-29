@@ -33,7 +33,7 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[0, 150])
     parser.add_argument("-t", "--turbine", type=str, choices=["True"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
     parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
-    parser.add_argument("--testing", type=str, choices=["True", "False"], default="True", help="Specifies whether a short test run is initiated.")
+    parser.add_argument("--testing", type=str, choices=["True", "False"], default="False", help="Specifies whether a short test run is initiated.")
     
     args = parser.parse_args()
     
@@ -53,7 +53,7 @@ if __name__ == '__main__':
       
         _step_p = 30
         _step_c = 50
-        _step_fl = 25
+        _step_fl = 30
         #range_power is ugly deined atm. due to not starting at 0 and want to have inclusive bounds.... maybe there is a better way?
         #range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
         range_power = np.array([20, 50, 80, 125, 150, 175])
