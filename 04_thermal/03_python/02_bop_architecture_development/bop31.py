@@ -76,3 +76,4 @@ Evaluate and generate output
 """
 
 circ.evaluate()
+y  = 1

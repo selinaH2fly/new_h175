@@ -37,11 +37,11 @@ circ.add_comp(compressor)
 
 mixer1 = ThermSim.ConnectorPassive2to1(9, 6, 10, "mixer1")
 circ.add_comp(mixer1)
-splitter2 = ThermSim.ConnectorPassive1to2(10, 11, 13, "splitter1")
+splitter2 = ThermSim.ConnectorPassive1to2(10, 11, 13, "splitter2")
 circ.add_comp(splitter2)
 intercooler = ThermSim.Heatsource(11, 12, "intercooler")
 circ.add_comp(intercooler)
-mixer2 = ThermSim.ConnectorPassive2to1(12, 14, 15, "mixer1")
+mixer2 = ThermSim.ConnectorPassive2to1(12, 14, 15, "mixer2")
 circ.add_comp(mixer2)
 
 throttle1 = ThermSim.Throttle(13, 14, "throttle1")
@@ -49,9 +49,9 @@ circ.add_comp(throttle1)
 """
 Provide input on boundary conditions
 """
-circ.add_bc("Vdot_1 = 0.1")
+circ.add_bc("Vdot_1 = 0.2")
 #circ.add_bc("delta_p_throttle1 = - 0.0")
-circ.add_bc("Vdot_11 = 0.08")
+circ.add_bc("Vdot_11 = 0.199")
 circ.add_bc("p_1 = 1.0")
 circ.add_bc("T_1 = 273.15 + 50.0")
 

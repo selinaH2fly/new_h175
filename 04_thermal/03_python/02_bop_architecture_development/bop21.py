@@ -1,6 +1,7 @@
 import sys
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
@@ -42,7 +43,7 @@ circ.add_comp(compressor)
 """
 Provide input on boundary conditions
 """
-circ.add_bc("Vdot_1 = 0.2")
+circ.add_bc("Vdot_1 = 0")
 circ.add_bc("delta_p_throttle1 = - 0.0")
 circ.add_bc("p_1 = 1.0")
 circ.add_bc("T_1 = 273.15 + 50.0")
@@ -69,4 +70,46 @@ circ.add_bc("Qdot_evap = - 13500")
 Evaluate and generate output
 """
 
-circ.evaluate()
+vdot_3 = []
+vdot_6 = []
+p_end = []
+t_in_lvdcdc = []
+t_in_hvdcdc = []
+t_in_hpdu = []
+t_in_inverter = []
+t_in_compressor = []
+t_in_intercooler = []
+
+for i in range(len(circ.eq_unsorted)):
+    if circ.eq_unsorted[i] == ['Vdot_1 = 0']:
+        circ.eq_unsorted[i] = ['Vdot_1 = 15']
+        k = i
+vdot = [15, 20, 25, 30, 35, 40]
+for x in vdot:
+    y = x / 60
+    circ.eq_unsorted[k] = ['Vdot_1 = %f' %(y)]
+    circ.evaluate()
+
+    for j in range(len(circ.var_name)):
+        if circ.var_name[j] == "Vdot_3":
+            vdot_3.append(circ.var_res[j])
+        elif circ.var_name[j] == "Vdot_6":
+            vdot_6.append(circ.var_res[j])
+        elif circ.var_name[j] == "p_12":
+            p_end.append(circ.var_res[j])
+        elif circ.var_name[j] == hvdcdc.T_in:
+            t_in_hvdcdc.append(circ.var_res[j])
+        elif circ.var_name[j] == hpdu.T_in:
+            t_in_hpdu.append(circ.var_res[j])
+        elif circ.var_name[j] == lvdcdc.T_in:
+            t_in_lvdcdc.append(circ.var_res[j])
+        elif circ.var_name[j] == inverter.T_in:
+            t_in_inverter.append(circ.var_res[j])
+        elif circ.var_name[j] == compressor.T_in:
+            t_in_compressor.append(circ.var_res[j])
+        elif circ.var_name[j] == intercooler.T_in:
+            t_in_intercooler.append(circ.var_res[j])
+    circ.reset_to_startcond()
+plt.plot(x, vdot_3, '--', x, vdot_6)
+plt.ylabel('Flow over branches [l/s]')
+plt.xlabel('Entry Flow [l/s]')
