@@ -87,8 +87,8 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     # They should eventually be properly integrated. 
     # Called by points_comp_power[Power level, Cell count]
     
-    points_comp_power = [[28,27,26],[100, 37,35], [100,100, 46]]
-    points_turb_power = [[7,7,6],[100,9,8],[100,100,11]]
+    points_comp_power = [[28,27,26],[0, 37,35], [0,0, 46]]
+    points_turb_power = [[7,7,6],[0,9,8],[0,0,11]]
     
     
     # Calculate m_stack using the formula
@@ -101,15 +101,23 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     #print(subsystem_mass_total)
 
     # Counter to append the mass value to the correct indice of the array
-
     max_tracker = 0
-    # x_labels = []
+    plot_bar = []
+    
     for k in range(0,len(points)):
-        i = 0
+        #i = 0
         for n in range(0,len(cell_no)):
             # Defining a temporary dictionary for each separate test case
             temp,total= sum_mass(masses_dict_constant)
-
+            
+            # Current way of assessing if data is true, so that plotting of this bar is passed.
+            # Later compressor and turbine power will be called directly from the component class. 
+            # This boolean should be dependent on whether the current exceeds 700A to reach required power. 
+            data_valid = True
+            if points_comp_power[k][n] == 0:
+                data_valid = False
+            plot_bar.append(data_valid)
+                
             temp['Stack'] += m_stack_values[n]
             temp['Cathode']+= points_comp_power[k][n]*0.63
             temp['Cathode']+= points_turb_power[k][n]*0.63
@@ -123,9 +131,12 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
             
             
             for key,value in temp.items():
-                subsystem_mass_total[points[k]][key][i] = value
-            i += 1
+                subsystem_mass_total[points[k]][key][n] = value
+
+            #i += 1
+        
             
+    print(plot_bar)
    #print(subsystem_mass_total)
     
     categories = list(subsystem_mass_total.keys())  # ['A', 'B', 'C']
@@ -169,10 +180,15 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     label_colors= ['tab:blue', 'tab:orange','tab:red']
     #print(subsystem_mass_total[max(points)]['Cathode'])
 
+    plot_bar_index = 0
 
-    # Plot each fruit
     for j in range(n_values):
         bottom_values = np.zeros(n_categories)
+        """
+        if not plot_bar[plot_bar_index]:  # Check the boolean list before plotting each bar
+            plot_bar_index += 1
+            continue 
+        """
         for i, order in enumerate(orders):
             values = [subsystem_mass_total[category][order][j] for category in categories]
             bar_positions = x + j * (bar_width + bar_spacing)
@@ -186,7 +202,8 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
             height = bar.get_height() + bar.get_y() +10
             ax.text(bar.get_x() + bar.get_width() / 2, height, f'{cell_no[j]} cells', ha='center', va='bottom', rotation='vertical', color='black',
                     bbox=dict(facecolor=label_colors[j], edgecolor=label_colors[j], boxstyle='round,pad=0.3', linewidth=1.5, alpha=0.6))
-
+        plot_bar_index += 1
+        
     # Adding labels and title
     ax.set_xlabel('Net Power [kW]')
     ax.set_ylabel('Mass [kg]')
