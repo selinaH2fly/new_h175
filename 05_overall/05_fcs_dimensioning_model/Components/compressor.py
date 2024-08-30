@@ -1,10 +1,11 @@
 import CoolProp.CoolProp as CP
 from scipy.interpolate import RegularGridInterpolator
+import numpy as np
 
 class Compressor:
     def __init__(self, params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95,
                  air_mass_flow_kg_s=1, temperature_in_K=293.15, pressure_in_Pa=1.013e5, pressure_out_Pa=1.013e5,
-                 nominal_BoP_pressure_drop_Pa=0.3*1e5, nominal_air_flow_kg_s=0.130,
+                 nominal_BoP_pressure_drop_Pa=0.3*1e5, nominal_air_flow_kg_s=0.130, compressor_map=None,
                  mass_by_power_kg_kW= {"mean": 1.0, "sd": 0.1}):
 
         self.isentropic_efficiency = isentropic_efficiency
@@ -16,6 +17,7 @@ class Compressor:
         self.pressure_out_Pa = pressure_out_Pa
         self.nominal_pressure_drop_Pa = nominal_BoP_pressure_drop_Pa
         self.nominal_air_flow_kg_s = nominal_air_flow_kg_s
+        self.compressor_map = compressor_map
         self.mass_by_power_kg_kW = mass_by_power_kg_kW
 
     def calculate_power(self) -> float:
@@ -40,65 +42,41 @@ class Compressor:
         # Compute the isentropic power
         compressor_isentropic_power_W = self.air_mass_flow_kg_s * (specific_enthalpy_out_J_kg - specific_enthalpy_in_J_kg)
 
-        # Determine the operating point
-        pressure_ratio = self.pressure_out_Pa / self.pressure_in_Pa
-        mass_flow = self.air_mass_flow_kg_s
-        speed = self.speed_rpm
+        # Determine the operating point if a real-world compressor map is provided
+        if self.compressor_map is not None:
+            efficiency = self._interpolate_efficiency()
+            compressor_shaft_power_W = compressor_isentropic_power_W / efficiency
+        else:
+            compressor_shaft_power_W = compressor_isentropic_power_W / self.isentropic_efficiency
 
-        # Interpolating efficiency from the compressor map
-        efficiency = self._interpolate_efficiency(pressure_ratio, mass_flow, speed)
-
-        # Checking operating limits (surge/choke)
-        if not self._check_surge_choke_limits(pressure_ratio, mass_flow, speed):
-            raise ValueError("Operating point outside of surge/choke limits.")
-
-        # Compute the real-world power
-        compressor_shaft_power_W = compressor_isentropic_power_W / efficiency
+        # Compute the electric power
         compressor_electric_power_W = compressor_shaft_power_W / self.electric_efficiency
 
         return compressor_electric_power_W
 
-    def _interpolate_efficiency(self, PR, mass_flow, speed) -> float:
+    def _interpolate_efficiency(self) -> float:
         """
         Interpolates the efficiency from the compressor map based on the current operating point.
-
-        Parameters:
-        - PR: Pressure Ratio
-        - mass_flow: Mass Flow Rate (kg/s)
-        - speed: Rotational Speed (RPM)
 
         Returns:
         - Efficiency at the given operating point.
         """
+        pressure_ratio = self.pressure_out_Pa / self.pressure_in_Pa
+        mass_flow_g_s = self.air_mass_flow_kg_s
+        corrected_mass_flow_g_s = mass_flow_g_s * (self.pressure_in_Pa / self.compressor_map['reference_pressure_Pa']) * \
+            np.sqrt(self.temperature_in_K / self.compressor_map['reference_temperature_K'])
+
+
         # Assuming compressor_map is a dictionary with keys 'PR', 'mass_flow', 'speed', and 'efficiency'
-        PR_grid = self.compressor_map['PR']
-        mass_flow_grid = self.compressor_map['mass_flow']
-        speed_grid = self.compressor_map['speed']
+        pressure_ratio_grid = self.compressor_map['pressure_ratio']
+        mass_flow_grid = self.compressor_map['corrected_massflow_g_s']
         efficiency_grid = self.compressor_map['efficiency']
 
-        interpolator = RegularGridInterpolator((PR_grid, mass_flow_grid, speed_grid), efficiency_grid)
+        interpolator = RegularGridInterpolator((pressure_ratio_grid, mass_flow_grid), efficiency_grid, bounds_error=False, fill_value=1e-3)
 
-        efficiency = interpolator([PR, mass_flow, speed])
+        efficiency = interpolator([pressure_ratio, corrected_mass_flow_g_s])
+
         return efficiency
-
-    def _check_surge_choke_limits(self, PR, mass_flow, speed) -> bool:
-        """
-        Checks if the current operating point is within surge and choke limits.
-
-        Parameters:
-        - PR: Pressure Ratio
-        - mass_flow: Mass Flow Rate (kg/s)
-        - speed: Rotational Speed (RPM)
-
-        Returns:
-        - True if within limits, False otherwise.
-        """
-        # Surge and choke limits would be derived from compressor map data, similar to efficiency interpolation
-        # Implement interpolation or boundary check logic here based on the map data
-
-        # Placeholder implementation
-        within_limits = True  # Modify based on actual check
-        return within_limits
     
     def calculate_BoP_pressure_drop(self)->float:
         """
