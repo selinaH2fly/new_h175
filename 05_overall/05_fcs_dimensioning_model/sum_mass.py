@@ -75,15 +75,7 @@ print(subsystem_totals_500_cells)
 print(total_500_cells)
 """
 
-def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
-    """
-    cells = {400,450,500}
-    for i in cells:
-        masses_dict = f'masses_FCM_{cells[i]}_cells'
-    # Here we would implement correct formatting for multiple test cases. 
-    for subsystem, subsystem_total in subsystems_dict.items():
-        return
-    """    
+def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):   
     # The x-axis points to be plotted and searched for
     points = [125, 150, 175]
     
@@ -98,9 +90,6 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     points_comp_power = [[28,27,26],[100, 37,35], [100,100, 46]]
     points_turb_power = [[7,7,6],[100,9,8],[100,100,11]]
     
-    #mass_comp_power = 0.63*points_comp_power
-    #mass_turb_power = 0.63*points_turb_power
-    
     
     # Calculate m_stack using the formula
     m_stack_values = 0.0766 * cell_no + 9.2813  # Equation for PC
@@ -109,7 +98,7 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     #Populating the final array with lists of zeros. Feels like there should be a quicker way.
     for power in points:
         subsystem_mass_total[power]={'Stack':np.zeros(len(cell_no)),'Cathode':np.zeros(len(cell_no)),'Anode':np.zeros(len(cell_no)),'Thermal':np.zeros(len(cell_no)), 'Other':np.zeros(len(cell_no))}
-    print(subsystem_mass_total)
+    #print(subsystem_mass_total)
 
     # Counter to append the mass value to the correct indice of the array
 
@@ -132,15 +121,12 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
             if total > max_tracker:
                 max_tracker = total
             
-            #x_labels.append(f'{cell_no[n]} cells, {points[k]} kW')
-            #print(temp)
             
             for key,value in temp.items():
                 subsystem_mass_total[points[k]][key][i] = value
             i += 1
             
-    #print(x_labels)
-    print(subsystem_mass_total)
+   #print(subsystem_mass_total)
     
     categories = list(subsystem_mass_total.keys())  # ['A', 'B', 'C']
 
@@ -168,7 +154,18 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     # Initialize a plot
     fig, ax = plt.subplots(figsize=(12, 6))
     
-    colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99', '#cc99ff']
+    #colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99', '#cc99ff']
+    cmap = plt.get_cmap('viridis')
+    num_colors = len(orders)
+    #num_colors=5
+    #print(num_colors)
+    indices = np.linspace(0, 1, num_colors)
+
+    # Sample the colormap at these points
+    colors = cmap(indices)
+    
+    #colors = [cmap(mcolors.Normalize(vmin=125, vmax=175)(power)) for power in highlight_powers]
+    
     label_colors= ['tab:blue', 'tab:orange','tab:red']
     #print(subsystem_mass_total[max(points)]['Cathode'])
 
@@ -180,22 +177,24 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
             values = [subsystem_mass_total[category][order][j] for category in categories]
             bar_positions = x + j * (bar_width + bar_spacing)
             #print(bar_positions)
+            ax.set_axisbelow(True)
+            ax.yaxis.grid(True)
             bars = ax.bar(bar_positions, values, bar_width, label=f'{order}' if j == 0 else "", bottom=bottom_values, color=colors[i])
             bottom_values += values  # Update bottom_values to stack the next bars
             
         for bar in bars:
             height = bar.get_height() + bar.get_y() +10
-            ax.text(bar.get_x() + bar.get_width() / 2, height, f'{cell_no[j]} cells', ha='center', va='bottom', rotation='vertical', color='white',
-                    bbox=dict(facecolor=label_colors[j], edgecolor=label_colors[j], boxstyle='round,pad=0.2', linewidth=1.5))
+            ax.text(bar.get_x() + bar.get_width() / 2, height, f'{cell_no[j]} cells', ha='center', va='bottom', rotation='vertical', color='black',
+                    bbox=dict(facecolor=label_colors[j], edgecolor=label_colors[j], boxstyle='round,pad=0.3', linewidth=1.5, alpha=0.6))
 
     # Adding labels and title
-    ax.set_xlabel('Net Power /kW')
-    ax.set_ylabel('Mass /kg')
-    ax.set_title('Predicted FCM mass for each power rating')
+    ax.set_xlabel('Net Power [kW]')
+    ax.set_ylabel('Mass [kg]')
+    ax.set_title('Predicted FCM mass for each net power')
     ax.set_xticks(x + (n_values - 1) * (bar_width + bar_spacing) / 2)
     ax.set_xticklabels(categories)
     #ax.set_ylim([0, max(subsystem_mass_total[max(points)]['Cathode'])])
-    ax.set_ylim([0,max_tracker +50])
+    ax.set_ylim([0,max_tracker +75])
     handles, labels = plt.gca().get_legend_handles_labels()
 
     #add legend to plot
@@ -207,61 +206,6 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     plt.tight_layout()
     plt.show()
     
-    
-    """
-    x = np.arange(len(points))
-    width = 0.5
-    multiplier = 0
-    fig, ax = plt.subplots()
-    bottom = np.zeros(len(points))
-    
-    for attribute,measurement in subsystem_mass_total.items():
-        bottom = 0
-        for boolean, subsystems_dict in measurement.items():
-            offset = width * multiplier
-            rects = ax.bar(x + offset, subsystems_dict, width, label=boolean, bottom=bottom)
-            #p = ax.bar(points,subsystems_dict, width, label=boolean, bottom=bottom)
-            bottom += subsystems_dict
-        ax.bar_label(rects, padding=3)
-        ax.set_xlabel(attribute)
-        multiplier += 1
-
-    ax.set_title("Summed mass of each system")
-    plt.xlabel('Case')
-    plt.xticks(rotation=90)
-    plt.ylabel('System Mass Estimation [kg]')
-    ax.legend(loc="upper right")
-    """
-    
-    """
-    subsystems_dict_one, total = sum_mass(masses_dict_one)
-    subsystems_dict_two, total = sum_mass(masses_dict_two)
-    
-    #Iterate through each case. To be improved
-    cases = ("One", "Two")
-    subsystem_mass={}
-    
-    for subsystem, subsystem_one_total in subsystems_dict_one.items():
-        subsystem_two_total = subsystems_dict_two[subsystem]
-        subsystem_mass[subsystem] = np.array([subsystem_one_total, subsystem_two_total])
-    
-    #print(subsystem_mass)
-    width = 0.5
-    fig, ax = plt.subplots()
-    bottom = np.zeros(2)
-    
-
-    for boolean, subsystems_dict in subsystem_mass.items():
-        p = ax.bar(cases,subsystems_dict, width, label=boolean, bottom=bottom)
-        bottom += subsystems_dict
-
-    ax.set_title("Summed mass of each system")
-    plt.xlabel('Case')
-    plt.ylabel('System Mass Estimation [kg]')
-    ax.legend(loc="upper right")
-
-    plt.show()
-    """
     
 plot_mass_estimate(masses_FCM_constants)
 
