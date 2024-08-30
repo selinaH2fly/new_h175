@@ -54,7 +54,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                                    electric_efficiency=_params_compressor.electric_efficiency,
                                    temperature_in_K=temperature_ambient_K, pressure_in_Pa=pressure_ambient_Pa,
                                    nominal_BoP_pressure_drop_Pa=_params_compressor.nominal_BoP_pressure_drop_Pa,
-                                   compressor_map=_params_compressor.compressor_map,
+                                   compressor_map=_params_compressor.compressor_map_VSEC15,
                                    nominal_air_flow_kg_s=_params_compressor.nominal_air_flow_kg_s)
     
     turbine         =   Turbine(_params_physics, isentropic_efficiency=_params_turbine.isentropic_efficiency,

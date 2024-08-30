@@ -1,5 +1,5 @@
 import CoolProp.CoolProp as CP
-from scipy.interpolate import RegularGridInterpolator
+from scipy.interpolate import griddata, RegularGridInterpolator
 import numpy as np
 
 class Compressor:
@@ -62,19 +62,22 @@ class Compressor:
         - Efficiency at the given operating point.
         """
         pressure_ratio = self.pressure_out_Pa / self.pressure_in_Pa
-        mass_flow_g_s = self.air_mass_flow_kg_s
+        mass_flow_g_s = self.air_mass_flow_kg_s * 1000
         corrected_mass_flow_g_s = mass_flow_g_s * (self.pressure_in_Pa / self.compressor_map['reference_pressure_Pa']) * \
             np.sqrt(self.temperature_in_K / self.compressor_map['reference_temperature_K'])
 
 
-        # Assuming compressor_map is a dictionary with keys 'PR', 'mass_flow', 'speed', and 'efficiency'
-        pressure_ratio_grid = self.compressor_map['pressure_ratio']
-        mass_flow_grid = self.compressor_map['corrected_massflow_g_s']
-        efficiency_grid = self.compressor_map['efficiency']
+        # Assign the compressor map arrays and flatten to 1D
+        pressure_ratio_vector = self.compressor_map['pressure_ratio'].flatten()
+        mass_flow_vector_g_s= self.compressor_map['corrected_massflow_g_s'].flatten()
+        efficiency_vector = self.compressor_map['efficiency'].flatten()
 
-        interpolator = RegularGridInterpolator((pressure_ratio_grid, mass_flow_grid), efficiency_grid, bounds_error=False, fill_value=1e-3)
+        # Combine the pressure ratio and mass flow into a single array of coordinates
+        compressor_map_representation = np.array([pressure_ratio_vector, mass_flow_vector_g_s]).T
 
-        efficiency = interpolator([pressure_ratio, corrected_mass_flow_g_s])
+        # Interpolate the efficiency at the target pressure ratio and mass flow
+        efficiency = griddata(compressor_map_representation, efficiency_vector, (pressure_ratio, corrected_mass_flow_g_s),
+                              method='linear', fill_value=1e-3)
 
         return efficiency
     
