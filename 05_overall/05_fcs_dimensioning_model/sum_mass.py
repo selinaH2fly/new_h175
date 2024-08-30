@@ -88,7 +88,7 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     points = [125, 150, 175]
     
     # Define cell number we would like to iterate through
-    n_values = np.array([400, 450, 500])
+    cell_no = np.array([400, 450, 500])
     
     # These points are currently taken as constants from V1.2 documentation.
     # Values of 100 are placeholders as operation deemed unfeasible
@@ -103,43 +103,53 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     
     
     # Calculate m_stack using the formula
-    m_stack_values = 0.0766 * n_values + 9.2813  # Equation for PC
+    m_stack_values = 0.0766 * cell_no + 9.2813  # Equation for PC
     
     subsystem_mass_total = {}
     #Populating the final array with lists of zeros. Feels like there should be a quicker way.
     for power in points:
-        subsystem_mass_total[f'{power}']={'Stack':np.zeros(len(n_values)),'Cathode':np.zeros(len(n_values)),'Anode':np.zeros(len(n_values)),'Thermal':np.zeros(len(n_values)), 'Other':np.zeros(len(n_values))}
-    #subsystem_mass_total={'Stack':np.zeros(len(points)*len(n_values)),'Cathode':np.zeros(len(points)*len(n_values)),'Anode':np.zeros(len(points)*len(n_values)),'Thermal':np.zeros(len(points)*len(n_values)), 'Other':np.zeros(len(points)*len(n_values))}
+        subsystem_mass_total[power]={'Stack':np.zeros(len(cell_no)),'Cathode':np.zeros(len(cell_no)),'Anode':np.zeros(len(cell_no)),'Thermal':np.zeros(len(cell_no)), 'Other':np.zeros(len(cell_no))}
     print(subsystem_mass_total)
 
     # Counter to append the mass value to the correct indice of the array
- 
-    
-    x_labels = []
+
+    max_tracker = 0
+    # x_labels = []
     for k in range(0,len(points)):
         i = 0
-        for n in range(0,len(n_values)):
+        for n in range(0,len(cell_no)):
             # Defining a temporary dictionary for each separate test case
-            temp,totals = sum_mass(masses_dict_constant)
+            temp,total= sum_mass(masses_dict_constant)
+
             temp['Stack'] += m_stack_values[n]
             temp['Cathode']+= points_comp_power[k][n]*0.63
             temp['Cathode']+= points_turb_power[k][n]*0.63
-            x_labels.append(f'{n_values[n]} cells, {points[k]} kW')
+            
+            total += m_stack_values[n]
+            total += points_comp_power[k][n]*0.63
+            total += points_turb_power[k][n]*0.63
+            
+            if total > max_tracker:
+                max_tracker = total
+            
+            #x_labels.append(f'{cell_no[n]} cells, {points[k]} kW')
             #print(temp)
+            
             for key,value in temp.items():
-                subsystem_mass_total[f'{points[k]}'][key][i] = value
+                subsystem_mass_total[points[k]][key][i] = value
             i += 1
             
     #print(x_labels)
-    #print(subsystem_mass_total)
+    print(subsystem_mass_total)
     
     categories = list(subsystem_mass_total.keys())  # ['A', 'B', 'C']
 
     #The order, from bottom to top, that the components should be in. Place constant components at bottom so the changes are clearer.
     orders = ['Other', 'Anode', 'Thermal','Stack','Cathode']
-    #orders = list(subsystem_mass_total[f'{points[0]}'].keys())  # ['apples', 'bananas', 'oranges', 'kiwis']
+    legend_order = [4,3,2,1,0]
+    #orders = list(subsystem_mass_total[f'{points[0]}'].keys())  
 
-    n_values = len(subsystem_mass_total[f'{points[0]}']['Stack'])  # Number of values for each fruit
+    n_values = len(subsystem_mass_total[points[0]]['Stack'])  # Number of values for each subsystem
 
     #print(categories)
     #print(orders)
@@ -159,6 +169,8 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     fig, ax = plt.subplots(figsize=(12, 6))
     
     colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99', '#cc99ff']
+    label_colors= ['tab:blue', 'tab:orange','tab:red']
+    #print(subsystem_mass_total[max(points)]['Cathode'])
 
 
     # Plot each fruit
@@ -167,17 +179,29 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
         for i, order in enumerate(orders):
             values = [subsystem_mass_total[category][order][j] for category in categories]
             bar_positions = x + j * (bar_width + bar_spacing)
-            ax.bar(bar_positions, values, bar_width, label=f'{order}' if j == 0 else "", bottom=bottom_values, color=colors[i])
+            #print(bar_positions)
+            bars = ax.bar(bar_positions, values, bar_width, label=f'{order}' if j == 0 else "", bottom=bottom_values, color=colors[i])
             bottom_values += values  # Update bottom_values to stack the next bars
+            
+        for bar in bars:
+            height = bar.get_height() + bar.get_y() +10
+            ax.text(bar.get_x() + bar.get_width() / 2, height, f'{cell_no[j]} cells', ha='center', va='bottom', rotation='vertical', color='white',
+                    bbox=dict(facecolor=label_colors[j], edgecolor=label_colors[j], boxstyle='round,pad=0.2', linewidth=1.5))
 
     # Adding labels and title
-    ax.set_xlabel('Categories')
+    ax.set_xlabel('Net Power /kW')
     ax.set_ylabel('Mass /kg')
-    ax.set_title('Grouped Stacked Bar Chart')
-    ax.set_xticks(x + bar_width * (n_values - 1) / 2)
+    ax.set_title('Predicted FCM mass for each power rating')
     ax.set_xticks(x + (n_values - 1) * (bar_width + bar_spacing) / 2)
     ax.set_xticklabels(categories)
-    ax.legend(title='Fruits')
+    #ax.set_ylim([0, max(subsystem_mass_total[max(points)]['Cathode'])])
+    ax.set_ylim([0,max_tracker +50])
+    handles, labels = plt.gca().get_legend_handles_labels()
+
+    #add legend to plot
+    plt.legend([handles[idx] for idx in legend_order],[labels[idx] for idx in legend_order],title='Subsystems')
+    
+    #ax.legend(title='Subsystems')
 
     # Show the plot
     plt.tight_layout()
