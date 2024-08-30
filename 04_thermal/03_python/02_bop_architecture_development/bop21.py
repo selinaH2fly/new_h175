@@ -70,16 +70,16 @@ circ.add_bc("Qdot_evap = - 13500")
 Evaluate and generate output
 """
 
-result_vdot_dict = {'Vdot_3' : ['Vdot el. Comp. in [l/s]', []], 
-                    'Vdot_6' : ['Vdot Intercooler in [l/s]', []],
+result_vdot_dict = {'Vdot_6' : ['Vdot el. Comp. in [l/s]', []], 
+                    'Vdot_3' : ['Vdot Intercooler in [l/s]', []],
 }
-result_temp_dict = {lvdcdc.T_in : ['LV DCDC T_in in [°C]', []],
-                    hvdcdc.T_in : ['HV DCDC T_in in [°C]', []],
-                    inverter.T_in : ['Inverter T_in in [°C]', []],
-                    hpdu.T_in : ['HPDU T_in in [°C]', []],
-                    compressor.T_in : ['Compressor T_in in [°C]', []],
-                    intercooler.T_in : ['Intercooler T_in in [°C]', []],
-                    mixer1.T_out : ['BoP T_out in [°C]', []],
+result_temp_dict = {lvdcdc.T_in : ['LV DCDC T_in', []],
+                    hvdcdc.T_in : ['HV DCDC T_in', []],
+                    inverter.T_in : ['Inverter T_in', []],
+                    hpdu.T_in : ['HPDU T_in', []],
+                    compressor.T_in : ['Compressor T_in', []],
+                    intercooler.T_in : ['Intercooler T_in', []],
+                    mixer1.T_out : ['BoP T_out', []],
 }
 result_pr_dict = {mixer1.p_out : ['P_out in [bar]', []]
 }

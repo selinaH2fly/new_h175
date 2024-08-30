@@ -291,6 +291,7 @@ class Circuit:
         plt.show()
 
         data_dict = {}
+        data_dict['Vdot_1'] = variable_list
         for vdot_name in result_vdot_dict:
             data_dict[result_vdot_dict[vdot_name][0]] = result_vdot_dict[vdot_name][1]
         for temp_name in result_temp_dict:
