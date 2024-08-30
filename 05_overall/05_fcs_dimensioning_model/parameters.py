@@ -102,10 +102,15 @@ class Compressor_Parameters:
             [0.668, 0.68, 0.695, 0.719, 0.712, 0.701]
         ])
 
+        VSEC15_c200_reference_pressure_Pa = 1.01325 * 1e5
+        VSEC15_c200_reference_temperature_K = 25 + 273.15
+
         self.compressor_map = {
-            "corrected_massflow_kg_s": VSEC15_c200_mdot_TLU,
+            "corrected_massflow_g_s": VSEC15_c200_mdot_TLU,
             "pressure_ratio": VSEC15_c200_pr_TLU,
-            "efficiency": VSEC15_c200_eta_TLU
+            "efficiency": VSEC15_c200_eta_TLU,
+            "reference_pressure_Pa": VSEC15_c200_reference_pressure_Pa,
+            "reference_temperature_K": VSEC15_c200_reference_temperature_K
         }
 
 class Turbine_Parameters:
