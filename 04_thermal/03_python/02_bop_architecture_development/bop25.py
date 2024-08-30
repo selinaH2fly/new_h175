@@ -52,9 +52,9 @@ circ.add_comp(throttle1)
 """
 Provide input on boundary conditions
 """
-circ.add_bc("Vdot_1 = 0.1")
+circ.add_bc("Vdot_1 = 0")
 #circ.add_bc("delta_p_throttle1 = - 0.0")
-circ.add_bc("Vdot_11 = 0.08")
+circ.add_bc("Vdot_13 = 0.00001")
 circ.add_bc("p_1 = 1.0")
 circ.add_bc("T_1 = 273.15 + 50.0")
 
@@ -79,4 +79,19 @@ circ.add_bc("Qdot_evap = - 13500")
 Evaluate and generate output
 """
 
-circ.evaluate()
+result_vdot_dict = {'Vdot_7' : ['Vdot el. Comp. in [l/s]', []], 
+                    'Vdot_3' : ['Vdot Intercooler in [l/s]', []],
+}
+result_temp_dict = {lvdcdc.T_in : ['LV DCDC T_in', []],
+                    hvdcdc.T_in : ['HV DCDC T_in', []],
+                    inverter.T_in : ['Inverter T_in', []],
+                    hpdu.T_in : ['HPDU T_in', []],
+                    compressor.T_in : ['Compressor T_in', []],
+                    intercooler.T_in : ['Intercooler T_in', []],
+                    mixer2.T_out : ['BoP T_out', []],
+}
+result_pr_dict = {mixer2.p_out : ['P_out in [bar]', []]
+}
+
+vdot1 = [10/60, 13/60, 16/60, 19/60, 22/60]
+circ.analyse_vdot1(vdot1, result_vdot_dict, result_temp_dict, result_pr_dict)
