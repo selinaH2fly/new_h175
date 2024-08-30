@@ -13,6 +13,7 @@ This script will iterate through a nested dictionary of each individual componen
 
 """
 # Defining the input dictionaries for the following: power levels of 125, 150 and 175 kW; and cell count of 400, 450, 500
+"""
 masses_FCM_400_cells = {'Stack':{'Stack':39.92, 'CVM':1.00, 'SMI':3.00, 'Hose clamps': 0.18, 'Screws':0.09, 'HV+LV Cable': 1.20} \
                                ,'Cathode':{'Filter': 0.5, 'HFM': 0.5, 'Compressor':10.0, 'Compressor inverter':6.0, 'Intercooler':3.0, 'Humidifier': 2.0, 'Valves': 2.6, 'Drain valve': 0.30, 'Water separator': 0.3, 'Cathode pressure control valve': 0.0, 'Sensors': 1.2, 'Silicon hoses':1.76, 'Hose clamps': 0.42, 'Connectors': 0.8, 'Screws': 0.18, 'HV+LV Cable': 0.67, 'Turbine':0.0} \
                                ,'Anode': {'Shut-Off valve':0.2, 'Pressure control valve':0.2, 'Water separator':0, 'Particle filter':0.2, 'Recirculation pump':4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.80, 'Anode piping':1.01, 'Swagelok connector':0.56, 'Screws':0.09, 'HV+LV Cable': 0.34}\
@@ -30,6 +31,7 @@ masses_FCM_500_cells = {'Stack':{'Stack':47.58, 'CVM':1.00, 'SMI':3.00, 'Hose cl
                                ,'Anode': {'Shut-Off valve':0.2, 'Pressure control valve':0.2, 'Water separator':0, 'Particle filter':0.2, 'Recirculation pump':4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.80, 'Anode piping':1.01, 'Swagelok connector':0.56, 'Screws':0.09, 'HV+LV Cable': 0.34}\
                                ,'Thermal':{'Coolant pump':4.0, 'TCV':1.0, 'Particle filter':0.22, 'Ionic exchangr':1.0, 'Sensors':0.80+0.80, 'Silicone hoses':1.51+2.02, 'Hose clamps':0.36+0.48, 'Connectors':0.80+0.80, 'Screws':0.09+0.09, 'HV+LV Cable':0.34+0.34, 'Expansion tank':1.0,'HDPU':5.0,'Volume flow control valve':0.5, 'Stack coolant':7.0, 'Other coolant':5.0}\
                                ,'Other':{'FCCU':1.5,'Electrical connectors':0.4,'Unnamed':4.0,'Frame':5.0,'Connectors':2.0,'Screws':0.27, 'HV+LV Cable':0.67}}
+"""
     
 masses_FCM_constants = {'Stack':{'Stack':0, 'CVM':1.00, 'SMI':3.00, 'Hose clamps': 0.18, 'Screws':0.09, 'HV+LV Cable': 1.20} \
                                ,'Cathode':{'Filter': 0.5, 'HFM': 0.5, 'Compressor':0, 'Compressor inverter':6.0, 'Intercooler':3.0, 'Humidifier': 2.0, 'Valves': 2.6, 'Drain valve': 0.30, 'Water separator': 0.3, 'Cathode pressure control valve': 0.0, 'Sensors': 1.2, 'Silicon hoses':1.76, 'Hose clamps': 0.42, 'Connectors': 0.8, 'Screws': 0.18, 'HV+LV Cable': 0.67, 'Turbine':0.0} \
@@ -129,40 +131,51 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
             i += 1
             
     #print(x_labels)
-    print(subsystem_mass_total)
+    #print(subsystem_mass_total)
     
     categories = list(subsystem_mass_total.keys())  # ['A', 'B', 'C']
 
+    #The order, from bottom to top, that the components should be in. Place constant components at bottom so the changes are clearer.
+    orders = ['Other', 'Anode', 'Thermal','Stack','Cathode']
+    #orders = list(subsystem_mass_total[f'{points[0]}'].keys())  # ['apples', 'bananas', 'oranges', 'kiwis']
 
-    fruits = list(subsystem_mass_total[f'{points[0]}'].keys())  # ['apples', 'bananas', 'oranges', 'kiwis']
     n_values = len(subsystem_mass_total[f'{points[0]}']['Stack'])  # Number of values for each fruit
+
+    #print(categories)
+    #print(orders)
+    #print(n_values)
 
     # Number of categories and width of each bar
     n_categories = len(categories)
     bar_width = 0.25  # Width of each bar
-    group_width = bar_width * n_values  # Total width of a group of bars
+    group_spacing = 0.3 # Spacing between different groups
+    bar_spacing = 0.05 # Spacing between bars in the same group
+    #group_width = bar_width * n_values  # Total width of a group of bars
 
     # Positions of the groups on the x-axis
-    x = np.arange(n_categories) * (group_width + 0.2)  # Add spacing between groups
+    x = np.arange(n_categories) * (n_values * (bar_width + bar_spacing) + group_spacing) #Add spacing between groups and bars
 
     # Initialize a plot
     fig, ax = plt.subplots(figsize=(12, 6))
+    
+    colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99', '#cc99ff']
 
 
     # Plot each fruit
     for j in range(n_values):
         bottom_values = np.zeros(n_categories)
-        for i, fruit in enumerate(fruits):
-            values = [subsystem_mass_total[category][fruit][j] for category in categories]
-            bar_positions = x + j * bar_width
-            ax.bar(bar_positions, values, bar_width, label=f'{fruit}' if j == 0 else "", bottom=bottom_values)
+        for i, order in enumerate(orders):
+            values = [subsystem_mass_total[category][order][j] for category in categories]
+            bar_positions = x + j * (bar_width + bar_spacing)
+            ax.bar(bar_positions, values, bar_width, label=f'{order}' if j == 0 else "", bottom=bottom_values, color=colors[i])
             bottom_values += values  # Update bottom_values to stack the next bars
 
     # Adding labels and title
     ax.set_xlabel('Categories')
-    ax.set_ylabel('Quantity')
+    ax.set_ylabel('Mass /kg')
     ax.set_title('Grouped Stacked Bar Chart')
     ax.set_xticks(x + bar_width * (n_values - 1) / 2)
+    ax.set_xticks(x + (n_values - 1) * (bar_width + bar_spacing) / 2)
     ax.set_xticklabels(categories)
     ax.legend(title='Fruits')
 
