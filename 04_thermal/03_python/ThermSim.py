@@ -8,6 +8,8 @@ import ast
 import numpy as np
 import CoolProp.CoolProp as cp
 import matplotlib.pyplot as plt
+import pandas as pd
+
 
 
 class Circuit:
@@ -245,7 +247,7 @@ class Circuit:
         self.var_res_start = self.var_res
 
     
-    def analyse_vdot1(self, variable_list, result_name_dict):
+    def analyse_vdot1(self, variable_list, result_vdot_dict, result_temp_dict, result_pr_dict):
 
         for i in range(len(self.eq_unsorted)):
             if self.eq_unsorted[i] == ['Vdot_1 = 0']:
@@ -257,16 +259,48 @@ class Circuit:
             self.evaluate()
 
             for j in range(len(self.var_name)):
-                for result_name in result_name_dict:
-                    if self.var_name[j] == result_name:
-                        result_name_dict[result_name][1].append(self.var_res[j])
+                for vdot_name in result_vdot_dict:
+                    if self.var_name[j] == vdot_name:
+                        result_vdot_dict[vdot_name][1].append(self.var_res[j])
+                for temp_name in result_temp_dict:
+                    if self.var_name[j] == temp_name:
+                        result_temp_dict[temp_name][1].append(self.var_res[j])
+                for pr_name in result_pr_dict:
+                    if self.var_name[j] == pr_name:
+                        result_pr_dict[pr_name][1].append(self.var_res[j])
                 
             self.reset_to_startcond()
-        for result_name in result_name_dict:
-            plt.plot(variable_list, result_name_dict[result_name][1])
-            plt.ylabel(result_name_dict[result_name][0])
-            plt.xlabel('Entry Flow [l/s]')
-            plt.show()
+
+        for vdot_name in result_vdot_dict:
+            plt.plot(variable_list, result_vdot_dict[vdot_name][1], label=result_vdot_dict[vdot_name][0])
+        plt.ylabel('Flow in Branches in [l/s]')
+        plt.xlabel('BoP Entry Flow in [l/s]')
+        plt.legend()
+        plt.show()
+        for temp_name in result_temp_dict:
+            plt.plot(variable_list, result_temp_dict[temp_name][1], label=result_temp_dict[temp_name][0])
+        plt.ylabel('Temperature in [K]')
+        plt.xlabel('BoP Entry Flow in [l/s]')
+        plt.legend(loc = 'lower right')
+        plt.show()
+        for pr_name in result_pr_dict:
+            plt.plot(variable_list, result_pr_dict[pr_name][1], label=result_pr_dict[pr_name][0])
+        plt.ylabel('Pressure in [bar]')
+        plt.xlabel('BoP Entry Flow in [l/s]')
+        plt.legend()
+        plt.show()
+
+        data_dict = {}
+        for vdot_name in result_vdot_dict:
+            data_dict[result_vdot_dict[vdot_name][0]] = result_vdot_dict[vdot_name][1]
+        for temp_name in result_temp_dict:
+            data_dict[result_temp_dict[temp_name][0]] = result_temp_dict[temp_name][1]
+        for pr_name in result_pr_dict:
+            data_dict[result_pr_dict[pr_name][0]] = result_pr_dict[pr_name][1]
+        data = pd.DataFrame(data_dict)
+        datatoexcel = pd.ExcelWriter('results.xlsx')
+        data.to_excel(datatoexcel)
+        datatoexcel.close()
 
 
 class NodeRenamer(ast.NodeTransformer):
