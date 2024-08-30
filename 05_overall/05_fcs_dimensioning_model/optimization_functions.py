@@ -116,9 +116,11 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         optimized_temp_coolant_inlet_degC = optimized_input[4]
         optimized_temp_coolant_outlet_degC = optimized_input[5]
 
-        # Consider the end of life derating factor
+        # Consider the end of life derating factor which is linearly dependent on the current density
         if end_of_life:
-            optimized_cell_voltage_V *= _params_Eol.eol_factor
+            current_density_A_m2 = optimized_current_A / _params_stack.cell_area_m2
+            derating_factor = 1 - (1 - _params_Eol.reference_derating_factor)/_params_Eol.reference_current_density_A_m2 * current_density_A_m2
+            optimized_cell_voltage_V *= derating_factor
 
         # %% Compressor and Turbine
 
