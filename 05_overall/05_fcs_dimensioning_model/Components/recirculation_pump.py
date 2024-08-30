@@ -44,6 +44,12 @@ class Recirculation_Pump:
         self.hydrogen_concentration_supply = 1          # H2 concentration in tank
     
     def calculate_power(self)->float:
+        """
+        Calculate the electrical power consumed by the recirculation pump.
+        
+        Returns:
+        - reci_electric_power_W: Electrical power consumed by the recirculation pump in Watts.
+        """
 
         # Calculate the recirculated flows (either based on fixed recirculation ratio or based on nitrogen and hydrogen flow balances)
         if self.fixed_recirculation_ratio is None:
@@ -59,7 +65,7 @@ class Recirculation_Pump:
         kappa = self.params_physics.specific_heat_ratio # specific heat ratio for H2 and N2 almost equal to air (i.e., 1.4) TODO: snack from coolprop
         isentropic_outlet_temperature_K = self.temperature_in_K * (self.pressure_out_Pa/self.pressure_in_Pa)**((kappa-1)/kappa)
 
-        # Compute the specific enthalpies of the species
+        # Compute the specific enthalpies of the species before and after the recirculation pump
         specific_enthalpy_hydrogen_in_J_kg = CP.PropsSI('H', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Hydrogen')
         specific_enthalpy_nitrogen_in_J_kg = CP.PropsSI('H', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Nitrogen')
         specific_enthalpy_hydrogen_out_J_kg = CP.PropsSI('H', 'T', isentropic_outlet_temperature_K, 'P', self.pressure_out_Pa, 'Hydrogen')
