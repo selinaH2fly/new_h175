@@ -112,10 +112,10 @@ class Stack_Parameters:
 
      def __init__(self):
              
-        self.cell_area_m2 = 300*1e-4
+        self.cell_area_m2 = 300 / (100 * 100)
 
-        self.anode_pressure_drop_coefficients = [4*1e-4, 9.4*1e-3, 49.7] # cf. PowerLayout, DoE Evaluation
-        self.cooling_pressure_drop_coefficients = [6.5e-3, 0.477, 0] # cf. PowerLayout, DoE Evaluation
+        self.anode_pressure_drop_coefficients = [4*1e-4, 9.4*1e-3, 49.7]    # cf. PowerLayout, DoE Evaluation
+        self.cooling_pressure_drop_coefficients = [6.5e-3, 0.477, 0]        # cf. PowerLayout, DoE Evaluation
 
 
 
@@ -123,4 +123,5 @@ class Eol_Parameter:
 
     def __init__(self):
 
-        self.eol_factor = 0.85
+        self.reference_derating_factor = 0.85
+        self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A 
