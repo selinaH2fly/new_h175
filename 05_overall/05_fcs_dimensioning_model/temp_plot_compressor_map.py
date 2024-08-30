@@ -8,11 +8,11 @@ cp = Compressor_Parameters()
 plt.figure(figsize=(10, 8))
 
 # Contour plot for efficiency over pressure ratio and corrected mass flow
-contours = plt.contourf(cp.VSEC15_c200_mdot_TLU, cp.VSEC15_c200_pr_TLU, cp.VSEC15_c200_eta_TLU, levels=15, cmap="viridis")
+contours = plt.contourf(cp.compressor_map["corrected_massflow_kg_s"], cp.compressor_map["pressure_ratio"], cp.compressor_map["efficiency"], levels=15, cmap="viridis")
 plt.colorbar(contours, label="Efficiency")
 
 # Contour lines for efficiency
-contour_lines = plt.contour(cp.VSEC15_c200_mdot_TLU, cp.VSEC15_c200_pr_TLU, cp.VSEC15_c200_eta_TLU, levels=15, colors='black', linestyles='--')
+contour_lines = plt.contour(cp.compressor_map["corrected_massflow_kg_s"], cp.compressor_map["pressure_ratio"], cp.compressor_map["efficiency"], levels=15, colors='black', linestyles='--')
 plt.clabel(contour_lines, inline=True, fontsize=10, fmt="%.2f")
 
 plt.grid(True)
