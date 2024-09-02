@@ -266,8 +266,10 @@ class Circuit:
                     if self.var_name[j] == temp_name:
                         result_temp_dict[temp_name][1].append(self.var_res[j])
                 for pr_name in result_pr_dict:
-                    if self.var_name[j] == pr_name:
-                        result_pr_dict[pr_name][1].append(1 - self.var_res[j])
+                    if self.var_name[j] == pr_name and 'delta_p' not in self.var_name[j]:
+                        result_pr_dict[pr_name][1].append(1 - self.var_res[j])          # absolute pressure converts to pressure drop
+                    elif self.var_name[j] == pr_name:
+                        result_pr_dict[pr_name][1].append( - self.var_res[j])
                 
             self.reset_to_startcond()
 

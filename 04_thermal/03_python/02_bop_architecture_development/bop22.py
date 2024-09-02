@@ -45,7 +45,6 @@ Provide input on boundary conditions
 circ.add_bc("Vdot_1 = 0")
 circ.add_bc("delta_p_throttle1 = - 0.0")
 circ.add_bc("p_1 = 1.0")
-circ.add_bc("T_1 = 273.15 + 50.0")
 
 circ.add_bc("delta_p_hpdu = - (1.0423 * 10 ** (-3) * Vdot_8 ** 2 * 60 ** 2 + 2.2465 * 10 ** (-3) * Vdot_8 * 60)")
 circ.add_bc("delta_p_lvdcdc = - (5.3884 * 10 ** (-4) * Vdot_7 ** 2 * 60 ** 2  + 2.8112 * 10 ** (-3) * Vdot_7 * 60)")
@@ -55,13 +54,25 @@ circ.add_bc("delta_p_intercooler = - (4.4760 * 10 ** (-4) * Vdot_5 ** 2 * 60 ** 
 circ.add_bc("delta_p_compressor = - (2.9956 * 10 ** (-3) * Vdot_10 ** 2 * 60 ** 2 + 4.1023 * 10 ** (-4) * Vdot_10 * 60)")
 circ.add_bc("delta_p_evap = - (1.3479 * 10 ** (-4) * Vdot_1 ** 2 * 60 ** 2 + 1.4225 * 10 ** (-3) * Vdot_1 * 60)")
 
-circ.add_bc("Qdot_hpdu = 500")
-circ.add_bc("Qdot_lvdcdc = 150")
-circ.add_bc("Qdot_hvdcdc = 800")
-circ.add_bc("Qdot_inverter = 625")
-circ.add_bc("Qdot_intercooler = 13000")
-circ.add_bc("Qdot_compressor = 500")
-circ.add_bc("Qdot_evap = - 13500")
+critical_operation = True
+if critical_operation is False:
+    circ.add_bc("T_1 = 273.15 + 50.0")
+    circ.add_bc("Qdot_hpdu = 500")
+    circ.add_bc("Qdot_lvdcdc = 150")
+    circ.add_bc("Qdot_hvdcdc = 800")
+    circ.add_bc("Qdot_inverter = 625")
+    circ.add_bc("Qdot_intercooler = 13000")
+    circ.add_bc("Qdot_compressor = 500")
+    circ.add_bc("Qdot_evap = - 13500")
+elif critical_operation is True:
+    circ.add_bc("T_1 = 273.15 + 60.0")
+    circ.add_bc("Qdot_hpdu = 1000")
+    circ.add_bc("Qdot_lvdcdc = 300")
+    circ.add_bc("Qdot_hvdcdc = 1600")
+    circ.add_bc("Qdot_inverter = 1250")
+    circ.add_bc("Qdot_intercooler = 19000")
+    circ.add_bc("Qdot_compressor = 1000")
+    circ.add_bc("Qdot_evap = - 13500")
 
 
 """
@@ -83,5 +94,5 @@ result_temp_dict = {lvdcdc.T_in : ['LV DCDC T_in', []],
 result_pr_dict = {mixer1.p_out : ['bop pressure drop in [bar]', []]
 }
 
-vdot1 = [15/60, 20/60, 25/60, 30/60]
+vdot1 = [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60]
 circ.analyse_vdot1(vdot1, result_vdot_dict, result_temp_dict, result_pr_dict)
