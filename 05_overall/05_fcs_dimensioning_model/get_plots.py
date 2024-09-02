@@ -55,7 +55,7 @@ def plot_polarization_curves(data, titles, fl_set, saving=True):
 
         # Annotate points where 'eol (t/f)' is True
         for i in df[df["eol (t/f)"] == True].index:
-            ax.annotate('EOL', 
+            ax.annotate('EoL', 
                         (df['current_A (Value)'][i], df['Cell Voltage (V)'][i]), 
                         textcoords="offset points", 
                         xytext=(2, -20), 
@@ -75,7 +75,7 @@ def plot_polarization_curves(data, titles, fl_set, saving=True):
         plt.show()
                 
 
-# PLOT: Polcurve bol vs eol connectede points
+# PLOT: Polcurve bol vs eol connected points
 def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
     def filter_data(df, eol, cell_counts):
         # Filter data for the specified flight level and EOL condition
@@ -86,18 +86,18 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
             for count in cell_counts
         }
 
-    def plot_data(ax, bol_data, eol_data, titles, colors, highlight_powers, highlight_range=3):
+    def plot_data(ax, bol_data, eol_data, titles, colors, highlight_powers):
         for count, title, color in zip(bol_data.keys(), titles, colors):
             bol_df, eol_df = bol_data[count], eol_data[count]
 
             # Plot BOL and EOL data
-            ax.scatter(bol_df['current_A (Value)'], bol_df['Cell Voltage (V)'], color=color, label=f'{title} bol', marker="p")
-            ax.scatter(eol_df['current_A (Value)'], eol_df['Cell Voltage (V)'], color=color, label=f'{title} eol', marker='X')
+            ax.scatter(bol_df['current_A (Value)'], bol_df['Cell Voltage (V)'], color=color, label=f'{title}, BoL', marker="p")
+            ax.scatter(eol_df['current_A (Value)'], eol_df['Cell Voltage (V)'], color=color, label=f'{title}, EoL', marker='X')
 
             # Connect corresponding BOL and EOL points and annotate
             for power in highlight_powers:
-                bol_highlight = bol_df[bol_df["System Power (kW)"].between(power - highlight_range, power + highlight_range)]
-                eol_highlight = eol_df[eol_df["System Power (kW)"].between(power - highlight_range, power + highlight_range)]
+                bol_highlight = bol_df[bol_df["Power Constraint (kW)"].between(power - 1e-3, power + 1e-3)]
+                eol_highlight = eol_df[eol_df["Power Constraint (kW)"].between(power - 1e-3, power + 1e-3)]
                 
                 # Ensure both BOL is available for annotation:
                 if not bol_highlight.empty:
@@ -137,8 +137,8 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
     plot_data(ax, bol_data, eol_data, titles, colors, highlight_powers)
 
     # Add red shaded area and labels
-    ax.axvspan(700, 1300, color='red', alpha=0.2)
-    ax.set(title=f"System Polarization Curve, {fl_set}, eol vs bol", xlabel='Current [A]', xlim=[0, 1300], ylabel='Cell Voltage [V]', ylim=[0.3, 1])
+    ax.axvspan(700, 1000, color='red', alpha=0.2)
+    ax.set(title=f"System Polarization Curve - EoL vs BoL, FL {fl_set}", xlabel='Current [A]', xlim=[0, 1000], ylabel='Cell Voltage [V]', ylim=[0.3, 1])
     ax.grid(True)
     ax.legend(loc='upper right')
 
@@ -299,8 +299,8 @@ def plot_power_needs(data, titles, fl_set, saving=True):
         col_positions = [i + (i // 2) + 0.5 for i in range(df.shape[1] - 1)]
         ax.set_xticks(col_positions)
     
-        # Set x-tick labels to alternate between 'Bol' and 'Eol'
-        ax.set_xticklabels(['Bol' if i % 2 == 0 else 'Eol' for i in range(df.shape[1] - 1)])
+        # Set x-tick labels to alternate between 'BoL' and 'EoL'
+        ax.set_xticklabels(['BoL' if i % 2 == 0 else 'EoL' for i in range(df.shape[1] - 1)])
     
         # Add secondary x-axis on top, with centered labels above each pair of boxes
         ax2 = ax.twiny()
@@ -319,7 +319,7 @@ def plot_power_needs(data, titles, fl_set, saving=True):
         cbar.set_label('Power (kW)')
     
         # Set the title centered between the colored boxes
-        title = f"Power Consumption of Components [kW] {title}, FL {fl_set}"
+        title = f"Power Consumption of Components [kW], {title}, FL {fl_set}"
         ax.set_title(title, pad=30, loc='center')
     
         # Save or show the plot
@@ -346,7 +346,7 @@ def plot_h2_consumption(data, titles, colors, weights, fl_set, saving=True):
             
             # Scatter plot for each dataset
             scatter = ax.scatter(filtered_df['System Power (kW)'], 
-                                 filtered_df['Hydrogen Consumption (g/s)']/weight, 
+                                 (filtered_df['Hydrogen Consumption (g/s)']/weight), 
                                  s=100, edgecolor='k', color=color, marker=marker)
             
             # Extract x and y data
@@ -381,7 +381,7 @@ def plot_h2_consumption(data, titles, colors, weights, fl_set, saving=True):
     ax.legend(handles, labels, loc='best')
 
     # Set title and labels
-    ax.set_title(f'Hydrogen Consumption vs System Power, {fl_set}')
+    ax.set_title(f'Hydrogen Consumption vs System Net Power, FL {fl_set}')
     ax.set_xlabel('System Power [kW]')
     ax.set_ylabel('Hydrogen Consumption [g/s]')
     ax.grid(True)
@@ -389,6 +389,70 @@ def plot_h2_consumption(data, titles, colors, weights, fl_set, saving=True):
     if saving:
         plt.savefig('H2_Consumption.png', bbox_inches='tight')
     plt.show()
+    
+# PLOT: system efficiency (aka Flade plot)
+def plot_system_efficiency(data, titles, colors, fl_set, saving=True):
+    
+    fig, ax = plt.subplots(figsize=(12, 8))
+    fig.tight_layout()
+    # Store handles and labels for manual legend creation
+    handles = []
+    labels = []
+
+    for df, title, color in zip(data, titles, colors):
+        df = df[df['Flight Level (100x ft)'] == fl_set]
+        for filter_eol, linestyle, marker, label_suffix in [(False, '-', 'p', 'BoL'), (True, '--', 'X', 'EoL')]:
+            # Apply the filter based on the function argument
+            filtered_df = df[(df["eol (t/f)"] == filter_eol) 
+                             &(df["current_A (Value)"] <= 700)]
+            
+            # Scatter plot for each dataset
+            scatter = ax.scatter(filtered_df['System Power (kW)'], 
+                                 (filtered_df['System Power (kW)'] / (filtered_df['Hydrogen Consumption (g/s)']* 33.33 * 3600))*1000, 
+                                 s=100, edgecolor='k', color=color, marker=marker)
+            
+            # Extract x and y data
+            x = filtered_df['System Power (kW)']
+            y = (filtered_df['System Power (kW)'] / (filtered_df['Hydrogen Consumption (g/s)']* 33.33 * 3600))*1000
+            
+            # Construct the design matrix [x^2, x, 1]
+            A = np.vstack([x**2, x**1, x**0]).T
+            
+            # Perform least squares fitting
+            coeffs, _, _, _ = np.linalg.lstsq(A, y, rcond=None)
+            
+            # Create the polynomial function
+            def poly(x):
+                return coeffs[0] * x**2 + coeffs[1] * x + coeffs[2]
+            
+            # Plot the polynomial fit
+            line_x = np.linspace(x.min(), x.max(), 500)
+            line_y = poly(line_x)
+            line, = ax.plot(line_x, line_y, linestyle=linestyle, color=color, alpha=0.7)
+            
+            # Add the polynomial formula to the legend
+            formula = f'{title} ({label_suffix}) Fit: {coeffs[0]:.2e}x² + {coeffs[1]:.2e}x + {coeffs[2]:.2e}'
+            
+            
+            # Collect handles and labels for the legend
+            handles.append(scatter)
+            labels.append(f'{title} ({label_suffix}) Data')
+            handles.append(line)
+            labels.append(formula)
+
+    # Create the legend
+    ax.legend(handles, labels, loc='best')
+
+    # Set title and labels
+    ax.set_title(f'System Efficiency vs System Power, FL {fl_set}')
+    ax.set_xlabel('System Power [kW]')
+    ax.set_ylabel('System Efficiency [-]')
+    ax.grid(True)
+    
+    if saving:
+        plt.savefig('System_Efficiency_vs_Power.png', bbox_inches='tight')
+    plt.show()
+
     
 # PLOT: H2 consumption over flight level all in one
 def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
@@ -399,7 +463,6 @@ def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
 
     # Define power levels to highlight
     highlight_powers = [125, 150, 175]
-    highlight_range = 4
 
     # Create a figure and axis
     fig, ax = plt.subplots(figsize=(12, 8))
@@ -415,10 +478,10 @@ def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
 
     if mode == "eol":
         filter_mode = True
-        mode_name = "Eol"
+        mode_name = "EoL"
     elif mode == "bol":
         filter_mode = False
-        mode_name = "Bol"
+        mode_name = "BoL"
     #Filter the DF for currents in range and the filter omde
     df1 = df1[(df1["current_A (Value)"] <= 700) & (df1["eol (t/f)"] == filter_mode)]
     
@@ -426,9 +489,9 @@ def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
     for cell, icon in zip(cells, markers):
         #filter dataframe after cell count and 125-+, 150+-, and 175+-
         df_filtered = df1[(df1['Specified Cell Count'] == cell) 
-                          &(df1['System Power (kW)'].between(highlight_powers[0] - highlight_range, highlight_powers[0] + highlight_range) |
-                            df1['System Power (kW)'].between(highlight_powers[1] - highlight_range, highlight_powers[1] + highlight_range) |
-                            df1['System Power (kW)'].between(highlight_powers[2] - highlight_range, highlight_powers[2] + highlight_range))]
+                          &(df1['Power Constraint (kW)'].between(highlight_powers[0] - 1e-3, highlight_powers[0] + 1e-3) |
+                            df1['Power Constraint (kW)'].between(highlight_powers[1] - 1e-3, highlight_powers[1] + 1e-3) |
+                            df1['Power Constraint (kW)'].between(highlight_powers[2] - 1e-3, highlight_powers[2] + 1e-3))]
 
         # Scatter plot with color based on 'System Power (kW)'
         scatter = ax.scatter(df_filtered['Flight Level (100x ft)'], df_filtered['Hydrogen Consumption (g/s)'], 
@@ -442,7 +505,7 @@ def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
         ax.legend(handles, labels, loc='upper left')
         
         # Set title and labels
-        ax.set_title(f'System Hydrogen Consumption over FL for Different Cell Counts at {mode_name}', fontsize=14, pad=20)
+        ax.set_title(f'System Hydrogen Consumption vs FL for Different Cell Counts ({mode_name})', fontsize=14, pad=20)
         ax.set_xlabel('Flight Level [100x ft]')
         # Set x-range from 0 to 140 in steps of 30, and include 150
         x_ticks = list(range(0, fl_max + 1, 30))
@@ -474,7 +537,7 @@ def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
             
 #PLOT: Weiht estmate wuth fit:
 def plot_weight_estimate(data, titles, colors, components_dict, components_sd_dict, markers, saving=True, mode="bol"):
-    
+    #TODO: Change up this plot to ref system weight and use dicts of Kate:
     # Function to perform linear regression and return the formula and R^2
     def linear_fit(x, y):
         x = np.array(x).reshape(-1, 1)
@@ -489,10 +552,10 @@ def plot_weight_estimate(data, titles, colors, components_dict, components_sd_di
     # Filter option for eol or bol plot:
     if mode == "eol":
         filter_mode = True
-        mode_name = "Eol"
+        mode_name = "EoL"
     elif mode == "bol":
         filter_mode = False
-        mode_name = "Bol"
+        mode_name = "BoL"
         
     # The x-axis points to be plotted and searched for
     points = [20, 125, 150, 175]
@@ -619,7 +682,7 @@ def analyze_data(_file_path1, saving=True):
     
     # Sort and prefilter data by index and current
     #df1 =df1[df1["converged (t/f)"] == True]
-    df1 = filter_converged_points(df1, tolerance=4)
+    df1 = filter_converged_points(df1, tolerance=7)
     df1 = df1.sort_values(by=['idx'])
         
     # Split the data based on 'Specified Cell Count'
@@ -648,6 +711,9 @@ def analyze_data(_file_path1, saving=True):
     weights = [1,1,1]#[39.92+ 6.26,43.75+6.01,47.58+5.77] #stack + compressor gewicht
     plot_h2_consumption(data, titles, colors, weights, fl_set, saving=saving)
         
+    ###########PLOT: System eff vs Net Power: Flade Plot, 
+    plot_system_efficiency(data, titles, colors, fl_set, saving=saving)
+    
     #############PLOT: H2 consumption vs Flightlevel:
     H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="bol")
     H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="eol")
@@ -671,6 +737,6 @@ def analyze_data(_file_path1, saving=True):
 # %%    
 
 
-# analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
+analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
 
 #TODO write init:

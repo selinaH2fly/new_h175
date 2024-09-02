@@ -246,10 +246,10 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         # Compute the penalty term for the power constraint
         if power_constraint_kW is not None:
-            power_constraint = cell_voltage * cellcount * optimal_input[0] \
+            power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
                 - compressor_power_W + turbine_power_W - reci_pump_power_W  - coolant_pump_power_W \
                     - power_constraint_kW * 1000
-            penalty = _params_optimization.penalty_weight * (power_constraint**2)
+            penalty = _params_optimization.penalty_weight * (power_balance_offset**2)
         else:
             penalty = 0
         
