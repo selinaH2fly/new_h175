@@ -36,7 +36,7 @@ masses_FCM_500_cells = {'Stack':{'Stack':47.58, 'CVM':1.00, 'SMI':3.00, 'Hose cl
 masses_FCM_constants = {'Stack':{'Stack':0, 'CVM':1.00, 'SMI':3.00, 'Hose clamps': 0.18, 'Screws':0.09, 'HV+LV Cable': 1.20} \
                                ,'Cathode':{'Filter': 0.5, 'HFM': 0.5, 'Compressor':0, 'Compressor inverter':6.0, 'Intercooler':3.0, 'Humidifier': 2.0, 'Valves': 2.6, 'Drain valve': 0.30, 'Water separator': 0.3, 'Cathode pressure control valve': 0.0, 'Sensors': 1.2, 'Silicon hoses':1.76, 'Hose clamps': 0.42, 'Connectors': 0.8, 'Screws': 0.18, 'HV+LV Cable': 0.67, 'Turbine':0.0} \
                                ,'Anode': {'Shut-Off valve':0.2, 'Pressure control valve':0.2, 'Water separator':0, 'Particle filter':0.2, 'Recirculation pump':4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.80, 'Anode piping':1.01, 'Swagelok connector':0.56, 'Screws':0.09, 'HV+LV Cable': 0.34}\
-                               ,'Thermal':{'Coolant pump':4.0, 'TCV':1.0, 'Particle filter':0.22, 'Ionic exchangr':1.0, 'Sensors':0.80+0.80, 'Silicone hoses':1.51+2.02, 'Hose clamps':0.36+0.48, 'Connectors':0.80+0.80, 'Screws':0.09+0.09, 'HV+LV Cable':0.34+0.34, 'Expansion tank':1.0,'HDPU':5.0,'Volume flow control valve':0.5, 'Stack coolant':7.0, 'Other coolant':5.0}\
+                               ,'Thermal':{'Coolant pump':4.0, 'TCV':1.0, 'Particle filter':0.22, 'Ionic exchangr':1.0, 'Sensors':0.80+0.80, 'Silicone hoses':1.51+2.02, 'Hose clamps':0.36+0.48, 'Connectors':0.80+0.80, 'Screws':0.09+0.09, 'HV+LV Cable':0.34+0.34, 'Expansion tank':1.0,'HDPU':5.0,'Volume flow control valve':0.5, 'Stack coolant':0, 'Other coolant':5.0}\
                                ,'Other':{'FCCU':1.5,'Electrical connectors':0.4,'Unnamed':4.0,'Frame':5.0,'Connectors':2.0,'Screws':0.27, 'HV+LV Cable':0.67}}    
 """
 Comments on dictionary formatting:
@@ -81,6 +81,10 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     
     # Define cell number we would like to iterate through
     cell_no = np.array([400, 450, 500])
+    # Calculate m_stack using the formula
+    m_stack_values = 0.0766 * cell_no + 9.2813  # Equation for PC
+    # A mass of 7 kg of coolant was measured for a 455 cell stack. We scale this value linearly to account for changing coolant masses in different stack sizes. 
+    m_coolant_values = cell_no * 7/455
     
     # These points are currently taken as constants from V1.2 documentation.
     # Values of 100 are placeholders as operation deemed unfeasible
@@ -90,9 +94,7 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     points_comp_power = [[28,27,26],[0, 37,35], [0,0, 46]]
     points_turb_power = [[7,7,6],[0,9,8],[0,0,11]]
     
-    
-    # Calculate m_stack using the formula
-    m_stack_values = 0.0766 * cell_no + 9.2813  # Equation for PC
+
     
     subsystem_mass_total = {}
     #Populating the final array with lists of zeros. Feels like there should be a quicker way.
@@ -104,7 +106,12 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     max_tracker = 0
     plot_bar = []
     
+    # Creatig values of horizontal line to show specific power target
+    target_specific_power = 1.25    # [kW/kg]
+    target_masses = []
+    
     for k in range(0,len(points)):
+        target_masses.append(points[k]/target_specific_power)
         #i = 0
         for n in range(0,len(cell_no)):
             # Defining a temporary dictionary for each separate test case
@@ -121,10 +128,12 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
             temp['Stack'] += m_stack_values[n]
             temp['Cathode']+= points_comp_power[k][n]*0.63
             temp['Cathode']+= points_turb_power[k][n]*0.63
+            temp['Thermal']+= m_coolant_values[n]
             
             total += m_stack_values[n]
             total += points_comp_power[k][n]*0.63
             total += points_turb_power[k][n]*0.63
+            total += m_coolant_values[n]
             
             if total > max_tracker:
                 max_tracker = total
@@ -135,15 +144,19 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
 
             #i += 1
         
-            
-    print(plot_bar)
+    print(target_masses)
+    #print(plot_bar)
    #print(subsystem_mass_total)
     
     categories = list(subsystem_mass_total.keys())  # ['A', 'B', 'C']
 
     #The order, from bottom to top, that the components should be in. Place constant components at bottom so the changes are clearer.
     orders = ['Other', 'Anode', 'Thermal','Stack','Cathode']
-    legend_order = [4,3,2,1,0]
+    
+    # Note. This is currently a hash to only plot  the target mass line once in rhe legend. 
+    # The iteration skips through the other two labels. 
+    
+    legend_order = [7,6,5,4,3,2]
     #orders = list(subsystem_mass_total[f'{points[0]}'].keys())  
 
     n_values = len(subsystem_mass_total[points[0]]['Stack'])  # Number of values for each subsystem
@@ -208,7 +221,11 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
 
             #print(plot_index)
             plot_index += 1
-        
+    
+    
+    for i, target in enumerate(target_masses):
+        ax.hlines(target, x[i] - bar_width, x[i] + n_values * (bar_width + bar_spacing) - bar_spacing, colors='grey', linestyles='dashed', label=f'Target mass to achieve {target_specific_power} kW/kg')
+    
     # Adding labels and title
     ax.set_xlabel('Net Power [kW]')
     ax.set_ylabel('Mass [kg]')
@@ -216,11 +233,12 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     ax.set_xticks(x + (n_values - 1) * (bar_width + bar_spacing) / 2)
     ax.set_xticklabels(categories)
     #ax.set_ylim([0, max(subsystem_mass_total[max(points)]['Cathode'])])
-    ax.set_ylim([0,max_tracker +100])
+    ax.set_ylim([0,max_tracker +125])
     handles, labels = plt.gca().get_legend_handles_labels()
 
     #add legend to plot
-    plt.legend([handles[idx] for idx in legend_order],[labels[idx] for idx in legend_order],title='Subsystems', loc='upper right')
+    ax.legend([handles[idx] for idx in legend_order],[labels[idx] for idx in legend_order],title='Subsystems', loc='upper right')
+    #plt.legend()
     
     #ax.legend(title='Subsystems')
 
