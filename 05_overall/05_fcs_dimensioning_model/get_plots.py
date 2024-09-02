@@ -390,7 +390,7 @@ def plot_h2_consumption(data, titles, colors, weights, fl_set, saving=True):
         plt.savefig('H2_Consumption.png', bbox_inches='tight')
     plt.show()
     
-# PLOT: h2_consumption
+# PLOT: system efficiency (aka Flade plot)
 def plot_system_efficiency(data, titles, colors, fl_set, saving=True):
     
     fig, ax = plt.subplots(figsize=(12, 8))
@@ -415,23 +415,24 @@ def plot_system_efficiency(data, titles, colors, fl_set, saving=True):
             x = filtered_df['System Power (kW)']
             y = (filtered_df['System Power (kW)'] / (filtered_df['Hydrogen Consumption (g/s)']* 33.33 * 3600))*1000
             
-            # Construct the design matrix [x, 1]
-            A = np.vstack([x, np.ones_like(x)]).T
+            # Construct the design matrix [x^2, x, 1]
+            A = np.vstack([x**2, x**1, x**0]).T
             
             # Perform least squares fitting
             coeffs, _, _, _ = np.linalg.lstsq(A, y, rcond=None)
             
-            # Create the linear function
-            def linear(x):
-                return coeffs[0] * x + coeffs[1]
+            # Create the polynomial function
+            def poly(x):
+                return coeffs[0] * x**2 + coeffs[1] * x + coeffs[2]
             
-            # Plot the linear fit
-            line_x = np.linspace(20, 175, 500)
-            line_y = linear(line_x)
+            # Plot the polynomial fit
+            line_x = np.linspace(x.min(), x.max(), 500)
+            line_y = poly(line_x)
             line, = ax.plot(line_x, line_y, linestyle=linestyle, color=color, alpha=0.7)
             
             # Add the polynomial formula to the legend
-            formula = f'{title} ({label_suffix}) Fit: {coeffs[0]:.2e}x + {coeffs[1]:.2e}'
+            formula = f'{title} ({label_suffix}) Fit: {coeffs[0]:.2e}x² + {coeffs[1]:.2e}x + {coeffs[2]:.2e}'
+            
             
             # Collect handles and labels for the legend
             handles.append(scatter)
