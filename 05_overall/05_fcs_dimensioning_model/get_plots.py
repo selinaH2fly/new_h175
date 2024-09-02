@@ -55,7 +55,7 @@ def plot_polarization_curves(data, titles, fl_set, saving=True):
 
         # Annotate points where 'eol (t/f)' is True
         for i in df[df["eol (t/f)"] == True].index:
-            ax.annotate('EOL', 
+            ax.annotate('EoL', 
                         (df['current_A (Value)'][i], df['Cell Voltage (V)'][i]), 
                         textcoords="offset points", 
                         xytext=(2, -20), 
@@ -91,8 +91,8 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
             bol_df, eol_df = bol_data[count], eol_data[count]
 
             # Plot BOL and EOL data
-            ax.scatter(bol_df['current_A (Value)'], bol_df['Cell Voltage (V)'], color=color, label=f'{title} bol', marker="p")
-            ax.scatter(eol_df['current_A (Value)'], eol_df['Cell Voltage (V)'], color=color, label=f'{title} eol', marker='X')
+            ax.scatter(bol_df['current_A (Value)'], bol_df['Cell Voltage (V)'], color=color, label=f'{title}, BoL', marker="p")
+            ax.scatter(eol_df['current_A (Value)'], eol_df['Cell Voltage (V)'], color=color, label=f'{title}, EoL', marker='X')
 
             # Connect corresponding BOL and EOL points and annotate
             for power in highlight_powers:
@@ -138,7 +138,7 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
 
     # Add red shaded area and labels
     ax.axvspan(700, 1300, color='red', alpha=0.2)
-    ax.set(title=f"System Polarization Curve, {fl_set}, eol vs bol", xlabel='Current [A]', xlim=[0, 1300], ylabel='Cell Voltage [V]', ylim=[0.3, 1])
+    ax.set(title=f"System Polarization Curve, FL {fl_set}, EoL vs BoL", xlabel='Current [A]', xlim=[0, 1300], ylabel='Cell Voltage [V]', ylim=[0.3, 1])
     ax.grid(True)
     ax.legend(loc='upper right')
 
@@ -299,8 +299,8 @@ def plot_power_needs(data, titles, fl_set, saving=True):
         col_positions = [i + (i // 2) + 0.5 for i in range(df.shape[1] - 1)]
         ax.set_xticks(col_positions)
     
-        # Set x-tick labels to alternate between 'Bol' and 'Eol'
-        ax.set_xticklabels(['Bol' if i % 2 == 0 else 'Eol' for i in range(df.shape[1] - 1)])
+        # Set x-tick labels to alternate between 'BoL' and 'EoL'
+        ax.set_xticklabels(['BoL' if i % 2 == 0 else 'EoL' for i in range(df.shape[1] - 1)])
     
         # Add secondary x-axis on top, with centered labels above each pair of boxes
         ax2 = ax.twiny()
@@ -478,10 +478,10 @@ def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
 
     if mode == "eol":
         filter_mode = True
-        mode_name = "Eol"
+        mode_name = "EoL"
     elif mode == "bol":
         filter_mode = False
-        mode_name = "Bol"
+        mode_name = "BoL"
     #Filter the DF for currents in range and the filter omde
     df1 = df1[(df1["current_A (Value)"] <= 700) & (df1["eol (t/f)"] == filter_mode)]
     
@@ -505,7 +505,7 @@ def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
         ax.legend(handles, labels, loc='upper left')
         
         # Set title and labels
-        ax.set_title(f'System Hydrogen Consumption over FL for Different Cell Counts at {mode_name}', fontsize=14, pad=20)
+        ax.set_title(f'System Hydrogen Consumption over FL for Different Cell Counts ({mode_name})', fontsize=14, pad=20)
         ax.set_xlabel('Flight Level [100x ft]')
         # Set x-range from 0 to 140 in steps of 30, and include 150
         x_ticks = list(range(0, fl_max + 1, 30))
@@ -552,10 +552,10 @@ def plot_weight_estimate(data, titles, colors, components_dict, components_sd_di
     # Filter option for eol or bol plot:
     if mode == "eol":
         filter_mode = True
-        mode_name = "Eol"
+        mode_name = "EoL"
     elif mode == "bol":
         filter_mode = False
-        mode_name = "Bol"
+        mode_name = "BoL"
         
     # The x-axis points to be plotted and searched for
     points = [20, 125, 150, 175]
@@ -641,266 +641,7 @@ def plot_weight_estimate(data, titles, colors, components_dict, components_sd_di
         plt.savefig(f"Weight_estimation_vs_power_{mode}.png", bbox_inches='tight')
     else:
         plt.show()
-        
-#PLOT a stacked bar chart of each subsystem component mass grouped by power level.         
-def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=True, mode="bol"):  
-    
-    # Filter option for eol or bol plot: 
-    # If sizing for eol, Turbine and Compressor power tend to increase, and thus the estimated cathode mass would be higher.
-    
-    if mode == "eol":
-        filter_mode = True
-    elif mode == "bol":
-        filter_mode = False
-    
-    # Define a nested dictionary including all components whichare constant with net power and cell count.
-    # Note the zero values for stack, turbine, compressor and stack coolant. These will later be written over.       
-    masses_FCM_constants = {'Stack':{'Stack':0, 'CVM':1.00, 'SMI':3.00, 'Hose clamps': 0.18, 'Screws':0.09, 'HV+LV Cable': 1.20} \
-                                   ,'Cathode':{'Filter': 0.5, 'HFM': 0.5, 'Compressor':0, 'Compressor inverter':6.0, 'Intercooler':3.0, 'Humidifier': 2.0, 'Valves': 2.6, 'Drain valve': 0.30, 'Water separator': 0.3, 'Cathode pressure control valve': 0.0, 'Sensors': 1.2, 'Silicon hoses':1.76, 'Hose clamps': 0.42, 'Connectors': 0.8, 'Screws': 0.18, 'HV+LV Cable': 0.67, 'Turbine':0.0} \
-                                   ,'Anode': {'Shut-Off valve':0.2, 'Pressure control valve':0.2, 'Water separator':0, 'Particle filter':0.2, 'Recirculation pump':4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.80, 'Anode piping':1.01, 'Swagelok connector':0.56, 'Screws':0.09, 'HV+LV Cable': 0.34}\
-                                   ,'Thermal':{'Coolant pump':4.0, 'TCV':1.0, 'Particle filter':0.22, 'Ionic exchangr':1.0, 'Sensors':0.80+0.80, 'Silicone hoses':1.51+2.02, 'Hose clamps':0.36+0.48, 'Connectors':0.80+0.80, 'Screws':0.09+0.09, 'HV+LV Cable':0.34+0.34, 'Expansion tank':1.0,'HDPU':5.0,'Volume flow control valve':0.5, 'Stack coolant':0, 'Other coolant':5.0}\
-                                   ,'Other':{'FCCU':1.5,'Electrical connectors':0.4,'Unnamed':4.0,'Frame':5.0,'Connectors':2.0,'Screws':0.27, 'HV+LV Cable':0.67}}    
-        
-    # Define a function to sum the constants of each subsystem, as well as a total mass
-    def sum_mass(masses: dict):
-        subsystem_totals = {}
-        total = 0 
-        for subsystem, subsystem_dict in masses.items():
-            temp = 0
-            for value in subsystem_dict.values():
-                temp += value
-            subsystem_totals[subsystem] = temp
-            total += temp
-        return subsystem_totals, total
-    
-    # The x-axis points to be plotted and searched for
-    points = [125, 150, 175]
-    
-    # Define cell numbers we would like to iterate through
-    cell_no = np.array([400, 450, 500])
-    
-    # Calculate m_stack using the formula
-    m_stack_values = 0.0766 * cell_no + 9.2813  
-    
-    # A mass of 7 kg of coolant was measured for a 455 cell stack. We scale this value linearly to account for changing coolant masses in different stack sizes. 
-    m_coolant_values = cell_no * 7/455
-    
-    #Populating the final data array with lists of zeros. Feels like there should be a quicker way.
-    subsystem_mass_total = {}
-    for power in points:
-        subsystem_mass_total[power]={'Stack':np.zeros(len(cell_no)),'Cathode':np.zeros(len(cell_no)),'Anode':np.zeros(len(cell_no)),'Thermal':np.zeros(len(cell_no)), 'Other':np.zeros(len(cell_no))}
-    
-    # Counter to append the mass value to the correct indice of the array
-    max_tracker = 0
-    
-    # Creating values of horizontal line to show specific power target
-    target_specific_power = 1.25    # [kW/kg]
-    
-    # Initialising lists for the following iteration
-    target_masses = []
-    cathode_mass = []
-    within_tolerance = []
-    within_current = []
-    
-    # Extract Power of components and therefore the added cathode mass for each component
-    for df, title, color, m_stack_value, marker in zip(data, titles, colors, m_stack_values, markers):
-        # Filter the df for eol, bol and flight level
-        df = df[(df["eol (t/f)"] == filter_mode) & 
-                (df["Flight Level (100x ft)"] == 120)]
-        
-        # Extract all power points from the filtered DataFrame
-        all_points = sorted(df["System Power (kW)"].unique())
-        #print(all_points)
-        
-        # narrow all_points list down to those close 125,150 and 175. Might be a better way to do this.
-        tol = 1
-        
-        def find_closest(values, point):
-            converged = True
-            values_array = np.array(values)
-            index = (np.abs(values_array - point)).argmin()
-            # Checking if its the right point. If it different converge the calculated difference will be outside of the tolerance. 
-            if np.abs(values_array[index] - point) > tol:
-                converged = False
-            return values_array[index], converged
 
-        # Find and print the closest values for each target
-        closest_values = []
-        
-        for point in points:
-            current_check = True
-            closest_value, tolerance_bool = find_closest(all_points, point)
-            closest_values.append(closest_value)
-            within_tolerance.append(tolerance_bool)
-            closest_row = df.iloc[(df["System Power (kW)"] - point).abs().argmin()]
-            if closest_row["current_A (Value)"] > 700:
-                current_check = False
-            within_current.append(current_check)
-            cathode_weight = 0
-            for key, mean_value in components_dict.items():
-                power_value = closest_row[key]
-                component_weight = power_value * mean_value
-                cathode_weight += component_weight
-
-            cathode_mass.append(cathode_weight)
-    
-    # Currently, the outputted lists of the last loop need to be reordered to be the appropriate format for this loop.
-    # This is ugly, would like to change. 
-    within_tolerance_ordered = [None]* (len(within_tolerance))
-    within_current_ordered = [None] * (len(within_current))
-    i = 0
-    reorder = [0,3,6,1,4,7,2,5,8]
-    
-    for k in range(0,len(points)):
-        # Value of horizontal line for each power level
-        target_masses.append(points[k]/target_specific_power)
-
-        for n in range(0,len(cell_no)):
-            # Defining a temporary dictionary for each separate test case
-            temp,total= sum_mass(masses_FCM_constants)
-            
-            # Stack and coolant mass scale with cell count.
-            temp['Stack'] += m_stack_values[n]
-            temp['Thermal']+= m_coolant_values[n]
-            
-            # Cathode mass scales with power
-            temp['Cathode']+= cathode_mass[i]
-            
-            # Reorder our boolean lists to suit overall iteration later. 
-            within_tolerance_ordered[reorder[i]] = within_tolerance[i]
-            within_current_ordered[reorder[i]] = within_current[i]
-            
-            # Curently, this total value is just used to track the maximum bar height, to size the y-axis accordingly. 
-            total += m_stack_values[n]
-            total += m_coolant_values[n]
-            total += cathode_mass[i]
-            if total > max_tracker:
-                max_tracker = total
-            
-            # Assgning the updated subsystem masses to the correct location in the nested dictionary. 
-            for key,value in temp.items():
-                subsystem_mass_total[points[k]][key][n] = value
-                
-            # iterates between 0 and 8 to allow appropriate assignment to array    
-            i += 1      
-     
-
-    #The order, from bottom to top, that the components should be in. Place constant components at bottom so the changes are clearer.
-    orders = ['Other', 'Anode', 'Thermal','Stack','Cathode']
-    
-    categories = list(subsystem_mass_total.keys()) 
-    n_values = len(subsystem_mass_total[points[0]]['Stack'])  # Number of values for each subsystem
-
-
-    # Defining bar spacing
-    bar_width = 0.25  # Width of each bar
-    group_spacing = 0.3 # Spacing between different groups
-    bar_spacing = 0.05 # Spacing between bars in the same group
-
-    # Positions of the groups on the x-axis
-    x = np.arange(len(categories)) * (n_values * (bar_width + bar_spacing) + group_spacing) #Add spacing between groups and bars
-
-    # Initialize a plot
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.set_axisbelow(True)
-    
-    # Include major grid lines
-    ax.yaxis.grid(True)
-    
-    # Sample subsystem colours at regular intervals from the colourmap
-    cmap = plt.get_cmap('viridis')
-    num_colors = len(orders)
-    indices = np.linspace(0, 1, num_colors)
-    colors = cmap(indices)
-    
-    # Colours for different cell counts
-    label_colors= ['tab:blue', 'tab:orange','tab:red']
-
-    # This index is used to correctly iterate through the boolean lists that check for convergence and current level. 
-    plot_index = 0
-
-    # Iterate through each power
-    for i, category in enumerate(categories):
-        # Iterate through each cell number
-        for j in range(n_values):
-
-            bottom_values = np.zeros(1)
-            bar_positions = x[i] + j * (bar_width + bar_spacing)
-            total_height = 0
-            bar_plotted= False
-            
-            # Iterate through each subsystem
-            for k, order in enumerate(orders):
-                value = subsystem_mass_total[category][order][j]
-                # If the point has converged, plot a bar. 
-                if within_tolerance_ordered[plot_index]:
-                    bars = ax.bar(bar_positions, value, bar_width, label=f'{order}' if j == 0 else "", bottom=bottom_values, color=colors[k])
-                    bottom_values += value  # Update bottom_values to stack the next bars
-                    total_height = bottom_values[0]
-                    bar_plotted = True
-                else: 
-                    # Deciding on height of black cross
-                    #total_height += value
-                    total_height = 100
-                    
-            # If the point has not converged, plot a black cross        
-            if not bar_plotted:
-                x_left = bar_positions - bar_width / 2
-                x_right = bar_positions + bar_width / 2
-                y_bottom = 0
-                y_top = total_height
-    
-                # Draw the 'X' across the full height and width of the bar
-                ax.plot([x_left, x_right], [y_bottom, y_top], color='black', linewidth=2)  # Diagonal from bottom-left to top-right
-                ax.plot([x_left, x_right], [y_top, y_bottom], color='black', linewidth=2)  # Diagonal from top-left to bottom-right    
-                
-            # If the point has converged, but the current exceeds the limit, plot a red cross over the bar
-            if bar_plotted and not within_current_ordered[plot_index]:
-                x_left = bar_positions - bar_width / 2
-                x_right = bar_positions + bar_width / 2
-                y_bottom = 0
-                y_top = total_height
-        
-                # Draw the 'X' across the full height and width of the bar
-                ax.plot([x_left, x_right], [y_bottom, y_top], color='red', linewidth=2)  # Diagonal from bottom-left to top-right
-                ax.plot([x_left, x_right], [y_top, y_bottom], color='red', linewidth=2)  # Diagonal from top-left to bottom-right  
-                
-                
-            # Add text of cell count over each bar that has been plotted. 
-            if within_tolerance_ordered[plot_index]:
-                ax.text(bar_positions, total_height + 5, f'{cell_no[j]} cells', ha='center', va='bottom', color='black',
-                        bbox=dict(facecolor=label_colors[j], edgecolor=label_colors[j], boxstyle='round,pad=0.3', linewidth=1.5, alpha=0.6))
-        
-            plot_index += 1
-            
-    # Plot dashed horizontal lines indicating the mass required to achieve the target power density. 
-    for i, target in enumerate(target_masses):
-        ax.hlines(target, x[i] - bar_width, x[i] + n_values * (bar_width + bar_spacing) - bar_spacing, colors='grey', linestyles='dashed', label=f'Target mass to achieve {target_specific_power} kW/kg')
-    
-    # Adding labels and title
-    ax.set_xlabel('Net Power [kW]')
-    ax.set_ylabel('Mass [kg]')
-    ax.set_title('Predicted FCM Mass for each Net Power')
-    ax.set_xticks(x + (n_values - 1) * (bar_width + bar_spacing) / 2)
-    ax.set_xticklabels(categories)
-    ax.set_ylim([0,max_tracker +125])
-    handles, labels = plt.gca().get_legend_handles_labels()
-
-    # This is currently required to plot the legend labels in the correct order.
-    # And to only plot the 'target mass' label once for the 3 lines. Could be neatened later. 
-    legend_order = [7,6,5,4,3,2]
-    
-    # add legend to plot
-    ax.legend([handles[idx] for idx in legend_order],[labels[idx] for idx in legend_order],title='Subsystems', loc='upper right')
-
-    # Adjust layout
-    plt.tight_layout()
-    
-    # Save or show the plot
-    if saving:
-        plt.savefig(f"Weight_estimation_vs_power_{mode}.png", bbox_inches='tight')
-    else:
-        plt.show()
    
 #%%  
 def filter_converged_points(df, tolerance=4):
@@ -953,7 +694,6 @@ def analyze_data(_file_path1, saving=True):
     titles = ['400 Cells',  '450 Cells','500 Cells']
     colors = [ "tab:blue", "tab:orange",  "tab:red"]
     markers= ["o", "v", "s"]
-
     
     fl_set = 120
     fl_max = max(df1["Flight Level (100x ft)"])
@@ -992,16 +732,11 @@ def analyze_data(_file_path1, saving=True):
     plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="bol")
     plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="eol")
     
-    # New grouped, stacked bar chart function
-    plot_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
-    
 # Go back to origin dir
     os.chdir("../../")
-    
 # %%    
 
 
-
-analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=False)    
+analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
 
 #TODO write init:
