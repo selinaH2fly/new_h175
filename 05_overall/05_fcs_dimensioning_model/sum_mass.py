@@ -165,6 +165,10 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     # Initialize a plot
     fig, ax = plt.subplots(figsize=(12, 6))
     
+    #print(bar_positions)
+    ax.set_axisbelow(True)
+    ax.yaxis.grid(True)
+    
     #colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99', '#cc99ff']
     cmap = plt.get_cmap('viridis')
     num_colors = len(orders)
@@ -180,42 +184,43 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     label_colors= ['tab:blue', 'tab:orange','tab:red']
     #print(subsystem_mass_total[max(points)]['Cathode'])
 
-    plot_bar_index = 0
+    plot_index = 0
 
-    for j in range(n_values):
-        bottom_values = np.zeros(n_categories)
-        """
-        if not plot_bar[plot_bar_index]:  # Check the boolean list before plotting each bar
-            plot_bar_index += 1
-            continue 
-        """
-        for i, order in enumerate(orders):
-            values = [subsystem_mass_total[category][order][j] for category in categories]
-            bar_positions = x + j * (bar_width + bar_spacing)
-            #print(bar_positions)
-            ax.set_axisbelow(True)
-            ax.yaxis.grid(True)
-            bars = ax.bar(bar_positions, values, bar_width, label=f'{order}' if j == 0 else "", bottom=bottom_values, color=colors[i])
-            bottom_values += values  # Update bottom_values to stack the next bars
+    for i, category in enumerate(categories):
+        for j in range(n_values):
+            if not plot_bar[plot_index]:
+                plot_index += 1
+                continue
             
-        for bar in bars:
-            height = bar.get_height() + bar.get_y() +10
-            ax.text(bar.get_x() + bar.get_width() / 2, height, f'{cell_no[j]} cells', ha='center', va='bottom', rotation='vertical', color='black',
+            bottom_values = np.zeros(1)
+            bar_positions = x[i] + j * (bar_width + bar_spacing)
+            
+            for k, order in enumerate(orders):
+                value = subsystem_mass_total[category][order][j]
+                bars = ax.bar(bar_positions, value, bar_width, label=f'{order}' if j == 0 else "", bottom=bottom_values, color=colors[k])
+                bottom_values += value  # Update bottom_values to stack the next bars
+
+                
+            for bar in bars:
+                height = bar.get_height() + bar.get_y() +10
+                ax.text(bar.get_x() + bar.get_width() / 2, height, f'{cell_no[j]} cells', ha='center', va='bottom', color='black',
                     bbox=dict(facecolor=label_colors[j], edgecolor=label_colors[j], boxstyle='round,pad=0.3', linewidth=1.5, alpha=0.6))
-        plot_bar_index += 1
+
+            #print(plot_index)
+            plot_index += 1
         
     # Adding labels and title
     ax.set_xlabel('Net Power [kW]')
     ax.set_ylabel('Mass [kg]')
-    ax.set_title('Predicted FCM mass for each net power')
+    ax.set_title('Predicted FCM Mass for each Net Power')
     ax.set_xticks(x + (n_values - 1) * (bar_width + bar_spacing) / 2)
     ax.set_xticklabels(categories)
     #ax.set_ylim([0, max(subsystem_mass_total[max(points)]['Cathode'])])
-    ax.set_ylim([0,max_tracker +75])
+    ax.set_ylim([0,max_tracker +100])
     handles, labels = plt.gca().get_legend_handles_labels()
 
     #add legend to plot
-    plt.legend([handles[idx] for idx in legend_order],[labels[idx] for idx in legend_order],title='Subsystems')
+    plt.legend([handles[idx] for idx in legend_order],[labels[idx] for idx in legend_order],title='Subsystems', loc='upper right')
     
     #ax.legend(title='Subsystems')
 
