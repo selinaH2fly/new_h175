@@ -75,7 +75,7 @@ def plot_polarization_curves(data, titles, fl_set, saving=True):
         plt.show()
                 
 
-# PLOT: Polcurve bol vs eol connectede points
+# PLOT: Polcurve bol vs eol connected points
 def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
     def filter_data(df, eol, cell_counts):
         # Filter data for the specified flight level and EOL condition
