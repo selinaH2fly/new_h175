@@ -346,7 +346,7 @@ def plot_h2_consumption(data, titles, colors, weights, fl_set, saving=True):
             
             # Scatter plot for each dataset
             scatter = ax.scatter(filtered_df['System Power (kW)'], 
-                                 filtered_df['Hydrogen Consumption (g/s)']/weight, 
+                                 (filtered_df['Hydrogen Consumption (g/s)']/weight), 
                                  s=100, edgecolor='k', color=color, marker=marker)
             
             # Extract x and y data
@@ -381,7 +381,7 @@ def plot_h2_consumption(data, titles, colors, weights, fl_set, saving=True):
     ax.legend(handles, labels, loc='best')
 
     # Set title and labels
-    ax.set_title(f'Hydrogen Consumption vs System Power, {fl_set}')
+    ax.set_title(f'Hydrogen Consumption vs System Net Power, FL: {fl_set}')
     ax.set_xlabel('System Power [kW]')
     ax.set_ylabel('Hydrogen Consumption [g/s]')
     ax.grid(True)
@@ -389,6 +389,69 @@ def plot_h2_consumption(data, titles, colors, weights, fl_set, saving=True):
     if saving:
         plt.savefig('H2_Consumption.png', bbox_inches='tight')
     plt.show()
+    
+# PLOT: h2_consumption
+def plot_system_efficiency(data, titles, colors, fl_set, saving=True):
+    
+    fig, ax = plt.subplots(figsize=(12, 8))
+    fig.tight_layout()
+    # Store handles and labels for manual legend creation
+    handles = []
+    labels = []
+
+    for df, title, color in zip(data, titles, colors):
+        df = df[df['Flight Level (100x ft)'] == fl_set]
+        for filter_eol, linestyle, marker, label_suffix in [(False, '-', 'p', 'BoL'), (True, '--', 'X', 'EoL')]:
+            # Apply the filter based on the function argument
+            filtered_df = df[(df["eol (t/f)"] == filter_eol) 
+                             &(df["current_A (Value)"] <= 700)]
+            
+            # Scatter plot for each dataset
+            scatter = ax.scatter(filtered_df['System Power (kW)'], 
+                                 (filtered_df['System Power (kW)'] / (filtered_df['Hydrogen Consumption (g/s)']* 33.33 * 3600))*1000, 
+                                 s=100, edgecolor='k', color=color, marker=marker)
+            
+            # Extract x and y data
+            x = filtered_df['System Power (kW)']
+            y = (filtered_df['System Power (kW)'] / (filtered_df['Hydrogen Consumption (g/s)']* 33.33 * 3600))*1000
+            
+            # Construct the design matrix [x, 1]
+            A = np.vstack([x, np.ones_like(x)]).T
+            
+            # Perform least squares fitting
+            coeffs, _, _, _ = np.linalg.lstsq(A, y, rcond=None)
+            
+            # Create the linear function
+            def linear(x):
+                return coeffs[0] * x + coeffs[1]
+            
+            # Plot the linear fit
+            line_x = np.linspace(20, 175, 500)
+            line_y = linear(line_x)
+            line, = ax.plot(line_x, line_y, linestyle=linestyle, color=color, alpha=0.7)
+            
+            # Add the polynomial formula to the legend
+            formula = f'{title} ({label_suffix}) Fit: {coeffs[0]:.2e}x + {coeffs[1]:.2e}'
+            
+            # Collect handles and labels for the legend
+            handles.append(scatter)
+            labels.append(f'{title} ({label_suffix}) Data')
+            handles.append(line)
+            labels.append(formula)
+
+    # Create the legend
+    ax.legend(handles, labels, loc='best')
+
+    # Set title and labels
+    ax.set_title(f'System Efficiency vs System Power, FL: {fl_set}')
+    ax.set_xlabel('System Power [kW]')
+    ax.set_ylabel('System Efficiency [-]')
+    ax.grid(True)
+    
+    if saving:
+        plt.savefig('System_Efficiency_vs_Power.png', bbox_inches='tight')
+    plt.show()
+
     
 # PLOT: H2 consumption over flight level all in one
 def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
@@ -474,7 +537,7 @@ def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
             
 #PLOT: Weiht estmate wuth fit:
 def plot_weight_estimate(data, titles, colors, components_dict, components_sd_dict, markers, saving=True, mode="bol"):
-    
+    #TODO: Change up this plot to ref system weight and use dicts of Kate:
     # Function to perform linear regression and return the formula and R^2
     def linear_fit(x, y):
         x = np.array(x).reshape(-1, 1)
@@ -648,6 +711,9 @@ def analyze_data(_file_path1, saving=True):
     weights = [1,1,1]#[39.92+ 6.26,43.75+6.01,47.58+5.77] #stack + compressor gewicht
     plot_h2_consumption(data, titles, colors, weights, fl_set, saving=saving)
         
+    ###########PLOT: System eff vs Net Power: Flade Plot, 
+    plot_system_efficiency(data, titles, colors, fl_set, saving=saving)
+    
     #############PLOT: H2 consumption vs Flightlevel:
     H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="bol")
     H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="eol")
