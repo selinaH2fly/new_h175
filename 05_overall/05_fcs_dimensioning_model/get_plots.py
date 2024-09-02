@@ -55,7 +55,7 @@ def plot_polarization_curves(data, titles, fl_set, saving=True):
 
         # Annotate points where 'eol (t/f)' is True
         for i in df[df["eol (t/f)"] == True].index:
-            ax.annotate('EOL', 
+            ax.annotate('EoL', 
                         (df['current_A (Value)'][i], df['Cell Voltage (V)'][i]), 
                         textcoords="offset points", 
                         xytext=(2, -20), 
@@ -91,8 +91,8 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
             bol_df, eol_df = bol_data[count], eol_data[count]
 
             # Plot BOL and EOL data
-            ax.scatter(bol_df['current_A (Value)'], bol_df['Cell Voltage (V)'], color=color, label=f'{title} bol', marker="p")
-            ax.scatter(eol_df['current_A (Value)'], eol_df['Cell Voltage (V)'], color=color, label=f'{title} eol', marker='X')
+            ax.scatter(bol_df['current_A (Value)'], bol_df['Cell Voltage (V)'], color=color, label=f'{title}, BoL', marker="p")
+            ax.scatter(eol_df['current_A (Value)'], eol_df['Cell Voltage (V)'], color=color, label=f'{title}, EoL', marker='X')
 
             # Connect corresponding BOL and EOL points and annotate
             for power in highlight_powers:
@@ -138,7 +138,7 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
 
     # Add red shaded area and labels
     ax.axvspan(700, 1300, color='red', alpha=0.2)
-    ax.set(title=f"System Polarization Curve, {fl_set}, eol vs bol", xlabel='Current [A]', xlim=[0, 1300], ylabel='Cell Voltage [V]', ylim=[0.3, 1])
+    ax.set(title=f"System Polarization Curve, FL {fl_set}, EoL vs BoL", xlabel='Current [A]', xlim=[0, 1300], ylabel='Cell Voltage [V]', ylim=[0.3, 1])
     ax.grid(True)
     ax.legend(loc='upper right')
 
@@ -299,8 +299,8 @@ def plot_power_needs(data, titles, fl_set, saving=True):
         col_positions = [i + (i // 2) + 0.5 for i in range(df.shape[1] - 1)]
         ax.set_xticks(col_positions)
     
-        # Set x-tick labels to alternate between 'Bol' and 'Eol'
-        ax.set_xticklabels(['Bol' if i % 2 == 0 else 'Eol' for i in range(df.shape[1] - 1)])
+        # Set x-tick labels to alternate between 'BoL' and 'EoL'
+        ax.set_xticklabels(['BoL' if i % 2 == 0 else 'EoL' for i in range(df.shape[1] - 1)])
     
         # Add secondary x-axis on top, with centered labels above each pair of boxes
         ax2 = ax.twiny()
@@ -478,10 +478,10 @@ def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
 
     if mode == "eol":
         filter_mode = True
-        mode_name = "Eol"
+        mode_name = "EoL"
     elif mode == "bol":
         filter_mode = False
-        mode_name = "Bol"
+        mode_name = "BoL"
     #Filter the DF for currents in range and the filter omde
     df1 = df1[(df1["current_A (Value)"] <= 700) & (df1["eol (t/f)"] == filter_mode)]
     
@@ -505,7 +505,7 @@ def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
         ax.legend(handles, labels, loc='upper left')
         
         # Set title and labels
-        ax.set_title(f'System Hydrogen Consumption over FL for Different Cell Counts at {mode_name}', fontsize=14, pad=20)
+        ax.set_title(f'System Hydrogen Consumption over FL for Different Cell Counts ({mode_name})', fontsize=14, pad=20)
         ax.set_xlabel('Flight Level [100x ft]')
         # Set x-range from 0 to 140 in steps of 30, and include 150
         x_ticks = list(range(0, fl_max + 1, 30))
@@ -552,10 +552,10 @@ def plot_weight_estimate(data, titles, colors, components_dict, components_sd_di
     # Filter option for eol or bol plot:
     if mode == "eol":
         filter_mode = True
-        mode_name = "Eol"
+        mode_name = "EoL"
     elif mode == "bol":
         filter_mode = False
-        mode_name = "Bol"
+        mode_name = "BoL"
         
     # The x-axis points to be plotted and searched for
     points = [20, 125, 150, 175]
@@ -737,6 +737,6 @@ def analyze_data(_file_path1, saving=True):
 # %%    
 
 
-# analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
+analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
 
 #TODO write init:
