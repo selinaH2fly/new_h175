@@ -79,7 +79,7 @@ result_temp_dict = {lvdcdc.T_in : ['LV DCDC T_in', []],
                     intercooler.T_in : ['Intercooler T_in', []],
                     mixer1.T_out : ['BoP T_out', []],
 }
-result_pr_dict = {mixer1.p_out : ['P_out in [bar]', []]
+result_pr_dict = {mixer1.p_out : ['bop pressure drop in [bar]', []]
 }
 
 vdot1 = [15/60, 20/60, 25/60, 30/60]

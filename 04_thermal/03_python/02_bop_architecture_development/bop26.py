@@ -79,4 +79,19 @@ circ.add_bc("Qdot_evap = - 13500")
 Evaluate and generate output
 """
 
-circ.evaluate()
+result_vdot_dict = {'Vdot_6' : ['Vdot el. Comp. in [l/s]', []], 
+                    'Vdot_3' : ['Vdot Intercooler in [l/s]', []],
+}
+result_temp_dict = {lvdcdc.T_in : ['LV DCDC T_in', []],
+                    hvdcdc.T_in : ['HV DCDC T_in', []],
+                    inverter.T_in : ['Inverter T_in', []],
+                    hpdu.T_in : ['HPDU T_in', []],
+                    compressor.T_in : ['Compressor T_in', []],
+                    intercooler.T_in : ['Intercooler T_in', []],
+                    mixer1.T_out : ['BoP T_out', []],
+}
+result_pr_dict = {mixer1.p_out : ['bop pressure drop in [bar]', []]
+}
+
+vdot1 = [15/60, 20/60, 25/60, 30/60]
+circ.analyse_vdot1(vdot1, result_vdot_dict, result_temp_dict, result_pr_dict)

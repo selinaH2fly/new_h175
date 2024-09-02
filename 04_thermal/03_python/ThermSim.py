@@ -267,7 +267,7 @@ class Circuit:
                         result_temp_dict[temp_name][1].append(self.var_res[j])
                 for pr_name in result_pr_dict:
                     if self.var_name[j] == pr_name:
-                        result_pr_dict[pr_name][1].append(self.var_res[j])
+                        result_pr_dict[pr_name][1].append(1 - self.var_res[j])
                 
             self.reset_to_startcond()
 
@@ -276,18 +276,21 @@ class Circuit:
         plt.ylabel('Flow in Branches in [l/s]')
         plt.xlabel('BoP Entry Flow in [l/s]')
         plt.legend()
+        plt.grid()
         plt.show()
         for temp_name in result_temp_dict:
             plt.plot(variable_list, result_temp_dict[temp_name][1], label=result_temp_dict[temp_name][0])
         plt.ylabel('Temperature in [K]')
         plt.xlabel('BoP Entry Flow in [l/s]')
         plt.legend(loc = 'lower right')
+        plt.grid()
         plt.show()
         for pr_name in result_pr_dict:
             plt.plot(variable_list, result_pr_dict[pr_name][1], label=result_pr_dict[pr_name][0])
-        plt.ylabel('Pressure in [bar]')
+        plt.ylabel('BoP Pressuredrop in [bar]')
         plt.xlabel('BoP Entry Flow in [l/s]')
         plt.legend()
+        plt.grid()
         plt.show()
 
         data_dict = {}
