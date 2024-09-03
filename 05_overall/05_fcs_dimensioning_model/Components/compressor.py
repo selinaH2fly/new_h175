@@ -1,6 +1,8 @@
 import CoolProp.CoolProp as CP
 from scipy.interpolate import griddata, RegularGridInterpolator
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 class Compressor:
     def __init__(self, params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95,
@@ -44,7 +46,7 @@ class Compressor:
 
         # Determine the operating point if a real-world compressor map is provided
         if self.compressor_map is not None:
-            efficiency = self._interpolate_efficiency()
+            efficiency, _ = self._interpolate_efficiency()
             compressor_shaft_power_W = compressor_isentropic_power_W / efficiency
         else:
             compressor_shaft_power_W = compressor_isentropic_power_W / self.isentropic_efficiency
@@ -53,6 +55,42 @@ class Compressor:
         compressor_electric_power_W = compressor_shaft_power_W / self.electric_efficiency
 
         return compressor_electric_power_W
+    
+    def plot_compressor_map(self):
+        """
+        Plots the compressor map with efficiency contours and highlights the specified operating point
+        using the original unevenly spaced grid.
+        """
+
+        # Interpolate the efficiency at the target pressure ratio and mass flow
+        efficiency_interp, [operating_point_pressure_ratio, operating_point_corrected_massflow_g_s] = self._interpolate_efficiency()
+
+        # Create the plot
+        plt.figure(figsize=(10, 8))
+
+        # Contour plot for efficiency over pressure ratio and corrected mass flow using the original data
+        contours = plt.contourf(self.compressor_map['corrected_massflow_g_s'], self.compressor_map['pressure_ratio'], self.compressor_map['efficiency'], levels=30, cmap="viridis")
+        plt.colorbar(contours, label="Efficiency")
+
+        # Contour lines for efficiency
+        contour_lines = plt.contour(self.compressor_map['corrected_massflow_g_s'], self.compressor_map['pressure_ratio'], self.compressor_map['efficiency'], levels=30, colors='black', linestyles='--')
+        plt.clabel(contour_lines, inline=True, fontsize=10, fmt="%.2f")
+
+        # Highlight the operating point
+        plt.plot(operating_point_corrected_massflow_g_s, operating_point_pressure_ratio, 'ro', markersize=10,
+                label=f'Optimized Operating Point\nPR={operating_point_pressure_ratio:.2f}, Corrected Massflow={operating_point_corrected_massflow_g_s:.2f} g/s, Efficiency: {efficiency_interp:.2f}')
+
+        plt.grid(True)
+
+        # Labels and title
+        plt.title("Compressor Map: Pressure Ratio vs Corrected Mass Flow")
+        plt.xlabel("Corrected Mass Flow (g/s)")
+        plt.ylabel("Pressure Ratio")
+        plt.legend(loc='upper left')
+
+        # Display the plot
+        # plt.show()
+        plt.savefig('compressor_map_operating_point.png', bbox_inches='tight')
 
     def _interpolate_efficiency(self) -> float:
         """
@@ -76,7 +114,7 @@ class Compressor:
         efficiency = griddata(np.array([map_mass_flow_g_s, map_pressure_ratio]).T, map_efficiency,
                               (corrected_mass_flow_g_s, pressure_ratio), method='linear', rescale=True, fill_value=1e-3)
 
-        return efficiency
+        return efficiency.item(), [pressure_ratio, corrected_mass_flow_g_s]
     
     def calculate_BoP_pressure_drop(self)->float:
         """

@@ -285,4 +285,4 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     stack_power_kW = optimal_input[0] * cell_voltage * cellcount / 1000
 
     return optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_W / 1000, turbine_power_W / 1000, \
-        reci_pump_power_W / 1000, coolant_pump_power_W / 1000, optimization_converged
+        reci_pump_power_W / 1000, coolant_pump_power_W / 1000, compressor, optimization_converged

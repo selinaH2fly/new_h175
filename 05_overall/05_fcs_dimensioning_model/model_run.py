@@ -39,11 +39,11 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     # Optimize the input variables
     optimal_input, cell_voltage, hydrogen_mass_flow_g_s, \
         stack_power_kW, compressor_power_kW, turbine_power_kW, \
-            reci_pump_power_kW, coolant_pump_power_kW, converged = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
-                                                                                                flight_level_100ft, cellcount=specified_cell_count,
-                                                                                                power_constraint_kW=power_constraint_kW,
-                                                                                                consider_turbine=consider_turbine, compressor_map=compressor_map,
-                                                                                                end_of_life=end_of_life)
+            reci_pump_power_kW, coolant_pump_power_kW, compressor, converged = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
+                                                                                                            flight_level_100ft, cellcount=specified_cell_count,
+                                                                                                            power_constraint_kW=power_constraint_kW,
+                                                                                                            consider_turbine=consider_turbine, compressor_map=compressor_map,
+                                                                                                            end_of_life=end_of_life)
     
     system_power_kW = stack_power_kW - compressor_power_kW + turbine_power_kW - reci_pump_power_kW - coolant_pump_power_kW
 
@@ -67,6 +67,10 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     print(f"  {'Coolant Pump Power Estimate:':<{label_width}} -{coolant_pump_power_kW:>{value_width}.2f} kW")
     print("-" * (label_width + value_width + 7))
     print(f"  {'System (Net) Power (s.t. Optimization):':<{label_width}} ={system_power_kW:>{value_width}.2f} kW")
+
+    # Plot the compressor map with the optimized operating point highlighted
+    if compressor_map is not None:
+        compressor.plot_compressor_map()
     
     # Save results to a .csv file 
     export_to_csv(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds, hydrogen_mass_flow_g_s, cell_voltage, 

@@ -60,6 +60,6 @@ def plot_compressor_map(operating_point_pressure_ratio, operating_point_correcte
 
 
 # Example usage of the function:
-plot_compressor_map(1.6, 60.0)
+plot_compressor_map(3.06, 115.60)
 
 
