@@ -54,7 +54,7 @@ circ.add_bc("delta_p_intercooler = - (4.4760 * 10 ** (-4) * Vdot_6 ** 2 * 60 ** 
 circ.add_bc("delta_p_compressor = - (2.9956 * 10 ** (-3) * Vdot_10 ** 2 * 60 ** 2 + 4.1023 * 10 ** (-4) * Vdot_10 * 60)")
 circ.add_bc("delta_p_evap = - (1.3479 * 10 ** (-4) * Vdot_1 ** 2 * 60 ** 2 + 1.4225 * 10 ** (-3) * Vdot_1 * 60)")
 
-critical_operation = True
+critical_operation = False
 if critical_operation is False:
     circ.add_bc("T_1 = 273.15 + 50.0")
     circ.add_bc("Qdot_hpdu = 500")
