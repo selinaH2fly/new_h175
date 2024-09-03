@@ -641,7 +641,57 @@ def plot_weight_estimate(data, titles, colors, components_dict, components_sd_di
         plt.savefig(f"Weight_estimation_vs_power_{mode}.png", bbox_inches='tight')
     else:
         plt.show()
-
+        
+#PLOT a stacked bar chart of each subsystem component mass grouped by power level.         
+def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=True, mode="bol"):  
+    
+    # Filter option for eol or bol plot: 
+    # If sizing for eol, Turbine and Compressor power tend to increase, and thus the estimated cathode mass would be higher.
+    if mode == "eol":
+        filter_mode = True
+        mode_name = "Eol"
+    elif mode == "bol":
+        filter_mode = False
+        mode_name = "Bol"
+    
+    # Define a nested dictionary including all components whichare constant with net power and cell count.
+    # Note the zero values for stack, turbine, compressor and stack coolant. These will later be written over.       
+    masses_FCM_constants = {'Stack':{'Stack':0, 'CVM':1.00, 'SMI':3.00, 'Hose clamps': 0.18, 'Screws':0.09, 'HV+LV Cable': 1.20} \
+                                   ,'Cathode':{'Filter': 0.5, 'HFM': 0.5, 'Compressor':0, 'Compressor inverter':6.0, 'Intercooler':3.0, 'Humidifier': 2.0, 'Valves': 2.6, 'Drain valve': 0.30, 'Water separator': 0.3, 'Cathode pressure control valve': 0.0, 'Sensors': 1.2, 'Silicon hoses':1.76, 'Hose clamps': 0.42, 'Connectors': 0.8, 'Screws': 0.18, 'HV+LV Cable': 0.67, 'Turbine':0.0} \
+                                   ,'Anode': {'Shut-Off valve':0.2, 'Pressure control valve':0.2, 'Water separator':0, 'Particle filter':0.2, 'Recirculation pump':4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.80, 'Anode piping':1.01, 'Swagelok connector':0.56, 'Screws':0.09, 'HV+LV Cable': 0.34}\
+                                   ,'Thermal':{'Coolant pump':4.0, 'TCV':1.0, 'Particle filter':0.22, 'Ionic exchangr':1.0, 'Sensors':0.80+0.80, 'Silicone hoses':1.51+2.02, 'Hose clamps':0.36+0.48, 'Connectors':0.80+0.80, 'Screws':0.09+0.09, 'HV+LV Cable':0.34+0.34, 'Expansion tank':1.0,'HDPU':5.0,'Volume flow control valve':0.5, 'Stack coolant':0, 'Other coolant':5.0}\
+                                   ,'Other':{'FCCU':1.5,'Electrical connectors':0.4,'Unnamed':4.0,'Frame':5.0,'Connectors':2.0,'Screws':0.27, 'HV+LV Cable':0.67}}    
+        
+    # Define a function to sum the constants of each subsystem, as well as a total mass
+    def sum_mass(masses: dict):
+        subsystem_totals = {}
+        total = 0 
+        for subsystem, subsystem_dict in masses.items():
+            temp = 0
+            for value in subsystem_dict.values():
+                temp += value
+            subsystem_totals[subsystem] = temp
+            total += temp
+        return subsystem_totals, total
+    
+    # The x-axis points to be plotted and searched for
+    points = [125, 150, 175]
+    
+    # Define cell number we would like to iterate through
+    cell_no = np.array([400, 450, 500])
+    
+    # Calculate m_stack using the formula
+    m_stack_values = 0.0766 * cell_no + 9.2813  
+    
+    # A mass of 7 kg of coolant was measured for a 455 cell stack. We scale this value linearly to account for changing coolant masses in different stack sizes. 
+    m_coolant_values = cell_no * 7/455
+    
+    subsystem_mass_total = {}
+    
+    #Populating the final data array with lists of zeros. Feels like there should be a quicker way.
+    for power in points:
+        subsystem_mass_total[power]={'Stack':np.zeros(len(cell_no)),'Cathode':np.zeros(len(cell_no)),'Anode':np.zeros(len(cell_no)),'Thermal':np.zeros(len(cell_no)), 'Other':np.zeros(len(cell_no))}
+        
    
 #%%  
 def filter_converged_points(df, tolerance=4):
@@ -694,6 +744,7 @@ def analyze_data(_file_path1, saving=True):
     titles = ['400 Cells',  '450 Cells','500 Cells']
     colors = [ "tab:blue", "tab:orange",  "tab:red"]
     markers= ["o", "v", "s"]
+
     
     fl_set = 120
     fl_max = max(df1["Flight Level (100x ft)"])
@@ -737,6 +788,6 @@ def analyze_data(_file_path1, saving=True):
 # %%    
 
 
-analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
+analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=False)    
 
 #TODO write init:
