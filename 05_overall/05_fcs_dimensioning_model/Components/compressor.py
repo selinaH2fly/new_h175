@@ -68,16 +68,13 @@ class Compressor:
 
 
         # Assign the compressor map arrays and flatten to 1D
-        pressure_ratio_vector = self.compressor_map['pressure_ratio'].flatten()
-        mass_flow_vector_g_s= self.compressor_map['corrected_massflow_g_s'].flatten()
-        efficiency_vector = self.compressor_map['efficiency'].flatten()
-
-        # Combine the pressure ratio and mass flow into a single array of coordinates
-        compressor_map_representation = np.array([pressure_ratio_vector, mass_flow_vector_g_s]).T
+        map_pressure_ratio = self.compressor_map['pressure_ratio'].flatten()
+        map_mass_flow_g_s= self.compressor_map['corrected_massflow_g_s'].flatten()
+        map_efficiency = self.compressor_map['efficiency'].flatten()
 
         # Interpolate the efficiency at the target pressure ratio and mass flow
-        efficiency = griddata(compressor_map_representation, efficiency_vector, (pressure_ratio, corrected_mass_flow_g_s),
-                              method='linear', fill_value=1e-3)
+        efficiency = griddata(np.array([map_mass_flow_g_s, map_pressure_ratio]).T, map_efficiency,
+                              (corrected_mass_flow_g_s, pressure_ratio), method='linear', rescale=True, fill_value=1e-3)
 
         return efficiency
     

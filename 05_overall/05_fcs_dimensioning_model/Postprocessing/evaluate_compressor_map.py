@@ -28,10 +28,6 @@ def plot_compressor_map(operating_point_pressure_ratio, operating_point_correcte
     pressure_ratios = cp.compressor_map_VSEC15["pressure_ratio"]
     efficiencies = cp.compressor_map_VSEC15["efficiency"]
 
-    # Flatten the original grid points and efficiency values for interpolation
-    points = np.array([corrected_massflows.flatten(), pressure_ratios.flatten()]).T
-    values = efficiencies.flatten()
-
     # Interpolate the efficiency at the target pressure ratio and mass flow
     efficiency_interp = griddata(np.array([corrected_massflows.flatten(), pressure_ratios.flatten()]).T, efficiencies.flatten(),
                                  (operating_point_corrected_massflow_g_s, operating_point_pressure_ratio), method='linear', rescale=True)
@@ -65,7 +61,5 @@ def plot_compressor_map(operating_point_pressure_ratio, operating_point_correcte
 
 # Example usage of the function:
 plot_compressor_map(1.6, 60.0)
-plot_compressor_map(1.6, 70.0)
-plot_compressor_map(1.6, 80.0)
-plot_compressor_map(1.6, 90.0)
+
 
