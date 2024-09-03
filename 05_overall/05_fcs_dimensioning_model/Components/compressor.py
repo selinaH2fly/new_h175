@@ -78,7 +78,7 @@ class Compressor:
 
         # Highlight the operating point
         plt.plot(operating_point_corrected_massflow_g_s, operating_point_pressure_ratio, 'ro', markersize=10,
-                label=f'Optimized Operating Point\nPR={operating_point_pressure_ratio:.2f}, Corrected Massflow={operating_point_corrected_massflow_g_s:.2f} g/s, Efficiency: {efficiency_interp:.2f}')
+                label=f'Optimized Operating Point\nPR={operating_point_pressure_ratio:.2f}, Corrected Massflow={operating_point_corrected_massflow_g_s:.1f} g/s, Efficiency: {efficiency_interp:.2f}')
 
         plt.grid(True)
 

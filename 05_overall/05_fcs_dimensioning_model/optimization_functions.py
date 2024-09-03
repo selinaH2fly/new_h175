@@ -284,5 +284,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # Compute stack power
     stack_power_kW = optimal_input[0] * cell_voltage * cellcount / 1000
 
-    return optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_W / 1000, turbine_power_W / 1000, \
-        reci_pump_power_W / 1000, coolant_pump_power_W / 1000, compressor, optimization_converged
+    # Plot the compressor map with the optimized operating point highlighted
+    if compressor_map is not None:
+        compressor.plot_compressor_map()
+
+    return optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
+        reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.air_mass_flow_kg_s*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, optimization_converged
