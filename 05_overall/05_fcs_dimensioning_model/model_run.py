@@ -73,7 +73,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
         compressor.plot_compressor_map()
     
     # Save results to a .csv file 
-    export_to_csv(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds, hydrogen_mass_flow_g_s, cell_voltage, 
+    export_to_csv(gpr_model_cell_voltage.feature_names, optimal_input, hydrogen_mass_flow_g_s, cell_voltage, 
                       system_power_kW, compressor_power_kW, turbine_power_kW, reci_pump_power_kW, coolant_pump_power_kW, stack_power_kW,
                       power_constraint_kW, specified_cell_count, flight_level_100ft, consider_turbine, end_of_life, converged, filename='optimized_input_data.csv')
     
