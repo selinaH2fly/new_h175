@@ -110,6 +110,8 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
     target_specific_power = 1.25    # [kW/kg]
     target_masses = []
     
+    mass_sum,total= sum_mass(masses_dict_constant)
+    
     for k in range(0,len(points)):
         target_masses.append(points[k]/target_specific_power)
         #i = 0
@@ -124,6 +126,7 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
             if points_comp_power[k][n] == 0:
                 data_valid = False
             plot_bar.append(data_valid)
+            #print(plot_bar)
                 
             temp['Stack'] += m_stack_values[n]
             temp['Cathode']+= points_comp_power[k][n]*0.63
@@ -142,11 +145,12 @@ def plot_mass_estimate(masses_dict_constant:dict, saving=True, mode="bol"):
             for key,value in temp.items():
                 subsystem_mass_total[points[k]][key][n] = value
 
+
             #i += 1
         
-    print(target_masses)
+    #print(target_masses)
     #print(plot_bar)
-   #print(subsystem_mass_total)
+    print(subsystem_mass_total)
     
     categories = list(subsystem_mass_total.keys())  # ['A', 'B', 'C']
 

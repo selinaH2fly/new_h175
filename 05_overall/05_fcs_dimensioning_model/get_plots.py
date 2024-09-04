@@ -692,6 +692,230 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     for power in points:
         subsystem_mass_total[power]={'Stack':np.zeros(len(cell_no)),'Cathode':np.zeros(len(cell_no)),'Anode':np.zeros(len(cell_no)),'Thermal':np.zeros(len(cell_no)), 'Other':np.zeros(len(cell_no))}
         
+    #print(subsystem_mass_total)
+    #print(m_coolant_values)
+    #print(m_stack_values)
+    
+    # Counter to append the mass value to the correct indice of the array
+    max_tracker = 0
+    
+    # Creatig values of horizontal line to show specific power target
+    target_specific_power = 1.25    # [kW/kg]
+    target_masses = []
+    
+    cathode_mass = []
+    #within_tolerance = [None]*(len(points)*len(cell_no))
+    within_tolerance = []
+    within_current = []
+    
+
+    
+    # Extract Power of components and therefore the added cathode mass for each component
+    for df, title, color, m_stack_value, marker in zip(data, titles, colors, m_stack_values, markers):
+        # Filter the df for eol, bol
+        df = df[(df["eol (t/f)"] == filter_mode) & 
+                (df["Flight Level (100x ft)"] == 120)]
+        
+        # Extract all power points from the filtered DataFrame
+        all_points = sorted(df["System Power (kW)"].unique())
+        #print(all_points)
+        
+        # narrow all_points list down to those close 125,150 and 175. Might be a better way to do this.
+        tol = 1
+        
+        def find_closest(values, point):
+            converged = True
+            values_array = np.array(values)
+            index = (np.abs(values_array - point)).argmin()
+            # Checking if its the right point (might not have converged)
+            if np.abs(values_array[index] - point) > tol:
+                converged = False
+            return values_array[index], converged
+
+        # Find and print the closest values for each target
+        #print(closest_values)
+        closest_values = []
+        #within_tolerance = []
+        
+        for point in points:
+            current_check = True
+            closest_value, tolerance_bool = find_closest(all_points, point)
+            closest_values.append(closest_value)
+            within_tolerance.append(tolerance_bool)
+            closest_row = df.iloc[(df["System Power (kW)"] - point).abs().argmin()]
+            if closest_row["current_A (Value)"] > 700:
+                current_check = False
+            within_current.append(current_check)
+            cathode_weight = 0
+            for key, mean_value in components_dict.items():
+                power_value = closest_row[key]
+                component_weight = power_value * mean_value
+                cathode_weight += component_weight
+
+            cathode_mass.append(cathode_weight)
+            
+    #print(cathode_mass)
+    #print(within_tolerance)
+    #print(within_current)
+    
+    within_tolerance_ordered = [None]* (len(within_tolerance))
+    within_current_ordered = [None] * (len(within_current))
+            
+    # We want to reorder our tolerance bools so they are sorted in the correct format for my code.
+    # Warning, this won't be cute, will be fixed later.
+
+    i = 0
+    # Currently, the outputted lists of the last loop need to be reordered to be the appropriate format for this loop.
+    # This is ugly, would like to change. 
+    reorder = [0,3,6,1,4,7,2,5,8]
+    for k in range(0,len(points)):
+        target_masses.append(points[k]/target_specific_power)
+
+        for n in range(0,len(cell_no)):
+            # Defining a temporary dictionary for each separate test case
+            temp,total= sum_mass(masses_FCM_constants)
+            
+            # Stack and coolant mass scale with cell count.
+            temp['Stack'] += m_stack_values[n]
+            temp['Thermal']+= m_coolant_values[n]
+            
+            # Cathode mass scales with power
+            temp['Cathode']+= cathode_mass[i]
+            
+            # Reorder our boolean lists to suit overall iteration. 
+            within_tolerance_ordered[reorder[i]] = within_tolerance[i]
+            within_current_ordered[reorder[i]] = within_current[i]
+            
+            
+            total += m_stack_values[n]
+            #total += points_comp_power[k][n]*0.63
+            total += m_coolant_values[n]
+            
+            if total > max_tracker:
+                max_tracker = total
+            
+            
+            for key,value in temp.items():
+                subsystem_mass_total[points[k]][key][n] = value
+            i += 1
+    print(subsystem_mass_total)
+    print(within_tolerance_ordered)
+    print(within_current_ordered)
+    
+    categories = list(subsystem_mass_total.keys())  # ['A', 'B', 'C']
+
+    #The order, from bottom to top, that the components should be in. Place constant components at bottom so the changes are clearer.
+    orders = ['Other', 'Anode', 'Thermal','Stack','Cathode']
+    
+    # Note. This is currently a hash to only plot  the target mass line once in rhe legend. 
+    # The iteration skips through the other two labels. 
+    
+    legend_order = [7,6,5,4,3,2]
+    #orders = list(subsystem_mass_total[f'{points[0]}'].keys())  
+
+    n_values = len(subsystem_mass_total[points[0]]['Stack'])  # Number of values for each subsystem
+
+    #print(categories)
+    #print(orders)
+    #print(n_values)
+
+    # Number of categories and width of each bar
+    n_categories = len(categories)
+    bar_width = 0.25  # Width of each bar
+    group_spacing = 0.3 # Spacing between different groups
+    bar_spacing = 0.05 # Spacing between bars in the same group
+    #group_width = bar_width * n_values  # Total width of a group of bars
+
+    # Positions of the groups on the x-axis
+    x = np.arange(n_categories) * (n_values * (bar_width + bar_spacing) + group_spacing) #Add spacing between groups and bars
+
+    # Initialize a plot
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    #print(bar_positions)
+    ax.set_axisbelow(True)
+    ax.yaxis.grid(True)
+    
+    #colors = ['#ff9999','#66b3ff','#99ff99','#ffcc99', '#cc99ff']
+    cmap = plt.get_cmap('viridis')
+    num_colors = len(orders)
+    #num_colors=5
+    #print(num_colors)
+    indices = np.linspace(0, 1, num_colors)
+
+    # Sample the colormap at these points
+    colors = cmap(indices)
+    
+    #colors = [cmap(mcolors.Normalize(vmin=125, vmax=175)(power)) for power in highlight_powers]
+    
+    label_colors= ['tab:blue', 'tab:orange','tab:red']
+    #print(subsystem_mass_total[max(points)]['Cathode'])
+
+    plot_index = 0
+
+    for i, category in enumerate(categories):
+        for j in range(n_values):
+            """
+            if not plot_bar[plot_index]:
+                plot_index += 1
+                continue
+            """
+            
+            bottom_values = np.zeros(1)
+            bar_positions = x[i] + j * (bar_width + bar_spacing)
+            total_height = 0
+            
+            for k, order in enumerate(orders):
+                value = subsystem_mass_total[category][order][j]
+                bars = ax.bar(bar_positions, value, bar_width, label=f'{order}' if j == 0 else "", bottom=bottom_values, color=colors[k])
+                bottom_values += value  # Update bottom_values to stack the next bars
+                total_height = bottom_values[0]
+                
+            for bar in bars:
+                height = bar.get_height() + bar.get_y() +10
+                #if within_tolerance_ordered[plot_index]
+                ax.text(bar.get_x() + bar.get_width() / 2, height, f'{cell_no[j]} cells', ha='center', va='bottom', color='black',
+                    bbox=dict(facecolor=label_colors[j], edgecolor=label_colors[j], boxstyle='round,pad=0.3', linewidth=1.5, alpha=0.6))
+                if not within_current_ordered[plot_index]:
+                    x_left = bar_positions - bar_width / 2
+                    x_right = bar_positions + bar_width / 2
+                    y_bottom = 0
+                    y_top = total_height
+            
+                    # Draw the 'X' across the full height and width of the bar
+                    ax.plot([x_left, x_right], [y_bottom, y_top], color='red', linewidth=2)  # Diagonal from bottom-left to top-right
+                    ax.plot([x_left, x_right], [y_top, y_bottom], color='red', linewidth=2)  # Diagonal from top-left to bottom-right            
+
+            #print(plot_index)
+            plot_index += 1
+    
+    
+    for i, target in enumerate(target_masses):
+        ax.hlines(target, x[i] - bar_width, x[i] + n_values * (bar_width + bar_spacing) - bar_spacing, colors='grey', linestyles='dashed', label=f'Target mass to achieve {target_specific_power} kW/kg')
+    
+    # Adding labels and title
+    ax.set_xlabel('Net Power [kW]')
+    ax.set_ylabel('Mass [kg]')
+    ax.set_title('Predicted FCM Mass for each Net Power')
+    ax.set_xticks(x + (n_values - 1) * (bar_width + bar_spacing) / 2)
+    ax.set_xticklabels(categories)
+    #ax.set_ylim([0, max(subsystem_mass_total[max(points)]['Cathode'])])
+    ax.set_ylim([0,max_tracker +125])
+    handles, labels = plt.gca().get_legend_handles_labels()
+
+    #add legend to plot
+    ax.legend([handles[idx] for idx in legend_order],[labels[idx] for idx in legend_order],title='Subsystems', loc='upper right')
+    #plt.legend()
+    
+    #ax.legend(title='Subsystems')
+
+    # Show the plot
+    plt.tight_layout()
+    plt.show()
+    
+  
+  
+    #comp_power = data
    
 #%%  
 def filter_converged_points(df, tolerance=4):
@@ -785,9 +1009,56 @@ def analyze_data(_file_path1, saving=True):
     
 # Go back to origin dir
     os.chdir("../../")
+    
 # %%    
 
 
-analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=False)    
+def analyze_data_test(_file_path1, saving=True):
+    
+    # Load the CSV file into a DataFrame
+    df1 = pd.read_csv(_file_path1)
+
+    # Change the working directory to the directory containing the .csv file
+    file_dir = os.path.dirname(_file_path1)
+    os.chdir(file_dir)
+
+    # Create a new directory for plots
+    os.makedirs("00_Plots", exist_ok=True)
+    os.chdir("00_Plots")
+    
+    # Sort and prefilter data by index and current
+    #df1 =df1[df1["converged (t/f)"] == True]
+    df1 = filter_converged_points(df1, tolerance=4)
+    df1 = df1.sort_values(by=['idx'])
+        
+    # Split the data based on 'Specified Cell Count'
+    df_400 = df1[df1['Specified Cell Count'] == 400]
+    df_450 = df1[df1['Specified Cell Count'] == 450]
+    df_500 = df1[df1['Specified Cell Count'] == 500]
+    
+    data   = [     df_400,       df_450,     df_500]
+    titles = ['400 Cells',  '450 Cells','500 Cells']
+    colors = [ "tab:blue", "tab:orange",  "tab:red"]
+    markers= ["o", "v", "s"]
+
+    
+    fl_set = 120
+    fl_max = max(df1["Flight Level (100x ft)"])
+    
+    ############Plot Weight estimate
+    #Weight/Power Factor
+    componentsP_dict =  {"Compressor Power (kW)":   0.63,
+                        "Turbine Power (kW)":      0.63,
+                        "Recirculation Pump Power (kW)":    7.38,
+                        "Coolant Pump Power (kW)": 4.80}
+    components_SD_dict = {"Compressor Power (kW)":   0.1,
+                        "Turbine Power (kW)":      0.1,
+                        "Recirculation Pump Power (kW)":    4.04,
+                        "Coolant Pump Power (kW)": 1.66}
+    
+    plot_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
+
+analyze_data_test(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=False)
+#analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=False)    
 
 #TODO write init:
