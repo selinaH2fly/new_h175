@@ -901,7 +901,7 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
             
             if within_tolerance_ordered[plot_index]:
                 #height = bar.get_height() + bar.get_y() +10
-                ax.text(bar_positions, total_height + 10, f'{cell_no[j]} cells', ha='center', va='bottom', color='black',
+                ax.text(bar_positions, total_height + 5, f'{cell_no[j]} cells', ha='center', va='bottom', color='black',
                         bbox=dict(facecolor=label_colors[j], edgecolor=label_colors[j], boxstyle='round,pad=0.3', linewidth=1.5, alpha=0.6))
         
 
@@ -920,7 +920,7 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     ax.set_xticks(x + (n_values - 1) * (bar_width + bar_spacing) / 2)
     ax.set_xticklabels(categories)
     #ax.set_ylim([0, max(subsystem_mass_total[max(points)]['Cathode'])])
-    ax.set_ylim([0,max_tracker +125])
+    ax.set_ylim([0,max_tracker +150])
     handles, labels = plt.gca().get_legend_handles_labels()
 
     #add legend to plot
@@ -1023,58 +1023,16 @@ def analyze_data(_file_path1, saving=True):
     plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="bol")
     plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="eol")
     
+    # New grouped, stacked bar chart function
+    plot_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
+    
 # Go back to origin dir
     os.chdir("../../")
     
 # %%    
 
 
-def analyze_data_test(_file_path1, saving=True):
-    
-    # Load the CSV file into a DataFrame
-    df1 = pd.read_csv(_file_path1)
 
-    # Change the working directory to the directory containing the .csv file
-    file_dir = os.path.dirname(_file_path1)
-    os.chdir(file_dir)
-
-    # Create a new directory for plots
-    os.makedirs("00_Plots", exist_ok=True)
-    os.chdir("00_Plots")
-    
-    # Sort and prefilter data by index and current
-    #df1 =df1[df1["converged (t/f)"] == True]
-    df1 = filter_converged_points(df1, tolerance=4)
-    df1 = df1.sort_values(by=['idx'])
-        
-    # Split the data based on 'Specified Cell Count'
-    df_400 = df1[df1['Specified Cell Count'] == 400]
-    df_450 = df1[df1['Specified Cell Count'] == 450]
-    df_500 = df1[df1['Specified Cell Count'] == 500]
-    
-    data   = [     df_400,       df_450,     df_500]
-    titles = ['400 Cells',  '450 Cells','500 Cells']
-    colors = [ "tab:blue", "tab:orange",  "tab:red"]
-    markers= ["o", "v", "s"]
-
-    
-    fl_set = 120
-    fl_max = max(df1["Flight Level (100x ft)"])
-    
-    ############Plot Weight estimate
-    #Weight/Power Factor
-    componentsP_dict =  {"Compressor Power (kW)":   0.63,
-                        "Turbine Power (kW)":      0.63,
-                        "Recirculation Pump Power (kW)":    7.38,
-                        "Coolant Pump Power (kW)": 4.80}
-    components_SD_dict = {"Compressor Power (kW)":   0.1,
-                        "Turbine Power (kW)":      0.1,
-                        "Recirculation Pump Power (kW)":    4.04,
-                        "Coolant Pump Power (kW)": 1.66}
-    
-    plot_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
-
-analyze_data_test(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=False)
-#analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=False)    
+analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=False)    
 
 #TODO write init:
