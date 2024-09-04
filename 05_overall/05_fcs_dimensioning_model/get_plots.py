@@ -798,7 +798,7 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
             for key,value in temp.items():
                 subsystem_mass_total[points[k]][key][n] = value
             i += 1
-    print(subsystem_mass_total)
+    #print(subsystem_mass_total)
     print(within_tolerance_ordered)
     print(within_current_ordered)
     
@@ -870,24 +870,25 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
                 bars = ax.bar(bar_positions, value, bar_width, label=f'{order}' if j == 0 else "", bottom=bottom_values, color=colors[k])
                 bottom_values += value  # Update bottom_values to stack the next bars
                 total_height = bottom_values[0]
-                
+
             for bar in bars:
                 height = bar.get_height() + bar.get_y() +10
                 #if within_tolerance_ordered[plot_index]
                 ax.text(bar.get_x() + bar.get_width() / 2, height, f'{cell_no[j]} cells', ha='center', va='bottom', color='black',
-                    bbox=dict(facecolor=label_colors[j], edgecolor=label_colors[j], boxstyle='round,pad=0.3', linewidth=1.5, alpha=0.6))
+                        bbox=dict(facecolor=label_colors[j], edgecolor=label_colors[j], boxstyle='round,pad=0.3', linewidth=1.5, alpha=0.6))
                 if not within_current_ordered[plot_index]:
                     x_left = bar_positions - bar_width / 2
                     x_right = bar_positions + bar_width / 2
                     y_bottom = 0
                     y_top = total_height
-            
+        
                     # Draw the 'X' across the full height and width of the bar
                     ax.plot([x_left, x_right], [y_bottom, y_top], color='red', linewidth=2)  # Diagonal from bottom-left to top-right
                     ax.plot([x_left, x_right], [y_top, y_bottom], color='red', linewidth=2)  # Diagonal from top-left to bottom-right            
 
             #print(plot_index)
             plot_index += 1
+            
     
     
     for i, target in enumerate(target_masses):
