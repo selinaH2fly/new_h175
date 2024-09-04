@@ -1,5 +1,6 @@
 import CoolProp.CoolProp as CP
-from scipy.interpolate import griddata, RegularGridInterpolator
+from scipy.interpolate import griddata
+from scipy.spatial import ConvexHull
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -56,42 +57,6 @@ class Compressor:
 
         return compressor_electric_power_W
     
-    def plot_compressor_map(self):
-        """
-        Plots the compressor map with efficiency contours and highlights the specified operating point
-        using the original unevenly spaced grid.
-        """
-
-        # Interpolate the efficiency at the target pressure ratio and mass flow
-        efficiency_interp, [operating_point_pressure_ratio, operating_point_corrected_massflow_g_s] = self._interpolate_efficiency()
-
-        # Create the plot
-        plt.figure(figsize=(10, 8))
-
-        # Contour plot for efficiency over pressure ratio and corrected mass flow using the original data
-        contours = plt.contourf(self.compressor_map['corrected_massflow_g_s'], self.compressor_map['pressure_ratio'], self.compressor_map['efficiency'], levels=30, cmap="viridis")
-        plt.colorbar(contours, label="Efficiency")
-
-        # Contour lines for efficiency
-        contour_lines = plt.contour(self.compressor_map['corrected_massflow_g_s'], self.compressor_map['pressure_ratio'], self.compressor_map['efficiency'], levels=30, colors='black', linestyles='--')
-        plt.clabel(contour_lines, inline=True, fontsize=10, fmt="%.2f")
-
-        # Highlight the operating point
-        plt.plot(operating_point_corrected_massflow_g_s, operating_point_pressure_ratio, 'ro', markersize=10,
-                label=f'Optimized Operating Point\nPR={operating_point_pressure_ratio:.2f}, Corrected Massflow={operating_point_corrected_massflow_g_s:.1f} g/s, Efficiency: {efficiency_interp:.2f}')
-
-        plt.grid(True)
-
-        # Labels and title
-        plt.title("Compressor Map: Pressure Ratio vs Corrected Mass Flow")
-        plt.xlabel("Corrected Mass Flow (g/s)")
-        plt.ylabel("Pressure Ratio")
-        plt.legend(loc='upper left')
-
-        # Display the plot
-        # plt.show()
-        plt.savefig('compressor_map_operating_point.png', bbox_inches='tight')
-
     def _interpolate_efficiency(self) -> float:
         """
         Interpolates the efficiency from the compressor map based on the current operating point.
@@ -112,9 +77,85 @@ class Compressor:
 
         # Interpolate the efficiency at the target pressure ratio and mass flow
         efficiency = griddata(np.array([map_mass_flow_g_s, map_pressure_ratio]).T, map_efficiency,
-                              (corrected_mass_flow_g_s, pressure_ratio), method='linear', rescale=True, fill_value=1e-3)
+                                (corrected_mass_flow_g_s, pressure_ratio), method='linear', rescale=True, fill_value=1e-3)
 
         return efficiency.item(), [pressure_ratio, corrected_mass_flow_g_s]
+    
+    def plot_compressor_map(self):
+        """
+        Plots the compressor map with efficiency contours and highlights the specified operating point
+        using the original unevenly spaced grid.
+        """
+
+        # Interpolate the efficiency at the target pressure ratio and mass flow
+        efficiency_interp, [operating_point_pressure_ratio, operating_point_corrected_massflow_g_s] = self._interpolate_efficiency()
+
+        # Map to convex hull
+        massflow_convex_hull, pressure_ratio_convex_hull, efficiency_convex_hull, convex_hull, flattened_map = self._map_to_convex_hull()
+
+        # Create the plot
+        plt.figure(figsize=(10, 8))
+
+         # Plot the convex hull edges
+        for simplex in convex_hull.simplices:
+            plt.plot(flattened_map[simplex, 0], flattened_map[simplex, 1], 'gray', linestyle='--', linewidth=2)
+
+        # Contour plot for efficiency over pressure ratio and corrected mass flow
+        contours = plt.contourf(massflow_convex_hull, pressure_ratio_convex_hull, efficiency_convex_hull, levels=30, cmap="viridis")
+        plt.colorbar(contours, label="Efficiency")
+
+        # Contour lines for efficiency
+        contour_lines = plt.contour(massflow_convex_hull, pressure_ratio_convex_hull, efficiency_convex_hull, levels=30, colors='black', linestyles='--')
+        plt.clabel(contour_lines, inline=True, fontsize=10, fmt="%.2f")
+
+        # Highlight the operating point
+        plt.plot(operating_point_corrected_massflow_g_s, operating_point_pressure_ratio, 'ro', markersize=10,
+                label=f'Optimized Operating Point\nPR={operating_point_pressure_ratio:.2f}, Corrected Massflow={operating_point_corrected_massflow_g_s:.1f} g/s, Efficiency: {efficiency_interp:.2f}')
+
+        plt.grid(True)
+
+        # Labels and title
+        plt.title("Compressor Map: Pressure Ratio vs Corrected Mass Flow")
+        plt.xlabel("Corrected Mass Flow (g/s)")
+        plt.ylabel("Pressure Ratio")
+        plt.legend(loc='upper left')
+
+        # Display the plot
+        # plt.show()
+        plt.savefig('compressor_map_operating_point.png', bbox_inches='tight')
+    
+    def _map_to_convex_hull(self):
+
+        # Extract the original grid points and efficiency values
+        corrected_massflows = self.compressor_map["corrected_massflow_g_s"]
+        pressure_ratios = self.compressor_map["pressure_ratio"]
+        efficiencies = self.compressor_map["efficiency"]
+
+        # Flatten the input arrays
+        flattened_massflow = corrected_massflows.flatten()
+        flattened_pressure_ratio = pressure_ratios.flatten()
+        flattened_efficiency = efficiencies.flatten()
+
+        # Combine massflow and pressure_ratio into points
+        points = np.array([flattened_massflow, flattened_pressure_ratio]).T
+
+        # Compute the convex hull
+        hull = ConvexHull(points)
+        
+        # Get the points that define the convex hull
+        hull_points = points[hull.vertices]
+        
+        # Generate a grid that spans the convex hull
+        grid_massflow, grid_pressure_ratio = np.meshgrid(
+            np.linspace(hull_points[:, 0].min(), hull_points[:, 0].max(), 100),
+            np.linspace(hull_points[:, 1].min(), hull_points[:, 1].max(), 100)
+        )
+
+        # Interpolate efficiency values over the grid
+        grid_efficiency = griddata(points, flattened_efficiency, (grid_massflow, grid_pressure_ratio), method='linear', rescale=True)
+
+        return grid_massflow, grid_pressure_ratio, grid_efficiency, hull, points
+
     
     def calculate_BoP_pressure_drop(self)->float:
         """
