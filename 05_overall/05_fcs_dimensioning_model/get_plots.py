@@ -444,7 +444,7 @@ def plot_system_efficiency(data, titles, colors, fl_set, saving=True):
     ax.legend(handles, labels, loc='best')
 
     # Set title and labels
-    ax.set_title(f'System Efficiency vs System Power, FL {fl_set}')
+    ax.set_title(f'System Efficiency vs System Net Power, FL {fl_set}')
     ax.set_xlabel('System Power [kW]')
     ax.set_ylabel('System Efficiency [-]')
     ax.grid(True)
@@ -650,8 +650,10 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     
     if mode == "eol":
         filter_mode = True
+        mode_name = "EoL"
     elif mode == "bol":
         filter_mode = False
+        mode_name = "BoL"
     
     # Define a nested dictionary including all components whichare constant with net power and cell count.
     # Note the zero values for stack, turbine, compressor and stack coolant. These will later be written over.       
@@ -819,6 +821,10 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     # This index is used to correctly iterate through the boolean lists that check for convergence and current level. 
     plot_index = 0
 
+    # Create lists to store legend handles and labels
+    handles = []
+    labels = []
+
     # Iterate through each power
     for i, category in enumerate(categories):
         # Iterate through each cell number
@@ -838,6 +844,10 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
                     bottom_values += value  # Update bottom_values to stack the next bars
                     total_height = bottom_values[0]
                     bar_plotted = True
+
+                    # extract the handles and labels for the legend
+                    handles = handles + [bars]
+                    labels = labels + [f'{order}']
                 else: 
                     # Deciding on height of black cross
                     #total_height += value
@@ -876,15 +886,19 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     # Plot dashed horizontal lines indicating the mass required to achieve the target power density. 
     for i, target in enumerate(target_masses):
         ax.hlines(target, x[i] - bar_width, x[i] + n_values * (bar_width + bar_spacing) - bar_spacing, colors='grey', linestyles='dashed', label=f'Target mass to achieve {target_specific_power} kW/kg')
-    
+        
     # Adding labels and title
     ax.set_xlabel('Net Power [kW]')
     ax.set_ylabel('Mass [kg]')
-    ax.set_title('Predicted FCM Mass for each Net Power')
+    ax.set_title(f'Predicted FCM Mass, {mode_name}')
     ax.set_xticks(x + (n_values - 1) * (bar_width + bar_spacing) / 2)
     ax.set_xticklabels(categories)
     ax.set_ylim([0,max_tracker +125])
-    handles, labels = plt.gca().get_legend_handles_labels()
+
+    # Concetanate the legend handles and labels
+    handles_target_power, labels_target_power = plt.gca().get_legend_handles_labels()
+    handles = handles_target_power[0:3] + handles
+    labels = labels_target_power[0:3] + labels
 
     # This is currently required to plot the legend labels in the correct order.
     # And to only plot the 'target mass' label once for the 3 lines. Could be neatened later. 
@@ -988,11 +1002,12 @@ def analyze_data(_file_path1, saving=True):
                         "Recirculation Pump Power (kW)":    4.04,
                         "Coolant Pump Power (kW)": 1.66}
     
-    plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="bol")
-    plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="eol")
+    # plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="bol")
+    # plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="eol")
     
     # New grouped, stacked bar chart function
     plot_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
+    plot_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="eol")  
     
 # Go back to origin dir
     os.chdir("../../")
@@ -1001,6 +1016,6 @@ def analyze_data(_file_path1, saving=True):
 
 
 
-analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=False)    
+analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
 
 #TODO write init:
