@@ -6,12 +6,21 @@
     "configurations": [
         
         {
-            "name": "Python Debugger: Optimize Input Variables",
+            "name": "Python Debugger: End-of-Life",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--power", "125", "--cellcount", "350", "--flightlevel", "50", "--turbine", "false", "--eol", "true"],    
+            "args": ["--power", "150", "--cellcount", "455", "--flightlevel", "120", "--turbine", "True", "--map", "None", "--eol", "True"],    
+        }
+
+        {
+            "name": "Python Debugger: Compressor Map",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["--power", "150", "--cellcount", "455", "--flightlevel", "120", "--turbine", "True", "--map", "VSEC15", "--eol", "False"],    
         }
     ]
 }

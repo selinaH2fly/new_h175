@@ -12,11 +12,10 @@ from optimization_functions import optimize_inputs_evolutionary
 
 from data_export_csv import export_to_csv
  
-def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, consider_turbine=True, end_of_life=True):
+def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, consider_turbine=True, compressor_map=None, end_of_life=True):
     
     # Load parameters
     _params_optimization = parameters.Optimization_Parameters()  
-    _params_pyhsics = parameters.Physical_Parameters()
 
     # Set the random seed for reproducibility
     if _params_optimization.seed is not None:
@@ -40,10 +39,12 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     # Optimize the input variables
     optimal_input, cell_voltage, hydrogen_mass_flow_g_s, \
         stack_power_kW, compressor_power_kW, turbine_power_kW, \
-            reci_pump_power_kW, coolant_pump_power_kW, converged = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
-                                                                                                flight_level_100ft, cellcount=specified_cell_count,
-                                                                                                power_constraint_kW=power_constraint_kW,
-                                                                                                consider_turbine=consider_turbine, end_of_life=end_of_life)
+            reci_pump_power_kW, coolant_pump_power_kW, compressor_air_flow_g_s, \
+                compressor_pressure_ratio, converged = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
+                                                                                    flight_level_100ft, cellcount=specified_cell_count,
+                                                                                    power_constraint_kW=power_constraint_kW,
+                                                                                    consider_turbine=consider_turbine, compressor_map=compressor_map,
+                                                                                    end_of_life=end_of_life)
     
     system_power_kW = stack_power_kW - compressor_power_kW + turbine_power_kW - reci_pump_power_kW - coolant_pump_power_kW
 
@@ -69,9 +70,11 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     print(f"  {'System (Net) Power (s.t. Optimization):':<{label_width}} ={system_power_kW:>{value_width}.2f} kW")
     
     # Save results to a .csv file 
-    export_to_csv(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds, hydrogen_mass_flow_g_s, cell_voltage, 
-                      system_power_kW, compressor_power_kW, turbine_power_kW, reci_pump_power_kW, coolant_pump_power_kW, stack_power_kW,
-                      power_constraint_kW, specified_cell_count, flight_level_100ft, consider_turbine, end_of_life, converged, filename='optimized_input_data.csv')
+    export_to_csv(feature_names=gpr_model_cell_voltage.feature_names, optimal_input=optimal_input, hydrogen_mass_flow_g_s=hydrogen_mass_flow_g_s, cell_voltage=cell_voltage,
+                  system_power_kW=system_power_kW, compressor_power_kW=compressor_power_kW, turbine_power_kW=turbine_power_kW, reci_pump_power_kW=reci_pump_power_kW,
+                  coolant_pump_power_kW=coolant_pump_power_kW, stack_power_kW=stack_power_kW, power_constraint_kW=power_constraint_kW, specified_cell_count=specified_cell_count,
+                  flight_level_100ft=flight_level_100ft, compressor_air_flow_g_s=compressor_air_flow_g_s, compressor_pressure_ratio=compressor_pressure_ratio,
+                  consider_turbine=consider_turbine, end_of_life=end_of_life, converged=converged, filename='optimized_input_data.csv')
     
 # Entry point of the script
 if __name__ == '__main__':
@@ -81,13 +84,15 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=455)
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=120)
     parser.add_argument("-t", "--turbine", type=str, choices=["True", "False"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
-    parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
+    parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
+    parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.85 to account for end of life (default: False).")
 
     args = parser.parse_args()
 
-    # Convert string inputs to booleans
+    # Convert string inputs
     consider_turbine = args.turbine == "True"
     end_of_life = args.eol == "True"
+    compressor_map = args.map if args.map != "None" else None
 
     # Call the optimize_with_trained_model function
-    optimize_input_variables(args.power, args.cellcount, args.flightlevel, consider_turbine=consider_turbine, end_of_life=end_of_life)
+    optimize_input_variables(args.power, args.cellcount, args.flightlevel, consider_turbine=consider_turbine, compressor_map=compressor_map, end_of_life=end_of_life)
