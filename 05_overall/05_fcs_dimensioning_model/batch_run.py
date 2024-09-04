@@ -20,7 +20,8 @@ def build_command(parameter):
         "--cellcount", str(parameter[1]),
         "--flightlevel", str(parameter[2]),
         "--turbine", str(parameter[3]),
-        "--eol", str(parameter[4])
+        "--map", str(parameter[4]),
+        "--eol", str(parameter[5])
     ]
     return command
  
@@ -31,19 +32,21 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[20,175])
     parser.add_argument("-n", "--cellcount", type=float, nargs='+', help="Stack cell number for optimizing subject to power constraint", default=[400,500])
     parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[0, 150])
-    parser.add_argument("-t", "--turbine", type=str, choices=["True"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
-    parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
+    # parser.add_argument("-t", "--turbine", type=str, choices=["True"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
+    parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
+    # parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
     parser.add_argument("--testing", type=str, choices=["True", "False"], default="False", help="Specifies whether a short test run is initiated.")
     
     args = parser.parse_args()
     
     if args.testing == "True":
-        range_power = np.array([20,175])
+        range_power = np.array([20, 100, 175])
         range_cellcount = np.array([400])
         range_fl = np.array([0])
         # Convert turbine and eol to boolean lists
-        range_turbine =[args.turbine == "True"]#, args.turbine.lower() == "false"]
-        range_eol = [args.eol == "True", args.eol == "False"]
+        range_turbine =[True]#, args.turbine.lower() == "false"]
+        range_eol = [False]
+        range_map = [args.map]
         
         #Handle downstream data and plots
         saving = False
@@ -61,8 +64,9 @@ if __name__ == '__main__':
         range_fl = np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
         
         # Convert turbine and eol to boolean lists
-        range_turbine =[args.turbine == "True"]#, args.turbine.lower() == "false"]
-        range_eol = [args.eol == "True", args.eol == "False"]
+        range_turbine =[True]
+        range_eol = [False, True]
+        range_map = [args.map]
         
         #Handle downstream data and plots
         saving = True
@@ -72,7 +76,7 @@ if __name__ == '__main__':
         print("User Error: wrong input for --testing, sould be True/False")
 
     # Generate all combinations of parameters
-    parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_eol))
+    parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_map, range_eol))
     
     for parameter in tqdm(parameters, desc="Optimization Progress", unit="parameter"):
         

@@ -1,5 +1,4 @@
 import CoolProp.CoolProp as CP
-from basic_physics import icao_atmosphere
 
 class Turbine:
     def __init__(self, params_physics, isentropic_efficiency=0.85,

@@ -16,7 +16,7 @@ from basic_physics import compute_air_mass_flow, compute_coolant_flow, icao_atmo
 
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275,
-                                 power_constraint_kW=None, consider_turbine=True, end_of_life=False):
+                                 power_constraint_kW=None, consider_turbine=True, compressor_map=None, end_of_life=False):
     """
     Optimize the (cell) voltage predicted by the GPyTorch model with a (cell) power constraint using differential evolution.
 
@@ -27,6 +27,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     - cellcount: Number of cells.
     - power_constraint_kW: Power constraint in kilowatts.
     - consider_turbine: Whether to consider power recuperation in the optimization.
+    - compressor_map: The compressor map to be used in the optimization.
     - end_of_life: Whether to consider the end of life derating factor.
 
     Returns:
@@ -49,12 +50,16 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
 
+    # Consider the compressor map if provided
+    compressor_map = getattr(_params_compressor, "compressor_map_" + compressor_map) if compressor_map else None
+
+
     # Instantiate components
     compressor      =   Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency,
                                    electric_efficiency=_params_compressor.electric_efficiency,
                                    temperature_in_K=temperature_ambient_K, pressure_in_Pa=pressure_ambient_Pa,
                                    nominal_BoP_pressure_drop_Pa=_params_compressor.nominal_BoP_pressure_drop_Pa,
-                                   nominal_air_flow_kg_s=_params_compressor.nominal_air_flow_kg_s)
+                                   compressor_map=compressor_map, nominal_air_flow_kg_s=_params_compressor.nominal_air_flow_kg_s)
     
     turbine         =   Turbine(_params_physics, isentropic_efficiency=_params_turbine.isentropic_efficiency,
                                 temperature_out_K=temperature_ambient_K, pressure_out_Pa=pressure_ambient_Pa,
@@ -279,5 +284,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # Compute stack power
     stack_power_kW = optimal_input[0] * cell_voltage * cellcount / 1000
 
-    return optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_W / 1000, turbine_power_W / 1000, \
-        reci_pump_power_W / 1000, coolant_pump_power_W / 1000, optimization_converged
+    # Plot the compressor map with the optimized operating point highlighted
+    if compressor_map is not None:
+        compressor.plot_compressor_map()
+
+    return optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
+        reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.air_mass_flow_kg_s*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, optimization_converged
