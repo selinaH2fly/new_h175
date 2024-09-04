@@ -864,27 +864,46 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
             bottom_values = np.zeros(1)
             bar_positions = x[i] + j * (bar_width + bar_spacing)
             total_height = 0
+            bar_plotted= False
             
             for k, order in enumerate(orders):
                 value = subsystem_mass_total[category][order][j]
-                bars = ax.bar(bar_positions, value, bar_width, label=f'{order}' if j == 0 else "", bottom=bottom_values, color=colors[k])
-                bottom_values += value  # Update bottom_values to stack the next bars
-                total_height = bottom_values[0]
+                if within_tolerance_ordered[plot_index]:
+                    bars = ax.bar(bar_positions, value, bar_width, label=f'{order}' if j == 0 else "", bottom=bottom_values, color=colors[k])
+                    bottom_values += value  # Update bottom_values to stack the next bars
+                    total_height = bottom_values[0]
+                    bar_plotted = True
+                else: 
+                    total_height += value
+                    
+            if not bar_plotted:
+                x_left = bar_positions - bar_width / 2
+                x_right = bar_positions + bar_width / 2
+                y_bottom = 0
+                y_top = total_height
+    
+                # Draw the 'X' across the full height and width of the bar
+                ax.plot([x_left, x_right], [y_bottom, y_top], color='black', linewidth=2)  # Diagonal from bottom-left to top-right
+                ax.plot([x_left, x_right], [y_top, y_bottom], color='black', linewidth=2)  # Diagonal from top-left to bottom-right    
+                
 
-            for bar in bars:
-                height = bar.get_height() + bar.get_y() +10
-                #if within_tolerance_ordered[plot_index]
-                ax.text(bar.get_x() + bar.get_width() / 2, height, f'{cell_no[j]} cells', ha='center', va='bottom', color='black',
-                        bbox=dict(facecolor=label_colors[j], edgecolor=label_colors[j], boxstyle='round,pad=0.3', linewidth=1.5, alpha=0.6))
-                if not within_current_ordered[plot_index]:
-                    x_left = bar_positions - bar_width / 2
-                    x_right = bar_positions + bar_width / 2
-                    y_bottom = 0
-                    y_top = total_height
+            if bar_plotted and not within_current_ordered[plot_index]:
+                x_left = bar_positions - bar_width / 2
+                x_right = bar_positions + bar_width / 2
+                y_bottom = 0
+                y_top = total_height
         
-                    # Draw the 'X' across the full height and width of the bar
-                    ax.plot([x_left, x_right], [y_bottom, y_top], color='red', linewidth=2)  # Diagonal from bottom-left to top-right
-                    ax.plot([x_left, x_right], [y_top, y_bottom], color='red', linewidth=2)  # Diagonal from top-left to bottom-right            
+                # Draw the 'X' across the full height and width of the bar
+                ax.plot([x_left, x_right], [y_bottom, y_top], color='red', linewidth=2)  # Diagonal from bottom-left to top-right
+                ax.plot([x_left, x_right], [y_top, y_bottom], color='red', linewidth=2)  # Diagonal from top-left to bottom-right  
+                
+                
+            
+            if within_tolerance_ordered[plot_index]:
+                #height = bar.get_height() + bar.get_y() +10
+                ax.text(bar_positions, total_height + 10, f'{cell_no[j]} cells', ha='center', va='bottom', color='black',
+                        bbox=dict(facecolor=label_colors[j], edgecolor=label_colors[j], boxstyle='round,pad=0.3', linewidth=1.5, alpha=0.6))
+        
 
             #print(plot_index)
             plot_index += 1
@@ -913,10 +932,6 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     # Show the plot
     plt.tight_layout()
     plt.show()
-    
-  
-  
-    #comp_power = data
    
 #%%  
 def filter_converged_points(df, tolerance=4):
