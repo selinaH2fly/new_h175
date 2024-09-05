@@ -309,6 +309,23 @@ class Circuit:
         datatoexcel.close()
 
 
+    def analyse_big_arch(self, result_dict):
+        self.evaluate()
+
+        for j in range(len(self.var_name)):
+                for result_name in result_dict:
+                    if self.var_name[j] == result_name:
+                        result_dict[result_name][1].append(self.var_res[j])
+
+        data_dict = {}
+        for result_name in result_dict:
+            data_dict[result_dict[result_name][0]] = result_dict[result_name][1]
+        data = pd.DataFrame(data_dict)
+        datatoexcel = pd.ExcelWriter('results.xlsx')
+        data.to_excel(datatoexcel)
+        datatoexcel.close()
+        
+
 class NodeRenamer(ast.NodeTransformer):
     """
     Rename node in AST to replace variable.
