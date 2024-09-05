@@ -675,12 +675,20 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
         mode_name = "BoL"
     
     # Define a nested dictionary including all components whichare constant with net power and cell count.
-    # Note the zero values for stack, turbine, compressor and stack coolant. These will later be written over.       
+    # Note the zero values for stack, turbine, compressor and stack coolant. These will later be written over.
+    """       
     masses_FCM_constants = {'Stack':{'Stack':0, 'CVM':1.00, 'SMI':3.00, 'Hose clamps': 0.18, 'Screws':0.09, 'HV+LV Cable': 1.20} \
                                    ,'Cathode':{'Filter': 0.5, 'HFM': 0.5, 'Compressor':0, 'Compressor inverter':6.0, 'Intercooler':3.0, 'Humidifier': 2.0, 'Valves': 2.6, 'Drain valve': 0.30, 'Water separator': 0.3, 'Cathode pressure control valve': 0.0, 'Sensors': 1.2, 'Silicon hoses':1.76, 'Hose clamps': 0.42, 'Connectors': 0.8, 'Screws': 0.18, 'HV+LV Cable': 0.67, 'Turbine':0.0} \
                                    ,'Anode': {'Shut-Off valve':0.2, 'Pressure control valve':0.2, 'Water separator':0, 'Particle filter':0.2, 'Recirculation pump':4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.80, 'Anode piping':1.01, 'Swagelok connector':0.56, 'Screws':0.09, 'HV+LV Cable': 0.34}\
                                    ,'Thermal':{'Coolant pump':4.0, 'TCV':1.0, 'Particle filter':0.22, 'Ionic exchangr':1.0, 'Sensors':0.80+0.80, 'Silicone hoses':1.51+2.02, 'Hose clamps':0.36+0.48, 'Connectors':0.80+0.80, 'Screws':0.09+0.09, 'HV+LV Cable':0.34+0.34, 'Expansion tank':1.0,'HDPU':5.0,'Volume flow control valve':0.5, 'Stack coolant':0, 'Other coolant':5.0}\
                                    ,'Other':{'FCCU':1.5,'Electrical connectors':0.4,'Unnamed':4.0,'Frame':5.0,'Connectors':2.0,'Screws':0.27, 'HV+LV Cable':0.67}}    
+    """
+    # Updated with reduced mass estimates for E_VTOL applications
+    masses_FCM_constants = {'Stack':{'Stack':0, 'CVM':0.5, 'SMI':1.5, 'Hose clamps': 0.18, 'Screws':0.09, 'HV+LV Cable': 1.20} \
+                                   ,'Cathode':{'Filter': 0.2, 'HFM': 0.1, 'Compressor':0, 'Compressor inverter':6.0, 'Intercooler':1.0, 'Humidifier': 1.0, 'Valves': 1.5, 'Drain valve': 0.05, 'Water separator': 0.2, 'Cathode pressure control valve': 0.0, 'Sensors': 0.3, 'Silicon hoses':0.5, 'Hose clamps': 0.12, 'Connectors': 0.8, 'Screws': 0.18, 'HV+LV Cable': 0.67, 'Turbine':0.0} \
+                                   ,'Anode': {'Shut-Off valve':0.2, 'Pressure control valve':0.2, 'Water separator':0, 'Particle filter':0.2, 'Recirculation pump':0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.20, 'Anode piping':0.5, 'Swagelok connector':0.28, 'Screws':0.09, 'HV+LV Cable': 0.34}\
+                                   ,'Thermal':{'Coolant pump':0, 'TCV':0.5, 'Particle filter':0.1, 'Ionic exchanger':1.0, 'Sensors':0.2+0.20, 'Silicone hoses':0.5+0.5, 'Hose clamps':0.12+0.12, 'Connectors':0.80+0.80, 'Screws':0.09+0.09, 'HV+LV Cable':0.34, 'Expansion tank':0.20,'Volume flow control valve':0.5, 'Stack coolant':0, 'Other coolant':5.0}\
+                                   ,'Other':{'FCCU':0.5,'Electrical connectors':0.4,'HDPU':5.0,'Frame':2.0,'Connectors':1.0,'Screws':0.27, 'HV+LV Cable':0.0}}    
         
     # Define a function to sum the constants of each subsystem, as well as a total mass
     def sum_mass(masses: dict):
@@ -722,6 +730,11 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     cathode_mass = []
     within_tolerance = []
     within_current = []
+    additional_cathode_mass = []
+    additional_anode_mass = []
+    additional_thermal_mass = []
+    
+    
     
     # Extract Power of components and therefore the added cathode mass for each component
     for df, title, color, m_stack_value, marker in zip(data, titles, colors, m_stack_values, markers):
@@ -756,14 +769,29 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
             closest_row = df.iloc[(df["System Power (kW)"] - point).abs().argmin()]
             if closest_row["current_A (Value)"] > 700:
                 current_check = False
+            # Added mass for turbine and compressor
+            cathode_mass_add = closest_row["Compressor Power (kW)"] * 0.63 + closest_row["Turbine Power (kW)"]*0.63
+            anode_mass_add = closest_row["Recirculation Pump Power (kW)"] * 7.38
+            thermal_mass_add = closest_row["Coolant Pump Power (kW)"] * 4.8
+            additional_cathode_mass.append(cathode_mass_add)
+            additional_anode_mass.append(anode_mass_add)
+            additional_thermal_mass.append(thermal_mass_add)
             within_current.append(current_check)
+            
+            # Code to iterate through dictionary
+            """
             cathode_weight = 0
+            
             for key, mean_value in components_dict.items():
                 power_value = closest_row[key]
                 component_weight = power_value * mean_value
                 cathode_weight += component_weight
 
             cathode_mass.append(cathode_weight)
+            """
+    print(additional_cathode_mass)
+    print(additional_thermal_mass)
+    print(additional_anode_mass)
     
     # Currently, the outputted lists of the last loop need to be reordered to be the appropriate format for this loop.
     # This is ugly, would like to change. 
@@ -771,6 +799,9 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     within_current_ordered = [None] * (len(within_current))
     i = 0
     reorder = [0,3,6,1,4,7,2,5,8]
+    
+    test,total= sum_mass(masses_FCM_constants)
+    print(test)
     
     for k in range(0,len(points)):
         # Value of horizontal line for each power level
@@ -784,21 +815,33 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
             temp['Stack'] += m_stack_values[n]
             temp['Thermal']+= m_coolant_values[n]
             
+            # Add power based estimates
+            temp['Cathode'] += additional_cathode_mass[i]
+            temp['Anode'] += additional_anode_mass[i]
+            temp['Thermal'] += additional_thermal_mass[i]
+            
+            """
             # Cathode mass scales with power
             temp['Cathode']+= cathode_mass[i]
+            """
             
             # Reorder our boolean lists to suit overall iteration later. 
             within_tolerance_ordered[reorder[i]] = within_tolerance[i]
             within_current_ordered[reorder[i]] = within_current[i]
             
-            # Curently, this total value is just used to track the maximum bar height, to size the y-axis accordingly. 
+            # Curently, this total value is just used to track the maximum bar height, to size the y-axis accordingly. Could be refactored to make more efficient. 
             total += m_stack_values[n]
             total += m_coolant_values[n]
-            total += cathode_mass[i]
+            
+            #total += cathode_mass[i]
+            total += additional_cathode_mass[i]
+            total += additional_anode_mass[i]
+            total += additional_thermal_mass[i]
+            
             if total > max_tracker:
                 max_tracker = total
             
-            # Assgning the updated subsystem masses to the correct location in the nested dictionary. 
+            # Assigning the updated subsystem masses to the correct location in the nested dictionary. 
             for key,value in temp.items():
                 subsystem_mass_total[points[k]][key][n] = value
                 
@@ -913,6 +956,28 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     ax.set_xticks(x + (n_values - 1) * (bar_width + bar_spacing) / 2)
     ax.set_xticklabels(categories)
     ax.set_ylim([0,max_tracker +125])
+    
+    # Insert texbox explaining crosses. 
+
+    explanation_text = (
+    r'$\bf{X}$ (colored red): above limit' + '\n' +
+    r'$\bf{X}$ (colored black): not converged'
+)
+    
+    #If Latex is installed, this value can be used instead for cuter text. 
+    """
+    plt.rcParams['text.usetex'] = True
+    explanation_text = (
+    '\textbf{X}: Above 700A \newline \color{red} \textbf{X} \color{black}: Above 700A'
+)
+    """
+
+    # Add custom annotation with explanation
+    #ax.text(1.05, 1.05, explanation_text, transform=ax.transAxes, fontsize=10, verticalalignment='top',
+        #bbox=dict(facecolor='white', edgecolor='black'))
+    fig.text(0.07, 0.87, explanation_text, fontsize=12, ha='left', va='top', color='black', bbox=dict(facecolor='white', edgecolor='grey', boxstyle='round,pad=0.4', linewidth=1.5))
+
+
 
     # Concetanate the legend handles and labels
     handles_target_power, labels_target_power = plt.gca().get_legend_handles_labels()
@@ -927,13 +992,14 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     ax.legend([handles[idx] for idx in legend_order],[labels[idx] for idx in legend_order],title='Subsystems', loc='upper right')
 
     # Adjust layout
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
     
     # Save or show the plot
     if saving:
         plt.savefig(f"Weight_estimation_vs_power_{mode}.png", bbox_inches='tight')
     else:
         plt.show()
+        
    
 #%%  
 def filter_converged_points(df, tolerance=4):
@@ -989,6 +1055,7 @@ def analyze_data(_file_path1, saving=True):
     
     fl_set = 120
     fl_max = max(df1["Flight Level (100x ft)"])
+    """
     
     ###########PLOT: Polcurves
     plot_polarization_curves(data, titles, fl_set, saving=saving)
@@ -1012,6 +1079,7 @@ def analyze_data(_file_path1, saving=True):
 
     ############Plot Weight estimate
     #Weight/Power Factor
+    """
     componentsP_dict =  {"Compressor Power (kW)":   0.63,
                         "Turbine Power (kW)":      0.63,
                         "Recirculation Pump Power (kW)":    7.38,
@@ -1033,5 +1101,8 @@ def analyze_data(_file_path1, saving=True):
     
 # %%    
 
-analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2_std\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
+#analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2_std\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
+
+# Directory link that works for me (Kate)
+analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=False) 
 #TODO write init:
