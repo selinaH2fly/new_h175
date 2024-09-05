@@ -737,7 +737,6 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     additional_thermal_mass = []
     """
     
-    
     # Extract Power of components and therefore the added cathode mass for each component
     for df, title, color, m_stack_value, marker in zip(data, titles, colors, m_stack_values, markers):
         # Filter the df for eol, bol and flight level
@@ -825,7 +824,8 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
             """
             
             # Cathode mass scales with power
-            temp['Cathode']+= cathode_mass[i]
+            temp['Cathode'] += cathode_mass[reorder[i]]
+            
             
             # Reorder our boolean lists to suit overall iteration later. 
             within_tolerance_ordered[reorder[i]] = within_tolerance[i]
@@ -835,13 +835,7 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
             total += m_stack_values[n]
             total += m_coolant_values[n]
             
-            total += cathode_mass[i]
-            
-            """
-            total += additional_cathode_mass[i]
-            total += additional_anode_mass[i]
-            total += additional_thermal_mass[i]
-            """
+            total += cathode_mass[reorder[i]]
             
             if total > max_tracker:
                 max_tracker = total
