@@ -946,7 +946,7 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
             
     # Plot dashed horizontal lines indicating the mass required to achieve the target power density. 
     for i, target in enumerate(target_masses):
-        ax.hlines(target, x[i] - bar_width, x[i] + n_values * (bar_width + bar_spacing) - bar_spacing, colors='grey', linestyles='dashed', label=f'Target: {target_specific_power} kW/kg')
+        ax.hlines(target, x[i] - bar_width, x[i] + n_values * (bar_width + bar_spacing) - bar_spacing, colors='grey', linestyles='dashed', label=f'Target: {target_specific_power} kg/kW')
         
     # Adding labels and title
     ax.set_xlabel('Net Power [kW]')
