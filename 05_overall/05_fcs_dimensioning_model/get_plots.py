@@ -330,7 +330,26 @@ def plot_power_needs(data, titles, fl_set, saving=True):
 
 # PLOT: h2_consumption
 def plot_h2_consumption(data, titles, colors, weights, fl_set, saving=True):
+    # Print out nummerical example between points:
+    #1: 400 vs 500, BoL, FL 120, 125 kW:
+    _H2_400 = data[0][(data[0]["Flight Level (100x ft)"] == 120) & 
+                      (data[0]["Power Constraint (kW)"] == 125) &
+                      (data[0]["eol (t/f)"] == False)]["Hydrogen Consumption (g/s)"].iloc[0]
+
+    _H2_500 = data[2][(data[2]["Flight Level (100x ft)"] == 120) & 
+                      (data[2]["Power Constraint (kW)"] == 125) &
+                      (data[2]["eol (t/f)"] == False)]["Hydrogen Consumption (g/s)"].iloc[0]
     
+    _H2_500_eol = data[2][(data[2]["Flight Level (100x ft)"] == 120) & 
+                          (data[2]["Power Constraint (kW)"] == 125) &
+                          (data[2]["eol (t/f)"] == True)]["Hydrogen Consumption (g/s)"].iloc[0]
+    
+    print("H2 consumption FL 120, 125 kW, BoL, 400 vs 500 cells:")
+    print(f"{100-(_H2_500/_H2_400*100):.2f} % ")
+       
+    print("H2 consumption FL 120, 125 kW, 500 cells, BoL vs EoL:")
+    print(f"{(_H2_500_eol/_H2_500)*100-100:.2f} % ")
+        
     fig, ax = plt.subplots(figsize=(12, 8))
     fig.tight_layout()
     # Store handles and labels for manual legend creation
@@ -1014,8 +1033,5 @@ def analyze_data(_file_path1, saving=True):
     
 # %%    
 
-
-
-analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
-
+analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2_std\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
 #TODO write init:
