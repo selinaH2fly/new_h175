@@ -952,7 +952,7 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
             
     # Plot dashed horizontal lines indicating the mass required to achieve the target power density. 
     for i, target in enumerate(target_masses):
-        ax.hlines(target, x[i] - bar_width, x[i] + n_values * (bar_width + bar_spacing) - bar_spacing, colors='grey', linestyles='dashed', label=f'Target mass to achieve {target_specific_power} kW/kg')
+        ax.hlines(target, x[i] - bar_width, x[i] + n_values * (bar_width + bar_spacing) - bar_spacing, colors='grey', linestyles='dashed', label=f'Target: {target_specific_power} kW/kg')
         
     # Adding labels and title
     ax.set_xlabel('Net Power [kW]')
@@ -963,26 +963,11 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     ax.set_ylim([0,max_tracker +125])
     
     # Insert texbox explaining crosses. 
-
-    explanation_text = (
-    r'$\bf{X}$ (colored red): above limit' + '\n' +
-    r'$\bf{X}$ (colored black): not converged'
-)
+    fig.text(0.07, 0.87, r'$\bf{X}$', fontsize=12, ha='left', va='top', color='red')
+    fig.text(0.082, 0.87, r': above 700 A', fontsize=12, ha='left', va='top', color='black')
     
-    #If Latex is installed, this value can be used instead for cuter text. 
-    """
-    plt.rcParams['text.usetex'] = True
-    explanation_text = (
-    '\textbf{X}: Above 700A \newline \color{red} \textbf{X} \color{black}: Above 700A'
-)
-    """
-
-    # Add custom annotation with explanation
-    #ax.text(1.05, 1.05, explanation_text, transform=ax.transAxes, fontsize=10, verticalalignment='top',
-        #bbox=dict(facecolor='white', edgecolor='black'))
-    fig.text(0.07, 0.87, explanation_text, fontsize=12, ha='left', va='top', color='black', bbox=dict(facecolor='white', edgecolor='grey', boxstyle='round,pad=0.4', linewidth=1.5))
-
-
+    fig.text(0.07, 0.84, r'$\bf{X}$', fontsize=12, ha='left', va='top', color='black')
+    fig.text(0.082, 0.84, r' :not converged', fontsize=12, ha='left', va='top', color='black')
 
     # Concetanate the legend handles and labels
     handles_target_power, labels_target_power = plt.gca().get_legend_handles_labels()
@@ -1086,16 +1071,15 @@ def analyze_data(_file_path1, saving=True):
     #Weight/Power Factor
     """
     
-    """
-    componentsP_dict =  {"Compressor Power (kW)":   0.63,
-                        "Turbine Power (kW)":      0.63,
-                        "Recirculation Pump Power (kW)":    7.38,
-                        "Coolant Pump Power (kW)": 4.80}
-    """
-    components_SD_dict = {"Compressor Power (kW)":   0.1,
-                        "Turbine Power (kW)":      0.1,
-                        "Recirculation Pump Power (kW)":    4.04,
-                        "Coolant Pump Power (kW)": 1.66}
+    # componentsP_dict =  {"Compressor Power (kW)":   0.63,
+    #                     "Turbine Power (kW)":      0,
+    #                     "Recirculation Pump Power (kW)":    7.38,
+    #                     "Coolant Pump Power (kW)": 4.80}
+
+    # components_SD_dict = {"Compressor Power (kW)":   0.1,
+    #                     "Turbine Power (kW)":      0.1,
+    #                     "Recirculation Pump Power (kW)":    4.04,
+    #                     "Coolant Pump Power (kW)": 1.66}
     # Weight dictionary  to onl
     componentsP_dict =  {"Compressor Power (kW)":   0.63,
                          "Turbine Power (kW)":      0}
@@ -1115,5 +1099,5 @@ def analyze_data(_file_path1, saving=True):
 #analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2_std\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
 
 # Directory link that works for me (Kate)
-analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=False) 
+analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2_std\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=False) 
 #TODO write init:
