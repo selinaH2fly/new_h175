@@ -686,8 +686,8 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     # Updated with reduced mass estimates for E_VTOL applications
     masses_FCM_constants = {'Stack':{'Stack':0, 'CVM':0.5, 'SMI':1.5, 'Hose clamps': 0.18, 'Screws':0.09, 'HV+LV Cable': 1.20} \
                                    ,'Cathode':{'Filter': 0.2, 'HFM': 0.1, 'Compressor':0, 'Compressor inverter':6.0, 'Intercooler':1.0, 'Humidifier': 1.0, 'Valves': 1.5, 'Drain valve': 0.05, 'Water separator': 0.2, 'Cathode pressure control valve': 0.0, 'Sensors': 0.3, 'Silicon hoses':0.5, 'Hose clamps': 0.12, 'Connectors': 0.8, 'Screws': 0.18, 'HV+LV Cable': 0.67, 'Turbine':0.0} \
-                                   ,'Anode': {'Shut-Off valve':0.2, 'Pressure control valve':0.2, 'Water separator':0, 'Particle filter':0.2, 'Recirculation pump':0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.20, 'Anode piping':0.5, 'Swagelok connector':0.28, 'Screws':0.09, 'HV+LV Cable': 0.34}\
-                                   ,'Thermal':{'Coolant pump':0, 'TCV':0.5, 'Particle filter':0.1, 'Ionic exchanger':1.0, 'Sensors':0.2+0.20, 'Silicone hoses':0.5+0.5, 'Hose clamps':0.12+0.12, 'Connectors':0.80+0.80, 'Screws':0.09+0.09, 'HV+LV Cable':0.34, 'Expansion tank':0.20,'Volume flow control valve':0.5, 'Stack coolant':0, 'Other coolant':5.0}\
+                                   ,'Anode': {'Shut-Off valve':0.2, 'Pressure control valve':0.2, 'Water separator':0, 'Particle filter':0.2, 'Recirculation pump':4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.20, 'Anode piping':0.5, 'Swagelok connector':0.28, 'Screws':0.09, 'HV+LV Cable': 0.34}\
+                                   ,'Thermal':{'Coolant pump':3.0, 'TCV':0.5, 'Particle filter':0.1, 'Ionic exchanger':1.0, 'Sensors':0.2+0.20, 'Silicone hoses':0.5+0.5, 'Hose clamps':0.12+0.12, 'Connectors':0.80+0.80, 'Screws':0.09+0.09, 'HV+LV Cable':0.34, 'Expansion tank':0.20,'Volume flow control valve':0.5, 'Stack coolant':0, 'Other coolant':5.0}\
                                    ,'Other':{'FCCU':0.5,'Electrical connectors':0.4,'HDPU':5.0,'Frame':2.0,'Connectors':1.0,'Screws':0.27, 'HV+LV Cable':0.0}}    
         
     # Define a function to sum the constants of each subsystem, as well as a total mass
@@ -730,10 +730,12 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     cathode_mass = []
     within_tolerance = []
     within_current = []
+    
+    """
     additional_cathode_mass = []
     additional_anode_mass = []
     additional_thermal_mass = []
-    
+    """
     
     
     # Extract Power of components and therefore the added cathode mass for each component
@@ -769,6 +771,8 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
             closest_row = df.iloc[(df["System Power (kW)"] - point).abs().argmin()]
             if closest_row["current_A (Value)"] > 700:
                 current_check = False
+            
+            """
             # Added mass for turbine and compressor
             cathode_mass_add = closest_row["Compressor Power (kW)"] * 0.63 + closest_row["Turbine Power (kW)"]*0.63
             anode_mass_add = closest_row["Recirculation Pump Power (kW)"] * 7.38
@@ -776,10 +780,11 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
             additional_cathode_mass.append(cathode_mass_add)
             additional_anode_mass.append(anode_mass_add)
             additional_thermal_mass.append(thermal_mass_add)
+            """
             within_current.append(current_check)
             
             # Code to iterate through dictionary
-            """
+            
             cathode_weight = 0
             
             for key, mean_value in components_dict.items():
@@ -788,11 +793,9 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
                 cathode_weight += component_weight
 
             cathode_mass.append(cathode_weight)
-            """
-    print(additional_cathode_mass)
-    print(additional_thermal_mass)
-    print(additional_anode_mass)
-    
+            
+
+    #print(cathode_mass)
     # Currently, the outputted lists of the last loop need to be reordered to be the appropriate format for this loop.
     # This is ugly, would like to change. 
     within_tolerance_ordered = [None]* (len(within_tolerance))
@@ -801,7 +804,6 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
     reorder = [0,3,6,1,4,7,2,5,8]
     
     test,total= sum_mass(masses_FCM_constants)
-    print(test)
     
     for k in range(0,len(points)):
         # Value of horizontal line for each power level
@@ -815,15 +817,15 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
             temp['Stack'] += m_stack_values[n]
             temp['Thermal']+= m_coolant_values[n]
             
+            """
             # Add power based estimates
             temp['Cathode'] += additional_cathode_mass[i]
             temp['Anode'] += additional_anode_mass[i]
             temp['Thermal'] += additional_thermal_mass[i]
-            
             """
+            
             # Cathode mass scales with power
             temp['Cathode']+= cathode_mass[i]
-            """
             
             # Reorder our boolean lists to suit overall iteration later. 
             within_tolerance_ordered[reorder[i]] = within_tolerance[i]
@@ -833,10 +835,13 @@ def plot_mass_estimate(data, titles, colors, components_dict, markers, saving=Tr
             total += m_stack_values[n]
             total += m_coolant_values[n]
             
-            #total += cathode_mass[i]
+            total += cathode_mass[i]
+            
+            """
             total += additional_cathode_mass[i]
             total += additional_anode_mass[i]
             total += additional_thermal_mass[i]
+            """
             
             if total > max_tracker:
                 max_tracker = total
@@ -1080,14 +1085,20 @@ def analyze_data(_file_path1, saving=True):
     ############Plot Weight estimate
     #Weight/Power Factor
     """
+    
+    """
     componentsP_dict =  {"Compressor Power (kW)":   0.63,
                         "Turbine Power (kW)":      0.63,
                         "Recirculation Pump Power (kW)":    7.38,
                         "Coolant Pump Power (kW)": 4.80}
+    """
     components_SD_dict = {"Compressor Power (kW)":   0.1,
                         "Turbine Power (kW)":      0.1,
                         "Recirculation Pump Power (kW)":    4.04,
                         "Coolant Pump Power (kW)": 1.66}
+    # Weight dictionary  to onl
+    componentsP_dict =  {"Compressor Power (kW)":   0.63,
+                         "Turbine Power (kW)":      0}
     
     # plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="bol")
     # plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="eol")
