@@ -45,7 +45,7 @@ Provide input on boundary conditions
 """
 circ.add_bc("Vdot_1 = 0")
 circ.add_bc("nsplit_1_tcv1 = 1")
-circ.add_bc("delta_p_1_tcv1 = 0.0")
+circ.add_bc("delta_p_1_tcv1 = - 0.0")
 circ.add_bc("p_1 = 1.0")
 
 circ.add_bc("delta_p_hpdu = - (1.0423 * 10 ** (-3) * Vdot_3 ** 2 * 60 ** 2 + 2.2465 * 10 ** (-3) * Vdot_3 * 60)")
@@ -56,7 +56,7 @@ circ.add_bc("delta_p_intercooler = - (4.4760 * 10 ** (-4) * Vdot_8 ** 2 * 60 ** 
 circ.add_bc("delta_p_compressor = - (2.9956 * 10 ** (-3) * Vdot_6 ** 2 * 60 ** 2 + 4.1023 * 10 ** (-4) * Vdot_6 * 60)")
 circ.add_bc("delta_p_evap = - (1.3479 * 10 ** (-4) * Vdot_1 ** 2 * 60 ** 2 + 1.4225 * 10 ** (-3) * Vdot_1 * 60)")
 
-critical_operation = True
+critical_operation = False
 if critical_operation is False:
     circ.add_bc("T_1 = 273.15 + 50.0")
     circ.add_bc("Qdot_hpdu = 500")
@@ -96,4 +96,5 @@ result_pr_dict = {mixer1.p_out : ['bop pressure drop in [bar]', []]
 }
 # 3/60, 4/60, 
 vdot1 = [5/60, 6/60, 7/60, 8/60, 10/60]
-circ.analyse_vdot1(vdot1, result_vdot_dict, result_temp_dict, result_pr_dict)
+input_list = ['Vdot_1', vdot1, 'BoP Entry Flow [l/s]']
+circ.analyse_vdot_temp_pr(input_list, result_vdot_dict, result_temp_dict, result_pr_dict)

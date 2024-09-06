@@ -247,15 +247,13 @@ class Circuit:
         self.var_res_start = self.var_res
 
     
-    def analyse_vdot1(self, variable_list, result_vdot_dict, result_temp_dict, result_pr_dict):
-
+    def analyse_vdot_temp_pr(self, input_list, result_vdot_dict, result_temp_dict, result_pr_dict):
         for i in range(len(self.eq_unsorted)):
-            if self.eq_unsorted[i] == ['Vdot_1 = 0']:
-                self.eq_unsorted[i] = ['Vdot_1 = 15']
+            if '%s = ' %(input_list[0]) in self.eq_unsorted[i][0]:
                 k = i
         
-        for y in variable_list:
-            self.eq_unsorted[k] = ['Vdot_1 = %f' %(y)]
+        for y in input_list[1]:
+            self.eq_unsorted[k] = ['%s = %f' %(input_list[0], y)]
             self.evaluate()
 
             for j in range(len(self.var_name)):
@@ -274,29 +272,29 @@ class Circuit:
             self.reset_to_startcond()
 
         for vdot_name in result_vdot_dict:
-            plt.plot(variable_list, result_vdot_dict[vdot_name][1], label=result_vdot_dict[vdot_name][0])
+            plt.plot(input_list[1], result_vdot_dict[vdot_name][1], label=result_vdot_dict[vdot_name][0])
         plt.ylabel('Flow in Branches in [l/s]')
-        plt.xlabel('BoP Entry Flow in [l/s]')
+        plt.xlabel(input_list[2])
         plt.legend()
         plt.grid()
         plt.show()
         for temp_name in result_temp_dict:
-            plt.plot(variable_list, result_temp_dict[temp_name][1], label=result_temp_dict[temp_name][0])
+            plt.plot(input_list[1], result_temp_dict[temp_name][1], label=result_temp_dict[temp_name][0])
         plt.ylabel('Temperature in [K]')
-        plt.xlabel('BoP Entry Flow in [l/s]')
+        plt.xlabel(input_list[2])
         plt.legend(loc = 'lower right')
         plt.grid()
         plt.show()
         for pr_name in result_pr_dict:
-            plt.plot(variable_list, result_pr_dict[pr_name][1], label=result_pr_dict[pr_name][0])
+            plt.plot(input_list[1], result_pr_dict[pr_name][1], label=result_pr_dict[pr_name][0])
         plt.ylabel('BoP Pressuredrop in [bar]')
-        plt.xlabel('BoP Entry Flow in [l/s]')
+        plt.xlabel(input_list[2])
         plt.legend()
         plt.grid()
         plt.show()
 
         data_dict = {}
-        data_dict['Vdot_1'] = variable_list
+        data_dict[input_list[0]] = input_list[1]
         for vdot_name in result_vdot_dict:
             data_dict[result_vdot_dict[vdot_name][0]] = result_vdot_dict[vdot_name][1]
         for temp_name in result_temp_dict:
@@ -309,7 +307,7 @@ class Circuit:
         datatoexcel.close()
 
 
-    def analyse_big_arch(self, result_dict):
+    def eveluate_big_arch(self, result_dict):
         self.evaluate()
 
         for j in range(len(self.var_name)):
@@ -324,6 +322,41 @@ class Circuit:
         datatoexcel = pd.ExcelWriter('results.xlsx')
         data.to_excel(datatoexcel)
         datatoexcel.close()
+
+
+    def analyse_big_arch(self, input_list, result_dict):
+        for i in range(len(self.eq_unsorted)):
+            if '%s = ' %(input_list[0]) in self.eq_unsorted[i][0]:
+                k = i
+        
+        for y in input_list[1]:
+            self.eq_unsorted[k] = ['%s = %f' %(input_list[0], y)]
+            self.evaluate()
+
+            for j in range(len(self.var_name)):
+                for result_name in result_dict:
+                    if self.var_name[j] == result_name:
+                        result_dict[result_name][1].append(self.var_res[j])
+
+            self.reset_to_startcond()
+
+        for result_name in result_dict:
+            plt.plot(input_list[1], result_dict[result_name][1], label=result_dict[result_name][0])
+            plt.ylabel(result_dict[result_name][0])
+            plt.xlabel(input_list[2])
+            plt.legend()
+            plt.grid()
+            plt.show()
+
+        data_dict = {}
+        data_dict[input_list[0]] = input_list[1]
+        for result_name in result_dict:
+            data_dict[result_dict[result_name][0]] = result_dict[result_name][1]
+        data = pd.DataFrame(data_dict)
+        datatoexcel = pd.ExcelWriter('results.xlsx')
+        data.to_excel(datatoexcel)
+        datatoexcel.close()
+        
         
 
 class NodeRenamer(ast.NodeTransformer):

@@ -63,7 +63,7 @@ circ.add_bc("T_9 = 273.15 + 70.0")
 circ.add_bc("T_10 = 273.15 + 85.0")
 circ.add_bc("T_3 = 273.15 + 50.0")
 
-circ.add_bc("Qdot_bop1 = 13000.0")
+circ.add_bc("Qdot_bop1 = 10650")
 circ.add_bc("Qdot_stack1 = 158000")
 # circ.add_bc("Qdot_stack1 = %.1f"%(np.interp(600, [20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600], [2.6, 9.7, 20.8, 33.1, 46.7, 60.5, 75.0, 90.2, 106.4, 123.6, 142.5, 162.0, 178.5], left=np.nan, right=np.nan) * 1000.0))
 
