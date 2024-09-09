@@ -6,14 +6,13 @@ import matplotlib.pyplot as plt
 
 
 class Compressor:
-    def __init__(self, params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95,
+    def __init__(self, isentropic_efficiency=0.75, electric_efficiency=0.95,
                  air_mass_flow_kg_s=1, temperature_in_K=293.15, pressure_in_Pa=1.013e5, pressure_out_Pa=1.013e5,
                  nominal_BoP_pressure_drop_Pa=0.3*1e5, nominal_air_flow_kg_s=0.130, compressor_map=None,
                  mass_by_power_kg_kW= {"mean": 1.0, "sd": 0.1}):
 
         self.isentropic_efficiency = isentropic_efficiency
         self.electric_efficiency = electric_efficiency
-        self.params_physics = params_physics
         self.air_mass_flow_kg_s = air_mass_flow_kg_s
         self.temperature_in_K = temperature_in_K
         self.pressure_in_Pa = pressure_in_Pa        
@@ -189,10 +188,8 @@ class Compressor:
         }
     
 # %% Example Usage:
-import parameters   
-params_physics = parameters.Physical_Parameters()
 
-C1 = Compressor(params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95,
+C1 = Compressor(isentropic_efficiency=0.75, electric_efficiency=0.95,
              air_mass_flow_kg_s=1, pressure_in_Pa=1e5, pressure_out_Pa=2e5)
 
 power_el = C1.calculate_power()
