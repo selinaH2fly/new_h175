@@ -60,8 +60,13 @@ def plot_compressor_map(operating_point_pressure_ratio, operating_point_correcte
     # Create the plot
     plt.figure(figsize=(10, 8))
 
+    for simplex in hull.simplices:
+            plt.plot(points[simplex, 0], points[simplex, 1], 'gray', linestyle='--', linewidth=2)
+
+    plt.grid(True)
+
     # Contour plot for efficiency over pressure ratio and corrected mass flow
-    contours = plt.contourf(grid_massflow, grid_pressure_ratio, grid_efficiency, levels=15, cmap="viridis")
+    contours = plt.contourf(grid_massflow, grid_pressure_ratio, grid_efficiency, levels=30, cmap="viridis")
     plt.colorbar(contours, label="Efficiency")
 
     # Contour lines for efficiency
@@ -69,19 +74,18 @@ def plot_compressor_map(operating_point_pressure_ratio, operating_point_correcte
     plt.clabel(contour_lines, inline=True, fontsize=10, fmt="%.2f")
 
     # Highlight the operating point
-    plt.plot(operating_point_corrected_massflow_g_s, operating_point_pressure_ratio, 'ro', markersize=10,
-             label=f'Operating Point\nPR={operating_point_pressure_ratio}, Massflow={operating_point_corrected_massflow_g_s} g/s, Interpolated Efficiency: {efficiency_interp:.2f}')
+    # plt.plot(operating_point_corrected_massflow_g_s, operating_point_pressure_ratio, 'ro', markersize=10,
+    #          label=f'Operating Point\nPR={operating_point_pressure_ratio}, Massflow={operating_point_corrected_massflow_g_s} g/s, Interpolated Efficiency: {efficiency_interp:.2f}')
 
-    plt.grid(True)
-
-    # Labels and title
-    plt.title("Compressor Map: Pressure Ratio vs Corrected Mass Flow with Efficiency Contours")
+     # Labels and title
+    plt.title("Compressor Map: Pressure Ratio vs Corrected Mass Flow")
     plt.xlabel("Corrected Mass Flow (g/s)")
     plt.ylabel("Pressure Ratio")
-    plt.legend()
+    # plt.legend(loc='upper left')
 
     # Display the plot
-    plt.show()
+    # plt.show()
+    plt.savefig('compressor_map.png', bbox_inches='tight')
 
 # Example usage:
 # clipped_massflow, clipped_pressure_ratio, clipped_efficiency = clip_compressor_map_to_convex_hull(massflow, pressure_ratio, efficiency)

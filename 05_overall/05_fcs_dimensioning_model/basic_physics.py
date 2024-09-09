@@ -59,3 +59,10 @@ def compute_coolant_flow(current_A, cell_voltage_V, temp_coolant_in_degC, temp_c
     coolant_flow_m3_s = coolant_flow_kg_s / CP.PropsSI('D', 'T', (temp_coolant_in_degC + temp_coolant_out_degC) / 2 + 273.15, 'P', pressure_ambient_Pa, coolant)
 
     return coolant_flow_m3_s.item()
+
+#%% Example usage
+
+temperature_K, pressure_Pa = icao_atmosphere(flight_level_100ft=120)
+
+print(f"Temperature at 12000 ft: {temperature_K:.2f} K")
+print(f"Pressure at 12000 ft: {pressure_Pa:.2f} Pa")

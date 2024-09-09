@@ -69,7 +69,6 @@ class Compressor:
         corrected_mass_flow_g_s = mass_flow_g_s * (self.pressure_in_Pa / self.compressor_map['reference_pressure_Pa']) * \
             np.sqrt(self.temperature_in_K / self.compressor_map['reference_temperature_K'])
 
-
         # Assign the compressor map arrays and flatten to 1D
         map_pressure_ratio = self.compressor_map['pressure_ratio'].flatten()
         map_mass_flow_g_s= self.compressor_map['corrected_massflow_g_s'].flatten()
