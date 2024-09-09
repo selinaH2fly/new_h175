@@ -78,4 +78,4 @@ result_dict = {pump1.Vdot_in : ['flow over pump1 in [l/S]', []],
                pump2.delta_p : ['pump2 pressure difference [bar]', []],
 }
 
-circ.analyse_big_arch(result_dict)
+circ.eveluate_big_arch(result_dict)

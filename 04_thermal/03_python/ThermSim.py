@@ -248,6 +248,12 @@ class Circuit:
 
     
     def analyse_vdot_temp_pr(self, input_list, result_vdot_dict, result_temp_dict, result_pr_dict):
+        """
+        analyse choosen vdot, temp, and pr over the variation of a choosen input variable. Therefore runs sript in loop several times.
+        Results are plotted and saved in excelfile.                                 
+        result...dict = {'Name of variabel' : ['Legend for plotting', []]}                     
+        inputlist= ['Name of Variable', [...] , 'Legend for plotting']]  [...] is a List of values for variable to be invistigated
+        """
         for i in range(len(self.eq_unsorted)):
             if '%s = ' %(input_list[0]) in self.eq_unsorted[i][0]:
                 k = i
@@ -308,6 +314,10 @@ class Circuit:
 
 
     def eveluate_big_arch(self, result_dict):
+        """
+        saves in 'result_dict' choosen variables in excel file. Runs script only once
+        result...dict={'Name of variabel' : ['Legend for plotting', []]}      
+        """
         self.evaluate()
 
         for j in range(len(self.var_name)):
@@ -325,6 +335,12 @@ class Circuit:
 
 
     def analyse_big_arch(self, input_list, result_dict):
+        """
+        analyse choosen variables over the variation of a choosen input variable. Therefore runs sript in loop several times.
+        Results are plotted and saved in excelfile.                                 
+        result...dict = {'Name of variabel' : ['Legend for plotting', []]}                     
+        inputlist= ['Name of Variable', [...] , 'Legend for plotting']]  [...] is a List of values for variable to be invistigated
+        """
         for i in range(len(self.eq_unsorted)):
             if '%s = ' %(input_list[0]) in self.eq_unsorted[i][0]:
                 k = i

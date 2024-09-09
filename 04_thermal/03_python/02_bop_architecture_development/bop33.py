@@ -101,4 +101,5 @@ result_pr_dict = {mixer1.p_out : ['bop pressure drop in [bar]', []]
 }
 
 vdot1 = [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60]
-circ.analyse_vdot1(vdot1, result_vdot_dict, result_temp_dict, result_pr_dict)
+input_list = ['Vdot_1', vdot1, 'BoP Entry Flow [l/s]']
+circ.analyse_vdot_temp_pr(input_list, result_vdot_dict, result_temp_dict, result_pr_dict)
