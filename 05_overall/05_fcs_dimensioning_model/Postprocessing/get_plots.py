@@ -1042,7 +1042,7 @@ def analyze_data(_file_path1, saving=True):
     colors = [ "tab:blue", "tab:orange",  "tab:red"]
     markers= ["o", "v", "s"]
     
-    fl_set = 120
+    fl_set = 120 #TODO: Pass that as an argument to the function
     fl_max = max(df1["Flight Level (100x ft)"])
     
     # ###########PLOT: Polcurves

@@ -174,7 +174,7 @@ def plot_cathode_stoichiomtrey(data, titles, fl_set, saving=True):
         ax.axvspan(700, 800, color='red', alpha=0.3)
 
         # Set title and labels
-        ax.set_title(f'Optimized Operating Parameters: Cathode Inlet rel. Humidity, FL {fl_set}, {title}', fontsize=14)
+        ax.set_title(f'Optimized Operating Parameters: Cathode Sroichiometry, FL {fl_set}, {title}', fontsize=14)
         ax.set_xlabel('Current [A]')
         ax.set_ylabel(f'Cathode Inlet Stoichiometry [-]')
         ax.grid(True)
