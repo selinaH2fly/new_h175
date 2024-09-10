@@ -10,7 +10,7 @@ class Optimization_Parameters:
         TODO: Include parameters for optimization function (such as maxiter, popsize, etc.)
         '''
 
-        # Bounds for the optimization problem
+        # Bounds for the optimization problem TODO: make these a dictionary
         self.bounds = [(50, 2e3),       # current_A
                         (30, 100),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
                         (1.6, 5),       # stoich_cathode (lambda_min = 1.6 according to P10 manual)

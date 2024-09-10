@@ -10,9 +10,14 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 
+# Import plot functions defined in a separate file
+from get_plots_operating_parameters import plot_cathode_inlet_pressure, plot_cathode_inlet_realtive_humidity, \
+    plot_cathode_stoichiomtrey, plot_coolant_inlet_temperature, plot_coolant_outlet_temperature
+
+
 # %% Plot functions:
 
-# PLOT: Polcurve single bol
+# PLOT: Polcurve single BoL/EoL
 def plot_polarization_curves(data, titles, fl_set, saving=True):
     """
     Plots the polarization curves for multiple datasets.
@@ -1037,12 +1042,27 @@ def analyze_data(_file_path1, saving=True):
     colors = [ "tab:blue", "tab:orange",  "tab:red"]
     markers= ["o", "v", "s"]
     
-    fl_set = 120
+    fl_set = 120 #TODO: Pass that as an argument to the function
     fl_max = max(df1["Flight Level (100x ft)"])
-    """
     
     ###########PLOT: Polcurves
     plot_polarization_curves(data, titles, fl_set, saving=saving)
+
+    ###########PLOT: Optimized Operating Parameters
+
+    # create a directory for the plots
+    os.makedirs("Optimized_Operating_Parameters", exist_ok=True)
+    os.chdir("Optimized_Operating_Parameters")
+
+    # call the plot functions
+    plot_cathode_inlet_pressure(data, titles, fl_set, saving=saving)
+    plot_cathode_inlet_realtive_humidity(data, titles, fl_set, saving=saving)
+    plot_cathode_stoichiomtrey(data, titles, fl_set, saving=saving)
+    plot_coolant_inlet_temperature(data, titles, fl_set, saving=saving)
+    plot_coolant_outlet_temperature(data, titles, fl_set, saving=saving)
+
+    # go back to the parent directory
+    os.chdir("../")
     
     ############PLOT: Polcurves eol vs bol connected
     plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
@@ -1063,23 +1083,9 @@ def analyze_data(_file_path1, saving=True):
 
     ############Plot Weight estimate
     #Weight/Power Factor
-    """
     
-    # componentsP_dict =  {"Compressor Power (kW)":   0.63,
-    #                     "Turbine Power (kW)":      0,
-    #                     "Recirculation Pump Power (kW)":    7.38,
-    #                     "Coolant Pump Power (kW)": 4.80}
-
-    # components_SD_dict = {"Compressor Power (kW)":   0.1,
-    #                     "Turbine Power (kW)":      0.1,
-    #                     "Recirculation Pump Power (kW)":    4.04,
-    #                     "Coolant Pump Power (kW)": 1.66}
-    # Weight dictionary  to onl
     componentsP_dict =  {"Compressor Power (kW)":   0.63,
                          "Turbine Power (kW)":      0}
-    
-    # plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="bol")
-    # plot_weight_estimate(data, titles, colors, componentsP_dict, components_SD_dict, markers, saving=saving, mode="eol")
     
     # New grouped, stacked bar chart function
     plot_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
@@ -1090,8 +1096,6 @@ def analyze_data(_file_path1, saving=True):
     
 # %%    
 
-#analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2_std\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True)    
+analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2_std\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True) 
 
-# Directory link that works for me (Kate)
-analyze_data(_file_path1=r"consolidated_20-175kW_400-500_0-150ft__2_std\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=False) 
 #TODO write init:
