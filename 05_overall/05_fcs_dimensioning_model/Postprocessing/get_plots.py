@@ -11,8 +11,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 
 # Import plot functions defined in a separate file
-from get_plots_operating_parameters import plot_cathode_inlet_pressure
-
+from get_plots_operating_parameters import plot_cathode_inlet_pressure, plot_cathode_inlet_realtive_humidity, \
+    plot_cathode_stoichiomtrey, plot_coolant_inlet_temperature, plot_coolant_outlet_temperature
 
 
 # %% Plot functions:
@@ -1050,6 +1050,10 @@ def analyze_data(_file_path1, saving=True):
 
     ###########PLOT: Optimized Operating Parameters
     plot_cathode_inlet_pressure(data, titles, fl_set, saving=saving)
+    plot_cathode_inlet_realtive_humidity(data, titles, fl_set, saving=saving)
+    plot_cathode_stoichiomtrey(data, titles, fl_set, saving=saving)
+    plot_coolant_inlet_temperature(data, titles, fl_set, saving=saving)
+    plot_coolant_outlet_temperature(data, titles, fl_set, saving=saving)
     
     # ############PLOT: Polcurves eol vs bol connected
     # plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
