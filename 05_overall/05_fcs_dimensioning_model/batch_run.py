@@ -6,7 +6,7 @@ import argparse
 import numpy as np
 import itertools
 from collect_data import consolidate_experiment_data
-from get_plots import analyze_data
+from Postprocessing.get_plots import analyze_data
 from tqdm import tqdm
 
 def save_failed_case(parameter, error_message):
