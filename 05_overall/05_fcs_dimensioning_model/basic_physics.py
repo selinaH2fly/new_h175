@@ -20,7 +20,7 @@ def icao_atmosphere(flight_level_100ft):
     temperature_K = params_physics.sea_level_ambient_temperature_K - params_physics.temperature_lapse_rate * altitude_m
     pressure_Pa = params_physics.sea_level_ambient_pressure_bar*1e5 * \
         (1 - params_physics.temperature_lapse_rate * altitude_m / params_physics.sea_level_ambient_temperature_K) ** \
-            (physical_constants['Newtonian constant of gravitation'][0] / ((physical_constants['molar gas constant'][0]/CP.PropsSI('M', 'Air')) * params_physics.temperature_lapse_rate))  #calculation of specific gas constant by R/molar_mass(air)
+            ((physical_constants['standard acceleration of gravity'][0]) / ((physical_constants['molar gas constant'][0]/CP.PropsSI('M', 'Air')) * params_physics.temperature_lapse_rate))  #calculation of specific gas constant by R/molar_mass(air)
 
     return temperature_K, pressure_Pa
     
