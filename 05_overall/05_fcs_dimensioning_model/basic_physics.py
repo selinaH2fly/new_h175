@@ -2,6 +2,7 @@
 
 from parameters import Physical_Parameters
 import CoolProp.CoolProp as CP
+from scipy.constants import physical_constants
 
 
 def icao_atmosphere(flight_level_100ft):
@@ -19,7 +20,7 @@ def icao_atmosphere(flight_level_100ft):
     temperature_K = params_physics.sea_level_ambient_temperature_K - params_physics.temperature_lapse_rate * altitude_m
     pressure_Pa = params_physics.sea_level_ambient_pressure_bar*1e5 * \
         (1 - params_physics.temperature_lapse_rate * altitude_m / params_physics.sea_level_ambient_temperature_K) ** \
-            (params_physics.gravity / (params_physics.specific_gas_constant * params_physics.temperature_lapse_rate))
+            (physical_constants['Newtonian constant of gravitation'][0] / ((physical_constants['molar gas constant'][0]/CP.PropsSI('M', 'Air')) * params_physics.temperature_lapse_rate))  #calculation of specific gas constant by R/molar_mass(air)
 
     return temperature_K, pressure_Pa
     
@@ -32,8 +33,8 @@ def compute_air_mass_flow(stoichiometry, current_A, cellcount=275):
     params_physics = Physical_Parameters()
 
     # Calculate the air flow rates
-    air_flow_mol_s = current_A * cellcount * stoichiometry / (4 * params_physics.faraday * params_physics.oxygen_mol_fraction)
-    air_flow_kg_s = air_flow_mol_s * params_physics.air_molar_mass
+    air_flow_mol_s = current_A * cellcount * stoichiometry / (4 * physical_constants['Faraday constant'][0] * params_physics.oxygen_mol_fraction)
+    air_flow_kg_s = air_flow_mol_s * CP.PropsSI('M','Air')
 
     return air_flow_kg_s
 
