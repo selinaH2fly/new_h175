@@ -137,7 +137,7 @@ def plot_cathode_inlet_realtive_humidity(data, titles, fl_set, saving=True):
         if saving:
             plt.savefig(f'{title}_cathode_inlet_rel_humidity.png')
 
-# Plot the optimized cathode stocihiometry for each dataset
+# Plot the optimized cathode stoichiometry for each dataset
 def plot_cathode_stoichiomtrey(data, titles, fl_set, saving=True):
     """
     Plots the optimized operating paramter for multiple datasets.
@@ -174,7 +174,7 @@ def plot_cathode_stoichiomtrey(data, titles, fl_set, saving=True):
         ax.axvspan(700, 800, color='red', alpha=0.3)
 
         # Set title and labels
-        ax.set_title(f'Optimized Operating Parameters: Cathode Sroichiometry, FL {fl_set}, {title}', fontsize=14)
+        ax.set_title(f'Optimized Operating Parameters: Cathode Stoichiometry, FL {fl_set}, {title}', fontsize=14)
         ax.set_xlabel('Current [A]')
         ax.set_ylabel(f'Cathode Inlet Stoichiometry [-]')
         ax.grid(True)
