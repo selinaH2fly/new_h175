@@ -1045,8 +1045,8 @@ def analyze_data(_file_path1, saving=True):
     fl_set = 120 #TODO: Pass that as an argument to the function
     fl_max = max(df1["Flight Level (100x ft)"])
     
-    # ###########PLOT: Polcurves
-    # plot_polarization_curves(data, titles, fl_set, saving=saving)
+    ###########PLOT: Polcurves
+    plot_polarization_curves(data, titles, fl_set, saving=saving)
 
     ###########PLOT: Optimized Operating Parameters
 
@@ -1064,32 +1064,32 @@ def analyze_data(_file_path1, saving=True):
     # go back to the parent directory
     os.chdir("../")
     
-    # ############PLOT: Polcurves eol vs bol connected
-    # plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
+    ############PLOT: Polcurves eol vs bol connected
+    plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
     
-    # ############PLOT: System Power Grid Plot
-    # plot_power_needs(data, titles, fl_set, saving=saving)
+    ############PLOT: System Power Grid Plot
+    plot_power_needs(data, titles, fl_set, saving=saving)
     
-    # ###########PLOT: H2 consumption
-    # weights = [1,1,1]#[39.92+ 6.26,43.75+6.01,47.58+5.77] #stack + compressor gewicht
-    # plot_h2_consumption(data, titles, colors, weights, fl_set, saving=saving)
+    ###########PLOT: H2 consumption
+    weights = [1,1,1]#[39.92+ 6.26,43.75+6.01,47.58+5.77] #stack + compressor gewicht
+    plot_h2_consumption(data, titles, colors, weights, fl_set, saving=saving)
         
-    # ###########PLOT: System eff vs Net Power: Flade Plot, 
-    # plot_system_efficiency(data, titles, colors, fl_set, saving=saving)
+    ###########PLOT: System eff vs Net Power: Flade Plot, 
+    plot_system_efficiency(data, titles, colors, fl_set, saving=saving)
     
-    # #############PLOT: H2 consumption vs Flightlevel:
-    # H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="bol")
-    # H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="eol")
+    #############PLOT: H2 consumption vs Flightlevel:
+    H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="bol")
+    H2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="eol")
 
-    # ############Plot Weight estimate
-    # #Weight/Power Factor
+    ############Plot Weight estimate
+    #Weight/Power Factor
     
-    # componentsP_dict =  {"Compressor Power (kW)":   0.63,
-    #                      "Turbine Power (kW)":      0}
+    componentsP_dict =  {"Compressor Power (kW)":   0.63,
+                         "Turbine Power (kW)":      0}
     
-    # # New grouped, stacked bar chart function
-    # plot_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
-    # plot_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="eol")  
+    # New grouped, stacked bar chart function
+    plot_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
+    plot_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="eol")  
     
 # Go back to origin dir
     os.chdir("../../")
