@@ -1,9 +1,16 @@
 import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 import matplotlib.lines as mlines
+import sys
+import os
 
+# Import parameters.py from the parent directory
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from parameters import Optimization_Parameters
+_params_optimization = Optimization_Parameters()
+
+# Plot the optimized cathode inlet pressure for each dataset
 def plot_cathode_inlet_pressure(data, titles, fl_set, saving=True):
     """
     Plots the polarization curves for multiple datasets.
@@ -20,10 +27,13 @@ def plot_cathode_inlet_pressure(data, titles, fl_set, saving=True):
         
         # Create a colormap and normalize for the color gradient
         norm = mcolors.Normalize(vmin=20, vmax=175)
-        cmap = cm.ScalarMappable(norm=norm, cmap='viridis')
+
+        # plot min/max bounds according to parameters.py
+        ax.axhline(min(_params_optimization.bounds[3]), color='black', linestyle='--', label='Cathode Inlet Pressure Bounds', zorder=0)
+        ax.axhline(max(_params_optimization.bounds[3]), color='black', linestyle='--', zorder=0)
         
         # Scatter plot with color based on 'System Power (kW)'
-        scatter = ax.scatter(df['current_A (Value)'], df['pressure_cathode_in_bara (Value)'], c=df['System Power (kW)'], cmap='viridis', norm=norm, edgecolor='k', s=100)
+        scatter = ax.scatter(df['current_A (Value)'], df['pressure_cathode_in_bara (Value)'], c=df['System Power (kW)'], cmap='viridis', norm=norm, edgecolor='k', s=100, zorder=1)
 
         # Add colorbar for the gradient
         cbar = plt.colorbar(scatter, ax=ax)
@@ -36,14 +46,13 @@ def plot_cathode_inlet_pressure(data, titles, fl_set, saving=True):
         # Add a red shaded area from 700 A to 800 A
         ax.axvspan(700, 800, color='red', alpha=0.3)
 
-        
         # Set title and labels
         ax.set_title(f'Optimized Operating Parameters: Cathode Inlet Pressure, FL {fl_set}, {title}', fontsize=14)
         ax.set_xlabel('Current [A]')
         ax.set_ylabel(f'Cathode Inlet Pressure [Bar(a)]')
-        ax.grid(True)
+        ax.grid(True, zorder=-1)
         ax.set_xlim([0, 800])
-        # ax.set_ylim([0, 1.25])
+        ax.set_ylim([1, 3.5])
         fig.tight_layout()
 
         # Annotate points where 'eol (t/f)' is True
