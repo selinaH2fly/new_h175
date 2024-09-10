@@ -1049,11 +1049,20 @@ def analyze_data(_file_path1, saving=True):
     # plot_polarization_curves(data, titles, fl_set, saving=saving)
 
     ###########PLOT: Optimized Operating Parameters
+
+    # create a directory for the plots
+    os.makedirs("Optimized_Operating_Parameters", exist_ok=True)
+    os.chdir("Optimized_Operating_Parameters")
+
+    # call the plot functions
     plot_cathode_inlet_pressure(data, titles, fl_set, saving=saving)
     plot_cathode_inlet_realtive_humidity(data, titles, fl_set, saving=saving)
     plot_cathode_stoichiomtrey(data, titles, fl_set, saving=saving)
     plot_coolant_inlet_temperature(data, titles, fl_set, saving=saving)
     plot_coolant_outlet_temperature(data, titles, fl_set, saving=saving)
+
+    # go back to the parent directory
+    os.chdir("../")
     
     # ############PLOT: Polcurves eol vs bol connected
     # plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
