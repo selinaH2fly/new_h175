@@ -1,11 +1,14 @@
 import Arch01, Arch03a, Arch03b, Arch04, Arch05, Arch06, Arch08
+import pandas as pd
 
-arch_list = ["Arch01"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
+
+arch_list = ["Arch01", "Arch03a", "Arch03b"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
 
 # input_list[0] = variable which should be adapted
 # input_list[1] = Values for adjusting boundary condition
 # input_list[2] = Description for axis for plotting
-input_list = ["stack_t_out" , [273.15 + 70 + 8, 273.15 + 70 + 10, 273.15 + 70 + 12, 273.15 + 70 + 14, 273.15 + 70 + 16], 'Stackausgangstemperatur [K]']
+#273.15 + 70 + 8, 273.15 + 70 + 10, 273.15 + 70 + 12,
+input_list = ["stack_t_out" , [273.15 + 70 + 14, 273.15 + 70 + 16], 'Stackausgangstemperatur [K]']
 # input_list = ["stack_t_in" , [273.15 + 60 + 8, 273.15 + 60 + 10, 273.15 + 60 + 12, 273.15 + 60 + 14, 273.15 + 60 + 16], 'Stackeingangstemperatur [K]']
 # input_list = ["sys_t_in" , [273.15 + 50 + 8, 273.15 + 50 + 10, 273.15 + 50 + 12, 273.15 + 50 + 14, 273.15 + 50 + 16], 'Systemeingangstemperatur [K]']
 # input_list = ["bop_q" , [5000, 7000, 9000, 11000, 13000], 'Wärmeeintrag BoP Komponenten [W]']
@@ -27,8 +30,21 @@ stack_q = 158000            # stack heat
 bop_vdot = 0.4          # flow over bop components (whole block)
 
 #calculation
-for y in arch_list:
-    key_init = "%s.initialize(\"%s\", %f, %f, %f, %f, %f, %f, %f)" %(y, input_list[0], pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop_q, stack_q, bop_vdot)
+excel_dict = {}
+for arch in arch_list:
+    key_init = "%s.initialize(\"%s\", %f, %f, %f, %f, %f, %f, %f)" %(arch, input_list[0], pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop_q, stack_q, bop_vdot)
     circ, input_list[0], result_dict = eval(key_init)
-    circ.analyse_big_arch(input_list, result_dict)
+    result_dict = circ.compare_big_arch(input_list, result_dict)
 
+    for name in result_dict:    # rewrite results in one dictionary
+           excel_dict["%s_%s"%(arch,name)] = result_dict[name]
+    
+
+data = pd.DataFrame(excel_dict)
+datatoexcel = pd.ExcelWriter('results.xlsx')
+data.to_excel(datatoexcel)
+datatoexcel.close()
+
+#for title in excel_dict:
+#	for arch
+#
