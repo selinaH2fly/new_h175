@@ -1,5 +1,5 @@
 import Arch01, Arch03a, Arch03b, Arch04, Arch05, Arch06, Arch08
-arch_list = ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08",]      # which architecture should be eveluated?, also possible to evaluate multiple architectures
+arch_list = ["Arch01"]      # which architecture should be eveluated?, also possible to evaluate multiple architectures
 
 # input
 pump_p_in = 1       # pressure before pump, lowest pressure level

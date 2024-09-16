@@ -6,7 +6,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 import ThermSim
 
-def initialize(pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop_q, stack_q, bop_vdot):
+def initialize(input_variable, pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop_q, stack_q, bop_vdot):
 
     """
     Provide input on architecture
@@ -91,4 +91,19 @@ def initialize(pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop_q, stack_q, bop
                 radiator1.T_in : ['System Output Temperature [K]', []]
     }
 
-    return circ, result_dict
+    if input_variable == "stack_t_in":
+        input_variable = "T_6"               #
+    elif input_variable == "stack_t_out":
+        input_variable = "T_7"               #
+    elif input_variable == "sys_t_in":
+        input_variable = "T_3"               #
+    elif input_variable == "bop_q":
+        input_variable = "Qdot_bop1"
+    elif input_variable == "stack_q":
+        input_variable = "Qdot_stack1"
+    elif input_variable == "bop_vdot":
+        input_variable = "Vdot_3"            #
+    elif input_variable == "bop_dp":
+        input_variable = "delta_p_bop1"
+
+    return circ, input_variable, result_dict
