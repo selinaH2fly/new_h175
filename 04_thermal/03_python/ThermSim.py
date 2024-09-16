@@ -313,7 +313,7 @@ class Circuit:
         datatoexcel.close()
 
 
-    def eveluate_big_arch(self, result_dict):
+    def evaluate_big_arch(self, result_dict):
         """
         saves in 'result_dict' choosen variables in excel file. Runs script only once
         result...dict={'Name of variabel' : ['Legend for plotting', []]}      
