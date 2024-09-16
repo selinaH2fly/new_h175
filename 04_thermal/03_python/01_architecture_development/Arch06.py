@@ -6,7 +6,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 import ThermSim
 
-def initialize(sys_t_in, pump_p_in):
+def initialize(pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop_q, stack_q, bop_vdot):
 
     """
     Provide input on architecture
@@ -54,7 +54,7 @@ def initialize(sys_t_in, pump_p_in):
     Provide input on boundary conditions
     """
 
-    circ.add_bc("p_9 = 1.0")
+    circ.add_bc("p_9 = %f" %pump_p_in)
 
     # pressure drop for bop1 for all bop components including intercooler, must be adapted to without intercooler!
     # pressure drop bop2 is equal to intercooler pressure drop, already adapted!
@@ -67,17 +67,17 @@ def initialize(sys_t_in, pump_p_in):
 
     circ.add_bc("delta_p_1_tcv1 = 0.0")
 
-    circ.add_bc("T_6 = 273.15 + 70.0")
-    circ.add_bc("T_7 = 273.15 + 85.0")
-    circ.add_bc("T_3 = 273.15 + 50.0")
+    circ.add_bc("T_6 = %f" %stack_t_in)
+    circ.add_bc("T_7 = %f" %stack_t_out)
+    circ.add_bc("T_3 = %f" %sys_t_in)
 
     circ.add_bc("Qdot_bop1 = 1650")
     circ.add_bc("Qdot_bop2 = 9000")
-    circ.add_bc("Qdot_stack1 = 158000")
+    circ.add_bc("Qdot_stack1 = %f" %stack_q)
     #circ.add_bc("Qdot_stack1 = %.1f"%(np.interp(600, [20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600], [2.6, 9.7, 20.8, 33.1, 46.7, 60.5, 75.0, 90.2, 106.4, 123.6, 142.5, 162.0, 178.5], left=np.nan, right=np.nan) * 1000.0))
 
-    circ.add_bc("Vdot_3 = 0.1")
-    circ.add_bc("Vdot_11 = 0.1")
+    circ.add_bc("Vdot_3 = %f" %bop_vdot)
+    circ.add_bc("Vdot_11 = %f" %bop_vdot)
 
 
     """

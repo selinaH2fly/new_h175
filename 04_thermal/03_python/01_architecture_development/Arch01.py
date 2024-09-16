@@ -51,9 +51,9 @@ def initialize(pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop_q, stack_q, bop
     # boundary conditions, user input:
     circ.add_bc("p_9 = %f" %pump_p_in)
 
-    circ.add_bc("T_6 = 273.15 + %f" %stack_t_in)
-    circ.add_bc("T_7 = 273.15 + %f" %stack_t_out)
-    circ.add_bc("T_3 = 273.15 + %f" %sys_t_in)
+    circ.add_bc("T_6 = %f" %stack_t_in)
+    circ.add_bc("T_7 = %f" %stack_t_out)
+    circ.add_bc("T_3 = %f" %sys_t_in)
 
     circ.add_bc("Qdot_bop1 = %f" %bop_q)
     circ.add_bc("Qdot_stack1 = %f" %stack_q)
