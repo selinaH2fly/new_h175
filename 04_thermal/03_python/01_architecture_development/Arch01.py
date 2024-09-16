@@ -89,4 +89,7 @@ result_dict = {pump1.Vdot_in : ['flow over pump1 in [l/S]', []],
                radiator1.T_in : ['System Output Temperature [K]', []]
 }
 
-circ.eveluate_big_arch(input_list, result_dict)
+circ.analyse_big_arch(input_list, result_dict)
+#circ.eveluate_big_arch(input_list, result_dict)
+
+#circ.evaluate()
