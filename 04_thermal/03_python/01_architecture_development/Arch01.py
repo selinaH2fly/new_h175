@@ -6,7 +6,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 import ThermSim
 
-def initialize(input_variable, pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop_q, stack_q, bop_vdot):
+def initialize(input_dict, result_dict, bc_dict):
 
     """
     Provide input on architecture
@@ -49,16 +49,16 @@ def initialize(input_variable, pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop
     """
 
     # boundary conditions, user input:
-    circ.add_bc("p_9 = %f" %pump_p_in)
+    circ.add_bc("p_9 = %f" %bc_dict["pump_p_in"])
 
-    circ.add_bc("T_6 = %f" %stack_t_in)
-    circ.add_bc("T_7 = %f" %stack_t_out)
-    circ.add_bc("T_3 = %f" %sys_t_in)
+    circ.add_bc("T_6 = %f" %bc_dict["stack_t_in"])
+    circ.add_bc("T_7 = %f" %bc_dict["stack_t_out"])
+    circ.add_bc("T_3 = %f" %bc_dict["sys_t_in"])
 
-    circ.add_bc("Qdot_bop1 = %f" %bop_q)
-    circ.add_bc("Qdot_stack1 = %f" %stack_q)
+    circ.add_bc("Qdot_bop1 = %f" %bc_dict["bop_q"])
+    circ.add_bc("Qdot_stack1 = %f" %bc_dict["stack_q"])
 
-    circ.add_bc("Vdot_3 = %f" %bop_vdot)
+    circ.add_bc("Vdot_3 = %f" %bc_dict["bop_vdot"])
 
     # fixed boundary conditiones:
     circ.add_bc("delta_p_bop1 = - 0.18")
@@ -84,26 +84,32 @@ def initialize(input_variable, pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop
     # input_list = [['T_3 = 273.15 + 65.0'], 'Systemeingangstemperatur [K]', [273.15 + 45, 273.15 + 50, 273.15 + 55, 273.15 + 60, 273.15 + 55]]
 
 
-    result_dict = {pump1.Vdot_in : ['flow over pump1 in [l/S]', []],
-                pump1.delta_p : ['pump pressure difference [bar]', []],
-                radiator1.Vdot_in : ['flow over radiator in [l/S]', []],
-                tcv1.nmix_2 : ['Percentage recirculated', []],
-                radiator1.T_in : ['System Output Temperature [K]', []]
-    }
+    for name in result_dict:
+        if name == "pump_vdot":
+            result_dict[name][0] = pump1.Vdot_in
+        elif name == "pump_delta_p":
+            result_dict[name][0] = pump1.delta_p
+        elif name == "radiator_vdot":
+            result_dict[name][0] = radiator1.Vdot_in
+        elif name == "perc_rec":
+            result_dict[name][0] = tcv1.nmix_2
+        elif name == "radiator_t_in":
+            result_dict[name][0] = radiator1.T_in
+    
+    for name in input_dict:
+        if name == "stack_t_in":
+            input_dict[name][0] = stack1.T_in              #
+        elif name == "stack_t_out":
+            input_dict[name][0] = stack1.T_out              #
+        elif name == "sys_t_in":
+            input_dict[name][0] = radiator1.T_out            #
+        elif name == "bop_q":
+            input_dict[name][0] = bop1.Qdot
+        elif name == "stack_q":
+            input_dict[name][0] = stack1.Qdot
+        elif name == "bop_vdot":
+            input_dict[name][0] = bop1.Vdot_in          #
+        elif name == "bop_dp":
+            input_dict[name][0] = bop1.delta_p
 
-    if input_variable == "stack_t_in":
-        input_variable = "T_6"               #
-    elif input_variable == "stack_t_out":
-        input_variable = "T_7"               #
-    elif input_variable == "sys_t_in":
-        input_variable = "T_3"               #
-    elif input_variable == "bop_q":
-        input_variable = "Qdot_bop1"
-    elif input_variable == "stack_q":
-        input_variable = "Qdot_stack1"
-    elif input_variable == "bop_vdot":
-        input_variable = "Vdot_3"            #
-    elif input_variable == "bop_dp":
-        input_variable = "delta_p_bop1"
-
-    return circ, input_variable, result_dict
+    return circ, input_dict, result_dict

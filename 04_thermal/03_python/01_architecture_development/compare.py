@@ -1,5 +1,6 @@
 import Arch01, Arch03a, Arch03b, Arch04, Arch05, Arch06, Arch08
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 arch_list = ["Arch01", "Arch03a", "Arch03b"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
@@ -8,7 +9,7 @@ arch_list = ["Arch01", "Arch03a", "Arch03b"]      # which architecture should be
 # input_list[1] = Values for adjusting boundary condition
 # input_list[2] = Description for axis for plotting
 #273.15 + 70 + 8, 273.15 + 70 + 10, 273.15 + 70 + 12,
-input_list = ["stack_t_out" , [273.15 + 70 + 14, 273.15 + 70 + 16], 'Stackausgangstemperatur [K]']
+input_dict = {"stack_t_out" : ["", [273.15 + 70 + 8, 273.15 + 70 + 10, 273.15 + 70 + 12, 273.15 + 70 + 14, 273.15 + 70 + 16], 'Stackausgangstemperatur [K]']}
 # input_list = ["stack_t_in" , [273.15 + 60 + 8, 273.15 + 60 + 10, 273.15 + 60 + 12, 273.15 + 60 + 14, 273.15 + 60 + 16], 'Stackeingangstemperatur [K]']
 # input_list = ["sys_t_in" , [273.15 + 50 + 8, 273.15 + 50 + 10, 273.15 + 50 + 12, 273.15 + 50 + 14, 273.15 + 50 + 16], 'Systemeingangstemperatur [K]']
 # input_list = ["bop_q" , [5000, 7000, 9000, 11000, 13000], 'Wärmeeintrag BoP Komponenten [W]']
@@ -17,24 +18,30 @@ input_list = ["stack_t_out" , [273.15 + 70 + 14, 273.15 + 70 + 16], 'Stackausgan
 # input_list = ["bop_dp" , [0.1, 0.2, 0.3, 0.4, 0.5], 'Druckverlust über die BoP Komponenten [bar]']
 
 
+result_dict = {"pump_vdot" : ["", [], 'flow over pump1 in [l/S]'],
+                "pump_delta_p" : ["", [],'pump pressure difference [bar]'],
+                "radiator_vdot" : ["", [], 'flow over radiator in [l/S]'],
+                "perc_rec": ["", [], 'Percentage recirculated'],
+                "radiator_t_in" : ["", [],'System Output Temperature [K]']
+    }
+
 # input
-pump_p_in = 1       # pressure before pump, lowest pressure level
+bc_dict = {"pump_p_in" : 1,     # pressure before pump, lowest pressure level
+           "stack_t_in" : 273.15 + 70.0,        # temperature at stack inlet
+           "stack_t_out" : 273.15 + 85.0,       # temperature at stack outlet
+           "sys_t_in" : 273.15 + 65.0,          # System entry temperature, temperature after external radiatior
+           "bop_q" : 10600,             # bop heat 
+           "stack_q" : 158000,          # stack heat
+           "bop_vdot" : 0.4             # flow over bop components (whole block)
+}
 
-stack_t_in = 273.15 + 70.0              # temperature at stack inlet
-stack_t_out = 273.15 + 85.0             # temperature at stack outlet
-sys_t_in = 273.15 + 65.0                # System entry temperature, temperature after external radiatior
-
-bop_q = 10600               # bop heat 
-stack_q = 158000            # stack heat
-
-bop_vdot = 0.4          # flow over bop components (whole block)
 
 #calculation
 excel_dict = {}
 for arch in arch_list:
-    key_init = "%s.initialize(\"%s\", %f, %f, %f, %f, %f, %f, %f)" %(arch, input_list[0], pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop_q, stack_q, bop_vdot)
-    circ, input_list[0], result_dict = eval(key_init)
-    result_dict = circ.compare_big_arch(input_list, result_dict)
+    key_init = "%s.initialize(%s, %s, %s)" %(arch, input_dict, result_dict, bc_dict)
+    circ, input_dict, result_dict = eval(key_init)
+    result_dict = circ.compare_big_arch(input_dict, result_dict)
 
     for name in result_dict:    # rewrite results in one dictionary
            excel_dict["%s_%s"%(arch,name)] = result_dict[name]
@@ -45,6 +52,13 @@ datatoexcel = pd.ExcelWriter('results.xlsx')
 data.to_excel(datatoexcel)
 datatoexcel.close()
 
-#for title in excel_dict:
-#	for arch
-#
+
+
+for title in excel_dict:
+    if "delta_p" in title:
+        plt.plot(input_list[1], excel_dict[title], )
+    plt.ylabel(result_dict[result_name][0])
+    plt.xlabel(input_list[2])
+    plt.legend()
+    plt.grid()
+    plt.show()
