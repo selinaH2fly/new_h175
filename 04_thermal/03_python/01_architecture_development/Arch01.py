@@ -91,10 +91,14 @@ def initialize(input_dict, result_dict, bc_dict):
             result_dict[name][0] = pump1.delta_p
         elif name == "radiator_vdot":
             result_dict[name][0] = radiator1.Vdot_in
-        elif name == "perc_rec":
+        elif name == "perc_recirc":
             result_dict[name][0] = tcv1.nmix_2
         elif name == "radiator_t_in":
             result_dict[name][0] = radiator1.T_in
+        elif name == "pump2_vdot":
+            result_dict[name][0] = "Not implementet in Architecture"
+        elif name == "pump2_delta_p":
+            result_dict[name][0] = "Not implementet in Architecture"
     
     for name in input_dict:
         if name == "stack_t_in":

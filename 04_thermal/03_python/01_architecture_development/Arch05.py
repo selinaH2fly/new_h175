@@ -6,7 +6,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 import ThermSim
 
-def initialize(input_variable, pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop_q, stack_q, bop_vdot):
+def initialize(input_dict, result_dict, bc_dict):
 
     """
     Provide input on architecture
@@ -53,22 +53,22 @@ def initialize(input_variable, pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop
     Provide input on boundary conditions
     """
 
-    circ.add_bc("p_1 = %f" %pump_p_in)
+    circ.add_bc("p_1 = %f" %bc_dict["pump_p_in"])
     circ.add_bc("delta_p_bop1 = - (0.000425124 * 60 ** 2 * Vdot_3 ** 2 + 0.003355931 * Vdot_3)")
     circ.add_bc("delta_p_stack1 = - (5.6629  * 10 ** (-6) * 60 ** 2 * Vdot_9 ** 2 + 6.3347 * 10 ** (-4) * 60 * Vdot_9)")
     circ.add_bc("delta_p_radiator1 = - (8.2958 * 10 ** (-6) * 60 ** 2 * Vdot_1 + 1.6622 * 10 ** (-3) * 60 * Vdot_1)")
     circ.add_bc("delta_p_1_tcv2 = - 0.0")   #CAUTION: Weird behaviour of architecture
     circ.add_bc("delta_p_2_tcv2 = - 0.0")   #CAUTION: Weird behaviour of architecture
 
-    circ.add_bc("T_9 = %f" %stack_t_in)
-    circ.add_bc("T_10 = %f" %stack_t_out)
-    circ.add_bc("T_3 = %f" %sys_t_in)
+    circ.add_bc("T_9 = %f" %bc_dict["stack_t_in"])
+    circ.add_bc("T_10 = %f" %bc_dict["stack_t_out"])
+    circ.add_bc("T_3 = %f" %bc_dict["sys_t_in"])
 
-    circ.add_bc("Qdot_bop1 = %f" %bop_q)
-    circ.add_bc("Qdot_stack1 = %f" %stack_q)
+    circ.add_bc("Qdot_bop1 = %f" %bc_dict["bop_q"])
+    circ.add_bc("Qdot_stack1 = %f" %bc_dict["stack_q"])
     # circ.add_bc("Qdot_stack1 = %.1f"%(np.interp(600, [20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600], [2.6, 9.7, 20.8, 33.1, 46.7, 60.5, 75.0, 90.2, 106.4, 123.6, 142.5, 162.0, 178.5], left=np.nan, right=np.nan) * 1000.0))
 
-    circ.add_bc("Vdot_3 = %f" %bop_vdot)
+    circ.add_bc("Vdot_3 = %f" %bc_dict["bop_vdot"])
     circ.add_bc("Vdot_13 = 1.15")            # alternative: Vdot_7  #CAUTION: Weird behaviour of architecture
 
 
@@ -76,28 +76,36 @@ def initialize(input_variable, pump_p_in, stack_t_in, stack_t_out, sys_t_in, bop
     Evaluate and generate output
     """
 
-    result_dict = {pump1.Vdot_in : ['flow over pump1 in [l/S]', []],
-                pump1.delta_p : ['pump1 pressure difference [bar]', []],
-                radiator1.Vdot_in : ['flow over radiator in [l/S]', []],
-                mixer1.nmix_2 : ['Percentage recirculated', []],
-                radiator1.T_in : ['System Output Temperature [K]', []],
-                pump2.Vdot_in : ['flow over pump2 in [l/S]', []],
-                pump2.delta_p : ['pump2 pressure difference [bar]', []],
-    }
+    for name in result_dict:
+        if name == "pump_vdot":
+            result_dict[name][0] = pump1.Vdot_in
+        elif name == "pump_delta_p":
+            result_dict[name][0] = pump1.delta_p
+        elif name == "radiator_vdot":
+            result_dict[name][0] = radiator1.Vdot_in
+        elif name == "perc_recirc":
+            result_dict[name][0] = mixer1.nmix_2
+        elif name == "radiator_t_in":
+            result_dict[name][0] = radiator1.T_in
+        elif name == "pump2_vdot":
+            result_dict[name][0] = pump2.Vdot_in
+        elif name == "pump2_delta_p":
+            result_dict[name][0] = pump2.delta_p
 
-    if input_variable == "stack_t_in":
-        input_variable = "T_9"               #
-    elif input_variable == "stack_t_out":
-        input_variable = "T_10"               #
-    elif input_variable == "sys_t_in":
-        input_variable = "T_3"               #
-    elif input_variable == "bop_q":
-        input_variable = "Qdot_bop1"
-    elif input_variable == "stack_q":
-        input_variable = "Qdot_stack1"
-    elif input_variable == "bop_vdot":
-        input_variable = "Vdot_3"            #
-    elif input_variable == "bop_dp":
-        input_variable = "delta_p_bop1"
+    for name in input_dict:
+        if name == "stack_t_in":
+            input_dict[name][0] = stack1.T_in              #
+        elif name == "stack_t_out":
+            input_dict[name][0] = stack1.T_out              #
+        elif name == "sys_t_in":
+            input_dict[name][0] = radiator1.T_out            #
+        elif name == "bop_q":
+            input_dict[name][0] = bop1.Qdot
+        elif name == "stack_q":
+            input_dict[name][0] = stack1.Qdot
+        elif name == "bop_vdot":
+            input_dict[name][0] = bop1.Vdot_in          #
+        elif name == "bop_dp":
+            input_dict[name][0] = bop1.delta_p
 
-    return circ, input_variable, result_dict
+    return circ, input_dict, result_dict

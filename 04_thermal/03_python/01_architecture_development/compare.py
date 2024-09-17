@@ -2,8 +2,8 @@ import Arch01, Arch03a, Arch03b, Arch04, Arch05, Arch06, Arch08
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
-arch_list = ["Arch01"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
+#, "Arch03b", "Arch04", "Arch06", "Arch08"
+arch_list = ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
 
 # input_list[0] = variable which should be adapted
 # input_list[1] = Values for adjusting boundary condition
@@ -22,8 +22,10 @@ input_dict = {"stack_t_out" : ["", [273.15 + 70 + 8, 273.15 + 70 + 10], 'Stackau
 result_dict = {"pump_vdot" : ["", [], 'flow over pump1 in [l/S]'],
                 "pump_delta_p" : ["", [],'pump pressure difference [bar]'],
                 "radiator_vdot" : ["", [], 'flow over radiator in [l/S]'],
-                "perc_rec": ["", [], 'Percentage recirculated'],
-                "radiator_t_in" : ["", [],'System Output Temperature [K]']
+                "perc_recirc": ["", [], 'Percentage recirculated'],
+                "radiator_t_in" : ["", [],'System Output Temperature [K]'],
+                "pump2_vdot" : ["", [], 'flow over pump2 in [l/S]'],
+                "pump2_delta_p" : ["", [],'pump2 pressure difference [bar]'],
     }
 
 # input
@@ -45,8 +47,18 @@ for arch in arch_list:
     result_dict = circ.compare_big_arch(input_dict, result_dict)
 
     for name in result_dict:    # rewrite results in one dictionary
-           excel_dict["%s_%s"%(arch,name)] = result_dict[name][1]
-    
+        excel_dict["%s_%s"%(arch,name)] = result_dict[name][1]
+        result_dict[name][1] = []   # delete values
+
+
+max_len = 0    # fills gap in excel_dict with 0, important for architectures without second pump
+for name in excel_dict:
+    leng = len(excel_dict[name])
+    if leng > max_len:
+        max_len = leng
+for name in excel_dict:
+    while len(excel_dict[name]) < max_len:
+        excel_dict[name].append(0)
 
 data = pd.DataFrame(excel_dict)
 datatoexcel = pd.ExcelWriter('results.xlsx')
@@ -54,12 +66,19 @@ data.to_excel(datatoexcel)
 datatoexcel.close()
 
 
-for name in input_dict:
-    for title in excel_dict:
-        if "delta_p" in title:
-            plt.plot(input_dict[name][1], excel_dict[title], label=title)
-    plt.ylabel("Pressure Difference [bar]")
-    plt.xlabel(input_dict[name][2])
-    plt.legend()
-    plt.grid()
-    plt.show()
+y= 0
+
+for input_name in input_dict:
+    for result_name in result_dict:
+        y = 0
+        for title in excel_dict:
+            if result_name in title:
+                plt.plot(input_dict[input_name][1], excel_dict[title], label=title[:title.index("_")])
+                plt.text(input_dict[input_name][1][0] + y, excel_dict[title][0], title[:title.index("_")], fontsize=8)
+                plt.text(input_dict[input_name][1][-1] - y, excel_dict[title][-1], title[:title.index("_")], fontsize=8)
+                y +=0.01
+        plt.ylabel(result_dict[result_name][2])
+        plt.xlabel(input_dict[input_name][2])
+        plt.legend()
+        plt.grid()
+        plt.show()
