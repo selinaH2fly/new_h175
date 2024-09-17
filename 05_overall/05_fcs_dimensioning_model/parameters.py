@@ -163,4 +163,60 @@ class Eol_Parameter:
     def __init__(self):
 
         self.reference_derating_factor = 0.85
-        self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A 
+        self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A
+
+# Mass Estimation of the Subsystems
+
+class Fixed_Mass_Estimator:
+    def __init__(self):
+        # Mass estimates for E_VTOL components
+        self.masses_FCM_constants = {
+            'Stack': {'Stack': 0, 'CVM': 0.5, 'SMI': 1.5, 'Hose clamps': 0.18, 'Screws': 0.09, 'HV+LV Cable': 1.20},
+            'Cathode': {'Filter': 0.2, 'HFM': 0.1, 'Compressor': 0, 'Compressor inverter': 6.0, 'Intercooler': 1.0,
+                        'Humidifier': 1.0,
+                        'Valves': 1.5, 'Drain valve': 0.05, 'Water separator': 0.2,
+                        'Cathode pressure control valve': 0.0,
+                        'Sensors': 0.3, 'Silicon hoses': 0.5, 'Hose clamps': 0.12, 'Connectors': 0.8,
+                        'Screws': 0.18,
+                        'HV+LV Cable': 0.67, 'Turbine': 0.0},
+            'Anode': {'Shut-Off valve': 0.2, 'Pressure control valve': 0.2, 'Water separator': 0,
+                      'Particle filter': 0.2,
+                      'Recirculation pump': 4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.2,
+                      'Anode piping': 0.5,
+                      'Swagelok connector': 0.28, 'Screws': 0.09, 'HV+LV Cable': 0.34},
+            'Thermal': {'Coolant pump': 3.0, 'TCV': 0.5, 'Particle filter': 0.1, 'Ionic exchanger': 1.0,
+                        'Sensors': 0.2 + 0.20,
+                        'Silicone hoses': 0.5 + 0.5, 'Hose clamps': 0.12 + 0.12, 'Connectors': 0.80 + 0.80,
+                        'Screws': 0.09 + 0.09,
+                        'HV+LV Cable': 0.34, 'Expansion tank': 0.20, 'Volume flow control valve': 0.5,
+                        'Stack coolant': 0,
+                        'Other coolant': 5.0},
+            'Other': {'FCCU': 0.5, 'Electrical connectors': 0.4, 'HDPU': 5.0, 'Frame': 2.0, 'Connectors': 1.0,
+                      'Screws': 0.27,
+                      'HV+LV Cable': 0.0}
+        }
+
+    def sum_mass(self):
+        """Sums the masses for each subsystem and returns the totals."""
+        subsystem_totals = {}
+        total_mass = 0
+        for subsystem, components in self.masses_FCM_constants.items():
+            subsystem_mass = sum(components.values())
+            subsystem_totals[subsystem] = subsystem_mass
+            total_mass += subsystem_mass
+        return subsystem_totals, total_mass
+
+    def print_mass(self):
+        """Calculates and prints the total mass and the subsystem breakdown."""
+        subsystem_totals, total_mass = self.sum_mass()
+        print("Mass breakdown by subsystem:")
+        for subsystem, mass in subsystem_totals.items():
+            print(f"{subsystem}: {mass:.2f} kg")
+        print(f"\nTotal mass: {total_mass:.2f} kg")
+
+ # Instantiate the class and print the mass estimation of fixed mass componenets
+# mass_estimator = Fixed_Mass_Estimator()
+# mass_estimator.print_mass()
+
+
+
