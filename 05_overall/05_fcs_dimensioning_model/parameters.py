@@ -206,17 +206,6 @@ class Fixed_Mass_Estimator:
             total_mass += subsystem_mass
         return subsystem_totals, total_mass
 
-    def print_mass(self):
-        """Calculates and prints the total mass and the subsystem breakdown."""
-        subsystem_totals, total_mass = self.sum_mass()
-        print("Mass breakdown by subsystem:")
-        for subsystem, mass in subsystem_totals.items():
-            print(f"{subsystem}: {mass:.2f} kg")
-        print(f"\nTotal mass: {total_mass:.2f} kg")
-
- # Instantiate the class and print the mass estimation of fixed mass componenets
-# mass_estimator = Fixed_Mass_Estimator()
-# mass_estimator.print_mass()
-
+  
 
 
