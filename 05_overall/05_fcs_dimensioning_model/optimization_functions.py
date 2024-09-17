@@ -2,10 +2,12 @@
 import torch
 import gpytorch
 import numpy as np
+import pandas as pd
 from scipy.optimize import differential_evolution, NonlinearConstraint
-
+from scipy.spatial import ConvexHull, Delaunay
 # Import custom classes and functions
 import parameters
+import data_processing 
 from Components.compressor import Compressor
 from Components.turbine import Turbine
 from Components.recirculation_pump import Recirculation_Pump
@@ -47,6 +49,16 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_stack = parameters.Stack_Parameters()
     _params_Eol = parameters.Eol_Parameter()
 
+    # Load DoE-Data 
+    DoE_data, _ = data_processing.load_high_amp_doe_data()
+    
+    # reduce DoE-Data to optimized parameters
+    Optimized_DoE_data_variables = data_processing.voltage_input_data_dict(DoE_data,_params_physics)
+    Optimized_DoE_data_variables = pd.DataFrame(Optimized_DoE_data_variables)
+
+    # build convex hull of DoE parameters
+    DoE_envelope = ConvexHull(Optimized_DoE_data_variables.values)
+    DoE_envelope_Delaunay = Delaunay(Optimized_DoE_data_variables.values[DoE_envelope.vertices])
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
 
@@ -105,6 +117,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Evaluate the cell voltage model
         x_tensor = torch.tensor(x, dtype=torch.float).unsqueeze(0)
+
         cell_voltage_model.model.eval()
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
             cell_voltage = cell_voltage_model.model(x_tensor).mean.item()
@@ -247,7 +260,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Evaluate the models with the normalized input
         optimal_input, cell_voltage, compressor_power_W, turbine_power_W, \
             reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(x)
-        
+
         # Compute the penalty term for the power constraint
         if power_constraint_kW is not None:
             power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
@@ -261,9 +274,18 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     # Define the nonlinear constraint for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 0 K
     def nonlinear_constraint(x):
-        return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
-            - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4])) - 0
-    
+        # Constraint if results are inside convex hull of DoE
+
+        x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
+        x_scaled = x_scaled.reshape(1,6)
+        print("Convex_Hull_Check",DoE_envelope_Delaunay.find_simplex(x_scaled))
+        return DoE_envelope_Delaunay.find_simplex(x_scaled)
+
+        #return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
+        #    - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4])) - 0
+
+#       if not is_inside==True:
+#            return 
     nonlinear_constraint = NonlinearConstraint(nonlinear_constraint, 0, np.inf)
 
     # Normalize the bounds
