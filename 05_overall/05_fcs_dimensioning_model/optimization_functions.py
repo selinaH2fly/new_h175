@@ -59,6 +59,11 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # build convex hull of DoE parameters
     DoE_envelope = ConvexHull(Optimized_DoE_data_variables.values)
     DoE_envelope_Delaunay = Delaunay(Optimized_DoE_data_variables.values[DoE_envelope.vertices])
+    num_vertices = len(DoE_envelope.vertices)
+    num_simplices= len(DoE_envelope.simplices)
+    print(f"Anzahl der Eckpunkte (Vertices): {num_vertices}")
+    print(f"Anzahl der Simplexe (Fassetten): {num_simplices}")
+
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
 
@@ -278,22 +283,20 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
         x_scaled = x_scaled.reshape(1,6)
-        print("Convex_Hull_Check",DoE_envelope_Delaunay.find_simplex(x_scaled))
+
         return DoE_envelope_Delaunay.find_simplex(x_scaled)
 
         #return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
         #    - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4])) - 0
 
-#       if not is_inside==True:
-#            return 
-    nonlinear_constraint = NonlinearConstraint(nonlinear_constraint, 0, np.inf)
+    nlc = NonlinearConstraint(nonlinear_constraint, 0, np.inf)
 
     # Normalize the bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
                          zip(_params_optimization.bounds, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
 
     # Perform the optimization using differential evolution
-    result = differential_evolution(objective_function, normalized_bounds, constraints=nonlinear_constraint,
+    result = differential_evolution(objective_function, normalized_bounds, constraints=nlc,
                                     maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
                                     seed=_params_optimization.seed, recombination=_params_optimization.recombination,
                                     tol=_params_optimization.tol, polish=False, disp=False)
@@ -312,3 +315,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
     return optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
         reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.air_mass_flow_kg_s*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, optimization_converged
+    
+    
+    # Validate constraint parameters in DoE envelope
+    #if DoE_envelope_Delaunay.find_simplex(x_scaled)>0:
