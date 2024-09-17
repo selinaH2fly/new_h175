@@ -2,17 +2,18 @@
 import pandas as pd
 import os
 
+
 # Import plot functions defined in a separate file
-from get_plots_operating_parameters import plot_cathode_inlet_pressure, plot_cathode_inlet_realtive_humidity, \
+from .get_plots_operating_parameters import plot_cathode_inlet_pressure, plot_cathode_inlet_realtive_humidity, \
     plot_cathode_stoichiomtrey, plot_coolant_inlet_temperature, plot_coolant_outlet_temperature
-from plot_pol_curves import plot_polarization_curves
-from plot_pol_curves_connected import plot_polarization_curves_bol_eol
-from plot_power_grid import plot_power_needs #annotate_boxes, format_data_for_plot, 
-from plot_h2_consumption_vs_systempower import plot_h2_consumption_vs_systempower
-from plot_system_efficiency import plot_system_efficiency
-from plot_h2_consumption_vs_FL import plot_h2_consumption_vs_FL
+from .plot_pol_curves import plot_polarization_curves
+from .plot_pol_curves_connected import plot_polarization_curves_bol_eol
+from .plot_power_grid import plot_power_needs #annotate_boxes, format_data_for_plot, 
+from .plot_h2_consumption_vs_systempower import plot_h2_consumption_vs_systempower
+from .plot_system_efficiency import plot_system_efficiency
+from .plot_h2_consumption_vs_FL import plot_h2_consumption_vs_FL
 #from plot_system_mass_estimate_old import plot_mass_estimate # old version of wenzel (errorbar chart of system mass)
-from plot_system_mass_estimate import plot_system_mass_estimate
+from .plot_system_mass_estimate import plot_system_mass_estimate
 
 #%%  
 def filter_converged_points(df, tolerance=4):
@@ -119,4 +120,4 @@ def analyze_data(_file_path1, saving=True):
     
 # %%    
 
-analyze_data(_file_path1=r"..\consolidated_20-175kW_400-500_0-150ft__2_std\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True) 
+#analyze_data(_file_path1=r"..\consolidated_20-175kW_400-500_0-150ft__2_std\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True) 
