@@ -24,7 +24,7 @@ bc_dict = {"pump_p_in" : 1,     # pressure before pump, lowest pressure level
 
 #calculation
 for y in arch_list:
-    key_init = "%s.initialize(%s, %s, %s)" %(y, input_dict, input_dict, bc_dict)
+    key_init = "%s.initialize(%s, %s, %s)" %(y, input_dict, result_dict, bc_dict)
     circ, input_variable, result_dict = eval(key_init)
     circ.evaluate_big_arch(result_dict)
 

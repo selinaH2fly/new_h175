@@ -3,13 +3,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-arch_list = ["Arch01", "Arch03a", "Arch03b"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
+arch_list = ["Arch01"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
 
 # input_list[0] = variable which should be adapted
 # input_list[1] = Values for adjusting boundary condition
 # input_list[2] = Description for axis for plotting
 #273.15 + 70 + 8, 273.15 + 70 + 10, 273.15 + 70 + 12,
-input_dict = {"stack_t_out" : ["", [273.15 + 70 + 8, 273.15 + 70 + 10, 273.15 + 70 + 12, 273.15 + 70 + 14, 273.15 + 70 + 16], 'Stackausgangstemperatur [K]']}
+#, 273.15 + 70 + 12, 273.15 + 70 + 14, 273.15 + 70 + 16
+input_dict = {"stack_t_out" : ["", [273.15 + 70 + 8, 273.15 + 70 + 10], 'Stackausgangstemperatur [K]']}
 # input_list = ["stack_t_in" , [273.15 + 60 + 8, 273.15 + 60 + 10, 273.15 + 60 + 12, 273.15 + 60 + 14, 273.15 + 60 + 16], 'Stackeingangstemperatur [K]']
 # input_list = ["sys_t_in" , [273.15 + 50 + 8, 273.15 + 50 + 10, 273.15 + 50 + 12, 273.15 + 50 + 14, 273.15 + 50 + 16], 'Systemeingangstemperatur [K]']
 # input_list = ["bop_q" , [5000, 7000, 9000, 11000, 13000], 'Wärmeeintrag BoP Komponenten [W]']
@@ -44,7 +45,7 @@ for arch in arch_list:
     result_dict = circ.compare_big_arch(input_dict, result_dict)
 
     for name in result_dict:    # rewrite results in one dictionary
-           excel_dict["%s_%s"%(arch,name)] = result_dict[name]
+           excel_dict["%s_%s"%(arch,name)] = result_dict[name][1]
     
 
 data = pd.DataFrame(excel_dict)
@@ -53,12 +54,12 @@ data.to_excel(datatoexcel)
 datatoexcel.close()
 
 
-
-for title in excel_dict:
-    if "delta_p" in title:
-        plt.plot(input_list[1], excel_dict[title], )
-    plt.ylabel(result_dict[result_name][0])
-    plt.xlabel(input_list[2])
+for name in input_dict:
+    for title in excel_dict:
+        if "delta_p" in title:
+            plt.plot(input_dict[name][1], excel_dict[title], label=title)
+    plt.ylabel("Pressure Difference [bar]")
+    plt.xlabel(input_dict[name][2])
     plt.legend()
     plt.grid()
     plt.show()

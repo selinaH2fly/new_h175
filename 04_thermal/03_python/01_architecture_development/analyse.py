@@ -5,7 +5,8 @@ arch_list = ["Arch01"]      # which architecture should be analysed?, also possi
 # input_list[0] = variable which should be adapted
 # input_list[1] = Values for adjusting boundary condition
 # input_list[2] = Description for axis for plotting
-input_dict = {"stack_t_out" : ["", [273.15 + 70 + 8, 273.15 + 70 + 10, 273.15 + 70 + 12, 273.15 + 70 + 14, 273.15 + 70 + 16], 'Stackausgangstemperatur [K]']}
+#, 273.15 + 70 + 12, 273.15 + 70 + 14, 273.15 + 70 + 16
+input_dict = {"stack_t_out" : ["", [273.15 + 70 + 8, 273.15 + 70 + 10], 'Stackausgangstemperatur [K]']}
 # input_list = ["stack_t_in" , [273.15 + 60 + 8, 273.15 + 60 + 10, 273.15 + 60 + 12, 273.15 + 60 + 14, 273.15 + 60 + 16], 'Stackeingangstemperatur [K]']
 # input_list = ["sys_t_in" , [273.15 + 50 + 8, 273.15 + 50 + 10, 273.15 + 50 + 12, 273.15 + 50 + 14, 273.15 + 50 + 16], 'Systemeingangstemperatur [K]']
 # input_list = ["bop_q" , [5000, 7000, 9000, 11000, 13000], 'Wärmeeintrag BoP Komponenten [W]']
