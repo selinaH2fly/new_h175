@@ -1,3 +1,4 @@
+#Old script from Wenzel, not used due to kates stack bar chart.
 # %% Imports:
 import pandas as pd
 import matplotlib.pyplot as plt

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 # %% PLOT: H2 consumption over flight level all in one
-def H2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
+def plot_h2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
     """
     Plot of system power vs (system power/hydrogen sonsumption) with polynomial fit.
     

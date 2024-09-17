@@ -5,7 +5,7 @@ import numpy as np
 
 
 # %% PLOT: h2_consumption
-def plot_h2_consumption(data, titles, colors, fl_set, saving=True):
+def plot_h2_consumption_vs_systempower(data, titles, colors, fl_set, saving=True):
     """
     Plot of H2 consumption vs system power with polynomial fit.
     Further it prints an nummerical comparison between 400-500 cells and 500 stack @ bol and eol
