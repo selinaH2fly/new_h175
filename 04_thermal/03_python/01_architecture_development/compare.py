@@ -53,9 +53,9 @@ for arch in arch_list:
 
 max_len = 0    # fills gap in excel_dict with 0, important for architectures without second pump
 for name in excel_dict:
-    leng = len(excel_dict[name])
-    if leng > max_len:
-        max_len = leng
+    list_len = len(excel_dict[name])
+    if list_len > max_len:
+        max_len = list_len
 for name in excel_dict:
     while len(excel_dict[name]) < max_len:
         excel_dict[name].append(0)
@@ -66,17 +66,32 @@ data.to_excel(datatoexcel)
 datatoexcel.close()
 
 
-y= 0
 
 for input_name in input_dict:
     for result_name in result_dict:
-        y = 0
+        y_begin, y_end = [], [] # y- position of data beginn and end
         for title in excel_dict:
             if result_name in title:
-                plt.plot(input_dict[input_name][1], excel_dict[title], label=title[:title.index("_")])
-                plt.text(input_dict[input_name][1][0] + y, excel_dict[title][0], title[:title.index("_")], fontsize=8)
-                plt.text(input_dict[input_name][1][-1] - y, excel_dict[title][-1], title[:title.index("_")], fontsize=8)
-                y +=0.01
+                plt.plot(input_dict[input_name][1], excel_dict[title], label=title[:title.index("_")]) # plots data
+
+                adj_begin, adj_end = 0, 0           # 
+                for y in y_begin:
+                    if excel_dict[title][0] == 0:
+                        if y == 0:
+                            adj_begin += (input_dict[input_name][1][-1] - input_dict[input_name][1][0]) / 10
+                    elif abs((y - excel_dict[title][0]) / excel_dict[title][0]) * 100 < 0.1:
+                        adj_begin += (input_dict[input_name][1][-1] - input_dict[input_name][1][0]) / 10
+                plt.text(input_dict[input_name][1][0] + adj_begin, excel_dict[title][0], title[:title.index("_")], fontsize=8)
+                for y in y_end:
+                    if excel_dict[title][-1] == 0:
+                        if y == 0:
+                            adj_end += (input_dict[input_name][1][-1] - input_dict[input_name][1][0]) / 10
+                    elif abs((y - excel_dict[title][-1]) / excel_dict[title][-1]) * 100 < 0.1:
+                        adj_end += (input_dict[input_name][1][-1] - input_dict[input_name][1][0]) / 10
+                plt.text(input_dict[input_name][1][-1] - adj_end, excel_dict[title][-1] , title[:title.index("_")], fontsize=8)
+                y_begin.append(excel_dict[title][0])
+                y_end.append(excel_dict[title][-1])
+                
         plt.ylabel(result_dict[result_name][2])
         plt.xlabel(input_dict[input_name][2])
         plt.legend()

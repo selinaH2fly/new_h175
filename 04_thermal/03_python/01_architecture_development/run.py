@@ -3,8 +3,8 @@ arch_list = ["Arch01"]      # which architecture should be eveluated?, also poss
 input_dict = {}             # input_dict is not needed
 
 
-result_dict = {"pump_vdot" : ["", [], 'flow over pump1 in [l/S]'],
-                "pump_delta_p" : ["", [],'pump pressure difference [bar]'],
+result_dict = {"pump_vdot" : ["", [], 'flow over pump1 in [l/S]'],              # these variable will be saved in excel file result.xlsx
+                "pump_delta_p" : ["", [],'pump pressure difference [bar]'],     # to save an additional variable, there have to be made changes to arch...py files
                 "radiator_vdot" : ["", [], 'flow over radiator in [l/S]'],
                 "perc_rec": ["", [], 'Percentage recirculated'],
                 "radiator_t_in" : ["", [],'System Output Temperature [K]']
