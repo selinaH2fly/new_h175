@@ -5,10 +5,6 @@ import numpy as np
 class Optimization_Parameters:
     
     def __init__(self):
-        '''TODO: Steffen P. suggests to evaluate the bounds during runtime depending on the current operating point according to the DoE data
-        to prevent extrapolation. This is a good idea, but requires a bit more effort. Idea: Make it a constraint in the optimization problem.
-        TODO: Include parameters for optimization function (such as maxiter, popsize, etc.)
-        '''
 
         # Bounds for the optimization problem TODO: make these a dictionary
         self.bounds = [(50, 2e3),       # current_A
