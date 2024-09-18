@@ -3,8 +3,11 @@ import torch
 import gpytorch
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from scipy.optimize import differential_evolution, NonlinearConstraint
 from scipy.spatial import ConvexHull, Delaunay
+
 # Import custom classes and functions
 import parameters
 import data_processing 
@@ -59,11 +62,17 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # build convex hull of DoE parameters
     DoE_envelope = ConvexHull(Optimized_DoE_data_variables.values)
     DoE_envelope_Delaunay = Delaunay(Optimized_DoE_data_variables.values[DoE_envelope.vertices])
-    num_vertices = len(DoE_envelope.vertices)
-    num_simplices= len(DoE_envelope.simplices)
-    print(f"Anzahl der Eckpunkte (Vertices): {num_vertices}")
-    print(f"Anzahl der Simplexe (Fassetten): {num_simplices}")
-
+    
+    ##### DELETE #######
+    # num_vertices = len(DoE_envelope.vertices)
+    # num_simplices= len(DoE_envelope.simplices)
+    # print(f"Anzahl der Eckpunkte (Vertices): {num_vertices}")
+    # print(f"Anzahl der Simplexe (Fassetten): {num_simplices}")
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # ax.scatter(Optimized_DoE_data_variables.iloc[:,0],Optimized_DoE_data_variables.iloc[:,2],Optimized_DoE_data_variables.iloc[:,3], c='r',marker = 'o' )
+    # plt.show()
+    
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
 
@@ -285,11 +294,57 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         x_scaled = x_scaled.reshape(1,6)
 
         return DoE_envelope_Delaunay.find_simplex(x_scaled)
-
         #return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
         #    - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4])) - 0
 
     nlc = NonlinearConstraint(nonlinear_constraint, 0, np.inf)
+    
+    def create_callback(check_intervall):
+        step_count = 0
+
+        def callback(xk, convergence):
+            nonlocal step_count
+            step_count += 1
+            if step_count % check_intervall == 0:
+                xk_denormalized = xk * np.array(cell_voltage_model.input_data_std) + np.array(cell_voltage_model.input_data_mean)
+                # plot optimal input parameters in DoE-Data     
+                fig, axs = plt.subplots(2, 3, figsize=(20, 8))
+                for plots in range(len(xk)-1):
+                    x = Optimized_DoE_data_variables.iloc[:,0]
+                    y = Optimized_DoE_data_variables.iloc[:,plots+1]
+                    if plots < 2:
+                        axs[0,plots].scatter(x, y, color='black', label=f'{Optimized_DoE_data_variables.columns[plots+1]} - Current')
+                        axs[0,plots].scatter(xk_denormalized[0], xk_denormalized[plots+1], color='red', marker='x', s=200, label=f'Opt_Input')
+
+                        axs[0,plots].set_xlabel(f'{Optimized_DoE_data_variables.columns[0]}')
+                        axs[0,plots].set_ylabel(f'{Optimized_DoE_data_variables.columns[plots+1]}')
+                        y_min=Optimized_DoE_data_variables.iloc[:,plots+1].min()
+                        y_max=Optimized_DoE_data_variables.iloc[:,plots+1].max()
+                        axs[0, plots].set_ylim([y_min-y_min*0.1, y_max+y_max*0.1])  # Skalierung mit 10% Puffer
+                        axs[0,plots].legend(loc='lower center', bbox_to_anchor=(0.5, 1.02), ncol=2)
+
+                    else:
+                        axs[1,plots-2].scatter(x, y, color='black', label=f'{Optimized_DoE_data_variables.columns[plots+1]} - Current')
+                        axs[1,plots-2].scatter(xk_denormalized[0], xk_denormalized[plots+1], color='red', marker='x', s=200, label=f'Opt_Input')
+
+                        axs[1,plots-2].set_xlabel(f'{Optimized_DoE_data_variables.columns[0]}')
+                        axs[1,plots-2].set_ylabel(f'{Optimized_DoE_data_variables.columns[plots+1]}')
+                        y_min=Optimized_DoE_data_variables.iloc[:,plots+1].min()
+                        y_max=Optimized_DoE_data_variables.iloc[:,plots+1].max()
+                        axs[1, plots-2].set_ylim([y_min-y_min*0.1, y_max+y_max*0.1])  # Skalierung mit 10% Puffer
+                        axs[1,plots-2].legend(loc='lower center', bbox_to_anchor=(0.5, 1.02), ncol=2)
+
+                fig.delaxes(axs[0, 2])  # Entfernt den ungenutzten Platz im Grid
+                plt.tight_layout()
+
+                # save plot
+                filename = f'xk_optimized_input_{step_count}.jpg'
+                plt.savefig(filename, format='jpeg')
+                plt.close(fig)
+        return callback
+            
+
+    callback = create_callback(check_intervall=1)
 
     # Normalize the bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
@@ -299,12 +354,48 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     result = differential_evolution(objective_function, normalized_bounds, constraints=nlc,
                                     maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
                                     seed=_params_optimization.seed, recombination=_params_optimization.recombination,
-                                    tol=_params_optimization.tol, polish=False, disp=False)
+                                    tol=_params_optimization.tol, callback=callback, polish=False, disp=False)
     optimization_converged = result.success
     print(f'{result.message}')
 
     # Evaluate the models with the optimal input
     optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(result.x)
+    
+    # plot optimal input parameters in DoE-Data     
+    fig, axs = plt.subplots(2, 3, figsize=(20, 8))
+    for plots in range(len(optimal_input)-1):
+        x = Optimized_DoE_data_variables.iloc[:,0]
+        y = Optimized_DoE_data_variables.iloc[:,plots+1]
+        if plots < 2:
+            axs[0,plots].scatter(x, y, color='black', label=f'{Optimized_DoE_data_variables.columns[plots+1]} - Current')
+            axs[0,plots].scatter(optimal_input[0], optimal_input[plots+1], color='red', marker='x', s=200, label=f'Opt_Input')
+
+            axs[0,plots].set_xlabel(f'{Optimized_DoE_data_variables.columns[0]}')
+            axs[0,plots].set_ylabel(f'{Optimized_DoE_data_variables.columns[plots+1]}')
+            y_min=Optimized_DoE_data_variables.iloc[:,plots+1].min()
+            y_max=Optimized_DoE_data_variables.iloc[:,plots+1].max()
+            axs[0, plots].set_ylim([y_min-y_min*0.1, y_max+y_max*0.1])  # Skalierung mit 10% Puffer
+            axs[0,plots].legend(loc='lower center', bbox_to_anchor=(0.5, 1.02), ncol=2)
+
+        else:
+            axs[1,plots-2].scatter(x, y, color='black', label=f'{Optimized_DoE_data_variables.columns[plots+1]} - Current')
+            axs[1,plots-2].scatter(optimal_input[0], optimal_input[plots+1], color='red', marker='x', s=200, label=f'Opt_Input')
+
+            axs[1,plots-2].set_xlabel(f'{Optimized_DoE_data_variables.columns[0]}')
+            axs[1,plots-2].set_ylabel(f'{Optimized_DoE_data_variables.columns[plots+1]}')
+            y_min=Optimized_DoE_data_variables.iloc[:,plots+1].min()
+            y_max=Optimized_DoE_data_variables.iloc[:,plots+1].max()
+            axs[1, plots-2].set_ylim([y_min-y_min*0.1, y_max+y_max*0.1])  # Skalierung mit 10% Puffer
+            axs[1,plots-2].legend(loc='lower center', bbox_to_anchor=(0.5, 1.02), ncol=2)
+
+    fig.delaxes(axs[0, 2])  # Entfernt den ungenutzten Platz im Grid
+    plt.tight_layout()
+
+    # save plot
+    filename = 'DoE_optimal_inputs.jpg'
+    plt.savefig(filename, format='jpeg')
+    plt.close(fig)
+
 
     # Compute stack power
     stack_power_kW = optimal_input[0] * cell_voltage * cellcount / 1000
@@ -316,6 +407,3 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     return optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
         reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.air_mass_flow_kg_s*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, optimization_converged
     
-    
-    # Validate constraint parameters in DoE envelope
-    #if DoE_envelope_Delaunay.find_simplex(x_scaled)>0:
