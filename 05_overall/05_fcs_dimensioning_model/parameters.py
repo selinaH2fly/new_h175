@@ -28,13 +28,11 @@ class Physical_Parameters:
      
     def __init__(self):
 
-        # TODO: Make all variable names indicative of their units
-        self.hydrogen_lhv_voltage_equivalent = 1.253
-        self.hydrogen_hhv_voltage_equivalent = 1.481
+        self.hydrogen_lhv_voltage_equivalent_V = 1.253
 
         self.sea_level_ambient_pressure_bar = 1.01325
         self.sea_level_ambient_temperature_K = 288.15
-        self.temperature_lapse_rate = 0.0065
+        self.temperature_lapse_rate_K_m = 0.0065
         self.oxygen_mol_fraction = 0.2095
 
 class Compressor_Parameters:
@@ -43,7 +41,7 @@ class Compressor_Parameters:
 
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
-        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}                        # kg/kW
+        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
 
         # Assumption: ~0.3 bar BoP pressure drop downstream the compressor at 130 g/s air flow rate
         self.nominal_BoP_pressure_drop_Pa = 0.3*1e5
@@ -93,7 +91,7 @@ class Turbine_Parameters:
     def __init__(self):
 
         self.isentropic_efficiency = 0.75
-        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}                        # kg/kW
+        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
 
         # Assumption: ~0.15 bar BoP pressure drop upstream the turbine at 130 g/s air flow rate
         self.nominal_BoP_pressure_drop_Pa = 0.15*1e5
@@ -105,7 +103,7 @@ class Recirculation_Pump_Parameters:
 
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
-        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}                        # kg/kW
+        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
 
         self.fixed_recirculation_ratio = 70/30
 
@@ -118,7 +116,7 @@ class Coolant_Pump_Parameters:
 
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
-        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}                        # kg/kW
+        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
 
         # Assumption: ~0.5 bar pressure drop at 10 l/min coolant in LT cooling circuit
         self.nominal_pressure_drop_lt_Pa = 0.5*1e5
@@ -127,7 +125,7 @@ class Coolant_Pump_Parameters:
 class Radiator_Parameters:
 
     def __init__(self):
-        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}                        # kg/kW
+        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
 
         # Assumption: ~0.4 bar pressure drop at 250 l/min coolant in HT cooling circuit (including hoses and valves)
         self.nominal_pressure_drop_Pa = 0.4*1e5
