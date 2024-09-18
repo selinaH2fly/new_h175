@@ -23,7 +23,6 @@ class Optimization_Parameters:
 
         self.penalty_weight = 1e-6      # penalty factor for power constraint violation TODO: try making this a constraint (instead of a penalty) -> probably needs to define the cell voltage as an input variable!?
 
-
 class Physical_Parameters:
      
     def __init__(self):
@@ -35,6 +34,13 @@ class Physical_Parameters:
         self.temperature_lapse_rate_K_m = 0.0065
         self.oxygen_mol_fraction = 0.2095
 
+class Assumptions:
+
+    def __init__(self):
+
+        self.hydrogen_loss_factor = 0.05    # fraction of hydrogen lost by purging; note: for \lambda_A > 1, it's inevitable to lose some hydrogen!
+
+# TODO: move component parameters to component class definitions!?!
 class Compressor_Parameters:
 
     def __init__(self):
