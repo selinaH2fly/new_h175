@@ -167,9 +167,9 @@ class Eol_Parameter:
 
 # Mass Estimation of the Subsystems
 
-class Fixed_Mass_Estimator:
+class Mass_Estimator:
     def __init__(self):
-        # Mass estimates for E_VTOL components
+        # Mass estimates for fixed mass components
         self.masses_FCM_constants = {
             'Stack': {'Stack': 0, 'CVM': 0.5, 'SMI': 1.5, 'Hose clamps': 0.18, 'Screws': 0.09, 'HV+LV Cable': 1.20},
             'Cathode': {'Filter': 0.2, 'HFM': 0.1, 'Compressor': 0, 'Compressor inverter': 6.0, 'Intercooler': 1.0,
@@ -195,7 +195,12 @@ class Fixed_Mass_Estimator:
                       'Screws': 0.27,
                       'HV+LV Cable': 0.0}
         }
-
+        # Mass estimates for dependent mass components
+        self.masses_FCM_depended = {
+            'Compressor': {"mean": 1.0, "sd": 0.1},
+            'Recirculation_Pump': {"mean": 1.0, "sd": 0.1},
+            'Turbine': {"mean": 1.0, "sd": 0.1},
+        }
     def sum_mass(self):
         """Sums the masses for each subsystem and returns the totals."""
         subsystem_totals = {}
@@ -205,6 +210,10 @@ class Fixed_Mass_Estimator:
             subsystem_totals[subsystem] = subsystem_mass
             total_mass += subsystem_mass
         return subsystem_totals, total_mass
+
+
+
+
 
   
 
