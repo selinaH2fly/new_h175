@@ -21,7 +21,7 @@ from basic_physics import compute_air_mass_flow, compute_coolant_flow, icao_atmo
 
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275,
-                                 power_constraint_kW=None, consider_turbine=True, compressor_map=None, end_of_life=False):
+                                 power_constraint_kW=None, consider_turbine=True, compressor_map=None, end_of_life=False, constraint=True):
     """
     Optimize the (cell) voltage predicted by the GPyTorch model with a (cell) power constraint using differential evolution.
 
@@ -285,19 +285,35 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             penalty = 0
         
         return hydrogen_mass_flow_g_s + penalty
-    
-    # Define the nonlinear constraint for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 0 K
-    def nonlinear_constraint(x):
+   
+    # define nonlinear constraints
+    def nonlinear_constraint_Temp(x):
         # Constraint if results are inside convex hull of DoE
 
-        x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
-        x_scaled = x_scaled.reshape(1,6)
+        return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
+            - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4]))
+    
+    nlc_Temp = NonlinearConstraint(nonlinear_constraint_Temp, 0, np.inf)
 
-        return DoE_envelope_Delaunay.find_simplex(x_scaled)
-        #return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
-        #    - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4])) - 0
+    if constraint:
+        
+        # Define the nonlinear constraint for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 0 K
+        def nonlinear_constraint_DoE(x):
+            # Constraint if results are inside convex hull of DoE
 
-    nlc = NonlinearConstraint(nonlinear_constraint, 0, np.inf)
+            x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
+            x_scaled = x_scaled.reshape(1,6)
+
+            return DoE_envelope_Delaunay.find_simplex(x_scaled)
+            #return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
+            #    - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4])) - 0
+            
+        nlc_DoE = NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)
+        nlc = [nlc_Temp, nlc_DoE]
+    
+    else:
+        nlc = nlc_Temp  
+    # define callback to get optimzer information by iteration
     
     def create_callback(check_intervall):
         step_count = 0
