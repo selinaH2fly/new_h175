@@ -1,4 +1,4 @@
-from architectures import Arch01, Arch03a, Arch03b, Arch04, Arch05, Arch06, Arch08
+import Arch01, Arch03a, Arch03b, Arch04, Arch05, Arch06, Arch08
 
 arch_list = ["Arch01"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
 

@@ -1,4 +1,4 @@
-from architectures import Arch01, Arch03a, Arch03b, Arch04, Arch05, Arch06, Arch08
+from architectures import bop10_tcv
 import pandas as pd
 import matplotlib.pyplot as plt
 #, "Arch03b", "Arch04", "Arch06", "Arch08"

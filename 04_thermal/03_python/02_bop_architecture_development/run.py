@@ -1,4 +1,4 @@
-from architectures import Arch01, Arch03a, Arch03b, Arch04, Arch05, Arch06, Arch08
+from architectures import bop10_tcv
 arch_list = ["Arch01"]      # which architecture should be eveluated?, also possible to evaluate multiple architectures
 input_dict = {}             # input_dict is not needed
 
