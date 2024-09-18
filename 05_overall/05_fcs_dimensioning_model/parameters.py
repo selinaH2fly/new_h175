@@ -195,14 +195,25 @@ class Mass_Estimator:
                       'Screws': 0.27,
                       'HV+LV Cable': 0.0}
         }
-        # Mass estimates for dependent mass components
+        # Mass estimates for dependent mass components, change the values as needed
         self.masses_FCM_depended = {
             'Compressor': {"mean": 1.0, "sd": 0.1},
             'Recirculation_Pump': {"mean": 1.0, "sd": 0.1},
             'Turbine': {"mean": 1.0, "sd": 0.1},
         }
-    def sum_mass(self):
-        """Sums the masses for each subsystem and returns the totals."""
+
+        # Cell numbers
+        self.cell_no = np.array([400, 450, 500])  # Cell numbers
+
+        # Calculate stack mass and coolant mass
+        self.m_stack_values = 0.0766 * self.cell_no + 9.2813  # Stack mass as a function of cell number
+        self.m_coolant_values = self.cell_no * 7 / 455  # Coolant mass scales with cell number
+
+        # Dictionary to store the total mass estimates
+        self.subsystem_mass_total = {}
+
+    def sum_fixed_mass(self):
+        """Sums the masses for each subsystem and returns the totals of the fixed mass."""
         subsystem_totals = {}
         total_mass = 0
         for subsystem, components in self.masses_FCM_constants.items():
@@ -211,10 +222,40 @@ class Mass_Estimator:
             total_mass += subsystem_mass
         return subsystem_totals, total_mass
 
+    """
+    the masses from compressor, turbine and recirculation pumps are not computed.
+    TODO: for each power, the mentioned masses should be added as required.
+    """
+    def estimate_mass(self):
+        """Estimate the mass of the subsystems for the given cell number combination."""
+        self.subsystem_mass_total = {
+            'Stack': np.zeros(len(self.cell_no)),
+            'Cathode': np.zeros(len(self.cell_no)),
+            'Anode': np.zeros(len(self.cell_no)),
+            'Thermal': np.zeros(len(self.cell_no)),
+            'Other': np.zeros(len(self.cell_no))
+        }
 
+        for i, n in enumerate(self.cell_no):
+            # Calculate mass for each subsystem
+            temp, total_mass = self.sum_fixed_mass()
 
+            # Stack and coolant mass scale with cell number
+            temp['Stack'] += self.m_stack_values[i]
+            temp['Thermal'] += self.m_coolant_values[i]
 
+            # Assign the updated subsystem masses to the correct location
+            for key, value in temp.items():
+                self.subsystem_mass_total[key][i] = value
 
-  
+        return self.subsystem_mass_total
 
+# %% Example Usage:
+# Instantiate the class and run the mass estimation
+estimator = Mass_Estimator()
+mass_estimates = estimator.estimate_mass()
 
+# Display Results
+print(f"\nMass Estimates:")
+for key in mass_estimates:
+    print(f"{key}: {mass_estimates[key]}")
