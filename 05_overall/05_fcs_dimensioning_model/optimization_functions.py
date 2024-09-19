@@ -14,6 +14,7 @@ from Components.recirculation_pump import Recirculation_Pump
 from Components.coolant_pump import Coolant_Pump
 from Components.radiator import Radiator
 from Components.stack import Stack
+from Components.heat_exchanger import Intercooler, Evaporator
 from basic_physics import compute_air_mass_flow, icao_atmosphere
 
 
@@ -47,6 +48,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_radiator = parameters.Radiator_Parameters()
     _params_stack = parameters.Stack_Parameters()
     _params_Eol = parameters.Eol_Parameter()
+    _params_intercooler = parameters.Intercooler_Parameters()
     _mass_estimator = parameters.Mass_Estimator()
 
     # Evaluate ambient conditions
@@ -86,7 +88,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     stack           =   Stack(cellcount=cellcount, anode_pressure_drop_coefficients=_params_stack.anode_pressure_drop_coefficients,
                               cooling_pressure_drop_coefficients=_params_stack.cooling_pressure_drop_coefficients)
-
+    
+    intercooler     =   Intercooler(efficiency=_params_intercooler.efficiency, primary_fluid = _params_intercooler.primary_fluid , coolant_fluid=_params_intercooler.primary_fluid , ALLOWED_FLUIDS=_params_intercooler.ALLOWED_FLUIDS)
+    
     def evaluate_models(x): # TODO: refactor this function that became too long and complex
         """
         Helper function to evaluate models and compute necessary values.
