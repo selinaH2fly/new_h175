@@ -10,7 +10,7 @@ class Stack:
     def __init__(self, cellcount=455, current_A=400, cell_voltage_V = 0.7, 
                  coolant_flow_m3_s=0.0, anode_pressure_drop_coefficients=[0, 0, 0],
                  cooling_pressure_drop_coefficients=[0, 0, 0], 
-                 temp_coolant_in_K= 240.15, temp_coolant_out_K=245.15):
+                 temp_coolant_in_K=338.15, temp_coolant_out_K= 343.15):
         """
         Initialize the radiator with a given pressure drop and coolant flow rate.
 
@@ -72,7 +72,7 @@ class Stack:
         
         return heat_flux_W 
         
-    def calculate_coolant_flow(self, flight_level_100ft=50):
+    def calculate_coolant_flow(self, pressure_ambient_Pa):
         """
         Compute the coolant flow rate in kg/s.
         
@@ -84,7 +84,6 @@ class Stack:
         # Calculate the heat capacity of the coolant
         #TODO: maybe move this to a component coolant in the future and use it in all cooled components...?
         coolant = "INCOMP::MEG-50%" # 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
-        _, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft=flight_level_100ft) # Assuming coolant pressure \approx. ambient pressure
         coolant_cp_J_kgK = CP.PropsSI('C', 'T', (self.temp_coolant_in_K + self.temp_coolant_out_K) / 2, 'P', pressure_ambient_Pa, coolant)
 
         # Calculate the coolant flow rate
