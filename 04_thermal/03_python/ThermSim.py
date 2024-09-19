@@ -286,7 +286,7 @@ class Circuit:
                 self.reset_to_startcond()
         for input_name in input_dict:
             for result_name in result_dict:
-                if ("vdot" or "Vdot") in result_dict[result_name][0]:
+                if ("vdot" in result_name) or ("Vdot" in result_name):
                     plt.plot(input_dict[input_name][1], result_dict[result_name][1], label=result_dict[result_name][2])
             plt.ylabel('Flow in Branches in [l/s]')
             plt.xlabel(input_dict[input_name][2])
@@ -294,7 +294,7 @@ class Circuit:
             plt.grid()
             plt.show()
             for result_name in result_dict:
-                if ("t_in" or "t_out" or "T_") in result_dict[result_name][0]:
+                if "dot_" not in result_name and (("t_in" in result_name) or ("t_out" in result_name) or ("T_" in result_name)):
                     plt.plot(input_dict[input_name][1], result_dict[result_name][1], label=result_dict[result_name][2])
             plt.ylabel('Temperature in [K]')
             plt.xlabel(input_dict[input_name][2])
@@ -302,10 +302,10 @@ class Circuit:
             plt.grid()
             plt.show()
             for result_name in result_dict:
-                if "delta_p" in result_dict[result_name][0]:
+                if "delta_p" in result_name:
                     plt.plot(input_dict[input_name][1], result_dict[result_name][1], label=result_dict[result_name][2])
                     
-                if "p_in" in result_dict[result_name][0]:
+                if "p_in" in result_name:
                     y = 0
                     while y < len(result_dict[result_name][1]):
                         result_dict[result_name][1][y] -= 1

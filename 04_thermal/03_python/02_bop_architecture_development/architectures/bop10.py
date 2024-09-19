@@ -77,7 +77,7 @@ def initialize(input_dict, result_dict, bc_dict):
     Evaluate and generate output
     """
     for name in input_dict:
-        if name in input_dict == "Vdot_in":
+        if name == "Vdot_in":
             input_dict[name][0] = evap.Vdot_in
 
     for name in result_dict:
@@ -97,8 +97,8 @@ def initialize(input_dict, result_dict, bc_dict):
             result_dict[name][0] = intercooler.T_out
         elif name == "t_out_Bop":
             result_dict[name][0] = mixer1.T_out     # depends on architecture!
-        elif name == "p_end":
-            result_dict[name][0] = mixer1.p_out     # depends on architecture!
+        elif name == "p_in":
+            result_dict[name][0] = evap.p_in     # depends on architecture!
         elif name == "Vdot_in":
             result_dict[name][0] = evap.Vdot_in     # = "Vdot_1"
         elif name == "Vdot_1":
@@ -107,7 +107,7 @@ def initialize(input_dict, result_dict, bc_dict):
  #           result_dict["vdot_intercooler"] = result_dict[name]
   #          del result_dict[name]
         elif name == "Vdot_2":
-            result_dict[name][0] = intercooler.Vdot_in          # depends on architecture!
+            result_dict[name][0] = mixer1.Vdot_in_2        # depends on architecture!
             result_dict[name][2] = "Flow over Bypass in [l/s]"
  #           result_dict["vdot_bypass"] = result_dict[name]
   #          del result_dict[name]
