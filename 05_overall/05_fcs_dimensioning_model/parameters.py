@@ -261,7 +261,3 @@ class Mass_Estimator:
 estimator = Mass_Estimator()
 mass_estimates = estimator.estimate_mass()
 
-# Display Results
-print(f"\nMass Estimates:")
-for key in mass_estimates:
-    print(f"{key}: {mass_estimates[key]}")
