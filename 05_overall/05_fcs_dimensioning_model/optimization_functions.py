@@ -239,6 +239,25 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Compute the actual coolant pump power
         coolant_pump_power_W = coolant_pump_ht.calculate_power() + coolant_pump_lt.calculate_power()
 
+        # %% Intercooler
+        #set T, p and m_dots here
+        intercooler.primary_T_in_K = #compresser out
+        intercooler.primary_T_out_K = #stack in
+        intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
+        intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
+        
+        intercooler.coolant_T_in_K =
+        intercooler.coolant_T_out_K =
+        intercooler.coolant_mdot_in_kg_s =
+        intercooler.coolant_p_in_Pa =
+        
+        intercooler_heat_flux_W = calculate_heat_flux()
+        intercooler_T_out_K = calculate_coolant_T_out()
+        
+        
+        
+        
+        
         # %% Consumed hydrogen mass flow rate
 
         # Compute the hydrogen mass flow rate
