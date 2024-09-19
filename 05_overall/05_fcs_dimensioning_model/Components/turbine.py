@@ -1,4 +1,5 @@
 import CoolProp.CoolProp as CP
+from parameters import Mass_Estimator
 
 class Turbine:
 
@@ -76,7 +77,6 @@ class Turbine:
         }
     
 # %% Example usage:
-from parameters import Mass_Estimator
 
 mass_estimator = Mass_Estimator()
 

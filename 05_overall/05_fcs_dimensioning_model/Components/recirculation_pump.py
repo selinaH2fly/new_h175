@@ -1,6 +1,7 @@
 import CoolProp.CoolProp as CP
 import math
 from scipy.constants import physical_constants
+from parameters import Mass_Estimator
 
 class Recirculation_Pump:
     
@@ -180,8 +181,6 @@ class Recirculation_Pump:
         }
  
 # %% Example Usage:
-from parameters import Mass_Estimator
-
 mass_estimator = Mass_Estimator()
 
 R1 = Recirculation_Pump(mass_estimator, current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,

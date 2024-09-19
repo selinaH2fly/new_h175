@@ -3,6 +3,7 @@ from scipy.interpolate import griddata
 from scipy.spatial import ConvexHull
 import numpy as np
 import matplotlib.pyplot as plt
+from parameters import Mass_Estimator
 
 class Compressor:
 
@@ -15,7 +16,7 @@ class Compressor:
         self.electric_efficiency = electric_efficiency
         self.air_mass_flow_kg_s = air_mass_flow_kg_s
         self.temperature_in_K = temperature_in_K
-        self.pressure_in_Pa = pressure_in_Pa        
+        self.pressure_in_Pa = pressure_in_Pa
         self.pressure_out_Pa = pressure_out_Pa
         self.nominal_pressure_drop_Pa = nominal_BoP_pressure_drop_Pa
         self.nominal_air_flow_kg_s = nominal_air_flow_kg_s
@@ -61,7 +62,7 @@ class Compressor:
         compressor_electric_power_W = compressor_shaft_power_W / self.electric_efficiency
 
         return compressor_electric_power_W
-    
+
     def _interpolate_efficiency(self) -> float:
         """
         Interpolates the efficiency from the compressor map based on the current operating point.
@@ -84,7 +85,7 @@ class Compressor:
                                 (corrected_mass_flow_g_s, pressure_ratio), method='linear', rescale=True, fill_value=1e-3)
 
         return efficiency.item(), [pressure_ratio, corrected_mass_flow_g_s]
-    
+
     def plot_compressor_map(self):
         """
         Plots the compressor map with efficiency contours and highlights the specified operating point
@@ -127,7 +128,7 @@ class Compressor:
         # Display the plot
         # plt.show()
         plt.savefig('compressor_map_operating_point.png', bbox_inches='tight')
-    
+
     def _map_to_convex_hull(self):
 
         # Extract the original grid points and efficiency values
@@ -145,10 +146,10 @@ class Compressor:
 
         # Compute the convex hull
         hull = ConvexHull(points)
-        
+
         # Get the points that define the convex hull
         hull_points = points[hull.vertices]
-        
+
         # Generate a grid that spans the convex hull
         grid_massflow, grid_pressure_ratio = np.meshgrid(
             np.linspace(hull_points[:, 0].min(), hull_points[:, 0].max(), 100),
@@ -160,7 +161,7 @@ class Compressor:
 
         return grid_massflow, grid_pressure_ratio, grid_efficiency, hull, points
 
-    
+
     def calculate_BoP_pressure_drop(self)->float:
         """
         Calculate the pressure drop across the BoP components downstream the compressor for a given air mass flow rate.
@@ -174,11 +175,11 @@ class Compressor:
         pressure_drop_Pa = pressure_drop_coefficient * self.air_mass_flow_kg_s**2
 
         return pressure_drop_Pa
-    
+
     def calculate_mass(self)->dict:
         """
         Calculate predicted mass of the compressor utilizing the mass_by_power_kg_kW dict of the class
-        
+
         Returns:
         - result: A dictionary containing:
             - "mean": Compressor mass in kg based on the mean value of mass_by_power_kg_kW.
@@ -192,13 +193,12 @@ class Compressor:
         "mean": compressor_mass_mean_kg,
         "sd": compressor_mass_sd_kg
         }
-    
+
 # %% Example Usage:
-from parameters import Mass_Estimator
 
 mass_estimator = Mass_Estimator()
 C1 = Compressor(mass_estimator, isentropic_efficiency=0.75, electric_efficiency=0.95, air_mass_flow_kg_s=1.2,
-                temperature_in_K=293.15, pressure_in_Pa=1.013e5, pressure_out_Pa=2.013e5,
+                temperature_in_K=293.15, pressure_in_Pa=1.013e5, pressure_out_Pa=2.013e5)
 
 power_el = C1.calculate_power()
 mass = C1.calculate_mass()
