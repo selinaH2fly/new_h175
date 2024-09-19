@@ -190,7 +190,7 @@ R2 = Recirculation_Pump(mass_estimator, current_A=200,temperature_in_K=343.15, p
                         cell_area_m2=300*1e-4, stoich_anode = 2.4, fixed_recirculation_ratio=70/30)
 
 # Calculate electrical power
-lectrical_power_W_smart = R1.calculate_power()
+electrical_power_W_smart = R1.calculate_power()
 electrical_power_W_fixed_ratio = R2.calculate_power()
 
 # Calculate mass
