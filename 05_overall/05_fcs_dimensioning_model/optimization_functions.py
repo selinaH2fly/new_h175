@@ -44,7 +44,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     """
     
     # Load parameters
-    #_params_physics = parameters.Physical_Parameters()
     _params_optimization = parameters.Optimization_Parameters()
     _params_compressor = parameters.Compressor_Parameters()
     _params_turbine = parameters.Turbine_Parameters()
@@ -53,6 +52,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_radiator = parameters.Radiator_Parameters()
     _params_stack = parameters.Stack_Parameters()
     _params_Eol = parameters.Eol_Parameter()
+    _mass_estimator = parameters.Mass_Estimator()
 
     # Load DoE-Data 
     DoE_data, _ = data_processing.load_high_amp_doe_data()
@@ -83,18 +83,18 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
 
     # Instantiate components
-    compressor      =   Compressor(isentropic_efficiency=_params_compressor.isentropic_efficiency,
+    compressor      =   Compressor(mass_estimator=_mass_estimator, isentropic_efficiency=_params_compressor.isentropic_efficiency,
                                    electric_efficiency=_params_compressor.electric_efficiency,
                                    temperature_in_K=temperature_ambient_K, pressure_in_Pa=pressure_ambient_Pa,
                                    nominal_BoP_pressure_drop_Pa=_params_compressor.nominal_BoP_pressure_drop_Pa,
                                    compressor_map=compressor_map, nominal_air_flow_kg_s=_params_compressor.nominal_air_flow_kg_s)
     
-    turbine         =   Turbine(isentropic_efficiency=_params_turbine.isentropic_efficiency,
+    turbine         =   Turbine(mass_estimator=_mass_estimator, isentropic_efficiency=_params_turbine.isentropic_efficiency,
                                 temperature_out_K=temperature_ambient_K, pressure_out_Pa=pressure_ambient_Pa,
                                 nominal_BoP_pressure_drop_Pa=_params_turbine.nominal_BoP_pressure_drop_Pa,
                                 nominal_air_flow_kg_s=_params_turbine.nominal_air_flow_kg_s)
     
-    reci_pump       =   Recirculation_Pump(isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
+    reci_pump       =   Recirculation_Pump(mass_estimator=_mass_estimator, isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
                                            electric_efficiency=_params_recirculation_pump.electric_efficiency,
                                            n_cell=cellcount, cell_area_m2=_params_stack.cell_area_m2,
                                            fixed_recirculation_ratio=_params_recirculation_pump.fixed_recirculation_ratio,
@@ -103,8 +103,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     coolant_pump_ht =   Coolant_Pump(isentropic_efficiency=_params_coolant_pump.isentropic_efficiency,
                                      electric_efficiency=_params_coolant_pump.electric_efficiency)
     
+    # virtual LT coolant pump for straight-forward power computation
     coolant_pump_lt =   Coolant_Pump(isentropic_efficiency=_params_coolant_pump.isentropic_efficiency,
-                                     electric_efficiency=_params_coolant_pump.electric_efficiency) # virtual LT coolant pump for straight-forward power computation
+                                     electric_efficiency=_params_coolant_pump.electric_efficiency)
     
     radiator        =   Radiator(nominal_pressure_drop_Pa=_params_radiator.nominal_pressure_drop_Pa,
                                  nominal_coolant_flow_m3_s=_params_radiator.nominal_coolant_flow_m3_s)
