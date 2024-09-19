@@ -1,7 +1,7 @@
 ''' This file contains the parameter definitions for the input variable optimization.'''
 
 import numpy as np
-
+from Components.stack import Stack
 class Optimization_Parameters:
     
     def __init__(self):
@@ -203,11 +203,17 @@ class Mass_Estimator:
         }
 
         # Cell numbers
-        self.cell_no = np.array([400, 450, 500])  # Cell numbers
+        self.cell_no = np.array([400, 450, 500])
 
-        # Calculate stack mass and coolant mass
-        self.m_stack_values = 0.0766 * self.cell_no + 9.2813  # Stack mass as a function of cell number
-        self.m_coolant_values = self.cell_no * 7 / 455  # Coolant mass scales with cell number
+        # Initialize lists for stack and coolant mass values
+        self.m_stack_values = np.zeros(len(self.cell_no))
+        self.m_coolant_values = np.zeros(len(self.cell_no))
+
+        # Calculate stack mass and coolant mass for each cell number
+        for i, n in enumerate(self.cell_no):
+            stack = Stack(cellcount=n)
+            self.m_stack_values[i] = stack.calculate_stack_mass()
+            self.m_coolant_values[i] = stack.calculate_coolant_mass()
 
         # Dictionary to store the total mass estimates
         self.subsystem_mass_total = {}
@@ -250,7 +256,6 @@ class Mass_Estimator:
                 self.subsystem_mass_total[key][i] = value
 
         return self.subsystem_mass_total
-
 # %% Example Usage:
 # Instantiate the class and run the mass estimation
 estimator = Mass_Estimator()
