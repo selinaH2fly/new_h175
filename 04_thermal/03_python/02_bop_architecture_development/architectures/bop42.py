@@ -55,8 +55,23 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Provide input on boundary conditions
     """
-    circ.add_bc("Vdot_1 = 0")
-    circ.add_bc("p_1 = 1.0")
+
+    for name in bc_dict:
+        if "Vdot_in" == name:
+            circ.add_bc("Vdot_1 = %f" %bc_dict["Vdot_in"])
+        elif "p_in" == name:
+            circ.add_bc("p_1 = %f" %bc_dict["p_in"])
+
+    circ.add_bc("p_11 = %f" %bc_dict["p_end"])
+    circ.add_bc("T_1 = %f" %bc_dict["T_in"])
+    circ.add_bc("Qdot_hpdu = %f" %bc_dict["Qdot_hpdu"])
+    circ.add_bc("Qdot_lvdcdc = %f" %bc_dict["Qddot_lvdcdc"])
+    circ.add_bc("Qdot_hvdcdc = %f" %bc_dict["Qdot_hvdcdc"])
+    circ.add_bc("Qdot_inverter = %f" %bc_dict["Qdot_inverter"])
+    circ.add_bc("Qdot_intercooler = %f" %bc_dict["Qdot_intercooler"])
+    circ.add_bc("Qdot_compressor = %f" %bc_dict["Qdot_compressor"])
+    circ.add_bc("Qdot_evap = %f" %bc_dict["Qdot_evap"])
+
     # circ.add_bc("nsplit_1_tcv1 = 1")
     circ.add_bc("delta_p_1_tcv1 = 0.0")
     circ.add_bc("delta_p_2_tcv1 = 0.0")
@@ -68,26 +83,6 @@ def initialize(input_dict, result_dict, bc_dict):
     circ.add_bc("delta_p_intercooler = - (4.4760 * 10 ** (-4) * Vdot_3 ** 2 * 60 ** 2 + 2.2828 * 10 ** (-3) * Vdot_3 * 60)")
     circ.add_bc("delta_p_compressor = - (2.9956 * 10 ** (-3) * Vdot_10 ** 2 * 60 ** 2 + 4.1023 * 10 ** (-4) * Vdot_10 * 60)")
     circ.add_bc("delta_p_evap = - (1.3479 * 10 ** (-4) * Vdot_1 ** 2 * 60 ** 2 + 1.4225 * 10 ** (-3) * Vdot_1 * 60)")
-
-    critical_operation = True
-    if critical_operation is False:
-        circ.add_bc("T_1 = 273.15 + 50.0")
-        circ.add_bc("Qdot_hpdu = 500")
-        circ.add_bc("Qdot_lvdcdc = 150")
-        circ.add_bc("Qdot_hvdcdc = 800")
-        circ.add_bc("Qdot_inverter = 625")
-        circ.add_bc("Qdot_intercooler = 13000")
-        circ.add_bc("Qdot_compressor = 500")
-        circ.add_bc("Qdot_evap = - 13500")
-    elif critical_operation is True:
-        circ.add_bc("T_1 = 273.15 + 60.0")
-        circ.add_bc("Qdot_hpdu = 1000")
-        circ.add_bc("Qdot_lvdcdc = 300")
-        circ.add_bc("Qdot_hvdcdc = 1600")
-        circ.add_bc("Qdot_inverter = 1250")
-        circ.add_bc("Qdot_intercooler = 19000")
-        circ.add_bc("Qdot_compressor = 1000")
-        circ.add_bc("Qdot_evap = - 13500")
 
     """
     Evaluate and generate output
@@ -109,9 +104,6 @@ def initialize(input_dict, result_dict, bc_dict):
     }
     result_pr_dict = {mixer1.p_out : ['bop pressure drop in [bar]', []]
     }
-    #10/60, 12/60, 15/60,
-    vdot1 = [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60]
-    input_list = ['Vdot_1', vdot1, 'BoP Entry Flow [l/s]']
-    circ.analyse_vdot_temp_pr(input_list, result_vdot_dict, result_temp_dict, result_pr_dict)
+
 
     return circ, input_dict, result_dict

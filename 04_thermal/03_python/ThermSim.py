@@ -247,7 +247,7 @@ class Circuit:
         self.var_res_start = self.var_res
 
     
-    def analyse_vdot_temp_pr(self, input_list, result_vdot_dict, result_temp_dict, result_pr_dict):
+    def analyse_vdot_temp_pr(self, input_dict, result_dict):
         """
         analyse choosen vdot, temp, and pr over the variation of a choosen input variable. Therefore runs sript in loop several times.
         Results are plotted and saved in excelfile.                                 
@@ -255,58 +255,72 @@ class Circuit:
         inputlist= ['Name of Variable', [...] , 'Legend for plotting']]  [...] is a List of values for variable to be invistigated
         """
         for i in range(len(self.eq_unsorted)):
-            if '%s = ' %(input_list[0]) in self.eq_unsorted[i][0]:
-                k = i
+            for input_name in input_dict:
+                if '%s = ' %(input_dict[input_name][0]) in self.eq_unsorted[i][0]:
+                    k = i
         
-        for y in input_list[1]:
-            self.eq_unsorted[k] = ['%s = %f' %(input_list[0], y)]
-            self.evaluate()
+        for input_name in input_dict:
+            for input_value in input_dict[input_name][1]:
+                self.eq_unsorted[k] = ['%s = %f' %(input_dict[input_name][0], input_value)]
+                self.evaluate()
 
-            for j in range(len(self.var_name)):
-                for vdot_name in result_vdot_dict:
-                    if self.var_name[j] == vdot_name:
-                        result_vdot_dict[vdot_name][1].append(self.var_res[j])
-                for temp_name in result_temp_dict:
-                    if self.var_name[j] == temp_name:
-                        result_temp_dict[temp_name][1].append(self.var_res[j])
-                for pr_name in result_pr_dict:
-                    if self.var_name[j] == pr_name and 'delta_p' not in self.var_name[j]:
-                        result_pr_dict[pr_name][1].append(1 - self.var_res[j])          # absolute pressure converts to pressure drop
-                    elif self.var_name[j] == pr_name:
-                        result_pr_dict[pr_name][1].append( - self.var_res[j])
-                
-            self.reset_to_startcond()
+                for j in range(len(self.var_name)):
+                    for result_name in result_dict:
+                        if self.var_name[j] == result_dict[result_name][0]:
+                            result_dict[result_name][1].append(self.var_res[j])
 
-        for vdot_name in result_vdot_dict:
-            plt.plot(input_list[1], result_vdot_dict[vdot_name][1], label=result_vdot_dict[vdot_name][0])
-        plt.ylabel('Flow in Branches in [l/s]')
-        plt.xlabel(input_list[2])
-        plt.legend()
-        plt.grid()
-        plt.show()
-        for temp_name in result_temp_dict:
-            plt.plot(input_list[1], result_temp_dict[temp_name][1], label=result_temp_dict[temp_name][0])
-        plt.ylabel('Temperature in [K]')
-        plt.xlabel(input_list[2])
-        plt.legend(loc = 'lower right')
-        plt.grid()
-        plt.show()
-        for pr_name in result_pr_dict:
-            plt.plot(input_list[1], result_pr_dict[pr_name][1], label=result_pr_dict[pr_name][0])
-        plt.ylabel('BoP Pressuredrop in [bar]')
-        plt.xlabel(input_list[2])
-        plt.legend()
-        plt.grid()
-        plt.show()
+
+#                for j in range(len(self.var_name)):
+ #                   for vdot_name in result_vdot_dict:
+  #                      if self.var_name[j] == vdot_name:
+   #                         result_vdot_dict[vdot_name][1].append(self.var_res[j])
+    #                for temp_name in result_temp_dict:
+     #                   if self.var_name[j] == temp_name:
+      #                      result_temp_dict[temp_name][1].append(self.var_res[j])
+       #             for pr_name in result_pr_dict:
+        #                if self.var_name[j] == pr_name and 'delta_p' not in self.var_name[j]:
+         #                   result_pr_dict[pr_name][1].append(1 - self.var_res[j])          # absolute pressure converts to pressure drop
+          #              elif self.var_name[j] == pr_name:
+           #                 result_pr_dict[pr_name][1].append( - self.var_res[j])
+                    
+                self.reset_to_startcond()
+        for input_name in input_dict:
+            for result_name in result_dict:
+                if ("vdot" or "Vdot") in result_dict[result_name][0]:
+                    plt.plot(input_dict[input_name][1], result_dict[result_name][1], label=result_dict[result_name][2])
+            plt.ylabel('Flow in Branches in [l/s]')
+            plt.xlabel(input_dict[input_name][2])
+            plt.legend()
+            plt.grid()
+            plt.show()
+            for result_name in result_dict:
+                if ("t_in" or "t_out" or "T_") in result_dict[result_name][0]:
+                    plt.plot(input_dict[input_name][1], result_dict[result_name][1], label=result_dict[result_name][2])
+            plt.ylabel('Temperature in [K]')
+            plt.xlabel(input_dict[input_name][2])
+            plt.legend(loc = 'lower right')
+            plt.grid()
+            plt.show()
+            for result_name in result_dict:
+                if "delta_p" in result_dict[result_name][0]:
+                    plt.plot(input_dict[input_name][1], result_dict[result_name][1], label=result_dict[result_name][2])
+                    
+                if "p_in" in result_dict[result_name][0]:
+                    y = 0
+                    while y < len(result_dict[result_name][1]):
+                        result_dict[result_name][1][y] -= 1
+                        y +=1
+                    plt.plot(input_dict[input_name][1], result_dict[result_name][1], label=result_dict[result_name][2])
+            plt.ylabel('BoP Pressuredrop in [bar]')
+            plt.xlabel(input_dict[input_name][2])
+            plt.legend()
+            plt.grid()
+            plt.show()
 
         data_dict = {}
-        data_dict[input_list[0]] = input_list[1]
-        for vdot_name in result_vdot_dict:
-            data_dict[result_vdot_dict[vdot_name][0]] = result_vdot_dict[vdot_name][1]
-        for temp_name in result_temp_dict:
-            data_dict[result_temp_dict[temp_name][0]] = result_temp_dict[temp_name][1]
-        for pr_name in result_pr_dict:
-            data_dict[result_pr_dict[pr_name][0]] = result_pr_dict[pr_name][1]
+        data_dict[input_dict[input_name][2]] = input_dict[input_name][1]
+        for result_name in result_dict:
+            data_dict[result_dict[result_name][2]] = result_dict[result_name][1]
         data = pd.DataFrame(data_dict)
         datatoexcel = pd.ExcelWriter('results.xlsx')
         data.to_excel(datatoexcel)

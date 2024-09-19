@@ -50,12 +50,12 @@ def initialize(input_dict, result_dict, bc_dict):
         if "Vdot_in" == name:
             circ.add_bc("Vdot_1 = %f" %bc_dict["Vdot_in"])
         elif "p_in" == name:
-            circ.add_bc("p_1 = %f" %bc_dict["p_in"])
+            circ.add_bc("%s = %f" %(mixer1.p_out, bc_dict["p_end"]))
 
     circ.add_bc("p_11 = %f" %bc_dict["p_end"])
     circ.add_bc("T_1 = %f" %bc_dict["T_in"])
     circ.add_bc("Qdot_hpdu = %f" %bc_dict["Qdot_hpdu"])
-    circ.add_bc("Qdot_lvdcdc = %f" %bc_dict["Qddot_lvdcdc"])
+    circ.add_bc("Qdot_lvdcdc = %f" %bc_dict["Qdot_lvdcdc"])
     circ.add_bc("Qdot_hvdcdc = %f" %bc_dict["Qdot_hvdcdc"])
     circ.add_bc("Qdot_inverter = %f" %bc_dict["Qdot_inverter"])
     circ.add_bc("Qdot_intercooler = %f" %bc_dict["Qdot_intercooler"])
@@ -76,27 +76,60 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Evaluate and generate output
     """
-    result_dict = {}
-    result_vdot_dict = {"Vdot_Bypass" : ['Vdot_10', [], 'Vdot Intercooler Bypass [l/s]'], 
-                        "Vdot_Intercooler" : ['Vdot_8', [],'Vdot Intercooler in [l/s]']}
-    result_temp_dict = {"t_in_lvdcdc": [lvdcdc.T_in, [],'LV DCDC T_in'],
-                        "t_in_hvdcdc" : [hvdcdc.T_in, [], 'HV DCDC T_in'],
-                        "t_in_inverter" : [inverter.T_in, [], 'Inverter T_in'],
-                        "t_in_hpdu" : [hpdu.T_in, [], 'HPDU T_in'],
-                        "t_in_compressor" : [compressor.T_in, [], 'Compressor T_in'],
-                        "t_in_intercooler" : [intercooler.T_in, [], "Intercooler T_in"],
-                        "t_out_Bop" : [mixer1.T_out, [],'BoP T_out'],
-    }
-    result_pr_dict = {"p_end" : [mixer1.p_out, [], 'bop pressure drop in [bar]']
-    }
+    for name in input_dict:
+        if name in input_dict == "Vdot_in":
+            input_dict[name][0] = evap.Vdot_in
 
+    for name in result_dict:
+        if name == "t_in_lvdcdc":
+            result_dict[name][0] = lvdcdc.T_in
+        elif name == "t_in_hvdcdc":
+            result_dict[name][0] = hvdcdc.T_in
+        elif name == "t_in_inverter":
+            result_dict[name][0] = inverter.T_in
+        elif name == "t_in_hpdu":
+            result_dict[name][0] = hpdu.T_in
+        elif name == "t_in_compressor":
+            result_dict[name][0] = compressor.T_in
+        elif name == "t_in_intercooler":
+            result_dict[name][0] = intercooler.T_in
+        elif name == "t_out_intercooler":
+            result_dict[name][0] = intercooler.T_out
+        elif name == "t_out_Bop":
+            result_dict[name][0] = mixer1.T_out     # depends on architecture!
+        elif name == "p_end":
+            result_dict[name][0] = mixer1.p_out     # depends on architecture!
+        elif name == "Vdot_in":
+            result_dict[name][0] = evap.Vdot_in     # = "Vdot_1"
+        elif name == "Vdot_1":
+            result_dict[name][0] = intercooler.Vdot_in          # depends on architecture!
+            result_dict[name][2] = "Flow over Intercooler in [l/s]"
+ #           result_dict["vdot_intercooler"] = result_dict[name]
+  #          del result_dict[name]
+        elif name == "Vdot_2":
+            result_dict[name][0] = intercooler.Vdot_in          # depends on architecture!
+            result_dict[name][2] = "Flow over Bypass in [l/s]"
+ #           result_dict["vdot_bypass"] = result_dict[name]
+  #          del result_dict[name]
+ #       elif name == "Vdot_3": 
+  #          del result_dict[name]       # depends on architecture!
+   #     elif name == "Vdot_4": 
+    #        del result_dict[name]       # depends on architecture!
+        
 
-    result_vdot_dict = {'Vdot_10' : ['Vdot Intercooler Bypass [l/s]', []], 
-                        'Vdot_8' : ['Vdot Intercooler in [l/s]', []],
-    }
+    #result_dict = {"Vdot_Bypass" : ['Vdot_10', [], 'Vdot Intercooler Bypass [l/s]'], 
+     #                   "Vdot_Intercooler" : ['Vdot_8', [],'Vdot Intercooler in [l/s]'],
+      #                  "t_in_lvdcdc": [lvdcdc.T_in, [],'LV DCDC T_in'],
+       #                 "t_in_hvdcdc" : [hvdcdc.T_in, [], 'HV DCDC T_in'],
+        #                "t_in_inverter" : [inverter.T_in, [], 'Inverter T_in'],
+         #               "t_in_hpdu" : [hpdu.T_in, [], 'HPDU T_in'],
+          #              "t_in_compressor" : [compressor.T_in, [], 'Compressor T_in'],
+           #             "t_in_intercooler" : [intercooler.T_in, [], "Intercooler T_in"],
+            #            "t_out_intercooler" : [intercooler.T_out, [], "Intercooler T_out"],
+             #           "t_out_Bop" : [mixer1.T_out, [],'BoP T_out'],
+              #          "p_end" : [mixer1.p_out, [], 'bop pressure drop in [bar]'],}
     
-    if name in input_dict == "throttle_delta_p":
-        input_dict[name][0] = "delta_p_1_tcv1"
-    circ.analyse_vdot_temp_pr(input_dict, result_vdot_dict, result_temp_dict, result_pr_dict)
+    #if name in input_dict == "throttle_delta_p":
+     #   input_dict[name][0] = "delta_p_1_tcv1"
     
     return circ, input_dict, result_dict

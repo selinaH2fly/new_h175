@@ -45,9 +45,24 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Provide input on boundary conditions
     """
-    circ.add_bc("Vdot_1 = 0")
+
+    for name in bc_dict:
+        if "Vdot_in" == name:
+            circ.add_bc("Vdot_1 = %f" %bc_dict["Vdot_in"])
+        elif "p_in" == name:
+            circ.add_bc("p_1 = %f" %bc_dict["p_in"])
+
+    circ.add_bc("p_11 = %f" %bc_dict["p_end"])
+    circ.add_bc("T_1 = %f" %bc_dict["T_in"])
+    circ.add_bc("Qdot_hpdu = %f" %bc_dict["Qdot_hpdu"])
+    circ.add_bc("Qdot_lvdcdc = %f" %bc_dict["Qddot_lvdcdc"])
+    circ.add_bc("Qdot_hvdcdc = %f" %bc_dict["Qdot_hvdcdc"])
+    circ.add_bc("Qdot_inverter = %f" %bc_dict["Qdot_inverter"])
+    circ.add_bc("Qdot_intercooler = %f" %bc_dict["Qdot_intercooler"])
+    circ.add_bc("Qdot_compressor = %f" %bc_dict["Qdot_compressor"])
+    circ.add_bc("Qdot_evap = %f" %bc_dict["Qdot_evap"])
+
     circ.add_bc("delta_p_throttle1 = - 0.0")
-    circ.add_bc("p_1 = 1.0")
 
     circ.add_bc("delta_p_hpdu = - (1.0423 * 10 ** (-3) * Vdot_8 ** 2 * 60 ** 2 + 2.2465 * 10 ** (-3) * Vdot_8 * 60)")
     circ.add_bc("delta_p_lvdcdc = - (5.3884 * 10 ** (-4) * Vdot_4 ** 2 * 60 ** 2  + 2.8112 * 10 ** (-3) * Vdot_4 * 60)")
@@ -56,27 +71,6 @@ def initialize(input_dict, result_dict, bc_dict):
     circ.add_bc("delta_p_intercooler = - (4.4760 * 10 ** (-4) * Vdot_6 ** 2 * 60 ** 2 + 2.2828 * 10 ** (-3) * Vdot_6 * 60)")
     circ.add_bc("delta_p_compressor = - (2.9956 * 10 ** (-3) * Vdot_10 ** 2 * 60 ** 2 + 4.1023 * 10 ** (-4) * Vdot_10 * 60)")
     circ.add_bc("delta_p_evap = - (1.3479 * 10 ** (-4) * Vdot_1 ** 2 * 60 ** 2 + 1.4225 * 10 ** (-3) * Vdot_1 * 60)")
-
-    critical_operation = False
-    if critical_operation is False:
-        circ.add_bc("T_1 = 273.15 + 50.0")
-        circ.add_bc("Qdot_hpdu = 500")
-        circ.add_bc("Qdot_lvdcdc = 150")
-        circ.add_bc("Qdot_hvdcdc = 800")
-        circ.add_bc("Qdot_inverter = 625")
-        circ.add_bc("Qdot_intercooler = 13000")
-        circ.add_bc("Qdot_compressor = 500")
-        circ.add_bc("Qdot_evap = - 13500")
-    elif critical_operation is True:
-        circ.add_bc("T_1 = 273.15 + 60.0")
-        circ.add_bc("Qdot_hpdu = 1000")
-        circ.add_bc("Qdot_lvdcdc = 300")
-        circ.add_bc("Qdot_hvdcdc = 1600")
-        circ.add_bc("Qdot_inverter = 1250")
-        circ.add_bc("Qdot_intercooler = 19000")
-        circ.add_bc("Qdot_compressor = 1000")
-        circ.add_bc("Qdot_evap = - 13500")
-
 
     """
     Evaluate and generate output
