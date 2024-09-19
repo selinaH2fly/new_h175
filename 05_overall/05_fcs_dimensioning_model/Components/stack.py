@@ -84,9 +84,7 @@ stack_pressure_drop_anode_Pa = stack.calculate_pressure_drop_anode()
 
 stack = Stack(cellcount=400)  # You can specify different cell counts if needed
 
-
 # Calculate stack mass, coolant mass, and total weight
 stack_mass = stack.calculate_stack_mass()
 coolant_mass = stack.calculate_coolant_mass()
 total_weight = stack.calculate_mass()
-
