@@ -59,7 +59,11 @@ class Stack:
         return None
     
     def calculate_heat_flux(self) -> float:
-        
+        """
+        Calculates the heat flux created by the H2 reaction
+
+
+        """
         # Load the physical parameters
         params_physics = Physical_Parameters()
         
@@ -71,7 +75,7 @@ class Stack:
     def calculate_coolant_flow(self, flight_level_100ft=50):
         """
         Compute the coolant flow rate in kg/s.
-
+        
         
         """
 
