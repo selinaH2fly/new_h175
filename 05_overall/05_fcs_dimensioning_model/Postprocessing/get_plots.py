@@ -1,19 +1,23 @@
 # %% Imports:
 import pandas as pd
 import os
-
+import sys
+import argparse
+# Adjust sys.path if running directly
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_dir)
 
 # Import plot functions defined in a separate file
-from .get_plots_operating_parameters import plot_cathode_inlet_pressure, plot_cathode_inlet_realtive_humidity, \
+from get_plots_operating_parameters import plot_cathode_inlet_pressure, plot_cathode_inlet_realtive_humidity, \
     plot_cathode_stoichiomtrey, plot_coolant_inlet_temperature, plot_coolant_outlet_temperature
-from .plot_pol_curves import plot_polarization_curves
-from .plot_pol_curves_connected import plot_polarization_curves_bol_eol
-from .plot_power_grid import plot_power_needs #annotate_boxes, format_data_for_plot, 
-from .plot_h2_consumption_vs_systempower import plot_h2_consumption_vs_systempower
-from .plot_system_efficiency import plot_system_efficiency
-from .plot_h2_consumption_vs_FL import plot_h2_consumption_vs_FL
+from plot_pol_curves import plot_polarization_curves
+from plot_pol_curves_connected import plot_polarization_curves_bol_eol
+from plot_power_grid import plot_power_needs #annotate_boxes, format_data_for_plot, 
+from plot_h2_consumption_vs_systempower import plot_h2_consumption_vs_systempower
+from plot_system_efficiency import plot_system_efficiency
+from plot_h2_consumption_vs_FL import plot_h2_consumption_vs_FL
 #from plot_system_mass_estimate_old import plot_mass_estimate # old version of wenzel (errorbar chart of system mass)
-from .plot_system_mass_estimate import plot_system_mass_estimate
+from plot_system_mass_estimate import plot_system_mass_estimate
 
 #%%  
 def filter_converged_points(df, tolerance=4):
@@ -120,4 +124,14 @@ def analyze_data(_file_path1, saving=True):
     
 # %%    
 
-#analyze_data(_file_path1=r"..\consolidated_20-175kW_400-500_0-150ft__2_std\optimized_parameters_20-175kW_400-500_0-150ft.csv", saving=True) 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_20-175kW_400-500_0-150ft__2_std\optimized_parameters_20-175kW_400-500_0-150ft.csv")
+    parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
+    args = parser.parse_args()
+    
+    # Convert 'True'/'False' string to boolean
+    saving = args.saving == "True"
+    
+    # Run analyze_data as an example if the script is called directly
+    analyze_data(args.filepath, saving)
