@@ -14,7 +14,7 @@ from Components.recirculation_pump import Recirculation_Pump
 from Components.coolant_pump import Coolant_Pump
 from Components.radiator import Radiator
 from Components.stack import Stack
-from basic_physics import compute_air_mass_flow, compute_coolant_flow, icao_atmosphere
+from basic_physics import compute_air_mass_flow, icao_atmosphere
 
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275,
@@ -39,7 +39,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     """
     
     # Load parameters
-    #_params_physics = parameters.Physical_Parameters()
     _params_optimization = parameters.Optimization_Parameters()
     _params_compressor = parameters.Compressor_Parameters()
     _params_turbine = parameters.Turbine_Parameters()
@@ -48,6 +47,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_radiator = parameters.Radiator_Parameters()
     _params_stack = parameters.Stack_Parameters()
     _params_Eol = parameters.Eol_Parameter()
+    _mass_estimator = parameters.Mass_Estimator()
 
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
@@ -57,18 +57,18 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
 
     # Instantiate components
-    compressor      =   Compressor(isentropic_efficiency=_params_compressor.isentropic_efficiency,
+    compressor      =   Compressor(mass_estimator=_mass_estimator, isentropic_efficiency=_params_compressor.isentropic_efficiency,
                                    electric_efficiency=_params_compressor.electric_efficiency,
                                    temperature_in_K=temperature_ambient_K, pressure_in_Pa=pressure_ambient_Pa,
                                    nominal_BoP_pressure_drop_Pa=_params_compressor.nominal_BoP_pressure_drop_Pa,
                                    compressor_map=compressor_map, nominal_air_flow_kg_s=_params_compressor.nominal_air_flow_kg_s)
     
-    turbine         =   Turbine(isentropic_efficiency=_params_turbine.isentropic_efficiency,
+    turbine         =   Turbine(mass_estimator=_mass_estimator, isentropic_efficiency=_params_turbine.isentropic_efficiency,
                                 temperature_out_K=temperature_ambient_K, pressure_out_Pa=pressure_ambient_Pa,
                                 nominal_BoP_pressure_drop_Pa=_params_turbine.nominal_BoP_pressure_drop_Pa,
                                 nominal_air_flow_kg_s=_params_turbine.nominal_air_flow_kg_s)
     
-    reci_pump       =   Recirculation_Pump(isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
+    reci_pump       =   Recirculation_Pump(mass_estimator=_mass_estimator, isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
                                            electric_efficiency=_params_recirculation_pump.electric_efficiency,
                                            n_cell=cellcount, cell_area_m2=_params_stack.cell_area_m2,
                                            fixed_recirculation_ratio=_params_recirculation_pump.fixed_recirculation_ratio,
@@ -77,8 +77,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     coolant_pump_ht =   Coolant_Pump(isentropic_efficiency=_params_coolant_pump.isentropic_efficiency,
                                      electric_efficiency=_params_coolant_pump.electric_efficiency)
     
+    # virtual LT coolant pump for straight-forward power computation
     coolant_pump_lt =   Coolant_Pump(isentropic_efficiency=_params_coolant_pump.isentropic_efficiency,
-                                     electric_efficiency=_params_coolant_pump.electric_efficiency) # virtual LT coolant pump for straight-forward power computation
+                                     electric_efficiency=_params_coolant_pump.electric_efficiency)
     
     radiator        =   Radiator(nominal_pressure_drop_Pa=_params_radiator.nominal_pressure_drop_Pa,
                                  nominal_coolant_flow_m3_s=_params_radiator.nominal_coolant_flow_m3_s)
@@ -129,7 +130,20 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             derating_factor = 1 - (1 - _params_Eol.reference_derating_factor)/_params_Eol.reference_current_density_A_m2 * current_density_A_m2
             optimized_cell_voltage_V *= derating_factor
 
-        # %% Compressor and Turbine
+# %% Stack
+        # Set stack attributes:
+        stack.current_A = optimized_current_A
+        stack.cell_voltage_V = optimized_cell_voltage_V
+        stack.temp_coolant_in_K = optimized_temp_coolant_inlet_degC + 273.15
+        stack.temp_coolant_out_K = optimized_temp_coolant_outlet_degC + 273.15
+        
+        # Compute the coolant flow rate
+        stack.coolant_flow_m3_s = stack.calculate_coolant_flow(pressure_ambient_Pa)
+        
+        # Compute the pressure drop across the stack
+        stack_pressure_drop_Pa = stack.calculate_pressure_drop_cooling() # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
+
+# %% Compressor and Turbine
 
         # Set compressor attributes
         compressor.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A, cellcount=cellcount)
@@ -191,7 +205,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         reci_pump.stoich_anode = 1.5                                                    # TODO: include anode stoichiometry in cell voltage model
 
         # Estimate the anode pressure drop
-        stack.current_A = optimized_current_A
         anode_pressure_drop_Pa = stack.calculate_pressure_drop_anode()
 
         # Estimate the BoP pressure drop in the recirculation loop
@@ -207,21 +220,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # %% Coolant Pump
 
-        # Compute the coolant flow rate
-        coolant_flow_rate_ht_m3_s = compute_coolant_flow(optimized_current_A, optimized_cell_voltage_V,
-                                                         optimized_temp_coolant_inlet_degC, optimized_temp_coolant_outlet_degC,
-                                                         flight_level_100ft=flight_level_100ft, cellcount=cellcount)
-        
-        # Compute the pressure drop across the stack
-        stack.coolant_flow_m3_s = coolant_flow_rate_ht_m3_s
-        stack_pressure_drop_Pa = stack.calculate_pressure_drop_cooling() # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
-
         # Compute the pressure drop across the radiator        
-        radiator.coolant_flow_m3_s = coolant_flow_rate_ht_m3_s # TODO: This ignores the TCV split between radiator and stack. Improve.
+        radiator.coolant_flow_m3_s = stack.coolant_flow_m3_s # TODO: This ignores the TCV split between radiator and stack. Improve.
         radiator_pressure_drop_Pa = radiator.calculate_pressure_drop()
 
         # Compute the coolant pump power for the HT circuit
-        coolant_pump_ht.coolant_flow_m3_s = coolant_flow_rate_ht_m3_s
+        coolant_pump_ht.coolant_flow_m3_s = stack.coolant_flow_m3_s
         coolant_pump_ht.head_Pa = stack_pressure_drop_Pa + radiator_pressure_drop_Pa # coolant_pump.head_Pa = stack_pressure_drop + radiator_pressure_drop (including 0.1 bar additional HT pressure drop)
         
         # Compute the (virtual) coolant pump power for the LT circuit (assuming a constant flow rate)
@@ -234,7 +238,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # %% Consumed hydrogen mass flow rate
 
         # Compute the hydrogen mass flow rate
-        hydrogen_mass_flow_g_s = optimized_input[0] * cellcount * CP.PropsSI('M', 'Hydrogen') / \
+        hydrogen_mass_flow_g_s = stack.current_A * stack.cellcount * CP.PropsSI('M', 'Hydrogen') / \
             (2 * (physical_constants['Faraday constant'][0])) * 1000
 
         return optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
@@ -282,10 +286,11 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
     # Evaluate the models with the optimal input
     optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(result.x)
-
-    # Compute stack power
-    stack_power_kW = optimal_input[0] * cell_voltage * cellcount / 1000
-
+    
+    # Compute stack power and heat flux
+    stack_power_kW = stack.current_A * stack.cell_voltage_V * stack.cellcount / 1000
+    stack_heat_flux_W = stack.calculate_heat_flux()
+    
     # Plot the compressor map with the optimized operating point highlighted
     if compressor_map is not None:
         compressor.plot_compressor_map()

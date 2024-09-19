@@ -1,17 +1,19 @@
 import CoolProp.CoolProp as CP
 import math
 from scipy.constants import physical_constants
+from parameters import Mass_Estimator
 
 class Recirculation_Pump:
     
-    def __init__(self, isentropic_efficiency=0.75, electric_efficiency=0.95, 
+    def __init__(self, mass_estimator: Mass_Estimator, isentropic_efficiency=0.75, electric_efficiency=0.95, 
                  current_A=100, temperature_in_K=293.15, pressure_in_Pa=1e5, pressure_out_Pa=1e5,
                  n_cell=455, cell_area_m2=300*1e-4, stoich_anode=1.5, nominal_BoP_pressure_drop_Pa=0.1*1e5,
-                 fixed_recirculation_ratio=None, mass_by_power_kg_kW={"mean": 1.0, "sd": 0.1}): 
+                 fixed_recirculation_ratio=None):
         """
         Initialize the recirculation pump with a given efficiency and operating conditions.
 
        Args:
+        - mass_estimator: calls dict from parameters
         - isentropic_efficiency: Efficiency of the pump (default is 0.75)
         - electric_efficiency: Electric efficiency of the pump (default is 0.95)
         - current_A: Current in Amperes (default is 100)
@@ -37,12 +39,18 @@ class Recirculation_Pump:
         self.stoich_anode = stoich_anode
         self.nominal_BoP_pressure_drop = nominal_BoP_pressure_drop_Pa
         self.fixed_recirculation_ratio = fixed_recirculation_ratio
-        self.mass_by_power_kg_kW = mass_by_power_kg_kW
 
         # TODO: No constant parameters in the class definition. Move to parameters.py
         self.stoich_0 = 1.05                            # stoich_0 1.02-1.05 "lost als H2 aus system = ~5%" TODO: rather specify the recirculation ratio!
         self.hydrogen_concentration_supply = 1          # H2 concentration in tank
-    
+
+        # Ensure the component is available in masses_FCM_depended; raise error if missing
+        if 'Recirculation_Pump' not in mass_estimator.masses_FCM_depended:
+            raise ValueError(f"Component 'Recirculation Pump' not found in mass estimator's dependent masses.")
+
+        # Retrieve mass data from the mass_estimator instance
+        self.mass_by_power_kg_kW = mass_estimator.masses_FCM_depended['Recirculation_Pump']
+
     def calculate_power(self)->float:
         """
         Calculate the electrical power consumed by the recirculation pump.
@@ -173,18 +181,17 @@ class Recirculation_Pump:
         }
  
 # %% Example Usage:
+mass_estimator = Mass_Estimator()
 
-R1 = Recirculation_Pump(current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
+R1 = Recirculation_Pump(mass_estimator, current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
                         cell_area_m2=300*1e-4, stoich_anode = 2.4)
 
-R2 = Recirculation_Pump(current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
+R2 = Recirculation_Pump(mass_estimator, current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
                         cell_area_m2=300*1e-4, stoich_anode = 2.4, fixed_recirculation_ratio=70/30)
 
 # Calculate electrical power
-electrical_power_W = R2.calculate_power()
+electrical_power_W_smart = R1.calculate_power()
+electrical_power_W_fixed_ratio = R2.calculate_power()
 
-#electrical power
-power_el_smart = R1.calculate_power()
-
-#mass
+# Calculate mass
 pump_mass = R1.calculate_mass()
