@@ -1,13 +1,13 @@
 import CoolProp.CoolProp as CP
+from parameters import Mass_Estimator
 
 class Turbine:
-    def __init__(self, params_physics, isentropic_efficiency=0.85,
+
+    def __init__(self, mass_estimator: Mass_Estimator, isentropic_efficiency=0.85,
                  air_mass_flow_kg_s=1, temperature_in_K=293.15, pressure_in_Pa=1.013e5, pressure_out_Pa=1.013e5, temperature_out_K=293.15,
-                 nominal_BoP_pressure_drop_Pa=0.15*1e5, nominal_air_flow_kg_s=0.130,
-                 mass_by_power_kg_kW={"mean": 1.0, "sd": 0.1}):
+                 nominal_BoP_pressure_drop_Pa=0.15*1e5, nominal_air_flow_kg_s=0.130):
 
         self.isentropic_efficiency = isentropic_efficiency
-        self.params_physics = params_physics
         self.air_mass_flow_kg_s = air_mass_flow_kg_s
         self.pressure_in_Pa = pressure_in_Pa
         self.temperature_in_K = temperature_in_K
@@ -15,7 +15,13 @@ class Turbine:
         self.temperature_out_K = temperature_out_K
         self.nominal_pressure_drop_Pa = nominal_BoP_pressure_drop_Pa
         self.nominal_air_flow_kg_s = nominal_air_flow_kg_s
-        self.mass_by_power_kg_kW = mass_by_power_kg_kW
+
+        # Ensure the component is available in masses_FCM_depended; raise error if missing
+        if 'Turbine' not in mass_estimator.masses_FCM_depended:
+            raise ValueError(f"Component 'Turbine' not found in mass estimator's dependent masses.")
+
+        # Retrieve mass data from the mass_estimator instance
+        self.mass_by_power_kg_kW = mass_estimator.masses_FCM_depended['Turbine']
 
     def calculate_power(self)->float:
         """
@@ -71,13 +77,11 @@ class Turbine:
         }
     
 # %% Example usage:
-import parameters   
-params_physics = parameters.Physical_Parameters()
 
-C1 = Turbine(params_physics, isentropic_efficiency=0.85, air_mass_flow_kg_s=1,
+mass_estimator = Mass_Estimator()
+
+C1 = Turbine(mass_estimator, isentropic_efficiency=0.85, air_mass_flow_kg_s=1,
              temperature_in_K=350.15, pressure_in_Pa=2e5, pressure_out_Pa=1e5, temperature_out_K=293.15)
            
 power_el = C1.calculate_power()
 mass = C1.calculate_mass()
-
-

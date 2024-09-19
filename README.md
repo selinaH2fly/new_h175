@@ -1,3 +1,3 @@
 
 # h175_model_fcs
-Model of the overall H175 fuel cell system. This repository integrates models of the subsystems (anode, cathode, stack, thermal) as Git submodules.
+This repository contains mathematical models of the H2F-175 fuel cell system.

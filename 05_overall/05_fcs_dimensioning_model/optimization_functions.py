@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.optimize import differential_evolution, NonlinearConstraint
 from scipy.spatial import ConvexHull, Delaunay
+import CoolProp.CoolProp as CP
+from scipy.constants import physical_constants
 
 # Import custom classes and functions
 import parameters
@@ -42,7 +44,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     """
     
     # Load parameters
-    _params_physics = parameters.Physical_Parameters()
+    #_params_physics = parameters.Physical_Parameters()
     _params_optimization = parameters.Optimization_Parameters()
     _params_compressor = parameters.Compressor_Parameters()
     _params_turbine = parameters.Turbine_Parameters()
@@ -81,18 +83,18 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
 
     # Instantiate components
-    compressor      =   Compressor(_params_physics, isentropic_efficiency=_params_compressor.isentropic_efficiency,
+    compressor      =   Compressor(isentropic_efficiency=_params_compressor.isentropic_efficiency,
                                    electric_efficiency=_params_compressor.electric_efficiency,
                                    temperature_in_K=temperature_ambient_K, pressure_in_Pa=pressure_ambient_Pa,
                                    nominal_BoP_pressure_drop_Pa=_params_compressor.nominal_BoP_pressure_drop_Pa,
                                    compressor_map=compressor_map, nominal_air_flow_kg_s=_params_compressor.nominal_air_flow_kg_s)
     
-    turbine         =   Turbine(_params_physics, isentropic_efficiency=_params_turbine.isentropic_efficiency,
+    turbine         =   Turbine(isentropic_efficiency=_params_turbine.isentropic_efficiency,
                                 temperature_out_K=temperature_ambient_K, pressure_out_Pa=pressure_ambient_Pa,
                                 nominal_BoP_pressure_drop_Pa=_params_turbine.nominal_BoP_pressure_drop_Pa,
                                 nominal_air_flow_kg_s=_params_turbine.nominal_air_flow_kg_s)
     
-    reci_pump       =   Recirculation_Pump(_params_physics, isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
+    reci_pump       =   Recirculation_Pump(isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
                                            electric_efficiency=_params_recirculation_pump.electric_efficiency,
                                            n_cell=cellcount, cell_area_m2=_params_stack.cell_area_m2,
                                            fixed_recirculation_ratio=_params_recirculation_pump.fixed_recirculation_ratio,
@@ -259,8 +261,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # %% Consumed hydrogen mass flow rate
 
         # Compute the hydrogen mass flow rate
-        hydrogen_mass_flow_g_s = optimized_input[0] * cellcount * _params_physics.hydrogen_molar_mass / \
-            (2 * _params_physics.faraday) * 1000
+        hydrogen_mass_flow_g_s = optimized_input[0] * cellcount * CP.PropsSI('M', 'Hydrogen') / \
+            (2 * (physical_constants['Faraday constant'][0])) * 1000
 
         return optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
             coolant_pump_power_W, hydrogen_mass_flow_g_s

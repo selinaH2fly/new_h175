@@ -1,16 +1,19 @@
 import CoolProp.CoolProp as CP
 import math
+from scipy.constants import physical_constants
+from parameters import Mass_Estimator
 
 class Recirculation_Pump:
     
-    def __init__(self, params_physics, isentropic_efficiency=0.75, electric_efficiency=0.95, 
+    def __init__(self, mass_estimator: Mass_Estimator, isentropic_efficiency=0.75, electric_efficiency=0.95, 
                  current_A=100, temperature_in_K=293.15, pressure_in_Pa=1e5, pressure_out_Pa=1e5,
                  n_cell=455, cell_area_m2=300*1e-4, stoich_anode=1.5, nominal_BoP_pressure_drop_Pa=0.1*1e5,
-                 fixed_recirculation_ratio=None, mass_by_power_kg_kW={"mean": 1.0, "sd": 0.1}): 
+                 fixed_recirculation_ratio=None):
         """
         Initialize the recirculation pump with a given efficiency and operating conditions.
 
        Args:
+        - mass_estimator: calls dict from parameters
         - isentropic_efficiency: Efficiency of the pump (default is 0.75)
         - electric_efficiency: Electric efficiency of the pump (default is 0.95)
         - current_A: Current in Amperes (default is 100)
@@ -25,7 +28,6 @@ class Recirculation_Pump:
         - reci_electric_power_W: Electrical power consumed by the recirculation pump in Watts.
         """
         
-        self.params_physics = params_physics
         self.isentropic_efficiency = isentropic_efficiency
         self.electric_efficiency = electric_efficiency
         self.current_A = current_A
@@ -37,12 +39,18 @@ class Recirculation_Pump:
         self.stoich_anode = stoich_anode
         self.nominal_BoP_pressure_drop = nominal_BoP_pressure_drop_Pa
         self.fixed_recirculation_ratio = fixed_recirculation_ratio
-        self.mass_by_power_kg_kW = mass_by_power_kg_kW
 
         # TODO: No constant parameters in the class definition. Move to parameters.py
         self.stoich_0 = 1.05                            # stoich_0 1.02-1.05 "lost als H2 aus system = ~5%" TODO: rather specify the recirculation ratio!
         self.hydrogen_concentration_supply = 1          # H2 concentration in tank
-    
+
+        # Ensure the component is available in masses_FCM_depended; raise error if missing
+        if 'Recirculation_Pump' not in mass_estimator.masses_FCM_depended:
+            raise ValueError(f"Component 'Recirculation Pump' not found in mass estimator's dependent masses.")
+
+        # Retrieve mass data from the mass_estimator instance
+        self.mass_by_power_kg_kW = mass_estimator.masses_FCM_depended['Recirculation_Pump']
+
     def calculate_power(self)->float:
         """
         Calculate the electrical power consumed by the recirculation pump.
@@ -58,18 +66,29 @@ class Recirculation_Pump:
             hydrogen_recirculated_mol_s, nitrogen_recirculated_mol_s = self.calculate_flows_fixed_recirculation_ratio(self.fixed_recirculation_ratio)
 
         # Compute the mass flows
-        hydrogen_recirculated_kg_s = hydrogen_recirculated_mol_s*self.params_physics.hydrogen_molar_mass
-        nitrogen_recirculated_kg_s = nitrogen_recirculated_mol_s*self.params_physics.nitrogen_molar_mass
+        hydrogen_recirculated_kg_s = hydrogen_recirculated_mol_s*CP.PropsSI('M', 'Hydrogen')
+        nitrogen_recirculated_kg_s = nitrogen_recirculated_mol_s*CP.PropsSI('M', 'Nitrogen')
 
         # Compute the isentropic outlet temperature
-        kappa = self.params_physics.specific_heat_ratio # specific heat ratio for H2 and N2 almost equal to air (i.e., 1.4) TODO: snack from coolprop
-        isentropic_outlet_temperature_K = self.temperature_in_K * (self.pressure_out_Pa/self.pressure_in_Pa)**((kappa-1)/kappa)
+        
+        cp_h =  CP.PropsSI('Cpmass', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Hydrogen')
+        cv_h =  CP.PropsSI('Cvmass', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Hydrogen')
 
+        cp_n =  CP.PropsSI('Cpmass', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Nitrogen')
+        cv_n =  CP.PropsSI('Cvmass', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Nitrogen')
+
+        kappa_h = cp_h/cv_h 
+        kappa_n = cp_n/cv_n
+
+        # compute kappa 
+        isentropic_outlet_temperature_K_h = self.temperature_in_K * (self.pressure_out_Pa/self.pressure_in_Pa)**((kappa_h-1)/kappa_h)
+        isentropic_outlet_temperature_K_n = self.temperature_in_K * (self.pressure_out_Pa/self.pressure_in_Pa)**((kappa_n-1)/kappa_n)
+        
         # Compute the specific enthalpies of the species before and after the recirculation pump
         specific_enthalpy_hydrogen_in_J_kg = CP.PropsSI('H', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Hydrogen')
         specific_enthalpy_nitrogen_in_J_kg = CP.PropsSI('H', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Nitrogen')
-        specific_enthalpy_hydrogen_out_J_kg = CP.PropsSI('H', 'T', isentropic_outlet_temperature_K, 'P', self.pressure_out_Pa, 'Hydrogen')
-        specific_enthalpy_nitrogen_out_J_kg = CP.PropsSI('H', 'T', isentropic_outlet_temperature_K, 'P', self.pressure_out_Pa, 'Nitrogen')
+        specific_enthalpy_hydrogen_out_J_kg = CP.PropsSI('H', 'T', isentropic_outlet_temperature_K_h, 'P', self.pressure_out_Pa, 'Hydrogen')
+        specific_enthalpy_nitrogen_out_J_kg = CP.PropsSI('H', 'T', isentropic_outlet_temperature_K_n, 'P', self.pressure_out_Pa, 'Nitrogen')
 
         # Compute the isentropic power
         reci_isentropic_power_W = hydrogen_recirculated_kg_s*(specific_enthalpy_hydrogen_out_J_kg - specific_enthalpy_hydrogen_in_J_kg) + \
@@ -86,7 +105,7 @@ class Recirculation_Pump:
         Calculate the mass flows of hydrogen and nitrogen in the recirculation pump based on nitrogen and hydrogen flow balances.
         """
 
-        hydrogen_consumption_mol_s = self.current_A*self.n_cell/(2*self.params_physics.faraday)         # consumed hydrogen in stack; mol/s
+        hydrogen_consumption_mol_s = self.current_A*self.n_cell/(2*(physical_constants['Faraday constant'][0]))         # consumed hydrogen in stack; mol/s
         hydrogen_recirculated_mol_s = (self.stoich_anode - self.stoich_0)*hydrogen_consumption_mol_s    # recirculated hydrogen; mol/s
 
         # Nitrogen diffusion flow in stack; TODO: check the formula as it gives very low values
@@ -113,7 +132,7 @@ class Recirculation_Pump:
         Args:
         - recirculation_ratio: Fixed volumetric ratio of recirculated hydrogen/nitrogen."""
 
-        hydrogen_consumption_mol_s = self.current_A*self.n_cell/(2*self.params_physics.faraday)         # consumed hydrogen in stack; mol/s
+        hydrogen_consumption_mol_s = self.current_A*self.n_cell/(2*(physical_constants['Faraday constant'][0]))         # consumed hydrogen in stack; mol/s
         hydrogen_recirculated_mol_s = (self.stoich_anode - self.stoich_0)*hydrogen_consumption_mol_s    # recirculated hydrogen; mol/s
 
         nitrogen_recirculated_mol_s = hydrogen_recirculated_mol_s/recirculation_ratio
@@ -162,20 +181,17 @@ class Recirculation_Pump:
         }
  
 # %% Example Usage:
-import parameters   
-params_physics = parameters.Physical_Parameters() 
+mass_estimator = Mass_Estimator()
 
-R1 = Recirculation_Pump(params_physics, current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
+R1 = Recirculation_Pump(mass_estimator, current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
                         cell_area_m2=300*1e-4, stoich_anode = 2.4)
 
-R2 = Recirculation_Pump(params_physics, current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
+R2 = Recirculation_Pump(mass_estimator, current_A=200,temperature_in_K=343.15, pressure_in_Pa=2.1*1e5, pressure_out_Pa=2.5*1e5, n_cell=455,
                         cell_area_m2=300*1e-4, stoich_anode = 2.4, fixed_recirculation_ratio=70/30)
 
 # Calculate electrical power
-electrical_power_W = R2.calculate_power()
+electrical_power_W_smart = R1.calculate_power()
+electrical_power_W_fixed_ratio = R2.calculate_power()
 
-#electrical power
-power_el_smart = R1.calculate_power()
-
-#mass
+# Calculate mass
 pump_mass = R1.calculate_mass()
