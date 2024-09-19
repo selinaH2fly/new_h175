@@ -1,7 +1,7 @@
 ''' This file contains the parameter definitions for the input variable optimization.'''
 
 import numpy as np
-
+from Components.stack import Stack
 class Optimization_Parameters:
     
     def __init__(self):
@@ -163,4 +163,101 @@ class Eol_Parameter:
     def __init__(self):
 
         self.reference_derating_factor = 0.85
-        self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A 
+        self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A
+
+# Mass Estimation of the Subsystems
+
+class Mass_Estimator:
+    def __init__(self):
+        # Mass estimates for fixed mass components
+        self.masses_FCM_constants = {
+            'Stack': {'Stack': 0, 'CVM': 0.5, 'SMI': 1.5, 'Hose clamps': 0.18, 'Screws': 0.09, 'HV+LV Cable': 1.20},
+            'Cathode': {'Filter': 0.2, 'HFM': 0.1, 'Compressor': 0, 'Compressor inverter': 6.0, 'Intercooler': 1.0,
+                        'Humidifier': 1.0,
+                        'Valves': 1.5, 'Drain valve': 0.05, 'Water separator': 0.2,
+                        'Cathode pressure control valve': 0.0,
+                        'Sensors': 0.3, 'Silicon hoses': 0.5, 'Hose clamps': 0.12, 'Connectors': 0.8,
+                        'Screws': 0.18,
+                        'HV+LV Cable': 0.67, 'Turbine': 0.0},
+            'Anode': {'Shut-Off valve': 0.2, 'Pressure control valve': 0.2, 'Water separator': 0,
+                      'Particle filter': 0.2,
+                      'Recirculation pump': 4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.2,
+                      'Anode piping': 0.5,
+                      'Swagelok connector': 0.28, 'Screws': 0.09, 'HV+LV Cable': 0.34},
+            'Thermal': {'Coolant pump': 3.0, 'TCV': 0.5, 'Particle filter': 0.1, 'Ionic exchanger': 1.0,
+                        'Sensors': 0.2 + 0.20,
+                        'Silicone hoses': 0.5 + 0.5, 'Hose clamps': 0.12 + 0.12, 'Connectors': 0.80 + 0.80,
+                        'Screws': 0.09 + 0.09,
+                        'HV+LV Cable': 0.34, 'Expansion tank': 0.20, 'Volume flow control valve': 0.5,
+                        'Stack coolant': 0,
+                        'Other coolant': 5.0},
+            'Other': {'FCCU': 0.5, 'Electrical connectors': 0.4, 'HDPU': 5.0, 'Frame': 2.0, 'Connectors': 1.0,
+                      'Screws': 0.27,
+                      'HV+LV Cable': 0.0}
+        }
+        # Mass estimates for dependent mass components, change the values as needed
+        self.masses_FCM_depended = {
+            'Compressor': {"mean": 1.0, "sd": 0.1},
+            'Recirculation_Pump': {"mean": 1.0, "sd": 0.1},
+            'Turbine': {"mean": 1.0, "sd": 0.1},
+        }
+
+        # Cell numbers
+        self.cell_no = np.array([400, 450, 500])
+
+        # Initialize lists for stack and coolant mass values
+        self.m_stack_values = np.zeros(len(self.cell_no))
+        self.m_coolant_values = np.zeros(len(self.cell_no))
+
+        # Calculate stack mass and coolant mass for each cell number
+        for i, n in enumerate(self.cell_no):
+            stack = Stack(cellcount=n)
+            self.m_stack_values[i] = stack.calculate_stack_mass()
+            self.m_coolant_values[i] = stack.calculate_coolant_mass()
+
+        # Dictionary to store the total mass estimates
+        self.subsystem_mass_total = {}
+
+    def sum_fixed_mass(self):
+        """Sums the masses for each subsystem and returns the totals of the fixed mass."""
+        subsystem_totals = {}
+        total_mass = 0
+        for subsystem, components in self.masses_FCM_constants.items():
+            subsystem_mass = sum(components.values())
+            subsystem_totals[subsystem] = subsystem_mass
+            total_mass += subsystem_mass
+        return subsystem_totals, total_mass
+
+    """
+    the masses from compressor, turbine and recirculation pumps are not computed.
+    TODO: for each power, the mentioned masses should be added as required.
+    
+    """
+    def estimate_mass(self):
+        """Estimate the mass of the subsystems for the given cell number combination."""
+        self.subsystem_mass_total = {
+            'Stack': np.zeros(len(self.cell_no)),
+            'Cathode': np.zeros(len(self.cell_no)),
+            'Anode': np.zeros(len(self.cell_no)),
+            'Thermal': np.zeros(len(self.cell_no)),
+            'Other': np.zeros(len(self.cell_no))
+        }
+
+        for i, n in enumerate(self.cell_no):
+            # Calculate mass for each subsystem
+            temp, total_mass = self.sum_fixed_mass()
+
+            # Stack and coolant mass scale with cell number
+            temp['Stack'] += self.m_stack_values[i]
+            temp['Thermal'] += self.m_coolant_values[i]
+
+            # Assign the updated subsystem masses to the correct location
+            for key, value in temp.items():
+                self.subsystem_mass_total[key][i] = value
+
+        return self.subsystem_mass_total
+# %% Example Usage:
+# Instantiate the class and run the mass estimation
+estimator = Mass_Estimator()
+mass_estimates = estimator.estimate_mass()
+
