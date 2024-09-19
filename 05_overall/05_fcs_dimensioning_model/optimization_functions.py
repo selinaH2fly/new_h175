@@ -204,7 +204,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         reci_pump.stoich_anode = 1.5                                                    # TODO: include anode stoichiometry in cell voltage model
 
         # Estimate the anode pressure drop
-        stack.current_A = optimized_current_A
         anode_pressure_drop_Pa = stack.calculate_pressure_drop_anode()
 
         # Estimate the BoP pressure drop in the recirculation loop
@@ -238,7 +237,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # %% Consumed hydrogen mass flow rate
 
         # Compute the hydrogen mass flow rate
-        hydrogen_mass_flow_g_s = optimized_input[0] * cellcount * CP.PropsSI('M', 'Hydrogen') / \
+        hydrogen_mass_flow_g_s = stack.current_A * stack.cellcount * CP.PropsSI('M', 'Hydrogen') / \
             (2 * (physical_constants['Faraday constant'][0])) * 1000
 
         return optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
@@ -287,9 +286,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # Evaluate the models with the optimal input
     optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(result.x)
     
-    # Compute stack power
-    stack_power_kW = optimal_input[0] * stack.cell_voltage_V * stack.cellcount / 1000
-    
+    # Compute stack power and heat flux
+    stack_power_kW = stack.current_A * stack.cell_voltage_V * stack.cellcount / 1000
+    stack_heat_flux_W = stack.calculate_heat_flux()
     
     # Plot the compressor map with the optimized operating point highlighted
     if compressor_map is not None:
