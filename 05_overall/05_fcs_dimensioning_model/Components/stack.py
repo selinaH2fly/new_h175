@@ -1,7 +1,11 @@
+<<<<<<< HWI-435-Stack-Component-Augmentation
 import CoolProp.CoolProp as CP
 from parameters import Physical_Parameters
 from basic_physics import icao_atmosphere
 
+=======
+import numpy as np
+>>>>>>> dev
 class Stack:
     """
     A class to model a fuel cell stack
@@ -53,7 +57,10 @@ class Stack:
 
         return pressure_drop_Pa
 
+<<<<<<< HWI-435-Stack-Component-Augmentation
 
+=======
+>>>>>>> dev
     def calculate_stack_mass(self) -> float:
         """
         Calculate the stack mass as a function of the number of cells.
@@ -79,6 +86,7 @@ class Stack:
 
         total_mass = stack_mass + coolant_mass
         return total_mass
+<<<<<<< HWI-435-Stack-Component-Augmentation
     
     def calculate_heat_flux(self) -> float:
         """
@@ -113,6 +121,9 @@ class Stack:
         coolant_flow_m3_s = coolant_flow_kg_s / CP.PropsSI('D', 'T', (self.temp_coolant_in_K + self.temp_coolant_out_K) / 2, 'P', pressure_ambient_Pa, coolant)
 
         return coolant_flow_m3_s
+=======
+
+>>>>>>> dev
 
 # %% Example Usage:
 
@@ -148,9 +159,22 @@ total_weight = stack.calculate_mass()
 # except Exception as e:
 #     print(f"Error in calculate_heat_flux: {e}")
 
+<<<<<<< HWI-435-Stack-Component-Augmentation
 # # Step 7: Test calculate_coolant_flow method
 # try:
 #     coolant_flow_m3_s = stack.calculate_coolant_flow(flight_level_100ft=50)
 #     print(f"Coolant flow rate: {coolant_flow_m3_s:.6f} m^3/s")
 # except Exception as e:
 #     print(f"Error in calculate_coolant_flow: {e}")
+=======
+# print(f"Pressure drop across the anode: {stack_pressure_drop_anode_Pa*1e-5:.2f} bar")
+
+# %% Example Usage:
+
+stack = Stack(cellcount=400)  # You can specify different cell counts if needed
+
+# Calculate stack mass, coolant mass, and total weight
+stack_mass = stack.calculate_stack_mass()
+coolant_mass = stack.calculate_coolant_mass()
+total_weight = stack.calculate_mass()
+>>>>>>> dev
