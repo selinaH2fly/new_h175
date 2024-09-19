@@ -202,4 +202,3 @@ C1 = Compressor(mass_estimator, isentropic_efficiency=0.75, electric_efficiency=
 
 power_el = C1.calculate_power()
 mass = C1.calculate_mass()
-
