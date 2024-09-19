@@ -1,4 +1,3 @@
-
 import CoolProp.CoolProp as CP
 
 class HeatExchanger:
@@ -49,7 +48,7 @@ class HeatExchanger:
         """
         return CP.PropsSI('C', 'T', T_in_K, 'P', p_in_Pa, fluid)
 
-    def calculate_Qdot(self, fluid_type="primary") -> float:
+    def calculate_heat_flux(self, fluid_type="primary") -> float:
         """
         Calculate the heat flux (Qdot) for the specified fluid (primary or coolant).
         
@@ -76,7 +75,7 @@ class HeatExchanger:
         This is only valid if we assume that all of the heat is transferred perfectly into the coolant.
         """
         c_p_coolant = self.calculate_specific_heat(self.coolant_T_in_K, self.coolant_p_in_Pa, self.coolant_fluid)
-        Q_dot_primary = self.calculate_Qdot("primary")
+        Q_dot_primary = self.calculate_heat_flux("primary")
         coolant_T_out_K = self.coolant_T_in_K + (Q_dot_primary / (c_p_coolant * self.coolant_mdot_in_kg_s))
         
         return coolant_T_out_K
@@ -84,17 +83,17 @@ class HeatExchanger:
 class Intercooler(HeatExchanger):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-    #T_in , T_out, mdot, primary
-    #TODO: Bonus: wie viel Wärmer wird das Kühlmittel durch den Intercooler
+    #We know: T_in , T_out, mdot, primary
  
 class Radiatior(HeatExchanger):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        #For the moment the Radiator is not needed as a component its Qdot will be calculated 
         
 class Evaporator(HeatExchanger):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-    # T_Tank, T_out, massflow , primary
+    #We know: T_Tank, T_out, massflow , primary
     
 # %% Example usage of the code:
 
@@ -116,7 +115,7 @@ specific_heat = intercooler.calculate_specific_heat(intercooler.primary_T_in_K,i
 print(f"Specific Heat Capacity: {specific_heat:.2f} J/kg.K")
 
 # Calculate heatflux 
-Q_dot = intercooler.calculate_Qdot("primary")
+Q_dot = intercooler.calculate_heat_flux("primary")
 print(f"Heat Transfer Rate (Qdot): {Q_dot:.2f} kW")
 
 
