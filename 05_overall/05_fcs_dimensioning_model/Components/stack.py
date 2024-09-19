@@ -53,10 +53,32 @@ class Stack:
 
         return pressure_drop_Pa
 
-    def calculate_weight(self)->float:
-        # TODO: Do weight estimation here.
-        # Placeholder implementation, update with actual logic
-        return None
+
+    def calculate_stack_mass(self) -> float:
+        """
+        Calculate the stack mass as a function of the number of cells.
+        The relationship is linear with a base value.
+        """
+        stack_mass = 0.0766 * self.cellcount + 9.2813
+        return stack_mass
+
+    def calculate_coolant_mass(self) -> float:
+        """
+        Calculate the coolant mass based on the number of cells.
+        The relationship is linear, with mass scaling based on the cell count.
+        """
+        coolant_mass = self.cellcount * 7 / 455
+        return coolant_mass
+
+    def calculate_mass(self)->float:
+        """
+        Estimate the total mass of the stack, including both stack mass and coolant mass.
+        """
+        stack_mass = self.calculate_stack_mass()
+        coolant_mass = self.calculate_coolant_mass()
+
+        total_mass = stack_mass + coolant_mass
+        return total_mass
     
     def calculate_heat_flux(self) -> float:
         """
@@ -94,13 +116,12 @@ class Stack:
 
 # %% Example Usage:
 
-# Step 1: Import necessary modules
-# import CoolProp.CoolProp as CP
-# from parameters import Physical_Parameters
-# from basic_physics import icao_atmosphere
+stack = Stack(cellcount=400)  # You can specify different cell counts if needed
 
-# Step 2: Instantiate the Stack object with default parameters
-# stack = Stack()
+# Calculate stack mass, coolant mass, and total weight
+stack_mass = stack.calculate_stack_mass()
+coolant_mass = stack.calculate_coolant_mass()
+total_weight = stack.calculate_mass()
 
 # # Step 3: Modify parameters if necessary (e.g., current_A, coolant flow, etc.)
 # stack.current_A = 400
