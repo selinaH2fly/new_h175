@@ -158,6 +158,15 @@ class Stack_Parameters:
         self.anode_pressure_drop_coefficients = [4*1e-4, 9.4*1e-3, 49.7]    # cf. PowerLayout, DoE Evaluation
         self.cooling_pressure_drop_coefficients = [6.5e-3, 0.477, 0]        # cf. PowerLayout, DoE Evaluation
 
+class Intercooler_Parameters:
+
+    def __init__(self):
+        self.efficiency = 1.0
+        
+        self.primary_fluid = "Air" 
+        self.coolant_fluid = "Water" # Todo change this to our real coolant fluid.
+        self.ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2']
+
 class Eol_Parameter:
 
     def __init__(self):

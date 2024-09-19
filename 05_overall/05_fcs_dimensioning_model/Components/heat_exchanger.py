@@ -11,7 +11,7 @@ class HeatExchanger:
                  coolant_fluid = "Water", coolant_mdot_in_kg_s = 0, coolant_T_in_K = 0, coolant_T_out_K = 0, coolant_p_in_Pa = 101325,
                  ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2']):
         
-        self.efficiency = efficiency
+        self.efficiency = efficiency #TODO use it or kill it 
         # primary fluid or working fluid
         self.primary_fluid = primary_fluid
         self.primary_mdot_in_kg_s = primary_mdot_in_kg_s
