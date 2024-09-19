@@ -40,7 +40,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     # Load parameters
     _params_optimization = parameters.Optimization_Parameters()
-    _params_assumptions = parameters.Assumption_Parameters()
+    _params_assumptions = parameters.Assumptions()
     _params_compressor = parameters.Compressor_Parameters()
     _params_turbine = parameters.Turbine_Parameters()
     _params_recirculation_pump = parameters.Recirculation_Pump_Parameters()
