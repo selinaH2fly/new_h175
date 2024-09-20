@@ -19,7 +19,8 @@ from Components.recirculation_pump import Recirculation_Pump
 from Components.coolant_pump import Coolant_Pump
 from Components.radiator import Radiator
 from Components.stack import Stack
-from basic_physics import compute_air_mass_flow, compute_coolant_flow, icao_atmosphere
+from Components.heat_exchanger import Intercooler, Evaporator
+from basic_physics import compute_air_mass_flow, icao_atmosphere
 
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275,
@@ -52,8 +53,11 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_radiator = parameters.Radiator_Parameters()
     _params_stack = parameters.Stack_Parameters()
     _params_Eol = parameters.Eol_Parameter()
-    _mass_estimator = parameters.Mass_Estimator()
     _params_physics = parameters.Physical_Parameters()
+    _params_intercooler = parameters.Intercooler_Parameters()
+    _params_evaporator = parameters.Evaporator_Parameters()
+    _mass_estimator = parameters.Mass_Parameters()
+    
     # Load DoE-Data 
     DoE_data, _ = data_processing.load_high_amp_doe_data()
     
@@ -103,7 +107,11 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     stack           =   Stack(cellcount=cellcount, anode_pressure_drop_coefficients=_params_stack.anode_pressure_drop_coefficients,
                               cooling_pressure_drop_coefficients=_params_stack.cooling_pressure_drop_coefficients)
-
+    
+    intercooler     =   Intercooler(efficiency=_params_intercooler.efficiency, primary_fluid = _params_intercooler.primary_fluid , coolant_fluid=_params_intercooler.primary_fluid , ALLOWED_FLUIDS=_params_intercooler.ALLOWED_FLUIDS)
+    
+    evaporator      =   Evaporator(efficiency=_params_evaporator.efficiency, primary_fluid = _params_evaporator.primary_fluid , coolant_fluid=_params_evaporator.primary_fluid , ALLOWED_FLUIDS=_params_evaporator.ALLOWED_FLUIDS)
+    
     def evaluate_models(x): # TODO: refactor this function that became too long and complex
         """
         Helper function to evaluate models and compute necessary values.
@@ -148,7 +156,20 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             derating_factor = 1 - (1 - _params_Eol.reference_derating_factor)/_params_Eol.reference_current_density_A_m2 * current_density_A_m2
             optimized_cell_voltage_V *= derating_factor
 
-        # %% Compressor and Turbine
+# %% Stack
+        # Set stack attributes:
+        stack.current_A = optimized_current_A
+        stack.cell_voltage_V = optimized_cell_voltage_V
+        stack.temp_coolant_in_K = optimized_temp_coolant_inlet_degC + 273.15
+        stack.temp_coolant_out_K = optimized_temp_coolant_outlet_degC + 273.15
+        
+        # Compute the coolant flow rate
+        stack.coolant_flow_m3_s = stack.calculate_coolant_flow(pressure_ambient_Pa)
+        
+        # Compute the pressure drop across the stack
+        stack_pressure_drop_Pa = stack.calculate_pressure_drop_cooling() # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
+        
+# %% Compressor and Turbine
 
         # Set compressor attributes
         compressor.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A, cellcount=cellcount)
@@ -210,7 +231,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         reci_pump.stoich_anode = 1.5                                                    # TODO: include anode stoichiometry in cell voltage model
 
         # Estimate the anode pressure drop
-        stack.current_A = optimized_current_A
         anode_pressure_drop_Pa = stack.calculate_pressure_drop_anode()
 
         # Estimate the BoP pressure drop in the recirculation loop
@@ -226,21 +246,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # %% Coolant Pump
 
-        # Compute the coolant flow rate
-        coolant_flow_rate_ht_m3_s = compute_coolant_flow(optimized_current_A, optimized_cell_voltage_V,
-                                                         optimized_temp_coolant_inlet_degC, optimized_temp_coolant_outlet_degC,
-                                                         flight_level_100ft=flight_level_100ft, cellcount=cellcount)
-        
-        # Compute the pressure drop across the stack
-        stack.coolant_flow_m3_s = coolant_flow_rate_ht_m3_s
-        stack_pressure_drop_Pa = stack.calculate_pressure_drop_cooling() # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
-
         # Compute the pressure drop across the radiator        
-        radiator.coolant_flow_m3_s = coolant_flow_rate_ht_m3_s # TODO: This ignores the TCV split between radiator and stack. Improve.
+        radiator.coolant_flow_m3_s = stack.coolant_flow_m3_s # TODO: This ignores the TCV split between radiator and stack. Improve.
         radiator_pressure_drop_Pa = radiator.calculate_pressure_drop()
 
         # Compute the coolant pump power for the HT circuit
-        coolant_pump_ht.coolant_flow_m3_s = coolant_flow_rate_ht_m3_s
+        coolant_pump_ht.coolant_flow_m3_s = stack.coolant_flow_m3_s
         coolant_pump_ht.head_Pa = stack_pressure_drop_Pa + radiator_pressure_drop_Pa # coolant_pump.head_Pa = stack_pressure_drop + radiator_pressure_drop (including 0.1 bar additional HT pressure drop)
         
         # Compute the (virtual) coolant pump power for the LT circuit (assuming a constant flow rate)
@@ -250,12 +261,36 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Compute the actual coolant pump power
         coolant_pump_power_W = coolant_pump_ht.calculate_power() + coolant_pump_lt.calculate_power()
 
+        # %% Intercooler
+        #set T, p and m_dots here
+        #TODO: set the values of the component
+        # intercooler.primary_T_in_K = ?#compresser out
+        intercooler.primary_T_out_K = optimized_temp_coolant_inlet_degC
+        intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
+        intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
+        
+        # intercooler.coolant_T_in_K = #Evap t out
+        # intercooler.coolant_T_out_K = # berechnen
+        # intercooler.coolant_mdot_in_kg_s = #?
+        # intercooler.coolant_p_in_Pa = #?
+        
+        #intercooler_T_out_K = intercooler.calculate_coolant_T_out()
+        #intercooler.coolant_T_out_K = intercooler_T_out_K
+        
+        
         # %% Consumed hydrogen mass flow rate
 
         # Compute the hydrogen mass flow rate
-        hydrogen_mass_flow_g_s = optimized_input[0] * cellcount * CP.PropsSI('M', 'Hydrogen') / \
+        hydrogen_mass_flow_g_s = stack.current_A * stack.cellcount * CP.PropsSI('M', 'Hydrogen') / \
             (2 * (physical_constants['Faraday constant'][0])) * 1000
-
+        
+        # %% Evaporatior:
+        evaporator.primary_T_in_K = _params_evaporator.primary_T_in_K
+        evaporator.primary_T_out_K = _params_evaporator.primary_T_out_K
+        evaporator.primary_mdot_in_kg_s = hydrogen_mass_flow_g_s/1000 #g -> kg
+        
+        # %% Return
+        
         return optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
             coolant_pump_power_W, hydrogen_mass_flow_g_s
 
@@ -366,45 +401,19 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # Evaluate the models with the optimal input
     optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(result.x)
     
-    # plot optimal input parameters in DoE-Data     
-    fig, axs = plt.subplots(2, 3, figsize=(20, 8))
-    for plots in range(len(optimal_input)-1):
-        x = Optimized_DoE_data_variables.iloc[:,0]
-        y = Optimized_DoE_data_variables.iloc[:,plots+1]
-        if plots < 2:
-            axs[0,plots].scatter(x, y, color='black', label=f'{Optimized_DoE_data_variables.columns[plots+1]} - Current')
-            axs[0,plots].scatter(optimal_input[0], optimal_input[plots+1], color='red', marker='x', s=100, label=f'Opt_Input')
-
-            axs[0,plots].set_xlabel(f'{Optimized_DoE_data_variables.columns[0]}')
-            axs[0,plots].set_ylabel(f'{Optimized_DoE_data_variables.columns[plots+1]}')
-            y_min=Optimized_DoE_data_variables.iloc[:,plots+1].min()
-            y_max=Optimized_DoE_data_variables.iloc[:,plots+1].max()
-            axs[0, plots].set_ylim([y_min-y_min*0.1, y_max+y_max*0.1])  # Skalierung mit 10% Puffer
-            axs[0,plots].legend(loc='lower center', bbox_to_anchor=(0.5, 1.02), ncol=2)
-
-        else:
-            axs[1,plots-2].scatter(x, y, color='black', label=f'{Optimized_DoE_data_variables.columns[plots+1]} - Current')
-            axs[1,plots-2].scatter(optimal_input[0], optimal_input[plots+1], color='red', marker='x', s=100, label=f'Opt_Input')
-
-            axs[1,plots-2].set_xlabel(f'{Optimized_DoE_data_variables.columns[0]}')
-            axs[1,plots-2].set_ylabel(f'{Optimized_DoE_data_variables.columns[plots+1]}')
-            y_min=Optimized_DoE_data_variables.iloc[:,plots+1].min()
-            y_max=Optimized_DoE_data_variables.iloc[:,plots+1].max()
-            axs[1, plots-2].set_ylim([y_min-y_min*0.1, y_max+y_max*0.1])  # Skalierung mit 10% Puffer
-            axs[1,plots-2].legend(loc='lower center', bbox_to_anchor=(0.5, 1.02), ncol=2)
-
-    fig.delaxes(axs[0, 2])  # Entfernt den ungenutzten Platz im Grid
-    plt.tight_layout()
-
-    # save plot
-    filename = 'DoE_optimal_inputs.jpg'
-    plt.savefig(filename, format='jpeg')
-    plt.close(fig)
-
-
-    # Compute stack power
-    stack_power_kW = optimal_input[0] * cell_voltage * cellcount / 1000
-
+    # Compute stack power 
+    stack_power_kW = stack.current_A * stack.cell_voltage_V * stack.cellcount / 1000
+    
+    # Compute  heat fluxes of comonents:
+    stack_heat_flux_W = stack.calculate_heat_flux()
+    #intercooler_heat_flux_W = intercooler.calculate_heat_flux("primary")
+    evaporator_heat_flux_W = evaporator.calculate_heat_flux("primary") #Todo: carefull with def use due to overwrite, make this more clear?
+    
+    #TODO: add all other components here
+    print(f'\nheat_flux stack: {stack_heat_flux_W/1000:.2f} kW')
+    #print(f'heat_flux intercooler: {intercooler_heat_flux_W/1000} kW')
+    print(f'heat_flux evap: {evaporator_heat_flux_W/1000:.2f} kW ')
+    
     # Plot the compressor map with the optimized operating point highlighted
     if compressor_map is not None:
         compressor.plot_compressor_map()

@@ -1,7 +1,6 @@
 ''' This file contains the parameter definitions for the input variable optimization.'''
 
 import numpy as np
-from Components.stack import Stack
 class Optimization_Parameters:
     
     def __init__(self):
@@ -50,8 +49,16 @@ class Physical_Parameters:
         #self.ideal_gas_constant = 8.314
     
         self.oxygen_mol_fraction = 0.2095
-        #self.air_molar_mass = 28.97 * 1e-3              # kg/mol        
-
+        #self.air_molar_mass = 28.97 * 1e-3              # kg/mol
+        
+        #enthalpy of evaporation of H2
+        self.dH_V = 446000                               # J/kg 
+        
+        #this is a "magic number" from Tank team, cp_H2 from 20K till 300K will change, this is a linear estimation.
+        #TODO: we would need to integrate for each T and p along the heating process to get cp
+        #Docu: https://h2fly.atlassian.net/browse/HWI-428?focusedCommentId=13070
+        self.mean_cp_H2 = 14500 #J/kg.K for 20K --> 300K        
+        
 
 class Compressor_Parameters:
 
@@ -158,6 +165,29 @@ class Stack_Parameters:
         self.anode_pressure_drop_coefficients = [4*1e-4, 9.4*1e-3, 49.7]    # cf. PowerLayout, DoE Evaluation
         self.cooling_pressure_drop_coefficients = [6.5e-3, 0.477, 0]        # cf. PowerLayout, DoE Evaluation
 
+class Intercooler_Parameters:
+
+    def __init__(self):
+        self.efficiency = 1.0
+        
+        self.primary_fluid = "Air" 
+        self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
+        self.ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2','INCOMP::MEG-50%']
+
+class Evaporator_Parameters:
+    
+    def __init__(self):
+        
+        self.efficiency = 1.0
+        self.primary_fluid = "H2"
+        self.primary_T_in_K = 20.0
+        self.primary_T_out_K = 300.0
+        
+        self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
+        self.ALLOWED_FLUIDS = ['H2','INCOMP::MEG-50%']
+    
+    
+    
 class Eol_Parameter:
 
     def __init__(self):
@@ -165,9 +195,7 @@ class Eol_Parameter:
         self.reference_derating_factor = 0.85
         self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A
 
-# Mass Estimation of the Subsystems
-
-class Mass_Estimator:
+class Mass_Parameters:
     def __init__(self):
         # Mass estimates for fixed mass components
         self.masses_FCM_constants = {
@@ -197,67 +225,7 @@ class Mass_Estimator:
         }
         # Mass estimates for dependent mass components, change the values as needed
         self.masses_FCM_depended = {
-            'Compressor': {"mean": 1.0, "sd": 0.1},
-            'Recirculation_Pump': {"mean": 1.0, "sd": 0.1},
-            'Turbine': {"mean": 1.0, "sd": 0.1},
+            'Compressor': {"mean": 0.0, "sd": 0.0},
+            'Recirculation_Pump': {"mean": 0.0, "sd": 0.0},
+            'Turbine': {"mean": 0.0, "sd": 0.0},
         }
-
-        # Cell numbers
-        self.cell_no = np.array([400, 450, 500])
-
-        # Initialize lists for stack and coolant mass values
-        self.m_stack_values = np.zeros(len(self.cell_no))
-        self.m_coolant_values = np.zeros(len(self.cell_no))
-
-        # Calculate stack mass and coolant mass for each cell number
-        for i, n in enumerate(self.cell_no):
-            stack = Stack(cellcount=n)
-            self.m_stack_values[i] = stack.calculate_stack_mass()
-            self.m_coolant_values[i] = stack.calculate_coolant_mass()
-
-        # Dictionary to store the total mass estimates
-        self.subsystem_mass_total = {}
-
-    def sum_fixed_mass(self):
-        """Sums the masses for each subsystem and returns the totals of the fixed mass."""
-        subsystem_totals = {}
-        total_mass = 0
-        for subsystem, components in self.masses_FCM_constants.items():
-            subsystem_mass = sum(components.values())
-            subsystem_totals[subsystem] = subsystem_mass
-            total_mass += subsystem_mass
-        return subsystem_totals, total_mass
-
-    """
-    the masses from compressor, turbine and recirculation pumps are not computed.
-    TODO: for each power, the mentioned masses should be added as required.
-    
-    """
-    def estimate_mass(self):
-        """Estimate the mass of the subsystems for the given cell number combination."""
-        self.subsystem_mass_total = {
-            'Stack': np.zeros(len(self.cell_no)),
-            'Cathode': np.zeros(len(self.cell_no)),
-            'Anode': np.zeros(len(self.cell_no)),
-            'Thermal': np.zeros(len(self.cell_no)),
-            'Other': np.zeros(len(self.cell_no))
-        }
-
-        for i, n in enumerate(self.cell_no):
-            # Calculate mass for each subsystem
-            temp, total_mass = self.sum_fixed_mass()
-
-            # Stack and coolant mass scale with cell number
-            temp['Stack'] += self.m_stack_values[i]
-            temp['Thermal'] += self.m_coolant_values[i]
-
-            # Assign the updated subsystem masses to the correct location
-            for key, value in temp.items():
-                self.subsystem_mass_total[key][i] = value
-
-        return self.subsystem_mass_total
-# %% Example Usage:
-# Instantiate the class and run the mass estimation
-estimator = Mass_Estimator()
-mass_estimates = estimator.estimate_mass()
-
