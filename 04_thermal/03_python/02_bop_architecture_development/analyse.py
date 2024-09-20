@@ -1,4 +1,4 @@
-from architectures import bop10, bop21, bop22
+from architectures import bop10, bop21, bop22, bop23, bop24, bop25, bop26, bop27, bop31, bop32, bop33, bop41, bop42
 
 arch_list = ["bop10"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
 

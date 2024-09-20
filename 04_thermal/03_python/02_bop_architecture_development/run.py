@@ -1,25 +1,49 @@
-from architectures import bop10_tcv
-arch_list = ["Arch01"]      # which architecture should be eveluated?, also possible to evaluate multiple architectures
+from architectures import bop10, bop21, bop22, bop23, bop24, bop25, bop26, bop27, bop31, bop32, bop33, bop41, bop42
+
+arch_list = ["bop10"]      # which architecture should be eveluated?, also possible to evaluate multiple architectures
 input_dict = {}             # input_dict is not needed
 
-
-result_dict = {"pump_vdot" : ["", [], 'flow over pump1 in [l/S]'],              # these variable will be saved in excel file result.xlsx
-                "pump_delta_p" : ["", [],'pump pressure difference [bar]'],     # to save an additional variable, there have to be made changes to arch...py files
-                "radiator_vdot" : ["", [], 'flow over radiator in [l/S]'],
-                "perc_rec": ["", [], 'Percentage recirculated'],
-                "radiator_t_in" : ["", [],'System Output Temperature [K]']
-}
-
+input_dict = {}
 
 # input
-bc_dict = {"pump_p_in" : 1,     # pressure before pump, lowest pressure level
-           "stack_t_in" : 273.15 + 70.0,        # temperature at stack inlet
-           "stack_t_out" : 273.15 + 85.0,       # temperature at stack outlet
-           "sys_t_in" : 273.15 + 65.0,          # System entry temperature, temperature after external radiatior
-           "bop_q" : 10600,             # bop heat 
-           "stack_q" : 158000,          # stack heat
-           "bop_vdot" : 0.4             # flow over bop components (whole block)
-}
+critical_operation = True
+if critical_operation is True:
+    bc_dict = {"T_in" : 273.15 + 60.0,
+                "Vdot_in" : 0.5,
+                "p_end" : 1,
+                "Qdot_hpdu" : 1000,
+                "Qdot_lvdcdc" : 300,
+                "Qdot_hvdcdc" : 1600,
+                "Qdot_inverter" : 1250,
+                "Qdot_intercooler" : 21000,
+                "Qdot_compressor" : 1000,
+                "Qdot_evap" : -13500}
+else: 
+    bc_dict = {"T_in" : 273.15 + 50.0,
+               "Vdot_in" : 0.5,
+                "p_end" : 1,
+                "Qdot_hpdu" : 500,
+                "Qdot_lvdcdc" : 150,
+                "Qdot_hvdcdc" : 800,
+                "Qdot_inverter" : 625,
+                "Qdot_intercooler" : 21000,
+                "Qdot_compressor" : 500,
+                "Qdot_evap" : -13500}
+    
+result_dict = {"Vdot_in" :              ['', [], ''], 
+                "Vdot_1" :              ['', [], ''], 
+                "Vdot_2" :              ['', [],''],
+#                "Vdot_3" :              ['', [],''],
+ #               "Vdot_4" :              ['', [],''],
+                "t_in_lvdcdc":          ["", [],'LV DCDC T_in'],
+                "t_in_hvdcdc" :         ["", [], 'HV DCDC T_in'],
+                "t_in_inverter" :       ["", [], 'Inverter T_in'],
+                "t_in_hpdu" :           ["", [], 'HPDU T_in'],
+                "t_in_compressor" :     ["", [], 'Compressor T_in'],
+                "t_in_intercooler" :    ["", [], "Intercooler T_in"],
+                "t_out_intercooler" :   ["", [], "Intercooler T_out"],
+                "t_out_Bop" :           ["", [],'BoP T_out'],
+                "p_in" :               ["", [], 'bop pressure drop in [bar]']}
 
 
 #calculation

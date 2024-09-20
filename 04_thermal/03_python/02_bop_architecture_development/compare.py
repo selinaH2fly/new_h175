@@ -1,41 +1,54 @@
-from architectures import bop10_tcv
+from architectures import bop10, bop21, bop22, bop23, bop24, bop25, bop26, bop27, bop31, bop32, bop33, bop41, bop42
+
 import pandas as pd
 import matplotlib.pyplot as plt
 #, "Arch03b", "Arch04", "Arch06", "Arch08"
-arch_list = ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
+arch_list = ["bop10", "bop21", "bop22", "bop23"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
 
-# input_list[0] = variable which should be adapted
-# input_list[1] = Values for adjusting boundary condition
-# input_list[2] = Description for axis for plotting
-#273.15 + 70 + 8, 273.15 + 70 + 10, 273.15 + 70 + 12,
-#, 273.15 + 70 + 12, 273.15 + 70 + 14, 273.15 + 70 + 16
-input_dict = {"stack_t_out" : ["", [273.15 + 70 + 8, 273.15 + 70 + 10], 'Stackausgangstemperatur [K]']}
-# input_list = ["stack_t_in" , [273.15 + 60 + 8, 273.15 + 60 + 10, 273.15 + 60 + 12, 273.15 + 60 + 14, 273.15 + 60 + 16], 'Stackeingangstemperatur [K]']
-# input_list = ["sys_t_in" , [273.15 + 50 + 8, 273.15 + 50 + 10, 273.15 + 50 + 12, 273.15 + 50 + 14, 273.15 + 50 + 16], 'Systemeingangstemperatur [K]']
-# input_list = ["bop_q" , [5000, 7000, 9000, 11000, 13000], 'Wärmeeintrag BoP Komponenten [W]']
-# input_list = ["stack_q" , [], 'Wärmeeintrag Stack [W]']
-# input_list = ["bop_vdot" , [20/60, 30/60, 40/60, 50/60, 60/60], 'Volumenstrom über BoP Komponenten [l/s]']
-# input_list = ["bop_dp" , [0.1, 0.2, 0.3, 0.4, 0.5], 'Druckverlust über die BoP Komponenten [bar]']
-
-
-result_dict = {"pump_vdot" : ["", [], 'flow over pump1 in [l/S]'],
-                "pump_delta_p" : ["", [],'pump pressure difference [bar]'],
-                "radiator_vdot" : ["", [], 'flow over radiator in [l/S]'],
-                "perc_recirc": ["", [], 'Percentage recirculated'],
-                "radiator_t_in" : ["", [],'System Output Temperature [K]'],
-                "pump2_vdot" : ["", [], 'flow over pump2 in [l/S]'],
-                "pump2_delta_p" : ["", [],'pump2 pressure difference [bar]'],
-    }
+input_dict = {"Vdot_in" : ["", [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60], "BoP Eingangsvolumenstrom l/s"]}
+#input_dict = {"p_in": ["p_1", [1.25, 1.3, 1.35, 1.4, 1.45, 1.5], "Input Pressure [bar]"]}
+#input_dict = {"throttle_delta_p" : ["", [0.1, 0.15, 0.2, 0.25, 0.3], "Thottle pressure drop [bar]"]}
 
 # input
-bc_dict = {"pump_p_in" : 1,     # pressure before pump, lowest pressure level
-           "stack_t_in" : 273.15 + 70.0,        # temperature at stack inlet
-           "stack_t_out" : 273.15 + 85.0,       # temperature at stack outlet
-           "sys_t_in" : 273.15 + 65.0,          # System entry temperature, temperature after external radiatior
-           "bop_q" : 10600,             # bop heat 
-           "stack_q" : 158000,          # stack heat
-           "bop_vdot" : 0.4             # flow over bop components (whole block)
-}
+critical_operation = True
+if critical_operation is True:
+    bc_dict = {"T_in" : 273.15 + 60.0,
+                "Vdot_in" : 0.5,
+                "p_end" : 1,
+                "Qdot_hpdu" : 1000,
+                "Qdot_lvdcdc" : 300,
+                "Qdot_hvdcdc" : 1600,
+                "Qdot_inverter" : 1250,
+                "Qdot_intercooler" : 21000,
+                "Qdot_compressor" : 1000,
+                "Qdot_evap" : -13500}
+else: 
+    bc_dict = {"T_in" : 273.15 + 50.0,
+               "Vdot_in" : 0.5,
+                "p_end" : 1,
+                "Qdot_hpdu" : 500,
+                "Qdot_lvdcdc" : 150,
+                "Qdot_hvdcdc" : 800,
+                "Qdot_inverter" : 625,
+                "Qdot_intercooler" : 21000,
+                "Qdot_compressor" : 500,
+                "Qdot_evap" : -13500}
+    
+result_dict = {"Vdot_in" :              ['', [], ''], 
+                "Vdot_1" :              ['', [], ''], 
+                "Vdot_2" :              ['', [],''],
+#                "Vdot_3" :              ['', [],''],
+ #               "Vdot_4" :              ['', [],''],
+                "t_in_lvdcdc":          ["", [],'LV DCDC T_in'],
+                "t_in_hvdcdc" :         ["", [], 'HV DCDC T_in'],
+                "t_in_inverter" :       ["", [], 'Inverter T_in'],
+                "t_in_hpdu" :           ["", [], 'HPDU T_in'],
+                "t_in_compressor" :     ["", [], 'Compressor T_in'],
+                "t_in_intercooler" :    ["", [], "Intercooler T_in"],
+                "t_out_intercooler" :   ["", [], "Intercooler T_out"],
+                "t_out_Bop" :           ["", [],'BoP T_out'],
+                "p_in" :               ["", [], 'bop pressure drop in [bar]']}
+
 
 
 #calculation
