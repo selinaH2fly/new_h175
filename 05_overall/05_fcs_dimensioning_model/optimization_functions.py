@@ -53,7 +53,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_stack = parameters.Stack_Parameters()
     _params_Eol = parameters.Eol_Parameter()
     _mass_estimator = parameters.Mass_Estimator()
-
+    _params_physics = parameters.Physical_Parameters()
     # Load DoE-Data 
     DoE_data, _ = data_processing.load_high_amp_doe_data()
     
@@ -65,16 +65,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     DoE_envelope = ConvexHull(Optimized_DoE_data_variables.values)
     DoE_envelope_Delaunay = Delaunay(Optimized_DoE_data_variables.values[DoE_envelope.vertices])
     
-    ##### DELETE #######
-    # num_vertices = len(DoE_envelope.vertices)
-    # num_simplices= len(DoE_envelope.simplices)
-    # print(f"Anzahl der Eckpunkte (Vertices): {num_vertices}")
-    # print(f"Anzahl der Simplexe (Fassetten): {num_simplices}")
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # ax.scatter(Optimized_DoE_data_variables.iloc[:,0],Optimized_DoE_data_variables.iloc[:,2],Optimized_DoE_data_variables.iloc[:,3], c='r',marker = 'o' )
-    # plt.show()
-    
+   
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
 
