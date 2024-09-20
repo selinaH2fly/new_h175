@@ -48,12 +48,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_radiator = parameters.Radiator_Parameters()
     _params_stack = parameters.Stack_Parameters()
     _params_Eol = parameters.Eol_Parameter()
-<<<<<<< HEAD
     _params_intercooler = parameters.Intercooler_Parameters()
-    _mass_estimator = parameters.Mass_Estimator()
-=======
     _mass_estimator = parameters.Mass_Parameters()
->>>>>>> dev
+
 
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
@@ -245,22 +242,19 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # %% Intercooler
         #set T, p and m_dots here
-        intercooler.primary_T_in_K = #compresser out
-        intercooler.primary_T_out_K = #stack in
-        intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
-        intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
+        #TODO: set the values of the component
+        # intercooler.primary_T_in_K = #compresser out
+        # intercooler.primary_T_out_K = #stack in
+        # intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
+        # intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
         
-        intercooler.coolant_T_in_K =
-        intercooler.coolant_T_out_K =
-        intercooler.coolant_mdot_in_kg_s =
-        intercooler.coolant_p_in_Pa =
+        # intercooler.coolant_T_in_K =
+        # intercooler.coolant_T_out_K =
+        # intercooler.coolant_mdot_in_kg_s =
+        # intercooler.coolant_p_in_Pa =
         
-        intercooler_heat_flux_W = calculate_heat_flux()
-        intercooler_T_out_K = calculate_coolant_T_out()
-        
-        
-        
-        
+        # intercooler_heat_flux_W = calculate_heat_flux()
+        # intercooler_T_out_K = calculate_coolant_T_out()
         
         # %% Consumed hydrogen mass flow rate
 

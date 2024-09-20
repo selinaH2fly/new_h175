@@ -123,7 +123,7 @@ intercooler.coolant_T_out_K = intercooler.calculate_coolant_T_out()
 print(intercooler.coolant_T_out_K)
 
 
-Q_dot = intercooler.calculate_Qdot("coolant")
+Q_dot = intercooler.calculate_heat_flux("coolant")
 print(f"Heat Transfer Rate (Qdot): {Q_dot:.2f} kW")
 
 #%%
