@@ -47,7 +47,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_radiator = parameters.Radiator_Parameters()
     _params_stack = parameters.Stack_Parameters()
     _params_Eol = parameters.Eol_Parameter()
-    _mass_estimator = parameters.Mass_Estimator()
+    _mass_estimator = parameters.Mass_Parameters()
 
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
