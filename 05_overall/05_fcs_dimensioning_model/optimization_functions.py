@@ -328,7 +328,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     evaporator_heat_flux_W = evaporator.calculate_heat_flux("primary") #Todo: carefull with def use due to overwrite, make this more clear?
     
     #TODO: add all other components here
-    print(f'heat_flux stack: {stack_heat_flux_W/1000:.2f} kW')
+    print(f'\nheat_flux stack: {stack_heat_flux_W/1000:.2f} kW')
     #print(f'heat_flux intercooler: {intercooler_heat_flux_W/1000} kW')
     print(f'heat_flux evap: {evaporator_heat_flux_W/1000:.2f} kW ')
     

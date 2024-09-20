@@ -57,7 +57,7 @@ class Physical_Parameters:
         #this is a "magic number" from Tank team, cp_H2 from 20K till 300K will change, this is a linear estimation.
         #TODO: we would need to integrate for each T and p along the heating process to get cp
         #Docu: https://h2fly.atlassian.net/browse/HWI-428?focusedCommentId=13070
-        self.mean_cp_H2 = 14500 #J/kg.K        
+        self.mean_cp_H2 = 14500 #J/kg.K for 20K --> 300K        
         
 
 class Compressor_Parameters:
