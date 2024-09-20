@@ -164,8 +164,6 @@ class Eol_Parameter:
         self.reference_derating_factor = 0.85
         self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A
 
-# Mass Estimation of the Subsystems
-
 class Mass_Parameters:
     def __init__(self):
         # Mass estimates for fixed mass components

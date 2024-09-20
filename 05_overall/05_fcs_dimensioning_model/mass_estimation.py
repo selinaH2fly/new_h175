@@ -1,9 +1,11 @@
-# Import the Mass_Estimator class from parameters.py
-from parameters import Mass_Estimator
+# Import the Mass_Parameters class from parameters.py
+from parameters import Mass_Parameters
 
-
-class MassCalculator(Mass_Estimator):
-
+#TODO: Not sure if we need inheritance for this? but okay will work.
+class MassCalculator(Mass_Parameters):
+    """
+    Class which uses the parameters set in parameters.py and uses them to calculate the overall fixed masses of each subsystem.
+    """
     def __init__(self):
         # Initialize the parent class
         super().__init__()
