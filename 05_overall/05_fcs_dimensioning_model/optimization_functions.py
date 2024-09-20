@@ -142,7 +142,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         # Compute the pressure drop across the stack
         stack_pressure_drop_Pa = stack.calculate_pressure_drop_cooling() # TODO: include stack pressure drop GPR model; caution: High-Amp DoE s.t. water as a coolant!
-
+        
 # %% Compressor and Turbine
 
         # Set compressor attributes
@@ -287,9 +287,13 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # Evaluate the models with the optimal input
     optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(result.x)
     
-    # Compute stack power and heat flux
+    # Compute stack power 
     stack_power_kW = stack.current_A * stack.cell_voltage_V * stack.cellcount / 1000
+    
+    # Compute  heat fluxes of comonents:
     stack_heat_flux_W = stack.calculate_heat_flux()
+    #TODO: add all other components here
+    #print(f'heat_flux stack: {stack_heat_flux_W} W at {stack.current_A} A')
     
     # Plot the compressor map with the optimized operating point highlighted
     if compressor_map is not None:
