@@ -21,7 +21,8 @@ def build_command(parameter):
         "--flightlevel", str(parameter[2]),
         "--turbine", str(parameter[3]),
         "--map", str(parameter[4]),
-        "--eol", str(parameter[5])
+        "--eol", str(parameter[5]),
+        "--constraint", str(parameter[6])
     ]
     return command
  
@@ -36,6 +37,7 @@ if __name__ == '__main__':
     parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
     # parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
     parser.add_argument("--testing", type=str, choices=["True", "False"], default="True", help="Specifies whether a short test run is initiated.")
+    parser.add_argument("--constraint", type=str, choices=["True","False"], default="True", help="Activates the DoE envelope constraint condition for the optimizer. (default: True)")
     
     args = parser.parse_args()
     
@@ -47,7 +49,7 @@ if __name__ == '__main__':
         range_turbine =[True]#, args.turbine.lower() == "false"]
         range_eol = [False]
         range_map = [args.map]
-        
+        range_DoE_constraint = [args.constraint]
         #Handle downstream data and plots
         saving = False
         dir_prefix = "testing__"
@@ -67,7 +69,8 @@ if __name__ == '__main__':
         range_turbine =[True]
         range_eol = [False, True]
         range_map = [args.map]
-        
+        range_DoE_constraint = [args.constraint]
+
         #Handle downstream data and plots
         saving = True
         dir_prefix =""
@@ -76,7 +79,7 @@ if __name__ == '__main__':
         print("User Error: wrong input for --testing, sould be True/False")
 
     # Generate all combinations of parameters
-    parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_map, range_eol))
+    parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_map, range_eol, range_DoE_constraint))
     
     for parameter in tqdm(parameters, desc="Optimization Progress", unit="parameter"):
         

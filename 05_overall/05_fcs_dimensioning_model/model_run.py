@@ -12,7 +12,7 @@ from optimization_functions import optimize_inputs_evolutionary
 
 from data_export_csv import export_to_csv
  
-def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, consider_turbine=True, compressor_map=None, end_of_life=True):
+def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, consider_turbine=True, compressor_map=None, end_of_life=True, constraint=True):
     
     # Load parameters
     _params_optimization = parameters.Optimization_Parameters()  
@@ -26,7 +26,6 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     print(f"\nOptimization System (Net) Power Constraint: {power_constraint_kW:.0f} kW")
     print(f"Specified Flight Level: {flight_level_100ft} (100x ft)")
     print(f"Specified Cell Count: {specified_cell_count}")
-    
     # Load the trained cell voltage model from the "Trained_Models" folder
     gpr_model_cell_voltage = load_gpr_model(os.path.join(os.getcwd(), "Trained_Models", "gpr_model_cell_voltage.pth"))
 
@@ -44,7 +43,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
                                                                                     flight_level_100ft, cellcount=specified_cell_count,
                                                                                     power_constraint_kW=power_constraint_kW,
                                                                                     consider_turbine=consider_turbine, compressor_map=compressor_map,
-                                                                                    end_of_life=end_of_life)
+                                                                                    end_of_life=end_of_life, constraint=constraint)
     
     system_power_kW = stack_power_kW - compressor_power_kW + turbine_power_kW - reci_pump_power_kW - coolant_pump_power_kW
 
@@ -86,13 +85,14 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--turbine", type=str, choices=["True", "False"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
     parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
     parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.85 to account for end of life (default: False).")
-
+    parser.add_argument("--constraint", type=str, choices=["True","False"], default="True", help="Activates the DoE envelope constraint condition for the optimizer. (default: True)")
     args = parser.parse_args()
 
     # Convert string inputs
     consider_turbine = args.turbine == "True"
     end_of_life = args.eol == "True"
     compressor_map = args.map if args.map != "None" else None
+    constraint = args.constraint == "True"
 
     # Call the optimize_with_trained_model function
-    optimize_input_variables(args.power, args.cellcount, args.flightlevel, consider_turbine=consider_turbine, compressor_map=compressor_map, end_of_life=end_of_life)
+    optimize_input_variables(args.power, args.cellcount, args.flightlevel, consider_turbine=consider_turbine, compressor_map=compressor_map, end_of_life=end_of_life, constraint=constraint)
