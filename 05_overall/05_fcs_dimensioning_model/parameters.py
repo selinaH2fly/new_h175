@@ -49,8 +49,16 @@ class Physical_Parameters:
         #self.ideal_gas_constant = 8.314
     
         self.oxygen_mol_fraction = 0.2095
-        #self.air_molar_mass = 28.97 * 1e-3              # kg/mol        
-
+        #self.air_molar_mass = 28.97 * 1e-3              # kg/mol
+        
+        #enthalpy of evaporation of H2
+        self.dH_V = 446000                               # J/kg 
+        
+        #this is a "magic number" from Tank team, cp_H2 from 20K till 300K will change, this is a linear estimation.
+        #TODO: we would need to integrate for each T and p along the heating process to get cp
+        #Docu: https://h2fly.atlassian.net/browse/HWI-428?focusedCommentId=13070
+        self.mean_cp_H2 = 14500 #J/kg.K        
+        
 
 class Compressor_Parameters:
 
@@ -164,8 +172,22 @@ class Intercooler_Parameters:
         
         self.primary_fluid = "Air" 
         self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
-        self.ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2',"INCOMP::MEG-50%"]
+        self.ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2','INCOMP::MEG-50%']
 
+class Evaporator_Parameters:
+    
+    def __init__(self):
+        
+        self.efficiency = 1.0
+        self.primary_fluid = "H2"
+        self.primary_T_in_K = 20.0
+        self.primary_T_out_K = 300.0
+        
+        self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
+        self.ALLOWED_FLUIDS = ['H2','INCOMP::MEG-50%']
+    
+    
+    
 class Eol_Parameter:
 
     def __init__(self):

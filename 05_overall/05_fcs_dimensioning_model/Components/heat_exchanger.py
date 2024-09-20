@@ -93,38 +93,61 @@ class Radiatior(HeatExchanger):
 class Evaporator(HeatExchanger):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+    
+    #OVERWRITE: due to mean cp value we need to overwrite this function
+    def calculate_heat_flux(self, fluid_type="primary", mean_cp_H2=14500, dH_V=446000) -> float:
+        """
+        Calculate the heat flux (Qdot) for the specified fluid (primary or coolant).
+        
+        Args:
+            fluid_type: Either "primary" or "coolant" to specify which fluid to calculate for.
+            
+        Returns:
+            Qdot in W.
+        """
+        
+        if fluid_type == "primary":
+            c_p = mean_cp_H2
+            Qdot_W = c_p * self.primary_mdot_in_kg_s * (self.primary_T_in_K - self.primary_T_out_K) + self.primary_mdot_in_kg_s * dH_V
+        elif fluid_type == "coolant":
+            c_p = self.calculate_specific_heat(self.coolant_T_in_K, self.coolant_p_in_Pa, self.coolant_fluid)
+            Qdot_W = c_p * self.coolant_mdot_in_kg_s * (self.coolant_T_out_K - self.coolant_T_in_K)
+        else:
+            raise ValueError("Invalid fluid_type. Choose either 'primary' or 'coolant'.")
+        
+        return Qdot_W
     #We know: T_Tank, T_out, massflow , primary
     
 # %% Example usage of the code:
 
-# Create an instance of Intercooler
-intercooler = Intercooler(
-    efficiency=0.9,
-    primary_fluid="Water",
-    coolant_fluid="Air",
-    primary_mdot_in_kg_s=2.0,
-    primary_T_in_K=350.0,
-    primary_T_out_K=300.0,
-    primary_p_in_Pa=200000,
-    coolant_mdot_in_kg_s=0.5,
-    coolant_T_in_K=281.0
-)
+# # Create an instance of Intercooler
+# intercooler = Intercooler(
+#     efficiency=0.9,
+#     primary_fluid="Water",
+#     coolant_fluid="Air",
+#     primary_mdot_in_kg_s=2.0,
+#     primary_T_in_K=350.0,
+#     primary_T_out_K=300.0,
+#     primary_p_in_Pa=200000,
+#     coolant_mdot_in_kg_s=0.5,
+#     coolant_T_in_K=281.0
+# )
 
-# Calculate specific heat
-specific_heat = intercooler.calculate_specific_heat(intercooler.primary_T_in_K,intercooler.primary_p_in_Pa,intercooler.primary_fluid)
-print(f"Specific Heat Capacity: {specific_heat:.2f} J/kg.K")
+# # Calculate specific heat
+# specific_heat = intercooler.calculate_specific_heat(intercooler.primary_T_in_K,intercooler.primary_p_in_Pa,intercooler.primary_fluid)
+# print(f"Specific Heat Capacity: {specific_heat:.2f} J/kg.K")
 
-# Calculate heatflux 
-Q_dot = intercooler.calculate_heat_flux("primary")
-print(f"Heat Transfer Rate (Qdot): {Q_dot:.2f} kW")
-
-
-intercooler.coolant_T_out_K = intercooler.calculate_coolant_T_out()
-print(intercooler.coolant_T_out_K)
+# # Calculate heatflux 
+# Q_dot = intercooler.calculate_heat_flux("primary")
+# print(f"Heat Transfer Rate (Qdot): {Q_dot:.2f} kW")
 
 
-Q_dot = intercooler.calculate_heat_flux("coolant")
-print(f"Heat Transfer Rate (Qdot): {Q_dot:.2f} kW")
+# intercooler.coolant_T_out_K = intercooler.calculate_coolant_T_out()
+# print(intercooler.coolant_T_out_K)
+
+
+# Q_dot = intercooler.calculate_heat_flux("coolant")
+# print(f"Heat Transfer Rate (Qdot): {Q_dot:.2f} kW")
 
 #%%
     
