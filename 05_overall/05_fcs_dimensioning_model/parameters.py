@@ -166,7 +166,7 @@ class Eol_Parameter:
 
 # Mass Estimation of the Subsystems
 
-class Mass_Estimator:
+class Mass_Parameters:
     def __init__(self):
         # Mass estimates for fixed mass components
         self.masses_FCM_constants = {
@@ -196,10 +196,7 @@ class Mass_Estimator:
         }
         # Mass estimates for dependent mass components, change the values as needed
         self.masses_FCM_depended = {
-            'Compressor': {"mean": 1.0, "sd": 0.1},
-            'Recirculation_Pump': {"mean": 1.0, "sd": 0.1},
-            'Turbine': {"mean": 1.0, "sd": 0.1},
+            'Compressor': {"mean": 0.0, "sd": 0.0},
+            'Recirculation_Pump': {"mean": 0.0, "sd": 0.0},
+            'Turbine': {"mean": 0.0, "sd": 0.0},
         }
-
-
-
