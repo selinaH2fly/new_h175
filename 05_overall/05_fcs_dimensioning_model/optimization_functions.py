@@ -248,7 +248,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         #TODO: set the values of the component
         # intercooler.primary_T_in_K = ?#compresser out
         intercooler.primary_T_out_K = optimized_temp_coolant_inlet_degC
-        intercooler.primary_mdot_in_kg_s = compressor.nominal_air_flow_kg_s
+        intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
         intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
         
         # intercooler.coolant_T_in_K = #Evap t out
