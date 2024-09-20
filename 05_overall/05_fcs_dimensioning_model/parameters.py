@@ -163,8 +163,8 @@ class Intercooler_Parameters:
         self.efficiency = 1.0
         
         self.primary_fluid = "Air" 
-        self.coolant_fluid = "Water" # Todo change this to our real coolant fluid.
-        self.ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2']
+        self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
+        self.ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2',"INCOMP::MEG-50%"]
 
 class Eol_Parameter:
 

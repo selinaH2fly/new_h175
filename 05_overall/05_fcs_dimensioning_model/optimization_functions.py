@@ -243,18 +243,18 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # %% Intercooler
         #set T, p and m_dots here
         #TODO: set the values of the component
-        # intercooler.primary_T_in_K = #compresser out
-        # intercooler.primary_T_out_K = #stack in
-        # intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
-        # intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
+        # intercooler.primary_T_in_K = ?#compresser out
+        intercooler.primary_T_out_K = optimized_temp_coolant_inlet_degC
+        intercooler.primary_mdot_in_kg_s = compressor.nominal_air_flow_kg_s
+        intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
         
-        # intercooler.coolant_T_in_K =
-        # intercooler.coolant_T_out_K =
-        # intercooler.coolant_mdot_in_kg_s =
-        # intercooler.coolant_p_in_Pa =
+        # intercooler.coolant_T_in_K = #Evap t out
+        # intercooler.coolant_T_out_K = # berechnen
+        # intercooler.coolant_mdot_in_kg_s = #?
+        # intercooler.coolant_p_in_Pa = #?
         
-        # intercooler_heat_flux_W = calculate_heat_flux()
-        # intercooler_T_out_K = calculate_coolant_T_out()
+        intercooler_T_out_K = intercooler.calculate_coolant_T_out()
+        intercooler.coolant_T_out_K = intercooler_T_out_K
         
         # %% Consumed hydrogen mass flow rate
 
@@ -313,6 +313,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     # Compute  heat fluxes of comonents:
     stack_heat_flux_W = stack.calculate_heat_flux()
+    intercooler_heat_flux_W = intercooler.calculate_heat_flux("primary")
     #TODO: add all other components here
     #print(f'heat_flux stack: {stack_heat_flux_W} W at {stack.current_A} A')
     
