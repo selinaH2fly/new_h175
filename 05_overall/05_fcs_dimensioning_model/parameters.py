@@ -1,7 +1,6 @@
 ''' This file contains the parameter definitions for the input variable optimization.'''
 
 import numpy as np
-from Components.stack import Stack
 class Optimization_Parameters:
     
     def __init__(self):
@@ -165,9 +164,7 @@ class Eol_Parameter:
         self.reference_derating_factor = 0.85
         self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A
 
-# Mass Estimation of the Subsystems
-
-class Mass_Estimator:
+class Mass_Parameters:
     def __init__(self):
         # Mass estimates for fixed mass components
         self.masses_FCM_constants = {
@@ -197,67 +194,7 @@ class Mass_Estimator:
         }
         # Mass estimates for dependent mass components, change the values as needed
         self.masses_FCM_depended = {
-            'Compressor': {"mean": 1.0, "sd": 0.1},
-            'Recirculation_Pump': {"mean": 1.0, "sd": 0.1},
-            'Turbine': {"mean": 1.0, "sd": 0.1},
+            'Compressor': {"mean": 0.0, "sd": 0.0},
+            'Recirculation_Pump': {"mean": 0.0, "sd": 0.0},
+            'Turbine': {"mean": 0.0, "sd": 0.0},
         }
-
-        # Cell numbers
-        self.cell_no = np.array([400, 450, 500])
-
-        # Initialize lists for stack and coolant mass values
-        self.m_stack_values = np.zeros(len(self.cell_no))
-        self.m_coolant_values = np.zeros(len(self.cell_no))
-
-        # Calculate stack mass and coolant mass for each cell number
-        for i, n in enumerate(self.cell_no):
-            stack = Stack(cellcount=n)
-            self.m_stack_values[i] = stack.calculate_stack_mass()
-            self.m_coolant_values[i] = stack.calculate_coolant_mass()
-
-        # Dictionary to store the total mass estimates
-        self.subsystem_mass_total = {}
-
-    def sum_fixed_mass(self):
-        """Sums the masses for each subsystem and returns the totals of the fixed mass."""
-        subsystem_totals = {}
-        total_mass = 0
-        for subsystem, components in self.masses_FCM_constants.items():
-            subsystem_mass = sum(components.values())
-            subsystem_totals[subsystem] = subsystem_mass
-            total_mass += subsystem_mass
-        return subsystem_totals, total_mass
-
-    """
-    the masses from compressor, turbine and recirculation pumps are not computed.
-    TODO: for each power, the mentioned masses should be added as required.
-    
-    """
-    def estimate_mass(self):
-        """Estimate the mass of the subsystems for the given cell number combination."""
-        self.subsystem_mass_total = {
-            'Stack': np.zeros(len(self.cell_no)),
-            'Cathode': np.zeros(len(self.cell_no)),
-            'Anode': np.zeros(len(self.cell_no)),
-            'Thermal': np.zeros(len(self.cell_no)),
-            'Other': np.zeros(len(self.cell_no))
-        }
-
-        for i, n in enumerate(self.cell_no):
-            # Calculate mass for each subsystem
-            temp, total_mass = self.sum_fixed_mass()
-
-            # Stack and coolant mass scale with cell number
-            temp['Stack'] += self.m_stack_values[i]
-            temp['Thermal'] += self.m_coolant_values[i]
-
-            # Assign the updated subsystem masses to the correct location
-            for key, value in temp.items():
-                self.subsystem_mass_total[key][i] = value
-
-        return self.subsystem_mass_total
-# %% Example Usage:
-# Instantiate the class and run the mass estimation
-estimator = Mass_Estimator()
-mass_estimates = estimator.estimate_mass()
-

@@ -41,12 +41,13 @@ class Radiator:
             - "sd": Radiator mass in kg based on the standard deviation of mass_by_power_kg_kW.
 
         """
-        radiator_mass_mean_kg = self.mass_by_power_kg_kW["mean"] * self.thermal_power_W / 1000
-        radiator_mass_sd_kg = self.mass_by_power_kg_kW["sd"] * self.thermal_power_W / 1000
-        return {
-        "mean": radiator_mass_mean_kg,
-        "sd": radiator_mass_sd_kg
-        }
+        # radiator_mass_mean_kg = self.mass_by_power_kg_kW["mean"] * self.thermal_power_W / 1000
+        # radiator_mass_sd_kg = self.mass_by_power_kg_kW["sd"] * self.thermal_power_W / 1000
+        # return {
+        # "mean": radiator_mass_mean_kg,
+        # "sd": radiator_mass_sd_kg
+        # }
+        pass #TODO do mass calc if needed
 
 # %% Example Usage:
 
@@ -55,4 +56,3 @@ radiator = Radiator(nominal_pressure_drop_Pa=0.3*1e5, nominal_coolant_flow_m3_s=
 radiator.coolant_flow_m3_s = 100/(1000*60)  # 100 l/min in m3/s
 pressure_drop_Pa = radiator.calculate_pressure_drop()
 radiator_mass_kg = radiator.calculate_mass()
-
