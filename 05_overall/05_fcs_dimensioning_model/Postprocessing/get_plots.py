@@ -6,7 +6,8 @@ import argparse
 # Adjust sys.path if running directly
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
-
+import data_processing 
+import parameters
 # Import plot functions defined in a separate file
 from get_plots_operating_parameters import plot_cathode_inlet_pressure, plot_cathode_inlet_realtive_humidity, \
     plot_cathode_stoichiomtrey, plot_coolant_inlet_temperature, plot_coolant_outlet_temperature
@@ -18,6 +19,7 @@ from plot_system_efficiency import plot_system_efficiency
 from plot_h2_consumption_vs_FL import plot_h2_consumption_vs_FL
 #from plot_system_mass_estimate_old import plot_mass_estimate # old version of wenzel (errorbar chart of system mass)
 from plot_system_mass_estimate import plot_system_mass_estimate
+from evaluate_DoE_envelope_constraint import plot_optimized_parameter_DoE_envelope
 
 #%%  
 def filter_converged_points(df, tolerance=4):
@@ -51,7 +53,14 @@ def analyze_data(_file_path1, saving=True):
     # Change the working directory to the directory containing the .csv file
     file_dir = os.path.dirname(_file_path1)
     os.chdir(file_dir)
-
+    
+    # Load the DoE High AMP Data
+    DoE_data, _ = data_processing.load_high_amp_doe_data()
+    
+    # reduce DoE-Data to optimized parameters
+    Optimized_DoE_data_variables = data_processing.voltage_input_data_dict(DoE_data,parameters.Physical_Parameters())
+    Optimized_DoE_data_variables = pd.DataFrame(Optimized_DoE_data_variables)
+    
     # Create a new directory for plots
     os.makedirs("00_Plots", exist_ok=True)
     os.chdir("00_Plots")
@@ -103,6 +112,9 @@ def analyze_data(_file_path1, saving=True):
     plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
     plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
     
+    ###########PLOT: optimized parameters in DoE envelope
+    plot_optimized_parameter_DoE_envelope(df1, Optimized_DoE_data_variables, saving=saving)
+
     ###########PLOT: Optimized Operating Parameters
 
     # create a directory for the plots
@@ -115,6 +127,7 @@ def analyze_data(_file_path1, saving=True):
     plot_cathode_stoichiomtrey(data, titles, fl_set, saving=saving)
     plot_coolant_inlet_temperature(data, titles, fl_set, saving=saving)
     plot_coolant_outlet_temperature(data, titles, fl_set, saving=saving)
+
 
     # go back to the parent directory
     os.chdir("../")
