@@ -18,7 +18,7 @@ class Turbine:
 
         # Ensure the component is available in masses_FCM_depended; raise error if missing
         if 'Turbine' not in mass_estimator.masses_FCM_depended:
-            raise ValueError(f"Component 'Turbine' not found in mass estimator's dependent masses.")
+            raise ValueError("Component 'Turbine' not found in mass estimator's dependent masses.")
 
         # Retrieve mass data from the mass_estimator instance
         self.mass_by_power_kg_kW = mass_estimator.masses_FCM_depended['Turbine']
