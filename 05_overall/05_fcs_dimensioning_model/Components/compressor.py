@@ -3,11 +3,11 @@ from scipy.interpolate import griddata
 from scipy.spatial import ConvexHull
 import numpy as np
 import matplotlib.pyplot as plt
-from parameters import Mass_Estimator
+from parameters import Mass_Parameters
 
 class Compressor:
 
-    def __init__(self, mass_estimator: Mass_Estimator, isentropic_efficiency=0.75, electric_efficiency=0.95,
+    def __init__(self, mass_estimator: Mass_Parameters, isentropic_efficiency=0.75, electric_efficiency=0.95,
                  air_mass_flow_kg_s=1, temperature_in_K=293.15, pressure_in_Pa=1.013e5, pressure_out_Pa=1.013e5,
                  nominal_BoP_pressure_drop_Pa=0.3*1e5, nominal_air_flow_kg_s=0.130, compressor_map=None
                  ):
@@ -196,7 +196,7 @@ class Compressor:
 
 # %% Example Usage:
 
-mass_estimator = Mass_Estimator()
+mass_estimator = Mass_Parameters()
 C1 = Compressor(mass_estimator, isentropic_efficiency=0.75, electric_efficiency=0.95, air_mass_flow_kg_s=1.2,
                 temperature_in_K=293.15, pressure_in_Pa=1.013e5, pressure_out_Pa=2.013e5)
 

@@ -1,9 +1,9 @@
 import CoolProp.CoolProp as CP
-from parameters import Mass_Estimator
+from parameters import Mass_Parameters
 
 class Turbine:
 
-    def __init__(self, mass_estimator: Mass_Estimator, isentropic_efficiency=0.85,
+    def __init__(self, mass_estimator: Mass_Parameters, isentropic_efficiency=0.85,
                  air_mass_flow_kg_s=1, temperature_in_K=293.15, pressure_in_Pa=1.013e5, pressure_out_Pa=1.013e5, temperature_out_K=293.15,
                  nominal_BoP_pressure_drop_Pa=0.15*1e5, nominal_air_flow_kg_s=0.130):
 
@@ -78,7 +78,7 @@ class Turbine:
     
 # %% Example usage:
 
-mass_estimator = Mass_Estimator()
+mass_estimator = Mass_Parameters()
 
 C1 = Turbine(mass_estimator, isentropic_efficiency=0.85, air_mass_flow_kg_s=1,
              temperature_in_K=350.15, pressure_in_Pa=2e5, pressure_out_Pa=1e5, temperature_out_K=293.15)
