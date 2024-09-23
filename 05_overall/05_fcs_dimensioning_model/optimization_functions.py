@@ -342,49 +342,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     else:
         nlc = nlc_Temp  
-    # define callback to get optimzer information by iteration
-    
-    # step_count = 0        
-    # check_intervall = 1
-    # def callback(xk, convergence):
-    #     nonlocal step_count
-    #     step_count += 1
-    #     if step_count % check_intervall == 0:
-    #         xk_denormalized = xk * np.array(cell_voltage_model.input_data_std) + np.array(cell_voltage_model.input_data_mean)
-    #         # plot optimal input parameters in DoE-Data     
-    #         fig, axs = plt.subplots(2, 3, figsize=(20, 8))
-    #         for plots in range(len(xk)-1):
-    #             x = Optimized_DoE_data_variables.iloc[:,0]
-    #             y = Optimized_DoE_data_variables.iloc[:,plots+1]
-    #             if plots < 2:
-    #                 axs[0,plots].scatter(x, y, color='black', label=f'{Optimized_DoE_data_variables.columns[plots+1]} - Current')
-    #                 axs[0,plots].scatter(xk_denormalized[0], xk_denormalized[plots+1], color='red', marker='x', s=100, label=f'Opt_Input')
-
-    #                 axs[0,plots].set_xlabel(f'{Optimized_DoE_data_variables.columns[0]}')
-    #                 axs[0,plots].set_ylabel(f'{Optimized_DoE_data_variables.columns[plots+1]}')
-    #                 y_min=Optimized_DoE_data_variables.iloc[:,plots+1].min()
-    #                 y_max=Optimized_DoE_data_variables.iloc[:,plots+1].max()
-    #                 axs[0, plots].set_ylim([y_min-y_min*0.1, y_max+y_max*0.1])  # Skalierung mit 10% Puffer
-    #                 axs[0,plots].legend(loc='lower center', bbox_to_anchor=(0.5, 1.02), ncol=2)
-
-    #             else:
-    #                 axs[1,plots-2].scatter(x, y, color='black', label=f'{Optimized_DoE_data_variables.columns[plots+1]} - Current')
-    #                 axs[1,plots-2].scatter(xk_denormalized[0], xk_denormalized[plots+1], color='red', marker='x', s=100, label=f'Opt_Input')
-
-    #                 axs[1,plots-2].set_xlabel(f'{Optimized_DoE_data_variables.columns[0]}')
-    #                 axs[1,plots-2].set_ylabel(f'{Optimized_DoE_data_variables.columns[plots+1]}')
-    #                 y_min=Optimized_DoE_data_variables.iloc[:,plots+1].min()
-    #                 y_max=Optimized_DoE_data_variables.iloc[:,plots+1].max()
-    #                 axs[1, plots-2].set_ylim([y_min-y_min*0.1, y_max+y_max*0.1])  # Skalierung mit 10% Puffer
-    #                 axs[1,plots-2].legend(loc='lower center', bbox_to_anchor=(0.5, 1.02), ncol=2)
-
-    #         fig.delaxes(axs[0, 2])  # Entfernt den ungenutzten Platz im Grid
-    #         plt.tight_layout()
-
-    #         # save plot
-    #         filename = f'xk_optimized_input_{step_count}.jpg'
-    #         plt.savefig(filename, format='jpeg')
-    #         plt.close(fig)
 
     # Normalize the bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
