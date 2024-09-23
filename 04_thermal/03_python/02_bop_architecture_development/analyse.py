@@ -37,7 +37,7 @@ else:
                 "Qdot_compressor" : 500,
                 "Qdot_evap" : -13500}
     
-result_dict = {"Vdot_in" :              ['', [], ''], 
+result_dict = {"Vdot_in" :              ['', [], 'BoP Input flow in [l/s]'], 
                 "Vdot_1" :              ['', [], ''], 
                 "Vdot_2" :              ['', [],''],
 #                "Vdot_3" :              ['', [],''],

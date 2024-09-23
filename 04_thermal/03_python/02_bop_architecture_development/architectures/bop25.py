@@ -57,11 +57,14 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     circ.add_bc("Vdot_13 = 0.00001")
 
+    circ.add_bc("%s = %f" %(mixer2.p_out, bc_dict["p_end"]))    # depends on architecture
+
+
     for name in bc_dict:
         if "Vdot_in" == name:
             circ.add_bc("Vdot_1 = %f" %bc_dict["Vdot_in"])
-        elif "p_end" == name:
-            circ.add_bc("%s = %f" %(mixer1.p_out, bc_dict["p_end"]))    # depends on architecture
+        elif "p_in" == name:
+            circ.add_bc("%s = %f" %(evap.p_in, bc_dict["p_in"]))
 
     circ.add_bc("T_1 = %f" %bc_dict["T_in"])
     circ.add_bc("Qdot_hpdu = %f" %bc_dict["Qdot_hpdu"])

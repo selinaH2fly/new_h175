@@ -3,17 +3,18 @@ from architectures import bop10, bop21, bop22, bop23, bop24, bop25, bop26, bop27
 import pandas as pd
 import matplotlib.pyplot as plt
 #, "Arch03b", "Arch04", "Arch06", "Arch08"
-arch_list = ["bop10", "bop21", "bop22", "bop23"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
+arch_list = ["bop10", "bop21", "bop31", "bop42"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
 
-input_dict = {"Vdot_in" : ["", [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60], "BoP Eingangsvolumenstrom l/s"]}
-#input_dict = {"p_in": ["p_1", [1.25, 1.3, 1.35, 1.4, 1.45, 1.5], "Input Pressure [bar]"]}
+# input_dict = {"Vdot_in" : ["", [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60], "BoP Eingangsvolumenstrom l/s"]}
+input_dict = {"p_in": ["p_1", [1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6], "Input Pressure [bar]"]}
 #input_dict = {"throttle_delta_p" : ["", [0.1, 0.15, 0.2, 0.25, 0.3], "Thottle pressure drop [bar]"]}
 
 # input
 critical_operation = True
 if critical_operation is True:
     bc_dict = {"T_in" : 273.15 + 60.0,
-                "Vdot_in" : 0.5,
+                #"Vdot_in" : 0.5,
+                "p_in" : 0.5,
                 "p_end" : 1,
                 "Qdot_hpdu" : 1000,
                 "Qdot_lvdcdc" : 300,
@@ -24,7 +25,8 @@ if critical_operation is True:
                 "Qdot_evap" : -13500}
 else: 
     bc_dict = {"T_in" : 273.15 + 50.0,
-               "Vdot_in" : 0.5,
+               #"Vdot_in" : 0.5,
+                "p_in" : 0.5,
                 "p_end" : 1,
                 "Qdot_hpdu" : 500,
                 "Qdot_lvdcdc" : 150,
@@ -34,7 +36,7 @@ else:
                 "Qdot_compressor" : 500,
                 "Qdot_evap" : -13500}
     
-result_dict = {"Vdot_in" :              ['', [], ''], 
+result_dict = {"Vdot_in" :              ['', [], 'BoP Input flow in [l/s]'], 
                 "Vdot_1" :              ['', [], ''], 
                 "Vdot_2" :              ['', [],''],
 #                "Vdot_3" :              ['', [],''],

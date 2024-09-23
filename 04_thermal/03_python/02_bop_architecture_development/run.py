@@ -1,6 +1,6 @@
 from architectures import bop10, bop21, bop22, bop23, bop24, bop25, bop26, bop27, bop31, bop32, bop33, bop41, bop42
 
-arch_list = ["bop10"]      # which architecture should be eveluated?, also possible to evaluate multiple architectures
+arch_list = ["bop21"]      # which architecture should be eveluated?, also possible to evaluate multiple architectures
 input_dict = {}             # input_dict is not needed
 
 input_dict = {}
@@ -19,17 +19,17 @@ if critical_operation is True:
                 "Qdot_intercooler" : 21000,
                 "Qdot_compressor" : 1000,
                 "Qdot_evap" : -13500}
-elif freezing_condition is True:
-    bc_dict = {"T_in" : 273.15 + 10.0,
-                "Vdot_in" : 0.5,
-                "p_end" : 1,
-                "Qdot_hpdu" : 0,
-                "Qdot_lvdcdc" : 0,
-                "Qdot_hvdcdc" : 0,
-                "Qdot_inverter" : 0,
-                "Qdot_intercooler" : 0,
-                "Qdot_compressor" : 0,
-                "Qdot_evap" : -13500}
+##elif freezing_condition is True:
+  #  bc_dict = {"T_in" : 273.15 + 10.0,
+   #             "Vdot_in" : 0.5,
+    #            "p_end" : 1,
+     #           "Qdot_hpdu" : 0,
+      #          "Qdot_lvdcdc" : 0,
+       #         "Qdot_hvdcdc" : 0,
+        #        "Qdot_inverter" : 0,
+         #       "Qdot_intercooler" : 0,
+          #      "Qdot_compressor" : 0,
+           #     "Qdot_evap" : -13500}
 else: 
     bc_dict = {"T_in" : 273.15 + 50.0,
                "Vdot_in" : 0.5,
