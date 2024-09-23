@@ -174,7 +174,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Set compressor attributes
         compressor.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A, cellcount=cellcount)
         compressor.pressure_out_Pa = optimized_pressure_cathode_in_bara*1e5 + compressor.calculate_BoP_pressure_drop() # compressor_out == cathode_in + BoP_pressure_drop (compressor out -> cathode in)
-
+        compressor.temperature_out_K = compressor.calculate_T_out()
         # Calculate compressor power
         compressor_power_W = compressor.calculate_power()
 
@@ -263,12 +263,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # %% Intercooler
         #set T, p and m_dots here
-        #TODO: set the values of the component
-        # intercooler.primary_T_in_K = ?#compresser out
-        intercooler.primary_T_out_K = optimized_temp_coolant_inlet_degC
+
+        intercooler.primary_T_in_K = compressor.temperature_out_K
+        intercooler.primary_T_out_K = optimized_temp_coolant_inlet_degC + 273.15 # degC into K
         intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
         intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
-        
+         
         # intercooler.coolant_T_in_K = #Evap t out
         # intercooler.coolant_T_out_K = # berechnen
         # intercooler.coolant_mdot_in_kg_s = #?
@@ -406,12 +406,15 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     # Compute  heat fluxes of comonents:
     stack_heat_flux_W = stack.calculate_heat_flux()
-    #intercooler_heat_flux_W = intercooler.calculate_heat_flux("primary")
-    evaporator_heat_flux_W = evaporator.calculate_heat_flux("primary") #Todo: carefull with def use due to overwrite, make this more clear?
+    
+    intercooler_heat_flux_W = intercooler.calculate_heat_flux("primary")
+    
+    evaporator_cp = evaporator.calculate_specific_heat(evaporator.primary_fluid, evaporator.primary_T_in_K, evaporator.primary_T_out_K, evaporator.primary_p_in_Pa, 0.1)
+    evaporator_heat_flux_W = evaporator.calculate_heat_flux("primary",evaporator_cp)
     
     #TODO: add all other components here
     print(f'\nheat_flux stack: {stack_heat_flux_W/1000:.2f} kW')
-    #print(f'heat_flux intercooler: {intercooler_heat_flux_W/1000} kW')
+    print(f'heat_flux intercooler: {intercooler_heat_flux_W/1000:.2f} kW')
     print(f'heat_flux evap: {evaporator_heat_flux_W/1000:.2f} kW ')
     
     # Plot the compressor map with the optimized operating point highlighted

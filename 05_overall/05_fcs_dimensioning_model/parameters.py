@@ -182,6 +182,7 @@ class Evaporator_Parameters:
         self.primary_fluid = "H2"
         self.primary_T_in_K = 20.0
         self.primary_T_out_K = 300.0
+        self.primary_p_in_Pa = 5*1e5
         
         self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
         self.ALLOWED_FLUIDS = ['H2','INCOMP::MEG-50%']
