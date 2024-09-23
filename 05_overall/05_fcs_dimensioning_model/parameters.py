@@ -52,7 +52,7 @@ class Physical_Parameters:
         #self.air_molar_mass = 28.97 * 1e-3              # kg/mol
         
         #enthalpy of evaporation of H2
-        self.dH_V = 446000                               # J/kg 
+        self.evaporation_enthalpy_J_kg = 446000                               # J/kg 
         
         #this is a "magic number" from Tank team, cp_H2 from 20K till 300K will change, this is a linear estimation.
         #TODO: we would need to integrate for each T and p along the heating process to get cp
