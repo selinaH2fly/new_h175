@@ -46,7 +46,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     # Load parameters
     _params_optimization = parameters.Optimization_Parameters()
-    _params_assumptions = parameters.Assumptions()
     _params_compressor = parameters.Compressor_Parameters()
     _params_turbine = parameters.Turbine_Parameters()
     _params_recirculation_pump = parameters.Recirculation_Pump_Parameters()
@@ -175,7 +174,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Set compressor attributes
         compressor.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A, cellcount=cellcount)
         compressor.pressure_out_Pa = optimized_pressure_cathode_in_bara*1e5 + compressor.calculate_BoP_pressure_drop() # compressor_out == cathode_in + BoP_pressure_drop (compressor out -> cathode in)
-
+        compressor.temperature_out_K = compressor.calculate_T_out()
         # Calculate compressor power
         compressor_power_W = compressor.calculate_power()
 
@@ -264,12 +263,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # %% Intercooler
         #set T, p and m_dots here
-        #TODO: set the values of the component
-        # intercooler.primary_T_in_K = ?#compresser out
-        intercooler.primary_T_out_K = optimized_temp_coolant_inlet_degC
+
+        intercooler.primary_T_in_K = compressor.temperature_out_K
+        intercooler.primary_T_out_K = optimized_temp_coolant_inlet_degC + 273.15 # degC into K
         intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
         intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
-        
+         
         # intercooler.coolant_T_in_K = #Evap t out
         # intercooler.coolant_T_out_K = # berechnen
         # intercooler.coolant_mdot_in_kg_s = #?
@@ -280,11 +279,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         
         # %% Consumed hydrogen mass flow rate
-
-        # Compute the hydrogen mass flow rate (supply = const. * consumption)
-        hydrogen_consumption_rate_g_s = optimized_input[0] * cellcount * CP.PropsSI('M', 'Hydrogen') / \
-            (2 * (physical_constants['Faraday constant'][0])) * 1000
-        hydrogen_supply_rate_g_s = hydrogen_consumption_rate_g_s * (1 + _params_assumptions.hydrogen_loss_factor)
 
         # Compute the hydrogen mass flow rate
         hydrogen_mass_flow_g_s = stack.current_A * stack.cellcount * CP.PropsSI('M', 'Hydrogen') / \
@@ -298,7 +292,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # %% Return
         
         return optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
-            coolant_pump_power_W, hydrogen_supply_rate_g_s
+            coolant_pump_power_W, hydrogen_mass_flow_g_s
 
 
 # %% Optimization
@@ -308,8 +302,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Evaluate the models with the normalized input
         optimal_input, cell_voltage, compressor_power_W, turbine_power_W, \
-            reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
-        
+            reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(x)
+
         # Compute the penalty term for the power constraint
         if power_constraint_kW is not None:
             power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
@@ -319,7 +313,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         else:
             penalty = 0
         
-        return hydrogen_supply_rate_g_s + penalty
+        return hydrogen_mass_flow_g_s + penalty
    
     # define nonlinear constraints
     def nonlinear_constraint_Temp(x):
@@ -348,49 +342,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     else:
         nlc = nlc_Temp  
-    # define callback to get optimzer information by iteration
-    
-    # step_count = 0        
-    # check_intervall = 1
-    # def callback(xk, convergence):
-    #     nonlocal step_count
-    #     step_count += 1
-    #     if step_count % check_intervall == 0:
-    #         xk_denormalized = xk * np.array(cell_voltage_model.input_data_std) + np.array(cell_voltage_model.input_data_mean)
-    #         # plot optimal input parameters in DoE-Data     
-    #         fig, axs = plt.subplots(2, 3, figsize=(20, 8))
-    #         for plots in range(len(xk)-1):
-    #             x = Optimized_DoE_data_variables.iloc[:,0]
-    #             y = Optimized_DoE_data_variables.iloc[:,plots+1]
-    #             if plots < 2:
-    #                 axs[0,plots].scatter(x, y, color='black', label=f'{Optimized_DoE_data_variables.columns[plots+1]} - Current')
-    #                 axs[0,plots].scatter(xk_denormalized[0], xk_denormalized[plots+1], color='red', marker='x', s=100, label=f'Opt_Input')
-
-    #                 axs[0,plots].set_xlabel(f'{Optimized_DoE_data_variables.columns[0]}')
-    #                 axs[0,plots].set_ylabel(f'{Optimized_DoE_data_variables.columns[plots+1]}')
-    #                 y_min=Optimized_DoE_data_variables.iloc[:,plots+1].min()
-    #                 y_max=Optimized_DoE_data_variables.iloc[:,plots+1].max()
-    #                 axs[0, plots].set_ylim([y_min-y_min*0.1, y_max+y_max*0.1])  # Skalierung mit 10% Puffer
-    #                 axs[0,plots].legend(loc='lower center', bbox_to_anchor=(0.5, 1.02), ncol=2)
-
-    #             else:
-    #                 axs[1,plots-2].scatter(x, y, color='black', label=f'{Optimized_DoE_data_variables.columns[plots+1]} - Current')
-    #                 axs[1,plots-2].scatter(xk_denormalized[0], xk_denormalized[plots+1], color='red', marker='x', s=100, label=f'Opt_Input')
-
-    #                 axs[1,plots-2].set_xlabel(f'{Optimized_DoE_data_variables.columns[0]}')
-    #                 axs[1,plots-2].set_ylabel(f'{Optimized_DoE_data_variables.columns[plots+1]}')
-    #                 y_min=Optimized_DoE_data_variables.iloc[:,plots+1].min()
-    #                 y_max=Optimized_DoE_data_variables.iloc[:,plots+1].max()
-    #                 axs[1, plots-2].set_ylim([y_min-y_min*0.1, y_max+y_max*0.1])  # Skalierung mit 10% Puffer
-    #                 axs[1,plots-2].legend(loc='lower center', bbox_to_anchor=(0.5, 1.02), ncol=2)
-
-    #         fig.delaxes(axs[0, 2])  # Entfernt den ungenutzten Platz im Grid
-    #         plt.tight_layout()
-
-    #         # save plot
-    #         filename = f'xk_optimized_input_{step_count}.jpg'
-    #         plt.savefig(filename, format='jpeg')
-    #         plt.close(fig)
 
     # Normalize the bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
@@ -405,24 +356,28 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     print(f'{result.message}')
 
     # Evaluate the models with the optimal input
-    optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(result.x)
+    optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(result.x)
     
     # Compute stack power 
     stack_power_kW = stack.current_A * stack.cell_voltage_V * stack.cellcount / 1000
     
     # Compute  heat fluxes of comonents:
     stack_heat_flux_W = stack.calculate_heat_flux()
-    #intercooler_heat_flux_W = intercooler.calculate_heat_flux("primary")
-    evaporator_heat_flux_W = evaporator.calculate_heat_flux("primary") #Todo: carefull with def use due to overwrite, make this more clear?
+    
+    intercooler_heat_flux_W = intercooler.calculate_heat_flux("primary")
+    
+    evaporator_cp = evaporator.calculate_specific_heat(evaporator.primary_fluid, evaporator.primary_T_in_K, evaporator.primary_T_out_K, evaporator.primary_p_in_Pa, 0.1)
+    evaporator_heat_flux_W = evaporator.calculate_heat_flux("primary", evaporator_cp, _params_physics.evaporation_enthalpy_J_kg)
     
     #TODO: add all other components here
     print(f'\nheat_flux stack: {stack_heat_flux_W/1000:.2f} kW')
-    #print(f'heat_flux intercooler: {intercooler_heat_flux_W/1000} kW')
+    print(f'heat_flux intercooler: {intercooler_heat_flux_W/1000:.2f} kW')
     print(f'heat_flux evap: {evaporator_heat_flux_W/1000:.2f} kW ')
     
     # Plot the compressor map with the optimized operating point highlighted
     if compressor_map is not None:
         compressor.plot_compressor_map()
 
-    return optimal_input, cell_voltage, hydrogen_supply_rate_g_s, stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
+    return optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
         reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.air_mass_flow_kg_s*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, optimization_converged
+    

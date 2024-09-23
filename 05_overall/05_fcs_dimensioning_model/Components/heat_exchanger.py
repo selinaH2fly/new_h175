@@ -95,7 +95,7 @@ class Evaporator(HeatExchanger):
         super().__init__(**kwargs)
     
     #OVERWRITE: due to mean cp value we need to overwrite this function
-    def calculate_heat_flux(self, fluid: str, T1: float = None, T2: float = None, P: float = None, step: float = 0.1) -> float:
+    def calculate_specific_heat(self, fluid: str, T1: float = None, T2: float = None, P: float = None, step: float = 0.1) -> float:
         """
         Calculates the mean specific heat capacity (Cp) of a fluid over a temperature range 
         using Euler's forward integration.
@@ -152,7 +152,7 @@ class Evaporator(HeatExchanger):
         return mean_cp
 
     #OVERWRITE: due to mean cp value we need to overwrite this function
-    def calculate_heat_flux(self, fluid_type="primary", mean_cp_H2 = 14500, dH_V=446000) -> float:
+    def calculate_heat_flux(self, fluid_type="primary", mean_cp_H2 = None, evaporation_enthalpy_J_kg=446000) -> float:
         """
         Calculate the heat flux (Qdot) for the specified fluid (primary or coolant).
         
@@ -166,7 +166,7 @@ class Evaporator(HeatExchanger):
         if fluid_type == "primary":
             c_p = mean_cp_H2
             #Due to Phase change from liquid to gass the Qdot has a additional term (Verdapfungsenthalpie)
-            Qdot_W = c_p * self.primary_mdot_in_kg_s * (self.primary_T_in_K - self.primary_T_out_K) + self.primary_mdot_in_kg_s * dH_V
+            Qdot_W = c_p * self.primary_mdot_in_kg_s * (self.primary_T_in_K - self.primary_T_out_K) + self.primary_mdot_in_kg_s * evaporation_enthalpy_J_kg
         elif fluid_type == "coolant":
             c_p = self.calculate_specific_heat(self.coolant_T_in_K, self.coolant_p_in_Pa, self.coolant_fluid)
             Qdot_W = c_p * self.coolant_mdot_in_kg_s * (self.coolant_T_out_K - self.coolant_T_in_K)

@@ -16,6 +16,7 @@ class Compressor:
         self.electric_efficiency = electric_efficiency
         self.air_mass_flow_kg_s = air_mass_flow_kg_s
         self.temperature_in_K = temperature_in_K
+        self.temperature_out_K = None
         self.pressure_in_Pa = pressure_in_Pa
         self.pressure_out_Pa = pressure_out_Pa
         self.nominal_pressure_drop_Pa = nominal_BoP_pressure_drop_Pa
@@ -28,7 +29,24 @@ class Compressor:
 
         # Retrieve mass data from the mass_estimator instance
         self.mass_by_power_kg_kW = mass_estimator.masses_FCM_depended['Compressor']
+    
+    def calculate_T_out(self) -> float:
+        """
+        Calculate the outlet Temperature of the isentropic compression by the compressor
 
+        Returns:
+        - temperature_out_K: T in K at the compressor outlet
+
+        """
+        # Compute the specific heat ratio of air
+        specific_heat_ratio = CP.PropsSI('C', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Air') / \
+            CP.PropsSI('O', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Air')
+        
+        temperature_out_K = self.temperature_in_K * (((self.pressure_out_Pa/self.pressure_in_Pa)**((specific_heat_ratio-1)/specific_heat_ratio)-1)/(self.isentropic_efficiency) + 1)
+        #self.temperature_out_K = temperature_out_K
+        
+        return temperature_out_K
+    
     def calculate_power(self) -> float:
         """
         Calculate the electrical power consumed by the compressor using a real-world compressor map.

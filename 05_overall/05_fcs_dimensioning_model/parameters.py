@@ -36,7 +36,7 @@ class Physical_Parameters:
         #self.air_molar_mass = 28.97 * 1e-3              # kg/mol
         
         #enthalpy of evaporation of H2
-        self.dH_V = 446000                               # J/kg 
+        self.evaporation_enthalpy_J_kg = 446000                               # J/kg 
         
         #this is a "magic number" from Tank team, cp_H2 from 20K till 300K will change, this is a linear estimation.
         #TODO: we would need to integrate for each T and p along the heating process to get cp
@@ -172,6 +172,7 @@ class Evaporator_Parameters:
         self.primary_fluid = "H2"
         self.primary_T_in_K = 20.0
         self.primary_T_out_K = 300.0
+        self.primary_p_in_Pa = 5*1e5
         
         self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
         self.ALLOWED_FLUIDS = ['H2','INCOMP::MEG-50%']
