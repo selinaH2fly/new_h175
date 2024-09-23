@@ -129,7 +129,7 @@ def analyze_data(_file_path1, saving=True):
 
     ##########PLOT: Optimized Operating Parameters
 
-    create a directory for the plots
+    # create a directory for the plots
     os.makedirs("Optimized_Operating_Parameters", exist_ok=True)
     os.chdir("Optimized_Operating_Parameters")
 
