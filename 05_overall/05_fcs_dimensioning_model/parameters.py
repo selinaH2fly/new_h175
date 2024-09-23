@@ -1,7 +1,6 @@
 ''' This file contains the parameter definitions for the input variable optimization.'''
 
 import numpy as np
-
 class Optimization_Parameters:
     
     def __init__(self):
@@ -34,8 +33,18 @@ class Physical_Parameters:
         self.temperature_lapse_rate_K_m = 0.0065
         self.oxygen_mol_fraction = 0.2095
 
-class Assumptions:
+        #self.air_molar_mass = 28.97 * 1e-3              # kg/mol
+        
+        #enthalpy of evaporation of H2
+        self.dH_V = 446000                               # J/kg 
+        
+        #this is a "magic number" from Tank team, cp_H2 from 20K till 300K will change, this is a linear estimation.
+        #TODO: we would need to integrate for each T and p along the heating process to get cp
+        #Docu: https://h2fly.atlassian.net/browse/HWI-428?focusedCommentId=13070
+        self.mean_cp_H2 = 14500 #J/kg.K for 20K --> 300K
 
+class Assumptions:
+        
     def __init__(self):
 
         self.hydrogen_loss_factor = 0.05    # fraction of hydrogen lost by purging; note: for \lambda_A > 1, it's inevitable to lose some hydrogen!
@@ -146,9 +155,65 @@ class Stack_Parameters:
         self.anode_pressure_drop_coefficients = [4*1e-4, 9.4*1e-3, 49.7]    # cf. PowerLayout, DoE Evaluation
         self.cooling_pressure_drop_coefficients = [6.5e-3, 0.477, 0]        # cf. PowerLayout, DoE Evaluation
 
+class Intercooler_Parameters:
+
+    def __init__(self):
+        self.efficiency = 1.0
+        
+        self.primary_fluid = "Air" 
+        self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
+        self.ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2','INCOMP::MEG-50%']
+
+class Evaporator_Parameters:
+    
+    def __init__(self):
+        
+        self.efficiency = 1.0
+        self.primary_fluid = "H2"
+        self.primary_T_in_K = 20.0
+        self.primary_T_out_K = 300.0
+        
+        self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
+        self.ALLOWED_FLUIDS = ['H2','INCOMP::MEG-50%']
+    
 class Eol_Parameter:
 
     def __init__(self):
 
         self.reference_derating_factor = 0.85
-        self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A 
+        self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A
+
+class Mass_Parameters:
+    def __init__(self):
+        # Mass estimates for fixed mass components
+        self.masses_FCM_constants = {
+            'Stack': {'Stack': 0, 'CVM': 0.5, 'SMI': 1.5, 'Hose clamps': 0.18, 'Screws': 0.09, 'HV+LV Cable': 1.20},
+            'Cathode': {'Filter': 0.2, 'HFM': 0.1, 'Compressor': 0, 'Compressor inverter': 6.0, 'Intercooler': 1.0,
+                        'Humidifier': 1.0,
+                        'Valves': 1.5, 'Drain valve': 0.05, 'Water separator': 0.2,
+                        'Cathode pressure control valve': 0.0,
+                        'Sensors': 0.3, 'Silicon hoses': 0.5, 'Hose clamps': 0.12, 'Connectors': 0.8,
+                        'Screws': 0.18,
+                        'HV+LV Cable': 0.67, 'Turbine': 0.0},
+            'Anode': {'Shut-Off valve': 0.2, 'Pressure control valve': 0.2, 'Water separator': 0,
+                      'Particle filter': 0.2,
+                      'Recirculation pump': 4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.2,
+                      'Anode piping': 0.5,
+                      'Swagelok connector': 0.28, 'Screws': 0.09, 'HV+LV Cable': 0.34},
+            'Thermal': {'Coolant pump': 3.0, 'TCV': 0.5, 'Particle filter': 0.1, 'Ionic exchanger': 1.0,
+                        'Sensors': 0.2 + 0.20,
+                        'Silicone hoses': 0.5 + 0.5, 'Hose clamps': 0.12 + 0.12, 'Connectors': 0.80 + 0.80,
+                        'Screws': 0.09 + 0.09,
+                        'HV+LV Cable': 0.34, 'Expansion tank': 0.20, 'Volume flow control valve': 0.5,
+                        'Stack coolant': 0,
+                        'Other coolant': 5.0},
+            'Other': {'FCCU': 0.5, 'Electrical connectors': 0.4, 'HDPU': 5.0, 'Frame': 2.0, 'Connectors': 1.0,
+                      'Screws': 0.27,
+                      'HV+LV Cable': 0.0}
+        }
+        # Mass estimates for dependent mass components, change the values as needed
+        self.masses_FCM_depended = {
+            'Compressor': {"mean": 0.0, "sd": 0.0},
+            'Recirculation_Pump': {"mean": 0.0, "sd": 0.0},
+            'Turbine': {"mean": 0.0, "sd": 0.0},
+        }
