@@ -152,7 +152,7 @@ class Evaporator(HeatExchanger):
         return mean_cp
 
     #OVERWRITE: due to mean cp value we need to overwrite this function
-    def calculate_heat_flux(self, fluid_type="primary", mean_cp_H2 = None, dH_V=446000) -> float:
+    def calculate_heat_flux(self, fluid_type="primary", mean_cp_H2 = 14500, dH_V=446000) -> float:
         """
         Calculate the heat flux (Qdot) for the specified fluid (primary or coolant).
         

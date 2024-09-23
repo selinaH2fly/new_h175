@@ -88,7 +88,7 @@ class Stack:
         params_physics = Physical_Parameters()
         
         # Calculate the heat generated in the stack TODO: account for stack radiation
-        heat_flux_W = self.current_A * self.cellcount * (params_physics.hydrogen_lhv_voltage_equivalent - self.cell_voltage_V)
+        heat_flux_W = self.current_A * self.cellcount * (params_physics.hydrogen_lhv_voltage_equivalent_V - self.cell_voltage_V)
         
         return heat_flux_W 
         
