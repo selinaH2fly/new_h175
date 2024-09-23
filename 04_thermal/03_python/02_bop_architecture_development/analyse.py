@@ -6,15 +6,16 @@ arch_list = ["bop10"]      # which architecture should be analysed?, also possib
 # input_list[1] = Values for adjusting boundary condition
 # input_list[2] = Description for axis for plotting
 #, 273.15 + 70 + 12, 273.15 + 70 + 14, 273.15 + 70 + 16
-input_dict = {"Vdot_in" : ["", [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60], "BoP Eingangsvolumenstrom l/s"]}
-#input_dict = {"p_in": ["p_1", [1.25, 1.3, 1.35, 1.4, 1.45, 1.5], "Input Pressure [bar]"]}
+#input_dict = {"Vdot_in" : ["", [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60], "BoP Eingangsvolumenstrom l/s"]}
+input_dict = {"p_in": ["p_1", [1.25, 1.3, 1.35, 1.4, 1.45, 1.5], "Input Pressure [bar]"]}
 #input_dict = {"throttle_delta_p" : ["", [0.1, 0.15, 0.2, 0.25, 0.3], "Thottle pressure drop [bar]"]}
 
 # input
 critical_operation = True
 if critical_operation is True:
     bc_dict = {"T_in" : 273.15 + 60.0,
-                "Vdot_in" : 0.5,
+                #"Vdot_in" : 0.5,
+                "p_in" : 1.5,
                 "p_end" : 1,
                 "Qdot_hpdu" : 1000,
                 "Qdot_lvdcdc" : 300,
@@ -25,7 +26,8 @@ if critical_operation is True:
                 "Qdot_evap" : -13500}
 else: 
     bc_dict = {"T_in" : 273.15 + 50.0,
-               "Vdot_in" : 0.5,
+               #"Vdot_in" : 0.5,
+                "p_in" : 0.5,
                 "p_end" : 1,
                 "Qdot_hpdu" : 500,
                 "Qdot_lvdcdc" : 150,

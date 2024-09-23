@@ -16,13 +16,13 @@ input_dict = {"stack_t_out" : ["", [273.15 + 70 + 8, 273.15 + 70 + 10], 'Stackau
 
 
 # input
-bc_dict = {"pump_p_in" : 1,     # pressure before pump, lowest pressure level
+bc_dict = {"pump_p_in" : 1,                     # pressure before pump, lowest pressure level
            "stack_t_in" : 273.15 + 68.0,        # temperature at stack inlet
            "stack_t_out" : 273.15 + 80.0,       # temperature at stack outlet
            "sys_t_in" : 273.15 + 60.0,          # System entry temperature, temperature after external radiatior
-           "bop_q" : 10600,             # bop heat 
-           "stack_q" : 158000,          # stack heat
-           "bop_vdot" : 0.4             # flow over bop components (whole block)
+           "bop_q" : 10600,                     # bop heat 
+           "stack_q" : 158000,                  # stack heat
+           "bop_vdot" : 0.4                     # flow over bop components (whole block)
 }
 
 result_dict = {"pump_vdot" : ["", [], 'flow over pump1 in [l/S]'],

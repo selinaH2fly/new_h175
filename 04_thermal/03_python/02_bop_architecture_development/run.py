@@ -7,6 +7,7 @@ input_dict = {}
 
 # input
 critical_operation = True
+freezing_condition = True
 if critical_operation is True:
     bc_dict = {"T_in" : 273.15 + 60.0,
                 "Vdot_in" : 0.5,
@@ -17,6 +18,17 @@ if critical_operation is True:
                 "Qdot_inverter" : 1250,
                 "Qdot_intercooler" : 21000,
                 "Qdot_compressor" : 1000,
+                "Qdot_evap" : -13500}
+elif freezing_condition is True:
+    bc_dict = {"T_in" : 273.15 + 10.0,
+                "Vdot_in" : 0.5,
+                "p_end" : 1,
+                "Qdot_hpdu" : 0,
+                "Qdot_lvdcdc" : 0,
+                "Qdot_hvdcdc" : 0,
+                "Qdot_inverter" : 0,
+                "Qdot_intercooler" : 0,
+                "Qdot_compressor" : 0,
                 "Qdot_evap" : -13500}
 else: 
     bc_dict = {"T_in" : 273.15 + 50.0,

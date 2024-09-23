@@ -80,9 +80,6 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Evaluate and generate output
     """
-    
-    # input_list = [['T_3 = 273.15 + 65.0'], 'Systemeingangstemperatur [K]', [273.15 + 45, 273.15 + 50, 273.15 + 55, 273.15 + 60, 273.15 + 55]]
-
 
     for name in result_dict:
         if name == "pump_vdot":
