@@ -95,7 +95,7 @@ class Evaporator(HeatExchanger):
         super().__init__(**kwargs)
     
     #OVERWRITE: due to mean cp value we need to overwrite this function
-    def calculate_heat_flux(self, fluid: str, T1: float = None, T2: float = None, P: float = None, step: float = 0.1) -> float:
+    def calculate_specific_heat(self, fluid: str, T1: float = None, T2: float = None, P: float = None, step: float = 0.1) -> float:
         """
         Calculates the mean specific heat capacity (Cp) of a fluid over a temperature range 
         using Euler's forward integration.
