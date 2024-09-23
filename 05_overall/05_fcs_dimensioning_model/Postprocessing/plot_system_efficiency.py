@@ -31,12 +31,12 @@ def plot_system_efficiency(data, titles, colors, fl_set, saving=True):
             
             # Scatter plot for each dataset TODO: magic 33.3 to params
             scatter = ax.scatter(filtered_df['System Power (kW)'], 
-                                 (filtered_df['System Power (kW)'] / (filtered_df['Hydrogen Supply (g/s)']* 33.33 * 3600))*1000, 
+                                 (filtered_df['System Power (kW)'] / (filtered_df['Hydrogen Supply Rate (g/s)']* 33.33 * 3600))*1000, 
                                  s=100, edgecolor='k', color=color, marker=marker)
             
             # Extract x and y data
             x = filtered_df['System Power (kW)']
-            y = (filtered_df['System Power (kW)'] / (filtered_df['Hydrogen Supply (g/s)']* 33.33 * 3600))*1000
+            y = (filtered_df['System Power (kW)'] / (filtered_df['Hydrogen Supply Rate (g/s)']* 33.33 * 3600))*1000
             
             # Construct the design matrix [x^2, x, 1]
             A = np.vstack([x**2, x**1, x**0]).T
