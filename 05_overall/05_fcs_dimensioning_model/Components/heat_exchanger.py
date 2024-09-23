@@ -95,7 +95,64 @@ class Evaporator(HeatExchanger):
         super().__init__(**kwargs)
     
     #OVERWRITE: due to mean cp value we need to overwrite this function
-    def calculate_heat_flux(self, fluid_type="primary", mean_cp_H2=14500, dH_V=446000) -> float:
+    def calculate_heat_flux(self, fluid: str, T1: float = None, T2: float = None, P: float = None, step: float = 0.1) -> float:
+        """
+        Calculates the mean specific heat capacity (Cp) of a fluid over a temperature range 
+        using Euler's forward integration.
+
+        Parameters:
+        - fluid: str : Name of the fluid (e.g., 'H2')
+        - T1: float : Starting temperature in Kelvin
+        - T2: float : Ending temperature in Kelvin
+        - P: float : Pressure in Pa
+        - step: float : Temperature step size in Kelvin (default: 0.1 K)
+        
+        Returns:
+        - mean_cp: float : Mean specific heat capacity in J/kg·K over the temperature range
+        """
+        
+        # Use instance attributes if parameters are not provided
+        if T1 is None:
+            T1 = self.primary_T_in_K
+        if T2 is None:
+            T2 = self.primary_T_out_K
+        if P is None:
+            P = self.primary_p_in_Pa
+    
+        # Ensure T1 is less than T2
+        if T1 >= T2:
+            raise ValueError("calculate_cp_of_T_range(): Starting temperature T1 must be less than ending temperature T2.")
+        
+        # Initialize variables
+        total_cp = 0.0
+        temp = T1
+        count = 0
+        
+        # Perform Euler's forward integration over the temperature range
+        while temp + step < T2:
+            # Calculate Cp at the current temperature and pressure using CoolProp
+            cp = CP.PropsSI('C', 'T', temp, 'P', P, fluid)
+            
+            # Add current cp to the total sum
+            total_cp += cp
+            
+            # Increment the temperature by the step size
+            temp += step
+            count += 1
+        
+        # Final step: ensure we reach exactly T2
+        # Calculate Cp at T2
+        cp = CP.PropsSI('C', 'T', T2, 'P', P, fluid)
+        total_cp += cp
+        count += 1
+        
+        # Calculate the mean Cp by dividing the total Cp by the number of steps
+        mean_cp = total_cp / count
+        
+        return mean_cp
+
+    #OVERWRITE: due to mean cp value we need to overwrite this function
+    def calculate_heat_flux(self, fluid_type="primary", mean_cp_H2 = None, dH_V=446000) -> float:
         """
         Calculate the heat flux (Qdot) for the specified fluid (primary or coolant).
         
@@ -107,7 +164,7 @@ class Evaporator(HeatExchanger):
         """
         
         if fluid_type == "primary":
-            c_p = mean_cp_H2 # TODO: dont use a mean value if possible
+            c_p = mean_cp_H2
             #Due to Phase change from liquid to gass the Qdot has a additional term (Verdapfungsenthalpie)
             Qdot_W = c_p * self.primary_mdot_in_kg_s * (self.primary_T_in_K - self.primary_T_out_K) + self.primary_mdot_in_kg_s * dH_V
         elif fluid_type == "coolant":
