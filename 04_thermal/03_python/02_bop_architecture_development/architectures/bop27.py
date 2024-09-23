@@ -9,7 +9,7 @@ import ThermSim
 def initialize(input_dict, result_dict, bc_dict):
 
     """
-    bop Architecture 2.7
+    bop Architecture 27
                                 7              8                9                    13                    14
                                 .---> LV DCDC ---> Compressor ---.               .----> Throttle1 -------------.
                                 |                                |               |                               |

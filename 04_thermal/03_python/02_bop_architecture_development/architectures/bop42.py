@@ -9,7 +9,7 @@ import ThermSim
 def initialize(input_dict, result_dict, bc_dict):
 
     """
-    bop Architecture 2.1
+    bop Architecture 42
 
                                     12                   13                
                                 .---------> Inverter ----------------.   
@@ -122,13 +122,19 @@ def initialize(input_dict, result_dict, bc_dict):
         result_dict["vdot_intercooler"] = result_dict["Vdot_1"]
         del result_dict["Vdot_1"]
     if "Vdot_2" in result_dict.keys():
-        result_dict["Vdot_2"][0] = mixer1.Vdot_in_2        # depends on architecture!
-        result_dict["Vdot_2"][2] = "Flow over Bypass in [l/s]"
-        result_dict["vdot_bypass"] = result_dict["Vdot_2"]
+        result_dict["Vdot_2"][0] = hpdu.Vdot_in        # depends on architecture!
+        result_dict["Vdot_2"][2] = "Flow over HPDU in [l/s]"
+        result_dict["vdot_hpdu"] = result_dict["Vdot_2"]
         del result_dict["Vdot_2"]
     if "Vdot_3" in result_dict.keys():      # depends on architecture
+        result_dict["Vdot_3"][0] = compressor.Vdot_in        # depends on architecture!
+        result_dict["Vdot_3"][2] = "Flow over Compressor in [l/s]"
+        result_dict["vdot_compressor"] = result_dict["Vdot_3"]
         del result_dict["Vdot_3"]
     if "Vdot_4" in result_dict.keys():      # depends on architecture
+        result_dict["Vdot_4"][0] = inverter.Vdot_in        # depends on architecture!
+        result_dict["Vdot_4"][2] = "Flow over Inverter in [l/s]"
+        result_dict["vdot_inverter"] = result_dict["Vdot_4"]
         del result_dict["Vdot_4"]
 
 

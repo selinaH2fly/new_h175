@@ -39,8 +39,8 @@ else:
 result_dict = {"Vdot_in" :              ['', [], 'BoP Input flow in [l/s]'], 
                 "Vdot_1" :              ['', [], ''], 
                 "Vdot_2" :              ['', [],''],
-#                "Vdot_3" :              ['', [],''],
- #               "Vdot_4" :              ['', [],''],
+                "Vdot_3" :              ['', [],''],
+                "Vdot_4" :              ['', [],''],
                 "t_in_lvdcdc":          ["", [],'LV DCDC T_in'],
                 "t_in_hvdcdc" :         ["", [], 'HV DCDC T_in'],
                 "t_in_inverter" :       ["", [], 'Inverter T_in'],
@@ -65,14 +65,14 @@ for arch in arch_list:
         result_dict[name][1] = []   # delete values
 
 
-max_len = 0    # fills gap in excel_dict with 0, important for architectures without second pump
-for name in excel_dict:
-    list_len = len(excel_dict[name])
-    if list_len > max_len:
-        max_len = list_len
-for name in excel_dict:
-    while len(excel_dict[name]) < max_len:
-        excel_dict[name].append(0)
+#max_len = 0    # fills gap in excel_dict with 0, important for architectures without second pump
+#for name in excel_dict:
+ #   list_len = len(excel_dict[name])
+  #  if list_len > max_len:
+   #     max_len = list_len
+#for name in excel_dict:
+ #   while len(excel_dict[name]) < max_len:
+  #      excel_dict[name].append(0)
 
 data = pd.DataFrame(excel_dict)
 datatoexcel = pd.ExcelWriter('results.xlsx')

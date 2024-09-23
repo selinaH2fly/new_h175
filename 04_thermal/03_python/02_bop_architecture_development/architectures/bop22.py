@@ -8,7 +8,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 def initialize(input_dict, result_dict, bc_dict):
 
     """
-    bop Architecture 2.2
+    bop Architecture 22
                     7               8        9             10              11
                     .----> LV DCDC ---> HPDU ---> Inverter ---> Compressor --.
                     |                                                        |
@@ -111,9 +111,9 @@ def initialize(input_dict, result_dict, bc_dict):
         result_dict["vdot_intercooler"] = result_dict["Vdot_1"]
         del result_dict["Vdot_1"]
     if "Vdot_2" in result_dict.keys():
-        result_dict["Vdot_2"][0] = mixer1.Vdot_in_2        # depends on architecture!
-        result_dict["Vdot_2"][2] = "Flow over Bypass in [l/s]"
-        result_dict["vdot_bypass"] = result_dict["Vdot_2"]
+        result_dict["Vdot_2"][0] = lvdcdc.Vdot_in        # depends on architecture!
+        result_dict["Vdot_2"][2] = "Flow over LV DCDC in [l/s]"
+        result_dict["vdot_lvdcdc"] = result_dict["Vdot_2"]
         del result_dict["Vdot_2"]
     if "Vdot_3" in result_dict.keys():      # depends on architecture
         del result_dict["Vdot_3"]

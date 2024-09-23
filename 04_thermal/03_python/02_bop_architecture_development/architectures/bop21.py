@@ -11,7 +11,7 @@ import ThermSim
 def initialize(input_dict, result_dict, bc_dict):
 
     """
-    bop Architecture 2.1
+    bop Architecture 21
                     6             7        8            9           10              11
                     .--> LV DCDC --> HPDU --> Inverter --> HV DCDC --> Compressor --.
                     |                                                               |
@@ -47,8 +47,6 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Provide input on boundary conditions
     """
-    circ.add_bc("Vdot_3 = Vdot_6")
-
     circ.add_bc("%s = %f" %(mixer1.p_out, bc_dict["p_end"]))    # depends on architecture
 
 
@@ -114,9 +112,9 @@ def initialize(input_dict, result_dict, bc_dict):
         result_dict["vdot_intercooler"] = result_dict["Vdot_1"]
         del result_dict["Vdot_1"]
     if "Vdot_2" in result_dict.keys():
-        result_dict["Vdot_2"][0] = mixer1.Vdot_in_2        # depends on architecture!
-        result_dict["Vdot_2"][2] = "Flow over Bypass in [l/s]"
-        result_dict["vdot_bypass"] = result_dict["Vdot_2"]
+        result_dict["Vdot_2"][0] = lvdcdc.Vdot_in        # depends on architecture!
+        result_dict["Vdot_2"][2] = "Flow over LV DCDC in [l/s]"
+        result_dict["vdot_lvdcdc"] = result_dict["Vdot_2"]
         del result_dict["Vdot_2"]
     if "Vdot_3" in result_dict.keys():      # depends on architecture
         del result_dict["Vdot_3"]
