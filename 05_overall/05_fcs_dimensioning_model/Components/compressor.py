@@ -42,7 +42,7 @@ class Compressor:
         specific_heat_ratio = CP.PropsSI('C', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Air') / \
             CP.PropsSI('O', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Air')
         
-        temperature_out_K = self.temperature_in_K * (((self.pressure_out_Pa/self.pressure_in_Pa)**((specific_heat_ratio-1)/specific_heat_ratio))/self.isentropic_efficiency + 1)
+        temperature_out_K = self.temperature_in_K * (((self.pressure_out_Pa/self.pressure_in_Pa)**((specific_heat_ratio-1)/specific_heat_ratio)-1)/(self.isentropic_efficiency) + 1)
         #self.temperature_out_K = temperature_out_K
         
         return temperature_out_K

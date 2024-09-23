@@ -367,7 +367,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     intercooler_heat_flux_W = intercooler.calculate_heat_flux("primary")
     
     evaporator_cp = evaporator.calculate_specific_heat(evaporator.primary_fluid, evaporator.primary_T_in_K, evaporator.primary_T_out_K, evaporator.primary_p_in_Pa, 0.1)
-    evaporator_heat_flux_W = evaporator.calculate_heat_flux("primary",evaporator_cp)
+    evaporator_heat_flux_W = evaporator.calculate_heat_flux("primary", evaporator_cp, _params_physics.evaporation_enthalpy_J_kg)
     
     #TODO: add all other components here
     print(f'\nheat_flux stack: {stack_heat_flux_W/1000:.2f} kW')
