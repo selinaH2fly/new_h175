@@ -282,7 +282,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # %% Consumed hydrogen mass flow rate
 
         # Compute the hydrogen mass flow rate (supply = const. * consumption)
-        hydrogen_consumption_rate_g_s = optimized_input[0] * cellcount * CP.PropsSI('M', 'Hydrogen') / \
+        hydrogen_consumption_rate_g_s = stack.current_A * cellcount * CP.PropsSI('M', 'Hydrogen') / \
             (2 * (physical_constants['Faraday constant'][0])) * 1000
         hydrogen_supply_rate_g_s = hydrogen_consumption_rate_g_s * (1 + _params_assumptions.hydrogen_loss_factor)
         
