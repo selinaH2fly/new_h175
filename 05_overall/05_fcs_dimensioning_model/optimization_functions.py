@@ -369,13 +369,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     evaporator_heat_flux_W = evaporator.calculate_heat_flux("primary", _evaporator_cp, _params_physics.evaporation_enthalpy_J_kg)
     radiator_heat_flux_W = stack_heat_flux_W + intercooler_heat_flux_W + evaporator_heat_flux_W
     
-    
-    #TODO: add all other components here
-    print(f'\nheat_flux stack: {stack_heat_flux_W/1000:.2f} kW')
-    print(f'heat_flux intercooler: {intercooler_heat_flux_W/1000:.2f} kW')
-    print(f'heat_flux evap: {evaporator_heat_flux_W/1000:.2f} kW ')
-    print(f'heat_flux radiator: {radiator_heat_flux_W/1000:.2f} kW ')
-    
     # Plot the compressor map with the optimized operating point highlighted
     if compressor_map is not None:
         compressor.plot_compressor_map()

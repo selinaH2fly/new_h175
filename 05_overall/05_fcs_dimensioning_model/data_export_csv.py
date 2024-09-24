@@ -45,7 +45,7 @@ def export_to_csv(feature_names, optimal_input, hydrogen_supply_rate_g_s, cell_v
                      f'{turbine_power_kW:.2f}', f'{reci_pump_power_kW:.2f}',
                      f'{coolant_pump_power_kW:.2f}', f'{stack_power_kW:.2f}',
                      f'{compressor_air_flow_g_s:.2f}', f'{compressor_pressure_ratio:.2f}',
-                     f'{stack_heat_flux_kW:.2f}', f'{intercooler_heat_flux_kW:.2}',
-                     f'{evaporator_heat_flux_kW:.2f}', f'{radiator_heat_flux_kW}',
+                     f'{stack_heat_flux_kW:.2f}', f'{intercooler_heat_flux_kW:.2f}',
+                     f'{evaporator_heat_flux_kW:.2f}', f'{radiator_heat_flux_kW:.2f}',
                      f'{consider_turbine}', f'{end_of_life}', f'{converged}'])
         writer.writerow(data)

@@ -74,7 +74,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
                   system_power_kW=system_power_kW, compressor_power_kW=compressor_power_kW, turbine_power_kW=turbine_power_kW, reci_pump_power_kW=reci_pump_power_kW,
                   coolant_pump_power_kW=coolant_pump_power_kW, stack_power_kW=stack_power_kW, power_constraint_kW=power_constraint_kW, specified_cell_count=specified_cell_count,
                   flight_level_100ft=flight_level_100ft, compressor_air_flow_g_s=compressor_air_flow_g_s, compressor_pressure_ratio=compressor_pressure_ratio, 
-                  stack_heat_flux_kW = stack_heat_flux_kW, intercooler_heat_flux_kW = intercooler_heat_flux_kW, evaporator_heat_flux_kW = intercooler_heat_flux_kW, radiator_heat_flux_kW = radiator_heat_flux_kW,
+                  stack_heat_flux_kW = stack_heat_flux_kW, intercooler_heat_flux_kW = intercooler_heat_flux_kW, evaporator_heat_flux_kW = evaporator_heat_flux_kW, radiator_heat_flux_kW = radiator_heat_flux_kW,
                   consider_turbine=consider_turbine, end_of_life=end_of_life, converged=converged, filename='optimized_input_data.csv')
     
 # Entry point of the script
