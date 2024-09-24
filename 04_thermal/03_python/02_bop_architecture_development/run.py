@@ -10,7 +10,8 @@ critical_operation = True
 freezing_condition = True
 if critical_operation is True:
     bc_dict = {"T_in" : 273.15 + 60.0,
-                "Vdot_in" : 0.5,
+                #"Vdot_in" : 0.5,
+                "p_in" : 1.5,
                 "p_end" : 1,
                 "Qdot_hpdu" : 1000,
                 "Qdot_lvdcdc" : 300,

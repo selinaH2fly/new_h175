@@ -384,22 +384,33 @@ class Circuit:
         result...dict = {'Name of variabel' : ['Legend for plotting', []]}                     
         inputlist= ['Name of Variable', [...] , 'Legend for plotting']]  [...] is a List of values for variable to be invistigated
         """
-        for name in input_dict:
-            for i in range(len(self.eq_unsorted)):
-                if '%s = ' %(input_dict[name][0]) in self.eq_unsorted[i][0]:
-                    k = i
+        if input_dict is not None:
+            for name in input_dict:
+                for i in range(len(self.eq_unsorted)):
+                    if '%s = ' %(input_dict[name][0]) in self.eq_unsorted[i][0]:
+                        k = i
 
-        for name in input_dict:
-            for y in input_dict[name][1]:
-                self.eq_unsorted[k] = ['%s = %f' %(input_dict[name][0], y)]
-                self.evaluate()
+        if input_dict is not None:
+            for name in input_dict:
+                for y in input_dict[name][1]:
+                    self.eq_unsorted[k] = ['%s = %f' %(input_dict[name][0], y)]
+                    self.evaluate()
 
-                for j in range(len(self.var_name)):
-                    for result_name in result_dict:
-                        if self.var_name[j] == result_dict[result_name][0]:
-                            result_dict[result_name][1].append(self.var_res[j])
+                    for j in range(len(self.var_name)):
+                        for result_name in result_dict:
+                            if self.var_name[j] == result_dict[result_name][0]:
+                                result_dict[result_name][1].append(self.var_res[j])
 
-                self.reset_to_startcond()
+                    self.reset_to_startcond()
+        else:
+            self.evaluate()
+
+            for j in range(len(self.var_name)):
+                for result_name in result_dict:
+                    if self.var_name[j] == result_dict[result_name][0]:
+                        result_dict[result_name][1].append(self.var_res[j])
+
+            self.reset_to_startcond()
 
         return result_dict
 
