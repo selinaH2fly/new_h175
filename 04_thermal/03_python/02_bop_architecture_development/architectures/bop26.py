@@ -10,11 +10,11 @@ def initialize(input_dict, result_dict, bc_dict):
 
     """
     bop Architecture 26
-                    6             7                 8                         13                    14
-                    .--> LV DCDC----> Compressor -----.                      .---->   Throttle1 -------------.
+                    6             7                 8                         13                    
+                    .--> LV DCDC----> Compressor -----.                      .-------------------------------.
                     |                                 |                      |                               |
-    ----> evap --> splitter1                         Mixer1 --> HV DCDC --> Splitter2 ----> Intercooler -----> Mixer2 ----->
-    1          2    |                                 |     9           10             11               12                 15
+    ----> evap --> splitter1                         Mixer1 --> HV DCDC --> TCV1 ----> Intercooler -----> Mixer2 ----->
+    1          2    |                                 |     9           10          11               12            14
                     '-----> HPDU ----> Inverter ------'
                     3               4           5                          
     """
@@ -42,20 +42,18 @@ def initialize(input_dict, result_dict, bc_dict):
     hvdcdc = ThermSim.Heatsource(9, 10, "hvdcdc")
     circ.add_comp(hvdcdc)
 
-    splitter2 = ThermSim.ConnectorPassive1to2(10, 11, 13, "splitter2")
-    circ.add_comp(splitter2)
+    tcv1 = ThermSim.ConnectorActive1to2(10, 11, 13, "tcv1")
+    circ.add_comp(tcv1)
     intercooler = ThermSim.Heatsource(11, 12, "intercooler")
     circ.add_comp(intercooler)
-    mixer2 = ThermSim.ConnectorPassive2to1(12, 14, 15, "mixer2")
+    mixer2 = ThermSim.ConnectorPassive2to1(12, 13, 14, "mixer2")
     circ.add_comp(mixer2)
-
-    throttle1 = ThermSim.Throttle(13, 14, "throttle1")
-    circ.add_comp(throttle1)
 
     """
     Provide input on boundary conditions
     """
-    circ.add_bc("Vdot_11 = 0.1")
+    circ.add_bc("%s = 0.0" %tcv1.nsplit_2)
+    circ.add_bc("%s = 0.0"%tcv1.delta_p_1)
 
     circ.add_bc("%s = %f" %(mixer2.p_out, bc_dict["p_end"]))    # depends on architecture
 

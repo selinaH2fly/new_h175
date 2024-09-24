@@ -39,8 +39,8 @@ def initialize(input_dict, result_dict, bc_dict):
 
     mixer1 = ThermSim.ConnectorPassive2to1(9, 6, 10, "mixer1")
     circ.add_comp(mixer1)
-    splitter1 = ThermSim.ConnectorActive1to2(10, 11, 13, 'tcv1')
-    circ.add_comp(splitter1)
+    tcv1 = ThermSim.ConnectorActive1to2(10, 11, 13, 'tcv1')
+    circ.add_comp(tcv1)
     intercooler = ThermSim.Heatsource(11, 12, "intercooler")
     circ.add_comp(intercooler)
     mixer2 = ThermSim.ConnectorPassive2to1(12, 13, 14, "mixer2")
@@ -50,9 +50,8 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Provide input on boundary conditions
     """
-
-    circ.add_bc("delta_p_1_tcv1 = 0.0")
-    circ.add_bc("nsplit_1_tcv1 = 1")
+    circ.add_bc("%s = 0.0" %tcv1.nsplit_2)
+    circ.add_bc("%s = -0.0"%tcv1.delta_p_1)
 
     circ.add_bc("%s = %f" %(mixer2.p_out, bc_dict["p_end"]))    # depends on architecture
 

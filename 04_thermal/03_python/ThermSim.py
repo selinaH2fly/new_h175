@@ -393,6 +393,7 @@ class Circuit:
         if input_dict is not None:
             for name in input_dict:
                 for y in input_dict[name][1]:
+                    print("Execute architecture with Variable: %s = %f"%(name, y))
                     self.eq_unsorted[k] = ['%s = %f' %(input_dict[name][0], y)]
                     self.evaluate()
 

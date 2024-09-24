@@ -3,22 +3,22 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Do you want to vary one boundary condition? If not no plots will be made, but results will be safed in excel.
-vary_bc = True  
+vary_bc = True
 
 # How do you want to plot?
-# Do you wan't to compare results of different architectures in one plot (has effect if vary_bc is set True)
-compare_res = False 
-# if you don't want to compare architectures in one plot: Do you wan't to compare all temperatures, all pressures and all flows in each one plot?
-plot_temp_pr_vd = True
+# Do you want to compare results of different architectures in one plot (has effect if vary_bc is set True)
+compare_res = True
+# if you don't want to compare architectures in one plot: Do you want to compare all temperatures, all pressures and all flows in each one plot?
+plot_temp_pr_vd = False
 
-# Which Architectures do you wan't to evaluate? ["bop10", "bop21","bop22", "bop23", "bop24","bop25", "bop26", "bop27","bop31", "bop33", "bop41","bop42"]
-arch_list = ["bop10", "bop21"]
+# Which Architectures do you want to evaluate? ["bop10", "bop21","bop22", "bop23", "bop24","bop25", "bop26", "bop27","bop31", "bop33", "bop41","bop42"]
+arch_list = ["bop10", "bop21", "bop22", "bop23", "bop24","bop31", "bop33", "bop41","bop42"] #,"bop25", "bop26", "bop27"
 
-if vary_bc is True: # Adjust Input_dict only if you wan't to vary a boundary condition
+if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
     #input_dict = {"Vdot_in" : ["", [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60], "BoP Eingangsvolumenstrom l/s"]}
-    input_dict = {"p_in": ["p_1", [1.3, 1.35, 1.4, 1.45, 1.5], "Input Pressure [bar]"]}
+    input_dict = {"p_in": ["p_1", [1.4, 1.45, 1.5], "Input Pressure [bar]"]} #1.3, 1.35,
     #input_dict = {"throttle_delta_p" : ["", [0.1, 0.15, 0.2, 0.25, 0.3], "Thottle pressure drop [bar]"]}
 else:
     input_dict = None
@@ -71,6 +71,7 @@ all_result_dict = {}
 for arch in arch_list:      # each architecture is evaluated
     key_init = "%s.initialize(%s, %s, %s)" %(arch, input_dict, result_dict, bc_dict)
     circ, input_dict, result_dict = eval(key_init)
+    print("Start to evaluate architecture %s"%arch)
     result_dict = circ.compare_big_arch(input_dict, result_dict)
 
     for name in result_dict:    # rewrite results in one dictionary
