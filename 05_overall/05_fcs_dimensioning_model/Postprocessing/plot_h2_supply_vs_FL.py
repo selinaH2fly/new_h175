@@ -4,8 +4,8 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-# %% PLOT: H2 consumption over flight level all in one
-def plot_h2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
+# %% PLOT: H2 supply over flight level all in one
+def plot_h2_supply_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
     """
     Plot of system power vs (system power/hydrogen sonsumption) with polynomial fit.
     
@@ -51,7 +51,7 @@ def plot_h2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
                             df1['Power Constraint (kW)'].between(highlight_powers[2] - 1e-3, highlight_powers[2] + 1e-3))]
 
         # Scatter plot with color based on 'System Power (kW)'
-        ax.scatter(df_filtered['Flight Level (100x ft)'], df_filtered['Hydrogen Consumption (g/s)'], 
+        ax.scatter(df_filtered['Flight Level (100x ft)'], df_filtered['Hydrogen Supply Rate (g/s)'], 
                              c=df_filtered['System Power (kW)'], cmap='viridis',norm=norm, edgecolor='k', s=100, marker=icon, label=f'{cell} Cells')
 
          # Create custom legend handles
@@ -62,14 +62,14 @@ def plot_h2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
         ax.legend(handles, labels, loc='upper left')
         
         # Set title and labels
-        ax.set_title(f'System Hydrogen Consumption vs FL for Different Cell Counts ({mode_name})', fontsize=14, pad=20)
+        ax.set_title(f'System Hydrogen Supply Rate vs FL for Different Cell Counts ({mode_name})', fontsize=14, pad=20)
         ax.set_xlabel('Flight Level [100x ft]')
         # Set x-range from 0 to 140 in steps of 30, and include 150
         x_ticks = list(range(0, fl_max + 1, 30))
         ax.set_xlim([0, fl_max])
         ax.set_xticks(x_ticks)
         ax.set_xlim([-1, fl_max + 1])
-        ax.set_ylabel('Hydrogen Consumption [g/s]')
+        ax.set_ylabel('Hydrogen Supply Rate [g/s]')
         ax.set_ylim([1,5])
         ax.grid(True)
         
@@ -88,6 +88,6 @@ def plot_h2_consumption_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
         
         # Save or show the plot
         if saving:
-            plt.savefig(f"H2_consumption_vs_flightlevel_{mode}.png", bbox_inches='tight')
+            plt.savefig(f"H2_supply_vs_flightlevel_{mode}.png", bbox_inches='tight')
         else:
             plt.show()

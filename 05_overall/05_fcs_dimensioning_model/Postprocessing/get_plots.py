@@ -4,19 +4,24 @@ import os
 import sys
 import argparse
 # Adjust sys.path if running directly
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(current_dir)
+sys.path.append(parent_dir)
+
 import data_processing 
 import parameters
+
 # Import plot functions defined in a separate file
 from get_plots_operating_parameters import plot_cathode_inlet_pressure, plot_cathode_inlet_realtive_humidity, \
     plot_cathode_stoichiomtrey, plot_coolant_inlet_temperature, plot_coolant_outlet_temperature
 from plot_pol_curves import plot_polarization_curves
 from plot_pol_curves_connected import plot_polarization_curves_bol_eol
 from plot_power_grid import plot_power_needs #annotate_boxes, format_data_for_plot, 
-from plot_h2_consumption_vs_systempower import plot_h2_consumption_vs_systempower
+from plot_h2_supply_vs_systempower import plot_h2_supply_vs_systempower
 from plot_system_efficiency import plot_system_efficiency
-from plot_h2_consumption_vs_FL import plot_h2_consumption_vs_FL
+from plot_h2_supply_vs_FL import plot_h2_supply_vs_FL
 #from plot_system_mass_estimate_old import plot_mass_estimate # old version of wenzel (errorbar chart of system mass)
 from plot_system_mass_estimate import plot_system_mass_estimate
 from evaluate_DoE_envelope_constraint import plot_optimized_parameter_DoE_envelope
@@ -69,7 +74,8 @@ def analyze_data(_file_path1, saving=True):
     #df1 =df1[df1["converged (t/f)"] == True]
     df1 = filter_converged_points(df1, tolerance=7)
     df1 = df1.sort_values(by=['idx'])
-        
+    df1 = df1.reset_index(drop=True)
+  
     # Split the data based on 'Specified Cell Count'
     df_400 = df1[df1['Specified Cell Count'] == 400]
     df_450 = df1[df1['Specified Cell Count'] == 450]
@@ -92,15 +98,15 @@ def analyze_data(_file_path1, saving=True):
     ############PLOT: System Power Grid Plot
     plot_power_needs(data, titles, fl_set, saving=saving)
     
-    ###########PLOT: H2 consumption
-    plot_h2_consumption_vs_systempower(data, titles, colors, fl_set, saving=saving)
+    ###########PLOT: H2 supply
+    plot_h2_supply_vs_systempower(data, titles, colors, fl_set, saving=saving)
     
     ###########PLOT: System eff vs Net Power: Flade Plot, 
     plot_system_efficiency(data, titles, colors, fl_set, saving=saving)
     
-    #############PLOT: H2 consumption vs Flightlevel:
-    plot_h2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="bol")
-    plot_h2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="eol")
+    #############PLOT: H2 supply vs Flightlevel:
+    plot_h2_supply_vs_FL(df1, markers, fl_max, saving=saving, mode="bol")
+    plot_h2_supply_vs_FL(df1, markers, fl_max, saving=saving, mode="eol")
 
     ############Plot Weight estimate
     #Weight/Power Factor
@@ -113,9 +119,15 @@ def analyze_data(_file_path1, saving=True):
     plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
     
     ###########PLOT: optimized parameters in DoE envelope
+    os.makedirs("DoE_Envelope_Evaluation", exist_ok=True)
+    os.chdir("DoE_Envelope_Evaluation")
+    
     plot_optimized_parameter_DoE_envelope(df1, Optimized_DoE_data_variables, saving=saving)
+    os.chdir("../")
 
-    ###########PLOT: Optimized Operating Parameters
+
+
+    ##########PLOT: Optimized Operating Parameters
 
     # create a directory for the plots
     os.makedirs("Optimized_Operating_Parameters", exist_ok=True)

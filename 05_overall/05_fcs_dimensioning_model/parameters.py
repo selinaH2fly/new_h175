@@ -4,10 +4,6 @@ import numpy as np
 class Optimization_Parameters:
     
     def __init__(self):
-        '''TODO: Steffen P. suggests to evaluate the bounds during runtime depending on the current operating point according to the DoE data
-        to prevent extrapolation. This is a good idea, but requires a bit more effort. Idea: Make it a constraint in the optimization problem.
-        TODO: Include parameters for optimization function (such as maxiter, popsize, etc.)
-        '''
 
         # Bounds for the optimization problem TODO: make these a dictionary
         self.bounds = [(50, 2e3),       # current_A
@@ -26,29 +22,17 @@ class Optimization_Parameters:
 
         self.penalty_weight = 1e-6      # penalty factor for power constraint violation TODO: try making this a constraint (instead of a penalty) -> probably needs to define the cell voltage as an input variable!?
 
-
 class Physical_Parameters:
      
     def __init__(self):
 
-        # TODO: Make all variable names indicative of their units
-        # TODO: Don't define constants here that we can get from CoolProp (e.g., molar masses)
-        self.hydrogen_lhv_voltage_equivalent = 1.253
-        self.hydrogen_hhv_voltage_equivalent = 1.481
-        #self.hydrogen_molar_mass = 2.016 * 1e-3         # kg/mol
-        #self.nitrogen_molar_mass = 28.0134 * 1e-3       # kg/mol
-        #self.faraday = 96485                            # C/mol
+        self.hydrogen_lhv_voltage_equivalent_V = 1.253
 
         self.sea_level_ambient_pressure_bar = 1.01325
         self.sea_level_ambient_temperature_K = 288.15
-        self.temperature_lapse_rate = 0.0065
-
-        #self.specific_gas_constant = 287.05
-        #self.gravity = 9.81
-        self.specific_heat_ratio = 1.4
-        #self.ideal_gas_constant = 8.314
-    
+        self.temperature_lapse_rate_K_m = 0.0065
         self.oxygen_mol_fraction = 0.2095
+
         #self.air_molar_mass = 28.97 * 1e-3              # kg/mol
         
         #enthalpy of evaporation of H2
@@ -57,16 +41,22 @@ class Physical_Parameters:
         #this is a "magic number" from Tank team, cp_H2 from 20K till 300K will change, this is a linear estimation.
         #TODO: we would need to integrate for each T and p along the heating process to get cp
         #Docu: https://h2fly.atlassian.net/browse/HWI-428?focusedCommentId=13070
-        self.mean_cp_H2 = 14500 #J/kg.K for 20K --> 300K        
-        
+        self.mean_cp_H2 = 14500 #J/kg.K for 20K --> 300K
 
+class Assumptions:
+        
+    def __init__(self):
+
+        self.hydrogen_loss_factor = 0.05    # fraction of hydrogen lost by purging; note: for \lambda_A > 1, it's inevitable to lose some hydrogen!
+
+# TODO: move component parameters to component class definitions!?!
 class Compressor_Parameters:
 
     def __init__(self):
 
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
-        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}                        # kg/kW
+        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
 
         # Assumption: ~0.3 bar BoP pressure drop downstream the compressor at 130 g/s air flow rate
         self.nominal_BoP_pressure_drop_Pa = 0.3*1e5
@@ -116,7 +106,7 @@ class Turbine_Parameters:
     def __init__(self):
 
         self.isentropic_efficiency = 0.75
-        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}                        # kg/kW
+        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
 
         # Assumption: ~0.15 bar BoP pressure drop upstream the turbine at 130 g/s air flow rate
         self.nominal_BoP_pressure_drop_Pa = 0.15*1e5
@@ -128,7 +118,7 @@ class Recirculation_Pump_Parameters:
 
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
-        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}                        # kg/kW
+        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
 
         self.fixed_recirculation_ratio = 70/30
 
@@ -141,7 +131,7 @@ class Coolant_Pump_Parameters:
 
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
-        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}                        # kg/kW
+        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
 
         # Assumption: ~0.5 bar pressure drop at 10 l/min coolant in LT cooling circuit
         self.nominal_pressure_drop_lt_Pa = 0.5*1e5
@@ -150,7 +140,7 @@ class Coolant_Pump_Parameters:
 class Radiator_Parameters:
 
     def __init__(self):
-        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}                        # kg/kW
+        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
 
         # Assumption: ~0.4 bar pressure drop at 250 l/min coolant in HT cooling circuit (including hoses and valves)
         self.nominal_pressure_drop_Pa = 0.4*1e5
@@ -186,8 +176,6 @@ class Evaporator_Parameters:
         
         self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
         self.ALLOWED_FLUIDS = ['H2','INCOMP::MEG-50%']
-    
-    
     
 class Eol_Parameter:
 

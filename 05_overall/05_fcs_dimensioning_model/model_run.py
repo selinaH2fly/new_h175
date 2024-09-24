@@ -36,7 +36,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     create_experiment_folder(_params_optimization=_params_optimization, type='optimization')
     
     # Optimize the input variables
-    optimal_input, cell_voltage, hydrogen_mass_flow_g_s, \
+    optimal_input, cell_voltage, hydrogen_supply_rate_g_s, \
         stack_power_kW, compressor_power_kW, turbine_power_kW, \
             reci_pump_power_kW, coolant_pump_power_kW, compressor_air_flow_g_s, \
                 compressor_pressure_ratio, converged = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
@@ -53,7 +53,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
         lower_bound_formatted = f"{bound[0]}" if abs(bound[0]) < 1e3 else f"{bound[0]:.1e}"
         upper_bound_formatted = f"{bound[1]}" if abs(bound[1]) < 1e3 else f"{bound[1]:.1e}"
         print(f"  {name}: {value:.4f} (Bounds: [{lower_bound_formatted}, {upper_bound_formatted}])")
-    print(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  Hydrogen Consumption: {hydrogen_mass_flow_g_s:.4f} g/s\n")
+    print(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  Hydrogen Supply Rate: {hydrogen_supply_rate_g_s:.4f} g/s\n")
     print(f"Cell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {cell_voltage:.4f} V\n")
 
     # Print the resultant power numbers
@@ -69,7 +69,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     print(f"  {'System (Net) Power (s.t. Optimization):':<{label_width}} ={system_power_kW:>{value_width}.2f} kW")
     
     # Save results to a .csv file 
-    export_to_csv(feature_names=gpr_model_cell_voltage.feature_names, optimal_input=optimal_input, hydrogen_mass_flow_g_s=hydrogen_mass_flow_g_s, cell_voltage=cell_voltage,
+    export_to_csv(feature_names=gpr_model_cell_voltage.feature_names, optimal_input=optimal_input, hydrogen_supply_rate_g_s=hydrogen_supply_rate_g_s, cell_voltage=cell_voltage,
                   system_power_kW=system_power_kW, compressor_power_kW=compressor_power_kW, turbine_power_kW=turbine_power_kW, reci_pump_power_kW=reci_pump_power_kW,
                   coolant_pump_power_kW=coolant_pump_power_kW, stack_power_kW=stack_power_kW, power_constraint_kW=power_constraint_kW, specified_cell_count=specified_cell_count,
                   flight_level_100ft=flight_level_100ft, compressor_air_flow_g_s=compressor_air_flow_g_s, compressor_pressure_ratio=compressor_pressure_ratio,
