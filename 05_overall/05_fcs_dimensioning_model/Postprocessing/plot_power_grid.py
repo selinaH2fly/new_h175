@@ -104,7 +104,7 @@ def format_data_for_plot(df, components, fl_set, eol_col='eol (t/f)', tolerance=
 
     return formatted_df
 
-def plot_power_needs(data, titles, fl_set, saving=True):
+def plot_power_needs(data, titles, fl_set, components, saving=True):
     """
     Plot a heatmap-like representation of power needs by components, with specific formatting.
 
@@ -113,15 +113,6 @@ def plot_power_needs(data, titles, fl_set, saving=True):
     - titles (list of str): List of titles for each DataFrame.
     - saving (bool): If True, saves the plot to a file. Defaults to False.
     """
-    
-    #List of pd column names of data for components which will be considered.
-    components = ["Power Constraint (kW)",
-                  "current_A (Value)",
-                  "Compressor Power (kW)",	
-                  "Turbine Power (kW)",	
-                  "Recirculation Pump Power (kW)",	
-                  "Coolant Pump Power (kW)",	
-                  "Stack Power (kW)"]
     
     for df1, title in zip(data, titles):
         
