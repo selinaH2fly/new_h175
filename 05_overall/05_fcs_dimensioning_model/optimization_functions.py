@@ -46,6 +46,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     # Load parameters
     _params_optimization = parameters.Optimization_Parameters()
+    _params_assumptions = parameters.Assumptions()
     _params_compressor = parameters.Compressor_Parameters()
     _params_turbine = parameters.Turbine_Parameters()
     _params_recirculation_pump = parameters.Recirculation_Pump_Parameters()
@@ -280,19 +281,20 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         # %% Consumed hydrogen mass flow rate
 
-        # Compute the hydrogen mass flow rate
-        hydrogen_mass_flow_g_s = stack.current_A * stack.cellcount * CP.PropsSI('M', 'Hydrogen') / \
+        # Compute the hydrogen mass flow rate (supply = const. * consumption)
+        hydrogen_consumption_rate_g_s = stack.current_A * stack.cellcount * CP.PropsSI('M', 'Hydrogen') / \
             (2 * (physical_constants['Faraday constant'][0])) * 1000
+        hydrogen_supply_rate_g_s = hydrogen_consumption_rate_g_s * (1 + _params_assumptions.hydrogen_loss_factor)
         
         # %% Evaporatior:
         evaporator.primary_T_in_K = _params_evaporator.primary_T_in_K
         evaporator.primary_T_out_K = _params_evaporator.primary_T_out_K
-        evaporator.primary_mdot_in_kg_s = hydrogen_mass_flow_g_s/1000 #g -> kg
+        evaporator.primary_mdot_in_kg_s = hydrogen_supply_rate_g_s/1000 #g -> kg
         
         # %% Return
         
         return optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
-            coolant_pump_power_W, hydrogen_mass_flow_g_s
+            coolant_pump_power_W, hydrogen_supply_rate_g_s
 
 
 # %% Optimization
@@ -302,8 +304,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Evaluate the models with the normalized input
         optimal_input, cell_voltage, compressor_power_W, turbine_power_W, \
-            reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(x)
-
+            reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
+        
         # Compute the penalty term for the power constraint
         if power_constraint_kW is not None:
             power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
@@ -313,7 +315,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         else:
             penalty = 0
         
-        return hydrogen_mass_flow_g_s + penalty
+        return hydrogen_supply_rate_g_s + penalty
    
     # define nonlinear constraints
     def nonlinear_constraint_Temp(x):
@@ -356,7 +358,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     print(f'{result.message}')
 
     # Evaluate the models with the optimal input
-    optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(result.x)
+    optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(result.x)
     
     # Compute stack power 
     stack_power_kW = stack.current_A * stack.cell_voltage_V * stack.cellcount / 1000
@@ -378,6 +380,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     if compressor_map is not None:
         compressor.plot_compressor_map()
 
-    return optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
+    return optimal_input, cell_voltage, hydrogen_supply_rate_g_s, stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
         reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.air_mass_flow_kg_s*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, optimization_converged
     
