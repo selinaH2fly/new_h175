@@ -19,9 +19,9 @@ from get_plots_operating_parameters import plot_cathode_inlet_pressure, plot_cat
 from plot_pol_curves import plot_polarization_curves
 from plot_pol_curves_connected import plot_polarization_curves_bol_eol
 from plot_power_grid import plot_power_needs #annotate_boxes, format_data_for_plot, 
-from plot_h2_consumption_vs_systempower import plot_h2_consumption_vs_systempower
+from plot_h2_supply_vs_systempower import plot_h2_supply_vs_systempower
 from plot_system_efficiency import plot_system_efficiency
-from plot_h2_consumption_vs_FL import plot_h2_consumption_vs_FL
+from plot_h2_supply_vs_FL import plot_h2_supply_vs_FL
 #from plot_system_mass_estimate_old import plot_mass_estimate # old version of wenzel (errorbar chart of system mass)
 from plot_system_mass_estimate import plot_system_mass_estimate
 from evaluate_DoE_envelope_constraint import plot_optimized_parameter_DoE_envelope
@@ -98,15 +98,15 @@ def analyze_data(_file_path1, saving=True):
     ############PLOT: System Power Grid Plot
     plot_power_needs(data, titles, fl_set, saving=saving)
     
-    ###########PLOT: H2 consumption
-    plot_h2_consumption_vs_systempower(data, titles, colors, fl_set, saving=saving)
+    ###########PLOT: H2 supply
+    plot_h2_supply_vs_systempower(data, titles, colors, fl_set, saving=saving)
     
     ###########PLOT: System eff vs Net Power: Flade Plot, 
     plot_system_efficiency(data, titles, colors, fl_set, saving=saving)
     
-    #############PLOT: H2 consumption vs Flightlevel:
-    plot_h2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="bol")
-    plot_h2_consumption_vs_FL(df1, markers, fl_max, saving=saving, mode="eol")
+    #############PLOT: H2 supply vs Flightlevel:
+    plot_h2_supply_vs_FL(df1, markers, fl_max, saving=saving, mode="bol")
+    plot_h2_supply_vs_FL(df1, markers, fl_max, saving=saving, mode="eol")
 
     ############Plot Weight estimate
     #Weight/Power Factor
@@ -129,7 +129,7 @@ def analyze_data(_file_path1, saving=True):
 
     ##########PLOT: Optimized Operating Parameters
 
-    create a directory for the plots
+    # create a directory for the plots
     os.makedirs("Optimized_Operating_Parameters", exist_ok=True)
     os.chdir("Optimized_Operating_Parameters")
 
