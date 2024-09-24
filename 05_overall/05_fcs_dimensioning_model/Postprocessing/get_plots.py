@@ -19,6 +19,7 @@ from get_plots_operating_parameters import plot_cathode_inlet_pressure, plot_cat
 from plot_pol_curves import plot_polarization_curves
 from plot_pol_curves_connected import plot_polarization_curves_bol_eol
 from plot_power_grid import plot_power_needs #annotate_boxes, format_data_for_plot, 
+from plot_power_grid_heatflux import plot_power_needs_heatflux
 from plot_h2_supply_vs_systempower import plot_h2_supply_vs_systempower
 from plot_system_efficiency import plot_system_efficiency
 from plot_h2_supply_vs_FL import plot_h2_supply_vs_FL
@@ -116,7 +117,7 @@ def analyze_data(_file_path1, saving=True):
                   "Evaporator Heat Flux (kW)",	
                   "Radiator Heat Flux (kW)"]
     
-    plot_power_needs(data, titles, fl_set, components, saving=saving)    
+    plot_power_needs_heatflux(data, titles, fl_set, components, saving=saving)    
         
     ###########PLOT: H2 supply
     plot_h2_supply_vs_systempower(data, titles, colors, fl_set, saving=saving)

@@ -102,9 +102,9 @@ def format_data_for_plot(df, components, fl_set, eol_col='eol (t/f)', tolerance=
         if drop_column in formatted_df.columns:
             formatted_df.drop(drop_column, axis=1, inplace=True)
 
-    return formatted_df
+    return formatted_df.abs()
 
-def plot_power_needs(data, titles, fl_set, components, saving=True):
+def plot_power_needs_heatflux(data, titles, fl_set, components, saving=True):
     """
     Plot a heatmap-like representation of power needs by components, with specific formatting.
 
@@ -166,7 +166,9 @@ def plot_power_needs(data, titles, fl_set, components, saving=True):
         ax2.set_xticks(positions)
     
         # Adjust labels for the secondary x-axis
-        ax2.set_xticklabels([col.replace(' Power (kW)_bol', '').replace(' Power (kW)_eol', '') for col in df.columns[1::2]])
+        names = ["Stack (+)", "Intercooler (+)", "Evaporator (-)", "Radiator (+)"]
+        ax2.set_xticklabels([col.replace(' Heat Flux (kW)_bol', '').replace(' Power (kW)_eol', '') for col in df.columns[1::2]])
+        ax2.set_xticklabels(names)
         #ax2.set_xlabel('Components', labelpad=10)
     
         # Add colorbar
@@ -174,11 +176,11 @@ def plot_power_needs(data, titles, fl_set, components, saving=True):
         cbar.set_label('Power (kW)')
     
         # Set the title centered between the colored boxes
-        title = f"Power Consumption of Components [kW], {title}, FL {fl_set}"
+        title = f"Heat Flux of Components [kW], {title}, FL {fl_set}"
         ax.set_title(title, pad=30, loc='center')
     
         # Save or show the plot
         if saving:
-            plt.savefig(f"Component_Powers_{title}.png", bbox_inches='tight')
+            plt.savefig(f"Component_Heat_Flux_{title}.png", bbox_inches='tight')
         else:
             plt.show()
