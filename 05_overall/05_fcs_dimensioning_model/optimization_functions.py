@@ -46,6 +46,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     # Load parameters
     _params_optimization = parameters.Optimization_Parameters()
+    _params_assumptions = parameters.Assumptions()
     _params_compressor = parameters.Compressor_Parameters()
     _params_turbine = parameters.Turbine_Parameters()
     _params_recirculation_pump = parameters.Recirculation_Pump_Parameters()
@@ -268,7 +269,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         intercooler.primary_T_out_K = optimized_temp_coolant_inlet_degC + 273.15 # degC into K
         intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
         intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
-         
+        
+        #TODO: Implement this if needed for Coolant_T increase
         # intercooler.coolant_T_in_K = #Evap t out
         # intercooler.coolant_T_out_K = # berechnen
         # intercooler.coolant_mdot_in_kg_s = #?
@@ -280,19 +282,20 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         # %% Consumed hydrogen mass flow rate
 
-        # Compute the hydrogen mass flow rate
-        hydrogen_mass_flow_g_s = stack.current_A * stack.cellcount * CP.PropsSI('M', 'Hydrogen') / \
+        # Compute the hydrogen mass flow rate (supply = const. * consumption)
+        hydrogen_consumption_rate_g_s = stack.current_A * stack.cellcount * CP.PropsSI('M', 'Hydrogen') / \
             (2 * (physical_constants['Faraday constant'][0])) * 1000
+        hydrogen_supply_rate_g_s = hydrogen_consumption_rate_g_s * (1 + _params_assumptions.hydrogen_loss_factor)
         
         # %% Evaporatior:
         evaporator.primary_T_in_K = _params_evaporator.primary_T_in_K
         evaporator.primary_T_out_K = _params_evaporator.primary_T_out_K
-        evaporator.primary_mdot_in_kg_s = hydrogen_mass_flow_g_s/1000 #g -> kg
+        evaporator.primary_mdot_in_kg_s = hydrogen_supply_rate_g_s/1000 #g -> kg
         
         # %% Return
         
         return optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
-            coolant_pump_power_W, hydrogen_mass_flow_g_s
+            coolant_pump_power_W, hydrogen_supply_rate_g_s
 
 
 # %% Optimization
@@ -302,8 +305,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Evaluate the models with the normalized input
         optimal_input, cell_voltage, compressor_power_W, turbine_power_W, \
-            reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(x)
-
+            reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
+        
         # # Compute the penalty term for the power constraint
         # if power_constraint_kW is not None:
         #     power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
@@ -313,7 +316,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # else:
         #     penalty = 0
         
-        return hydrogen_mass_flow_g_s #+ penalty
+        return hydrogen_supply_rate_g_s #+ penalty
    
     # define nonlinear constraints
     # def nonlinear_constraint_Temp(x):
@@ -325,7 +328,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # nlc_Temp = NonlinearConstraint(nonlinear_constraint_Temp, 0, np.inf)
 
     def nonlinear_constraint_Power(x):
-        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(x)
+        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
 
         power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
             - compressor_power_W + turbine_power_W - reci_pump_power_W  - coolant_pump_power_W \
@@ -369,28 +372,21 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     print(f'{result.message}')
 
     # Evaluate the models with the optimal input
-    optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(result.x)
+    optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(result.x)
     
     # Compute stack power 
     stack_power_kW = stack.current_A * stack.cell_voltage_V * stack.cellcount / 1000
     
-    # Compute  heat fluxes of comonents:
+    # Compute heat fluxes of comonents:
     stack_heat_flux_W = stack.calculate_heat_flux()
-    
     intercooler_heat_flux_W = intercooler.calculate_heat_flux("primary")
-    
-    evaporator_cp = evaporator.calculate_specific_heat(evaporator.primary_fluid, evaporator.primary_T_in_K, evaporator.primary_T_out_K, evaporator.primary_p_in_Pa, 0.1)
-    evaporator_heat_flux_W = evaporator.calculate_heat_flux("primary", evaporator_cp, _params_physics.evaporation_enthalpy_J_kg)
-    
-    #TODO: add all other components here
-    print(f'\nheat_flux stack: {stack_heat_flux_W/1000:.2f} kW')
-    print(f'heat_flux intercooler: {intercooler_heat_flux_W/1000:.2f} kW')
-    print(f'heat_flux evap: {evaporator_heat_flux_W/1000:.2f} kW ')
+    _evaporator_cp = evaporator.calculate_specific_heat(evaporator.primary_fluid, evaporator.primary_T_in_K, evaporator.primary_T_out_K, evaporator.primary_p_in_Pa, 0.1)
+    evaporator_heat_flux_W = evaporator.calculate_heat_flux("primary", _evaporator_cp, _params_physics.evaporation_enthalpy_J_kg)
+    radiator_heat_flux_W = stack_heat_flux_W + intercooler_heat_flux_W + evaporator_heat_flux_W
     
     # Plot the compressor map with the optimized operating point highlighted
     if compressor_map is not None:
         compressor.plot_compressor_map()
-
-    return optimal_input, cell_voltage, hydrogen_mass_flow_g_s, stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
-        reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.air_mass_flow_kg_s*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, optimization_converged
-    
+        
+    return optimal_input, cell_voltage, hydrogen_supply_rate_g_s , stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
+        reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.air_mass_flow_kg_s*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, stack_heat_flux_W/1000, intercooler_heat_flux_W/1000, evaporator_heat_flux_W/1000, radiator_heat_flux_W/1000, optimization_converged

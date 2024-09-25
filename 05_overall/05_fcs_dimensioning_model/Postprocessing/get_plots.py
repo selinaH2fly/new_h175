@@ -19,6 +19,7 @@ from get_plots_operating_parameters import plot_cathode_inlet_pressure, plot_cat
 from plot_pol_curves import plot_polarization_curves
 from plot_pol_curves_connected import plot_polarization_curves_bol_eol
 from plot_power_grid import plot_power_needs #annotate_boxes, format_data_for_plot, 
+from plot_power_grid_heatflux import plot_power_needs_heatflux
 from plot_h2_supply_vs_systempower import plot_h2_supply_vs_systempower
 from plot_system_efficiency import plot_system_efficiency
 from plot_h2_supply_vs_FL import plot_h2_supply_vs_FL
@@ -96,8 +97,28 @@ def analyze_data(_file_path1, saving=True):
     plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
     
     ############PLOT: System Power Grid Plot
-    plot_power_needs(data, titles, fl_set, saving=saving)
+    #List of pd column names of data for components which will be considered.
+    components = ["Power Constraint (kW)",
+                  "current_A (Value)",
+                  "Compressor Power (kW)",	
+                  "Turbine Power (kW)",	
+                  "Recirculation Pump Power (kW)",	
+                  "Coolant Pump Power (kW)",	
+                  "Stack Power (kW)"]
     
+    plot_power_needs(data, titles, fl_set, components, saving=saving)
+    
+    ############PLOT: System Power Grid Plot Heat Flux
+    #List of pd column names of data for components which will be considered.
+    components = ["Power Constraint (kW)",
+                  "current_A (Value)",
+                  "Stack Heat Flux (kW)",	
+                  "Intercooler Heat Flux (kW)",	
+                  "Evaporator Heat Flux (kW)",	
+                  "Radiator Heat Flux (kW)"]
+    
+    plot_power_needs_heatflux(data, titles, fl_set, components, saving=saving)    
+        
     ###########PLOT: H2 supply
     plot_h2_supply_vs_systempower(data, titles, colors, fl_set, saving=saving)
     
@@ -116,7 +137,7 @@ def analyze_data(_file_path1, saving=True):
     
     # New grouped, stacked bar chart function
     plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
-    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
+    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="eol")
     
     ###########PLOT: optimized parameters in DoE envelope
     os.makedirs("DoE_Envelope_Evaluation", exist_ok=True)
@@ -151,7 +172,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_20-175kW_400-500_0-150ft__2_std\optimized_parameters_20-175kW_400-500_0-150ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_20-175kW_400-500_0-120ft__1\optimized_parameters_20-175kW_400-500_0-120ft.csv")
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
     
