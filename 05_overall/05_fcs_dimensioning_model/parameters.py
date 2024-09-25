@@ -19,7 +19,9 @@ class Optimization_Parameters:
         self.popsize = 30               # population size for the evolutionary algorithm
         self.recombination = 0.9        # recombination rate \in [0, 1];
         self.seed = None                # set random seed for reproducibility
-        
+        self.init_cell_voltage = 0.7         # cell voltage for init population
+        self.brutto_deviation = 1.5     # estimated deviation brutto/netto power
+
         self.penalty_weight = 1e-6      # penalty factor for power constraint violation TODO: try making this a constraint (instead of a penalty) -> probably needs to define the cell voltage as an input variable!?
 
 

@@ -364,10 +364,39 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
     # Perform the optimization using differential evolution
 
+    def pop_init():
+        
+        #define current bounds by initial voltage and brutto deviation
+        current_lower = power_constraint_kW/_params_optimization.init_cell_voltage
+        current_upper =power_constraint_kW*_params_optimization.brutto_deviation/_params_optimization.init_cell_voltage
+
+        #filter DoE data by min,max bounds of estimatet current
+        filtered_DoE = Optimized_DoE_data_variables[(Optimized_DoE_data_variables['current_A'] >= current_lower*0.95) & (Optimized_DoE_data_variables['current_A'] <= current_upper)]
+        n_bounds = 6
+        bounds_pop = np.zeros((n_bounds,2))
+        init_pop = np.zeros((_params_optimization.popsize, n_bounds))
+
+        #build and normalize init population bounds
+        for i, column in enumerate(filtered_DoE.columns):
+            bounds_pop[i,0] = filtered_DoE[column].min()
+            bounds_pop[i,1] = filtered_DoE[column].max()
+        
+        print("Bounds for init_population:\n", bounds_pop)
+        normalized_bounds_pop = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
+                         zip(bounds_pop, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
+    
+        # build init population
+        for i in range(n_bounds):
+            lower_bound, upper_bound = normalized_bounds_pop[i]
+            init_pop[:,i] = np.random.uniform(lower_bound,upper_bound,_params_optimization.popsize)
+       
+        return init_pop
+
+
     result = differential_evolution(objective_function, normalized_bounds, constraints=nlc,
                                     maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
                                     seed=_params_optimization.seed, recombination=_params_optimization.recombination,
-                                    tol=_params_optimization.tol, polish=False, disp=False)
+                                    tol=_params_optimization.tol, polish=False, init=pop_init(), disp=False)
     optimization_converged = result.success
     print(f'{result.message}')
 
