@@ -33,7 +33,7 @@ def initialize(input_dict, result_dict, bc_dict):
 
     lvdcdc = ThermSim.Heatsource(6, 7, "lvdcdc")
     circ.add_comp(lvdcdc)
-    compressor = ThermSim.Heatsource(8, 9, "compressor")
+    compressor = ThermSim.Heatsource(7, 8, "compressor")
     circ.add_comp(compressor)
 
     mixer1 = ThermSim.ConnectorPassive2to1(8, 5, 9, "mixer1")
@@ -108,7 +108,7 @@ def initialize(input_dict, result_dict, bc_dict):
         elif name == "t_out_intercooler":
             result_dict[name][0] = intercooler.T_out
         elif name == "t_out_Bop":
-            result_dict[name][0] = mixer1.T_out     # depends on architecture!
+            result_dict[name][0] = mixer2.T_out     # depends on architecture!
         elif name == "p_in":
             result_dict[name][0] = evap.p_in     # depends on architecture!
         elif name == "Vdot_in":

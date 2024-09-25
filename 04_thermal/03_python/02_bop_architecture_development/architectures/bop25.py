@@ -110,7 +110,7 @@ def initialize(input_dict, result_dict, bc_dict):
         elif name == "t_out_intercooler":
             result_dict[name][0] = intercooler.T_out
         elif name == "t_out_Bop":
-            result_dict[name][0] = mixer1.T_out     # depends on architecture!
+            result_dict[name][0] = mixer2.T_out     # depends on architecture!
         elif name == "p_in":
             result_dict[name][0] = evap.p_in     # depends on architecture!
         elif name == "Vdot_in":

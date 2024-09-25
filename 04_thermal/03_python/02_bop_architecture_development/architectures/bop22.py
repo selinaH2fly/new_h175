@@ -44,7 +44,7 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Provide input on boundary conditions
     """
-    circ.add_bc("delta_p_throttle1 = - 0.0")
+    circ.add_bc("%s = - 0.0"%throttle1.delta_p)
 
     circ.add_bc("%s = %f" %(mixer1.p_out, bc_dict["p_end"]))    # depends on architecture
 

@@ -245,144 +245,13 @@ class Circuit:
         self.var_removal_start = self.var_removal
         self.var_replacement_start = self.var_replacement
         self.var_res_start = self.var_res
+       
 
-    
-    def analyse_vdot_temp_pr(self, input_dict, result_dict):
+    def analyse_arch(self, input_dict, result_dict):
         """
-        analyse choosen vdot, temp, and pr over the variation of a choosen input variable. Therefore runs sript in loop several times.
-        Results are plotted and saved in excelfile.                                 
-        result...dict = {'Name of variabel' : ['Legend for plotting', []]}                     
-        inputlist= ['Name of Variable', [...] , 'Legend for plotting']]  [...] is a List of values for variable to be invistigated
-        """
-        for i in range(len(self.eq_unsorted)):
-            for input_name in input_dict:
-                if '%s = ' %(input_dict[input_name][0]) in self.eq_unsorted[i][0]:
-                    k = i
-        
-        for input_name in input_dict:
-            for input_value in input_dict[input_name][1]:
-                self.eq_unsorted[k] = ['%s = %f' %(input_dict[input_name][0], input_value)]
-                self.evaluate()
-
-                for j in range(len(self.var_name)):
-                    for result_name in result_dict:
-                        if self.var_name[j] == result_dict[result_name][0]:
-                            result_dict[result_name][1].append(self.var_res[j])
-
-                self.reset_to_startcond()
-        for input_name in input_dict:
-            for result_name in result_dict:
-                if ("vdot" in result_name) or ("Vdot" in result_name):
-                    plt.plot(input_dict[input_name][1], result_dict[result_name][1], label=result_dict[result_name][2])
-            plt.ylabel('Flow in Branches in [l/s]')
-            plt.xlabel(input_dict[input_name][2])
-            plt.legend()
-            plt.grid()
-            plt.show()
-            for result_name in result_dict:
-                if "dot_" not in result_name and (("t_in" in result_name) or ("t_out" in result_name) or ("T_" in result_name)):
-                    plt.plot(input_dict[input_name][1], result_dict[result_name][1], label=result_dict[result_name][2])
-            plt.ylabel('Temperature in [K]')
-            plt.xlabel(input_dict[input_name][2])
-            plt.legend(loc = 'lower right')
-            plt.grid()
-            plt.show()
-            for result_name in result_dict:
-                if "delta_p" in result_name:
-                    plt.plot(input_dict[input_name][1], result_dict[result_name][1], label=result_dict[result_name][2])
-                    
-                if "p_in" in result_name:
-                    y = 0
-                    while y < len(result_dict[result_name][1]):
-                        result_dict[result_name][1][y] -= 1
-                        y +=1
-                    plt.plot(input_dict[input_name][1], result_dict[result_name][1], label=result_dict[result_name][2])
-            plt.ylabel('BoP Pressuredrop in [bar]')
-            plt.xlabel(input_dict[input_name][2])
-            plt.legend()
-            plt.grid()
-            plt.show()
-
-        data_dict = {}
-        data_dict[input_dict[input_name][2]] = input_dict[input_name][1]
-        for result_name in result_dict:
-            data_dict[result_dict[result_name][2]] = result_dict[result_name][1]
-        data = pd.DataFrame(data_dict)
-        datatoexcel = pd.ExcelWriter('results.xlsx')
-        data.to_excel(datatoexcel)
-        datatoexcel.close()
-
-
-    def evaluate_big_arch(self, result_dict):
-        """
-        saves in 'result_dict' choosen variables in excel file. Runs script only once
-        result...dict = {'Name of variabel' : ['ArchNameVar', [], 'Legend for plotting']}      
-        """
-        self.evaluate()
-
-        for j in range(len(self.var_name)):
-                for result_name in result_dict:
-                    if self.var_name[j] == result_dict[result_name][0]:
-                        result_dict[result_name][1].append(self.var_res[j])
-
-        data_dict = {}
-        for result_name in result_dict:
-            data_dict[result_dict[result_name][2]] = result_dict[result_name][1]
-        data = pd.DataFrame(data_dict)
-        datatoexcel = pd.ExcelWriter('results.xlsx')
-        data.to_excel(datatoexcel)
-        datatoexcel.close()
-
-
-    def analyse_big_arch(self, input_dict, result_dict):
-        """
-        analyse choosen variables over the variation of a choosen input variable. Therefore runs sript in loop several times.
-        Results are plotted and saved in excelfile.                                 
-        result...dict = {'Name of variabel' : ['ArchNameVar', [], 'Legend for plotting']}                     
-        inputlist= ['Name of Variable', [...] , 'Legend for plotting']]  [...] is a List of values for variable to be invistigated
-        """
-        for i in range(len(self.eq_unsorted)):
-            for name in input_dict:
-                if '%s = ' %(input_dict[name][0]) in self.eq_unsorted[i][0]:
-                    k = i
-        
-        for name in input_dict:
-            for y in input_dict[name][1]:
-                self.eq_unsorted[k] = ['%s = %f' %(input_dict[name][0], y)]
-                self.evaluate()
-
-                for j in range(len(self.var_name)):
-                    for result_name in result_dict:
-                        if self.var_name[j] == result_dict[result_name][0]:
-                            result_dict[result_name][1].append(self.var_res[j])
-
-                self.reset_to_startcond()
-
-        for name in input_dict:
-            for result_name in result_dict:
-                plt.plot(input_dict[name][1], result_dict[result_name][1])
-                plt.ylabel(result_dict[result_name][2])
-                plt.xlabel(input_dict[name][2])
-                plt.grid()
-                plt.show()
-
-        data_dict = {}
-        for name in input_dict:
-            data_dict[input_dict[name][2]] = input_dict[name][1]
-        for result_name in result_dict:
-            data_dict[result_dict[result_name][2]] = result_dict[result_name][1]
-        data = pd.DataFrame(data_dict)
-        datatoexcel = pd.ExcelWriter('results.xlsx')
-        data.to_excel(datatoexcel)
-        datatoexcel.close()
-        
-
-    def compare_big_arch(self, input_dict, result_dict):
-        """
-        analyse choosen variables over the variation of a choosen input variable. Therefore runs sript in loop several times.
-        Results are returned to be compared between the variables                                
-        result...dict = {'Name of variabel' : ['Legend for plotting', []]}                     
-        inputlist= ['Name of Variable', [...] , 'Legend for plotting']]  [...] is a List of values for variable to be invistigated
+        either: analyse choosen variables over the variation of a choosen input variable. Therefore runs arch in loop several times.
+        or: runs architecture just ones
+        Results are returned to be compared between the variables                              
         """
         if input_dict is not None:
             for name in input_dict:
@@ -390,7 +259,6 @@ class Circuit:
                     if '%s = ' %(input_dict[name][0]) in self.eq_unsorted[i][0]:
                         k = i
 
-        if input_dict is not None:
             for name in input_dict:
                 for y in input_dict[name][1]:
                     print("Execute architecture with Variable: %s = %f"%(name, y))

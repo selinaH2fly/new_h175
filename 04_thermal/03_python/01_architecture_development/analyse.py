@@ -31,7 +31,7 @@ bc_dict = {"pump_p_in" : 1,                     # pressure before pump, lowest p
            "stack_t_in" : 273.15 + 68.0,        # temperature at stack inlet
            "stack_t_out" : 273.15 + 80.0,       # temperature at stack outlet
            "sys_t_in" : 273.15 + 60.0,          # System entry temperature, temperature after external radiatior
-           "bop_q" : 10600,                     # bop heat 
+           "bop_q" : 13000,                     # bop heat 
            "stack_q" : 158000,                  # stack heat
            "bop_vdot" : 0.4                     # flow over bop components (whole block)
 }
@@ -57,7 +57,7 @@ if input_dict is not None:
 for arch in arch_list:      # each architecture is evaluated
     key_init = "%s.initialize(%s, %s, %s)" %(arch, input_dict, result_dict, bc_dict)
     circ, input_dict, result_dict_new = eval(key_init)
-    result_dict_new = circ.compare_big_arch(input_dict, result_dict_new)
+    result_dict_new = circ.analyse_arch(input_dict, result_dict_new)
 
     for name in result_dict_new:    # rewrite results in one dictionary
         all_result_dict["%s_%s"%(arch,name)] = [result_dict_new[name][0], result_dict_new[name][1], result_dict_new[name][2]]

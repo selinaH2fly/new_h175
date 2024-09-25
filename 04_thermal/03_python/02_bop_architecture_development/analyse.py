@@ -12,13 +12,14 @@ compare_res = True
 plot_temp_pr_vd = False
 
 # Which Architectures do you want to evaluate? ["bop10", "bop21","bop22", "bop23", "bop24","bop25", "bop26", "bop27","bop31", "bop33", "bop41","bop42"]
-arch_list = ["bop10", "bop21", "bop22", "bop23", "bop24","bop31", "bop33", "bop41","bop42"] #,"bop25", "bop26", "bop27"
+arch_list = ["bop10", "bop21", "bop22", "bop23", "bop24", "bop25", "bop26", "bop27", "bop31","bop32", "bop33", "bop41","bop42"] #,"bop25", "bop26", "bop27"
+
 
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
     #input_dict = {"Vdot_in" : ["", [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60], "BoP Eingangsvolumenstrom l/s"]}
-    input_dict = {"p_in": ["p_1", [1.4, 1.45, 1.5], "Input Pressure [bar]"]} #1.3, 1.35,
+    input_dict = {"p_in": ["p_1", [1.35, 1.4, 1.45, 1.5, 1.55, 1.6], "Input Pressure [bar]"]} #1.3, 1.35,
     #input_dict = {"throttle_delta_p" : ["", [0.1, 0.15, 0.2, 0.25, 0.3], "Thottle pressure drop [bar]"]}
 else:
     input_dict = None
@@ -72,13 +73,21 @@ for arch in arch_list:      # each architecture is evaluated
     key_init = "%s.initialize(%s, %s, %s)" %(arch, input_dict, result_dict, bc_dict)
     circ, input_dict, result_dict = eval(key_init)
     print("Start to evaluate architecture %s"%arch)
-    result_dict = circ.compare_big_arch(input_dict, result_dict)
+    result_dict = circ.analyse_arch(input_dict, result_dict)
 
     for name in result_dict:    # rewrite results in one dictionary
         all_result_dict["%s_%s"%(arch,name)] = [result_dict[name][0], result_dict[name][1], result_dict[name][2]]
         excel_dict["%s_%s"%(arch,name)] = result_dict[name][1]
         result_dict[name][1] = []   # delete values
 
+#max_len = 0    # fills gap in excel_dict with 0, important for architectures without second pump
+#for name in excel_dict:
+ #   list_len = len(excel_dict[name])
+  #  if list_len > max_len:
+   #     max_len = list_len
+#for name in excel_dict:
+ #   while len(excel_dict[name]) < max_len:
+  #      excel_dict[name].append(0)
 
 if input_dict is not None:
     for name in input_dict:
