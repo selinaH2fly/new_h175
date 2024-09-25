@@ -137,7 +137,7 @@ def analyze_data(_file_path1, saving=True):
     
     # New grouped, stacked bar chart function
     plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
-    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
+    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="eol")
     
     ###########PLOT: optimized parameters in DoE envelope
     os.makedirs("DoE_Envelope_Evaluation", exist_ok=True)

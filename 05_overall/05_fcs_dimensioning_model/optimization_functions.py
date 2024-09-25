@@ -374,7 +374,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # Plot the compressor map with the optimized operating point highlighted
     if compressor_map is not None:
         compressor.plot_compressor_map()
-
-
-    return optimal_input, cell_voltage, hydrogen_supply_rate_g_s, stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
-        reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.air_mass_flow_kg_s*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, optimization_converged
+        
+    return optimal_input, cell_voltage, hydrogen_supply_rate_g_s , stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
+        reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.air_mass_flow_kg_s*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, stack_heat_flux_W/1000, intercooler_heat_flux_W/1000, evaporator_heat_flux_W/1000, radiator_heat_flux_W/1000, optimization_converged
