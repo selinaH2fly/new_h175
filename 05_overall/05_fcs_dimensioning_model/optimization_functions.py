@@ -304,25 +304,37 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         optimal_input, cell_voltage, compressor_power_W, turbine_power_W, \
             reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(x)
 
-        # Compute the penalty term for the power constraint
-        if power_constraint_kW is not None:
-            power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
-                - compressor_power_W + turbine_power_W - reci_pump_power_W  - coolant_pump_power_W \
-                    - power_constraint_kW * 1000
-            penalty = _params_optimization.penalty_weight * (power_balance_offset**2)
-        else:
-            penalty = 0
+        # # Compute the penalty term for the power constraint
+        # if power_constraint_kW is not None:
+        #     power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
+        #         - compressor_power_W + turbine_power_W - reci_pump_power_W  - coolant_pump_power_W \
+        #             - power_constraint_kW * 1000
+        #     penalty = _params_optimization.penalty_weight * (power_balance_offset**2)
+        # else:
+        #     penalty = 0
         
-        return hydrogen_mass_flow_g_s + penalty
+        return hydrogen_mass_flow_g_s #+ penalty
    
     # define nonlinear constraints
-    def nonlinear_constraint_Temp(x):
-        # Constraint if results are inside convex hull of DoE
+    # def nonlinear_constraint_Temp(x):
+    #     # Constraint if results are inside convex hull of DoE
 
-        return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
-            - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4]))
+    #     return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
+    #         - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4]))
     
-    nlc_Temp = NonlinearConstraint(nonlinear_constraint_Temp, 0, np.inf)
+    # nlc_Temp = NonlinearConstraint(nonlinear_constraint_Temp, 0, np.inf)
+
+    def nonlinear_constraint_Power(x):
+        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_mass_flow_g_s = evaluate_models(x)
+
+        power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
+            - compressor_power_W + turbine_power_W - reci_pump_power_W  - coolant_pump_power_W \
+                - power_constraint_kW * 1000
+
+        return power_balance_offset        
+        #optimized_cell_voltage_V = cell_voltage * cell_voltage_model.target_data_std + cell_voltage_model.target_data_mean
+
+    nlc_Power = NonlinearConstraint(nonlinear_constraint_Power, 0, 500)
 
     if constraint:
         
@@ -338,16 +350,17 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             #    - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4])) - 0
             
         nlc_DoE = NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)
-        nlc = [nlc_Temp, nlc_DoE]
+        nlc = [nlc_Power, nlc_DoE]
     
     else:
-        nlc = nlc_Temp  
+        nlc = nlc_Power  
 
     # Normalize the bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
                          zip(_params_optimization.bounds, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
 
     # Perform the optimization using differential evolution
+
     result = differential_evolution(objective_function, normalized_bounds, constraints=nlc,
                                     maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
                                     seed=_params_optimization.seed, recombination=_params_optimization.recombination,
