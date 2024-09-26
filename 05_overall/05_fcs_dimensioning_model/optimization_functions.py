@@ -377,5 +377,5 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         compressor.plot_compressor_map()
         
     return optimal_input, cell_voltage, hydrogen_supply_rate_g_s , stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
-        reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.calculate_corrected_mass_flow(), compressor.pressure_out_Pa/compressor.pressure_in_Pa, \
+        reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.calculate_corrected_mass_flow()*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, \
             stack_heat_flux_W/1000, intercooler_heat_flux_W/1000, evaporator_heat_flux_W/1000, radiator_heat_flux_W/1000, optimization_converged
