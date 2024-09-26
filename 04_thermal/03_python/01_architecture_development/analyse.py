@@ -33,7 +33,7 @@ bc_dict = {"pump_p_in" : 1,                     # pressure before pump, lowest p
            "sys_t_in" : 273.15 + 60.0,          # System entry temperature, temperature after external radiatior
            "bop_q" : 13000,                     # bop heat 
            "stack_q" : 158000,                  # stack heat
-           "bop_vdot" : 0.4                     # flow over bop components (whole block)
+           "bop_vdot" : 0.5                     # flow over bop components (whole block) 30L/min
 }
 
 # Which variables should be safed in excel and be plotted
