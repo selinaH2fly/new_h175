@@ -32,7 +32,7 @@ bc_dict = {"pump_p_in" : 1,                     # pressure before pump, lowest p
            "stack_t_out" : 273.15 + 80.0,       # temperature at stack outlet
            "sys_t_in" : 273.15 + 60.0,          # System entry temperature, temperature after external radiatior
            "bop_q" : 13000,                     # bop heat 
-           "stack_q" : 158000,                  # stack heat
+           "stack_q" : 200000,                  # stack heat
            "bop_vdot" : 0.5                     # flow over bop components (whole block) 30L/min
 }
 
