@@ -318,9 +318,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         return hydrogen_supply_rate_g_s #+ penalty
    
-    # define nonlinear constraints
+    #define nonlinear constraints
     # def nonlinear_constraint_Temp(x):
-    #     # Constraint if results are inside convex hull of DoE
 
     #     return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
     #         - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4]))
@@ -337,7 +336,16 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         return power_balance_offset        
         #optimized_cell_voltage_V = cell_voltage * cell_voltage_model.target_data_std + cell_voltage_model.target_data_mean
 
-    nlc_Power = NonlinearConstraint(nonlinear_constraint_Power, 0, 500)
+    nlc_Power = NonlinearConstraint(nonlinear_constraint_Power, -100, 100)
+
+    def nonlinear_constraint_CoolantPump(x):
+        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
+
+        return coolant_pump_power_W        
+        #optimized_cell_voltage_V = cell_voltage * cell_voltage_model.target_data_std + cell_voltage_model.target_data_mean
+
+    nlc_Coolant_Pump = NonlinearConstraint(nonlinear_constraint_CoolantPump, 0, np.inf)
+
 
     if constraint:
         
@@ -353,15 +361,15 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             #    - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4])) - 0
             
         nlc_DoE = NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)
-        nlc = [nlc_Power, nlc_DoE]
+        nlc = [nlc_Power, nlc_DoE, nlc_Coolant_Pump]
     
     else:
-        nlc = nlc_Power  
+        nlc = [nlc_Power, nlc_Coolant_Pump]  
 
     # Normalize the bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
                          zip(_params_optimization.bounds, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
-
+    print(normalized_bounds)
     # Perform the optimization using differential evolution
 
     def pop_init():
@@ -392,11 +400,85 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
        
         return init_pop
 
+    class ConvergenceTracker:
 
-    result = differential_evolution(objective_function, normalized_bounds, constraints=nlc,
+        def __init__(self, tolerance=1e-4, window_size=30, constraint_check=10):
+            self.best_objective_values = []  # Stores the best objective values at each iteration
+            self.tolerance = tolerance       # Convergence tolerance (10e-4)
+            self.window_size = window_size   # The window size (e.g., 30 iterations)
+            self.constraint_check = constraint_check #Iteration point to check for DoE constraint
+
+        def __call__(self, xk, convergence):
+            # Store the best objective value
+            current_best_value = objective_function(xk)
+            self.best_objective_values.append(current_best_value)
+            self.constraint_satisfied = False
+            nlc_CP_xk = nonlinear_constraint_CoolantPump(xk)
+            nlc_Power_xk = nonlinear_constraint_Power(xk)
+            nlc_DoE_xk = nonlinear_constraint_DoE(xk)
+
+            if len(self.best_objective_values) == self.constraint_check and nlc_DoE_xk < 0:
+                print(f"Iteration {len(self.best_objective_values)}: Constraint not satisfied, restarting optimization...")
+                return True
+
+            elif len(self.best_objective_values) >= self.window_size:
+                # Calculate the average of the last 30 objective values
+                recent_values = self.best_objective_values[-self.window_size:]
+                average_recent_values = np.mean(recent_values)
+                
+                # Calculate the difference between the current value and the moving average
+                difference_to_avg = np.abs(current_best_value - average_recent_values)
+                difference_to_last = np.abs(current_best_value-recent_values[-2])
+                
+
+                # Print iteration details
+                print(f"Iteration {len(self.best_objective_values)}: Current Objective = {current_best_value:.6f}, Avg of Last 30 = {average_recent_values:.6f}, Difference to avg = {difference_to_avg:.6f}, Difference to last ={difference_to_last:.6f} , nlc_CP = {nlc_CP_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
+
+                # Check if the difference is less than the tolerance (i.e., convergence criterion)
+                if difference_to_avg < self.tolerance and difference_to_last < self.tolerance and -100 < nlc_Power_xk < 100 and nlc_CP_xk>0 and nlc_DoE_xk>0:
+                    print("Convergence criterion met! Stopping optimization.")
+                    self.constraint_satisfied = True
+                    return True  # Return True to stop the optimization early
+            
+            # Return False to continue the optimization
+            else:
+                # For initial iterations, print the basic info
+                print(f"Iteration {len(self.best_objective_values)}: Best Objective = {current_best_value:.6f}, nlc_CP = {nlc_CP_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
+            return False
+
+    def optimize_with_constraint_check():
+        max_attempts = 10
+        attempt = 0
+
+        while attempt < max_attempts:
+            print(f"\nStarting optimization attempt {attempt + 1}...")
+            # Reset the callback for each new attempt
+            callback = ConvergenceTracker(tolerance=1e-4, window_size=40, constraint_check=20)
+            result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=callback,
                                     maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
-                                    seed=_params_optimization.seed, recombination=_params_optimization.recombination,
+                                    seed=_params_optimization.seed, recombination=_params_optimization.recombination, strategy=_params_optimization.strategy, mutation=_params_optimization.mutation,
                                     tol=_params_optimization.tol, polish=False, init=pop_init(), disp=False)
+    
+            if callback.constraint_satisfied:
+                print("Optimization completed successfully.")
+                return result  # Return the successful result
+            else:
+                print("Optimization failed to satisfy the constraint, retrying...")
+
+            attempt += 1  # Increment the attempt counter
+
+        
+        print(f"\nStarting optimization attempt {attempt + 1}...")
+        # Reset the callback for each new attempt
+        callback = ConvergenceTracker(tolerance=1e-4, window_size=40, constraint_check=_params_optimization.maxiter+1)
+        result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=callback,
+                                maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
+                                seed=_params_optimization.seed, recombination=_params_optimization.recombination, strategy=_params_optimization.strategy, mutation=_params_optimization.mutation,
+                                tol=_params_optimization.tol, polish=False, init=pop_init(), disp=False)
+        print("Maximum attempts reached. Result based on last attempt.")
+        return result
+
+    result = optimize_with_constraint_check()
     optimization_converged = result.success
     print(f'{result.message}')
 
