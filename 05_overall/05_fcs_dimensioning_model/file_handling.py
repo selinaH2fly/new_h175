@@ -23,8 +23,18 @@ def create_experiment_folder(_params_model=None, _params_training=None, _params_
     while os.path.exists(dirName):
         experimentID += 1
         dirName = "{}_".format(experimentID) + dirName.split('_', 1)[1]
+    
+    #try to create a dir with the name above and be save that FileExistsError is covered for parallel batch run
+    try:
+        # Attempt to create the directory
+        os.mkdir(dirName)
 
-    os.mkdir(dirName)
+    except FileExistsError:
+        # If directory already exists, increment the ID and try again
+        experimentID += 1
+        dirName = "{}_".format(experimentID) + dirName.split('_', 1)[1]
+        os.mkdir(dirName)
+        
     shutil.copytree(os.getcwd(), os.path.join(dirName, "Sources_unzipped"),
                     ignore=shutil.ignore_patterns('*experiment*', '*consolidated*', 'archive', '.git*', 
                                                   '*model*', '../.idea', '__pycache__', 'README*'))

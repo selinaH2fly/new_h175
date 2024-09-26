@@ -8,6 +8,7 @@ import itertools
 from collect_data import consolidate_experiment_data
 from Postprocessing.get_plots import analyze_data
 from tqdm import tqdm
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 def save_failed_case(parameter, error_message):
     with open("failed_cases.txt", "a") as file:
@@ -25,7 +26,16 @@ def build_command(parameter):
         "--constraint", str(parameter[6])
     ]
     return command
- 
+
+def run_subprocess(parameter):
+    command = build_command(parameter)
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        # Log the error for failed cases
+        save_failed_case(parameter, result.stderr)
+        return (False, parameter, result.stderr)
+    return (True, parameter, result.stdout)
+
 if __name__ == '__main__':
     #import argparse
 
@@ -81,21 +91,22 @@ if __name__ == '__main__':
     # Generate all combinations of parameters
     parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_map, range_eol, range_DoE_constraint))
     
-    for parameter in tqdm(parameters, desc="Optimization Progress", unit="parameter"):
-        
-        # Build and execute command
-        command = build_command(parameter)
-        print('\n',command, "\n")
-        result = subprocess.run(command, capture_output=True, text=True)
-        
-        if result.returncode != 0:
-            print("\nError occurred:", result.stderr, "\n")
-            save_failed_case(parameter, result.stderr)
-        
-        # Print the output and error (if any) from the subprocess call
-        print( "\n", result.stdout, "\n")
-        
-    print("Done with batchrun.. \n geather data and start plotting...")
-        
-    path_to_data = consolidate_experiment_data(parameters,dir_prefix)
+    # Start parallel execution using ProcessPoolExecutor
+    max_workers = min(55, len(parameters))  # Define the number of processes based on available resources (55 processes to avoid memory limit)
+    
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(run_subprocess, param): param for param in parameters}
+
+        # Show progress bar using tqdm
+        for future in tqdm(as_completed(futures), total=len(futures), desc="Optimization Progress"):
+            success, param, output = future.result()
+            if success:
+                print(f"Success for parameter {param}: {output}")
+            else:
+                print(f"Failed for parameter {param}: {output}")
+    
+    print("Done with batch run... Gathering data and starting plotting...")
+
+    # Consolidate data and analyze results
+    path_to_data = consolidate_experiment_data(parameters, dir_prefix)
     analyze_data(_file_path1=path_to_data, saving=saving)
