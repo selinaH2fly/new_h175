@@ -29,6 +29,32 @@ def load_high_amp_doe_data():
 
     return df, units
 
+# Load the high temperature DoE data
+def load_high_temp_doe_data():
+    # Get path to data file
+    my_dir = os.getcwd()
+    filename = "H2FLY HT DOE - Averaged test points - 20240912_CC.xlsx"
+    path = os.path.join(Path(my_dir).parents[1], '01_p10_doe_basic_files', '03_TV501006_2_HT', '1_Averaged test point data', filename)
+
+    # Load data file
+    xls = pd.ExcelFile(path)
+
+    # Get the name of the first sheet
+    first_sheet_name = xls.sheet_names[0]
+
+    # Load the second sheet into a DataFrame, skipping the first row
+    df = pd.read_excel(path, sheet_name=first_sheet_name)
+
+    # Extract the units row and set it as the DataFrame column names
+    units = df.iloc[0]
+    df.columns = df.iloc[1]
+    df = df.drop([0, 1]).reset_index(drop=True)
+    df = df.drop(0)
+    df = df[df['Point successfully run'] == 1]
+    df = df.loc[:, ~df.columns.duplicated()]
+
+    return df, units
+
 # Preprocess the data
 def preprocess_data(df, target='eta_lhv', cutoff_current=0, params_pyhsics=None):
 
