@@ -26,6 +26,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     print(f"\nOptimization System (Net) Power Constraint: {power_constraint_kW:.0f} kW")
     print(f"Specified Flight Level: {flight_level_100ft} (100x ft)")
     print(f"Specified Cell Count: {specified_cell_count}")
+
     # Load the trained cell voltage model from the "Trained_Models" folder
     gpr_model_cell_voltage = load_gpr_model(os.path.join(os.getcwd(), "Trained_Models", "gpr_model_cell_voltage.pth"))
 
@@ -38,7 +39,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     # Optimize the input variables
     optimal_input, cell_voltage, hydrogen_supply_rate_g_s, \
         stack_power_kW, compressor_power_kW, turbine_power_kW, \
-            reci_pump_power_kW, coolant_pump_power_kW, compressor_air_flow_g_s, \
+            reci_pump_power_kW, coolant_pump_power_kW, compressor_corrected_air_flow_g_s, \
                 compressor_pressure_ratio, stack_heat_flux_kW, intercooler_heat_flux_kW, \
                     evaporator_heat_flux_kW, radiator_heat_flux_kW, converged = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
                                                                                     flight_level_100ft, cellcount=specified_cell_count,
@@ -73,7 +74,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     export_to_csv(feature_names=gpr_model_cell_voltage.feature_names, optimal_input=optimal_input, hydrogen_supply_rate_g_s=hydrogen_supply_rate_g_s, cell_voltage=cell_voltage,
                   system_power_kW=system_power_kW, compressor_power_kW=compressor_power_kW, turbine_power_kW=turbine_power_kW, reci_pump_power_kW=reci_pump_power_kW,
                   coolant_pump_power_kW=coolant_pump_power_kW, stack_power_kW=stack_power_kW, power_constraint_kW=power_constraint_kW, specified_cell_count=specified_cell_count,
-                  flight_level_100ft=flight_level_100ft, compressor_air_flow_g_s=compressor_air_flow_g_s, compressor_pressure_ratio=compressor_pressure_ratio, 
+                  flight_level_100ft=flight_level_100ft, compressor_corrected_air_flow_g_s=compressor_corrected_air_flow_g_s, compressor_pressure_ratio=compressor_pressure_ratio, 
                   stack_heat_flux_kW = stack_heat_flux_kW, intercooler_heat_flux_kW = intercooler_heat_flux_kW, evaporator_heat_flux_kW = evaporator_heat_flux_kW, radiator_heat_flux_kW = radiator_heat_flux_kW,
                   consider_turbine=consider_turbine, end_of_life=end_of_life, converged=converged, filename='optimized_input_data.csv')
     
