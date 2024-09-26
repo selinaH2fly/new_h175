@@ -16,12 +16,6 @@ def plot_compressor_map(data, titles, fl_set, colors, markers, saving=True):
     - markers: List of markers for each dataset.
     - saving: Boolean, if True, saves the plots as PNG files.
     """
-    #Parameters for corrected massflow 
-    #TODO: use it directly in the future.
-    pressure_ref_Pa = 1.01325 * 1e5
-    pressure_in_Pa = 64440.29
-    temperature_ref_K = 25 + 273.15
-    temperature_in_K = 264.38
     
     fig, ax = plt.subplots(figsize=(12, 8))
     
@@ -34,7 +28,7 @@ def plot_compressor_map(data, titles, fl_set, colors, markers, saving=True):
         df = df[(df["eol (t/f)"] == False) & (df['Flight Level (100x ft)'] == fl_set) & (df['current_A (Value)'] <= 700)] # filter out eol points, FL and points above 700 A 
         
         # Scatter plot with color based on 'System Power (kW)'
-        scatter = ax.scatter(df["Compressor Air Flow (g/s)"] * (pressure_in_Pa/pressure_ref_Pa) * (temperature_in_K/temperature_ref_K)**0.5
+        scatter = ax.scatter(df["Compressor Corrected Air Flow (g/s)"]
                              , df["Compressor Pressure Ratio (-)"], 
                              c=df['System Power (kW)'], cmap='viridis', 
                              norm=norm, edgecolor='k', s=100, marker=marker, label=title)
@@ -48,19 +42,19 @@ def plot_compressor_map(data, titles, fl_set, colors, markers, saving=True):
     cbar.ax.set_yticklabels([f'{int(t)} kW' for t in cbar.get_ticks()])
 
     # Set labels and grid
-    ax.set_xlabel('Corrected Compressor Air Flow [g/s]')
+    ax.set_xlabel('Corrected Air Flow [g/s]')
     ax.set_ylabel('Compressor Pressure Ratio [-]')
     ax.grid(True)
     ax.set_ylim([1, 8])
     
     # Add title and a legend for the datasets
-    ax.set_title(f'Ideal Compressor Map at FL {fl_set}', fontsize=14)
+    ax.set_title(f'Compressor Pressure Ratio vs Corrected Air Flow, FL {fl_set}', fontsize=14)
     ax.legend(loc='best')
     fig.tight_layout()
 
     # Save the plot as a PNG file if saving is True
     if saving:
-        plt.savefig('compressor_map_FL_{fl_set}.png')
+        plt.savefig('ideal_compressor_map_FL_{fl_set}.png')
     
     # Show the plot
     plt.show()
