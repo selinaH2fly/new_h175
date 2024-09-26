@@ -83,7 +83,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                                    electric_efficiency=_params_compressor.electric_efficiency,
                                    temperature_in_K=temperature_ambient_K, pressure_in_Pa=pressure_ambient_Pa,
                                    nominal_BoP_pressure_drop_Pa=_params_compressor.nominal_BoP_pressure_drop_Pa,
-                                   compressor_map=compressor_map, nominal_air_flow_kg_s=_params_compressor.nominal_air_flow_kg_s)
+                                   compressor_map=compressor_map, nominal_air_flow_kg_s=_params_compressor.nominal_air_flow_kg_s,
+                                   reference_ambient_conditions=(_params_compressor.reference_pressure_Pa, _params_compressor.reference_temperature_K))
     
     turbine         =   Turbine(mass_estimator=_mass_estimator, isentropic_efficiency=_params_turbine.isentropic_efficiency,
                                 temperature_out_K=temperature_ambient_K, pressure_out_Pa=pressure_ambient_Pa,
@@ -376,4 +377,5 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         compressor.plot_compressor_map()
         
     return optimal_input, cell_voltage, hydrogen_supply_rate_g_s , stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
-        reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.air_mass_flow_kg_s*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, stack_heat_flux_W/1000, intercooler_heat_flux_W/1000, evaporator_heat_flux_W/1000, radiator_heat_flux_W/1000, optimization_converged
+        reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.calculate_corrected_mass_flow(), compressor.pressure_out_Pa/compressor.pressure_in_Pa, \
+            stack_heat_flux_W/1000, intercooler_heat_flux_W/1000, evaporator_heat_flux_W/1000, radiator_heat_flux_W/1000, optimization_converged
