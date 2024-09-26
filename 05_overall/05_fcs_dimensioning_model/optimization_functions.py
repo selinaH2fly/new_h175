@@ -365,7 +365,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # Compute stack power 
     stack_power_kW = stack.current_A * stack.cell_voltage_V * stack.cellcount / 1000
     
-    # Compute heat fluxes of comonents:
+    # Compute heat fluxes of components
     stack_heat_flux_W = stack.calculate_heat_flux()
     intercooler_heat_flux_W = intercooler.calculate_heat_flux("primary")
     _evaporator_cp = evaporator.calculate_specific_heat(evaporator.primary_fluid, evaporator.primary_T_in_K, evaporator.primary_T_out_K, evaporator.primary_p_in_Pa, 0.1)
