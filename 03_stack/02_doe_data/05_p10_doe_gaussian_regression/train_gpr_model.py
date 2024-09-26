@@ -49,7 +49,7 @@ def train_gpr_model(target='voltage', cutoff_current=0, pretrained_model=None, d
         raise ValueError('Invalid data selection!')
             
     train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, (input_data_mean, input_data_std), (target_data_mean, target_data_std), feature_names = \
-        preprocess_data(pd_dataframe, target, cutoff_current, params_pyhsics=_params_pyhsics)
+        preprocess_data(pd_dataframe, target, cutoff_current, params_pyhsics=_params_pyhsics, data=data)
 
     # Likelihood and model
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
@@ -162,7 +162,7 @@ def train_gpr_model(target='voltage', cutoff_current=0, pretrained_model=None, d
 if __name__ == '__main__':
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Train a Gaussian process regression model on Powercell DoE data")
-    parser.add_argument("-t", "--target", type=str, help="Target variable for Gaussian process regression", default="voltage")
+    parser.add_argument("-t", "--target", type=str, help="Target variable for Gaussian process regression", default="cell_voltage")
     parser.add_argument("-c", "--cutoff", type=float, help="Datapoints below cutoff current are removed from training data", default=0.0)
     parser.add_argument("-m", "--model", type=str, help="Load a pretrained GPR model", default=None)
     parser.add_argument("--data", type=str, choices=["high_amp","high_temp"], help="Select the DoE dataset", default="high_temp")

@@ -45,24 +45,29 @@ def load_high_temp_doe_data():
     # Load the second sheet into a DataFrame, skipping the first row
     df = pd.read_excel(path, sheet_name=first_sheet_name)
 
-    # Extract the units row and set it as the DataFrame column names
+    # Extract the units from the scnd row and set the identifiers in the thrd row as the DataFrame column names
     units = df.iloc[0]
     df.columns = df.iloc[1]
     df = df.drop([0, 1]).reset_index(drop=True)
     df = df.drop(0)
+
+    # Clear failed runs and duplicates from the DataFrame
     df = df[df['Point successfully run'] == 1]
     df = df.loc[:, ~df.columns.duplicated()]
+
+    # Drop columns missing values
+    df = df.dropna(axis=1, how='all')
 
     return df, units
 
 # Preprocess the data
-def preprocess_data(df, target='eta_lhv', cutoff_current=0, params_pyhsics=None):
+def preprocess_data(df, target='eta_lhv', cutoff_current=0, params_pyhsics=None, data='high_amp'):
 
     # Drop data points from the dataframe with current values below the cutoff value
     df = df[df['current'] > cutoff_current]
 
     # Assign target data and input data
-    target_data, input_data_dict, feature_names = assign_input_and_target_data(df, target, params_pyhsics)
+    target_data, input_data_dict, feature_names = assign_input_and_target_data(df, target, params_pyhsics, data)
 
     # Convert to pytorch tensors
     input_data_tensor = torch.tensor(list(input_data_dict.values()), dtype=torch.float32).T
@@ -95,7 +100,7 @@ def preprocess_data(df, target='eta_lhv', cutoff_current=0, params_pyhsics=None)
     return train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, (input_data_mean, input_data_std), (target_data_mean, target_data_std), feature_names
 
 # Assign input data dict
-def assign_input_and_target_data(dataframe, target, params_pyhsics):
+def assign_input_and_target_data(dataframe, target, params_pyhsics, data):
 
     # Convert the dataframes to dictionaries
     df_dict = dataframe.to_dict('list')
@@ -106,16 +111,20 @@ def assign_input_and_target_data(dataframe, target, params_pyhsics):
         input_data_dict = default_input_data_dict(df_dict)
     else:
         # Check for custom targets
-        if target == 'eta_lhv':
+        if target == 'eta_lhv' and data == 'high_amp':
+            # TODO Make agnostic to the stack size
             target_data = [voltage / 275 / params_pyhsics.hydrogen_lhv_voltage_equivalent for voltage in df_dict['voltage']]
             input_data_dict = voltage_input_data_dict(df_dict, params_pyhsics)
-        elif target == 'eta_hhv':
+        elif target == 'eta_hhv' and data == 'high_amp':
+            # TODO Make agnostic to the stack size
             target_data = [voltage / 275 / params_pyhsics.hydrogen_hhv_voltage_equivalent for voltage in df_dict['voltage']]
             input_data_dict = voltage_input_data_dict(df_dict, params_pyhsics)
-        elif target == 'cell_voltage':
+        elif target == 'cell_voltage' and data == 'high_amp':
             target_data = df_dict['metis_CVM_Cell_Voltage_Mean']
             input_data_dict = voltage_input_data_dict(df_dict, params_pyhsics)
-
+        elif target == 'cell_voltage' and data == 'high_temp':
+            target_data = df_dict['cell_voltage_mean']
+            input_data_dict = voltage_input_data_dict(df_dict, params_pyhsics)
         elif target == 'cathode_pressure_drop':
             target_data = [pressure_in - pressure_out for pressure_in, pressure_out in zip(df_dict['pressure_cathode_inlet'], df_dict['pressure_cathode_outlet'])]
             input_data_dict = cathode_dp_input_data_dict(df_dict, params_pyhsics)
