@@ -26,6 +26,7 @@ from plot_h2_supply_vs_FL import plot_h2_supply_vs_FL
 #from plot_system_mass_estimate_old import plot_mass_estimate # old version of wenzel (errorbar chart of system mass)
 from plot_system_mass_estimate import plot_system_mass_estimate
 from evaluate_DoE_envelope_constraint import plot_optimized_parameter_DoE_envelope
+from plot_compressor_map import plot_compressor_map
 
 #%%  
 def filter_converged_points(df, tolerance=4):
@@ -139,14 +140,15 @@ def analyze_data(_file_path1, saving=True):
     plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
     plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="eol")
     
+    ###########PLOT: Compressormap
+    plot_compressor_map(data, titles, fl_set, colors, markers, saving=True)    
+        
     ###########PLOT: optimized parameters in DoE envelope
     os.makedirs("DoE_Envelope_Evaluation", exist_ok=True)
     os.chdir("DoE_Envelope_Evaluation")
     
-    plot_optimized_parameter_DoE_envelope(df1, Optimized_DoE_data_variables, saving=saving)
+    #plot_optimized_parameter_DoE_envelope(df1, Optimized_DoE_data_variables, saving=saving)
     os.chdir("../")
-
-
 
     ##########PLOT: Optimized Operating Parameters
 
@@ -172,7 +174,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_20-175kW_400-500_0-120ft__1\optimized_parameters_20-175kW_400-500_0-120ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_20-175kW_400-500_0-120ft__2\optimized_parameters_20-175kW_400-500_0-120ft.csv")
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
     

@@ -9,8 +9,8 @@ class Compressor:
 
     def __init__(self, mass_estimator: Mass_Parameters, isentropic_efficiency=0.75, electric_efficiency=0.95,
                  air_mass_flow_kg_s=1, temperature_in_K=293.15, pressure_in_Pa=1.013e5, pressure_out_Pa=1.013e5,
-                 nominal_BoP_pressure_drop_Pa=0.3*1e5, nominal_air_flow_kg_s=0.130, compressor_map=None
-                 ):
+                 nominal_BoP_pressure_drop_Pa=0.3*1e5, nominal_air_flow_kg_s=0.130, reference_ambient_conditions=(1.01325 * 1e5, 25 + 273.15),
+                 compressor_map=None):
 
         self.isentropic_efficiency = isentropic_efficiency
         self.electric_efficiency = electric_efficiency
@@ -22,6 +22,10 @@ class Compressor:
         self.nominal_pressure_drop_Pa = nominal_BoP_pressure_drop_Pa
         self.nominal_air_flow_kg_s = nominal_air_flow_kg_s
         self.compressor_map = compressor_map
+
+        # Assign the reference ambient conditions
+        self.reference_pressure_Pa, self.reference_temperature_K = reference_ambient_conditions \
+            if compressor_map is None else (self.compressor_map['reference_pressure_Pa'], self.compressor_map['reference_temperature_K'])
 
         # Ensure the component is available in masses_FCM_depended; raise error if missing
         if 'Compressor' not in mass_estimator.masses_FCM_depended:
@@ -89,9 +93,7 @@ class Compressor:
         - Efficiency at the given operating point.
         """
         pressure_ratio = self.pressure_out_Pa / self.pressure_in_Pa
-        mass_flow_g_s = self.air_mass_flow_kg_s * 1000
-        corrected_mass_flow_g_s = mass_flow_g_s * (self.pressure_in_Pa / self.compressor_map['reference_pressure_Pa']) * \
-            np.sqrt(self.temperature_in_K / self.compressor_map['reference_temperature_K'])
+        corrected_mass_flow_g_s = self.calculate_corrected_mass_flow() * 1000
 
         # Assign the compressor map arrays and flatten to 1D
         map_pressure_ratio = self.compressor_map['pressure_ratio'].flatten()
@@ -179,7 +181,6 @@ class Compressor:
 
         return grid_massflow, grid_pressure_ratio, grid_efficiency, hull, points
 
-
     def calculate_BoP_pressure_drop(self)->float:
         """
         Calculate the pressure drop across the BoP components downstream the compressor for a given air mass flow rate.
@@ -193,6 +194,19 @@ class Compressor:
         pressure_drop_Pa = pressure_drop_coefficient * self.air_mass_flow_kg_s**2
 
         return pressure_drop_Pa
+    
+    def calculate_corrected_mass_flow(self)->float:
+        """
+        Calculate the corrected mass flow rate of the compressor based on the reference ambient conditions.
+
+        Returns:
+        - corrected_mass_flow_g_s: The corrected mass flow rate in kg/s.
+        """
+
+        corrected_mass_flow_kg_s = self.air_mass_flow_kg_s * (self.reference_pressure_Pa / self.pressure_in_Pa) \
+            * (self.temperature_in_K / self.reference_temperature_K)**0.5
+
+        return corrected_mass_flow_kg_s
 
     def calculate_mass(self)->dict:
         """

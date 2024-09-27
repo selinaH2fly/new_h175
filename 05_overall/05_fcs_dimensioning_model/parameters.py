@@ -67,6 +67,10 @@ class Compressor_Parameters:
         self.nominal_BoP_pressure_drop_Pa = 0.3*1e5
         self.nominal_air_flow_kg_s = 0.130
 
+        # Reference variables for airflow correction
+        self.reference_pressure_Pa = 1.01325 * 1e5
+        self.reference_temperature_K = 25 + 273.15
+
         # Compressor map parameters
         self.compressor_map_VSEC15 = {
             "corrected_massflow_g_s": np.array([
