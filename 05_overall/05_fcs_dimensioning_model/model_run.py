@@ -4,14 +4,16 @@ import numpy as np
 import torch
 import argparse
 import random
-
+import time
 # Import custom classes and functions
 import parameters
 from file_handling import create_experiment_folder, load_gpr_model
 from optimization_functions import optimize_inputs_evolutionary
 
 from data_export_csv import export_to_csv
- 
+
+start_time=time.time()
+
 def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, consider_turbine=True, compressor_map=None, end_of_life=True, constraint=True):
     
     # Load parameters
@@ -98,3 +100,7 @@ if __name__ == '__main__':
 
     # Call the optimize_with_trained_model function
     optimize_input_variables(args.power, args.cellcount, args.flightlevel, consider_turbine=consider_turbine, compressor_map=compressor_map, end_of_life=end_of_life, constraint=constraint)
+
+    end_time=time.time()
+    execution_time = end_time - start_time
+    print(f"Die Ausführungsdauer des Skripts beträgt {execution_time:.4f} Sekunden.")
