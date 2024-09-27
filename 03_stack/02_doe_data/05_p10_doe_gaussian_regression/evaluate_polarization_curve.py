@@ -42,7 +42,6 @@ gpr_model_cell_voltage.model.eval()
 with torch.no_grad(), gpytorch.settings.fast_pred_var():
     cell_voltage_prediction_tensor = gpr_model_cell_voltage.model(x_tensor).mean
 
-
 # Denormalize the cell voltage prediction
 cell_voltage_tensor_V = cell_voltage_prediction_tensor * gpr_model_cell_voltage.target_data_std + gpr_model_cell_voltage.target_data_mean
 
@@ -51,7 +50,14 @@ for cell_voltage_V, input_data_dict in zip(cell_voltage_tensor_V, input_data_dic
     print(f"Current: {input_data_dict[feature_names[0]]} A, Cell voltage: {cell_voltage_V.item():.4f} V")
 
 # Save the cell voltage predictions alongside the corresponding input data to a .csv file
-with open("cell_voltage_predictions.csv", "w", newline='') as file:
+evaluation_ID = 1
+file_name = "{}_cell_voltage_predictions.csv".format(evaluation_ID)
+
+while os.path.exists(file_name):
+    evaluation_ID += 1
+    file_name = "{}_".format(evaluation_ID) + file_name.split('_', 1)[1]
+
+with open(file_name, "w", newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["current_A", "cathode_rh_in_perc", "stoich_cathode", "pressure_cathode_in_bara", "temp_coolant_inlet_degC", "temp_coolant_outlet_degC", "cell_voltage_V"])
     for cell_voltage_V, input_data_dict in zip(cell_voltage_tensor_V, input_data_dict_list):
