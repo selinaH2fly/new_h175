@@ -59,7 +59,7 @@ while os.path.exists(file_name):
 
 with open(file_name, "w", newline='') as file:
     writer = csv.writer(file)
-    writer.writerow(["current_A", "cathode_rh_in_perc", "stoich_cathode", "pressure_cathode_in_bara", "temp_coolant_inlet_degC", "temp_coolant_outlet_degC", "cell_voltage_V"])
+    writer.writerow([feature_names, "cell_voltage_V"])
     for cell_voltage_V, input_data_dict in zip(cell_voltage_tensor_V, input_data_dict_list):
         writer.writerow([input_data_dict[feature_name] for feature_name in feature_names] + [f"{cell_voltage_V.item():.4f}"])
     file.close()
