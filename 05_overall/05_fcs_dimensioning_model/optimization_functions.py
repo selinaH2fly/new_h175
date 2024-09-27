@@ -377,9 +377,17 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         #define current bounds by initial voltage and brutto deviation
         current_lower = power_constraint_kW/_params_optimization.init_cell_voltage
         current_upper =power_constraint_kW*_params_optimization.brutto_deviation/_params_optimization.init_cell_voltage
+        adjusted_lower = Optimized_DoE_data_variables[Optimized_DoE_data_variables['current_A'] < current_lower]['current_A'].max()
+        adjusted_upper = Optimized_DoE_data_variables[Optimized_DoE_data_variables['current_A'] > current_upper]['current_A'].min()
+
+        if pd.isna(adjusted_lower):
+            adjusted_lower = Optimized_DoE_data_variables['current_A'].min()
+        if pd.isna(adjusted_upper):
+            adjusted_upper = Optimized_DoE_data_variables['current_A'].max()
+        filtered_DoE = Optimized_DoE_data_variables[(Optimized_DoE_data_variables['current_A'] >= adjusted_lower) & (Optimized_DoE_data_variables['current_A'] <= adjusted_upper)]
 
         #filter DoE data by min,max bounds of estimatet current
-        filtered_DoE = Optimized_DoE_data_variables[(Optimized_DoE_data_variables['current_A'] >= current_lower*0.95) & (Optimized_DoE_data_variables['current_A'] <= current_upper)]
+        #filtered_DoE = Optimized_DoE_data_variables[(Optimized_DoE_data_variables['current_A'] >= Optimized_DoE_data_variables[Optimized_DoE_data_variables['current A']<current_lower]['current A'].max()) & (Optimized_DoE_data_variables['current_A'] >= Optimized_DoE_data_variables[Optimized_DoE_data_variables['current A']>current_upper]['current A'].min())]  #*0.75) & (Optimized_DoE_data_variables['current_A'] <= current_upper*1.1)]
         n_bounds = 6
         bounds_pop = np.zeros((n_bounds,2))
         init_pop = np.zeros((_params_optimization.popsize, n_bounds))
@@ -388,7 +396,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         for i, column in enumerate(filtered_DoE.columns):
             bounds_pop[i,0] = filtered_DoE[column].min()
             bounds_pop[i,1] = filtered_DoE[column].max()
-        
         normalized_bounds_pop = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
                          zip(bounds_pop, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
     
@@ -433,7 +440,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                 
 
                 # Print iteration details
-                print(f"Iteration {len(self.best_objective_values)}: Current Objective = {current_best_value:.6f}, Avg of Last 30 = {average_recent_values:.6f}, Difference to avg = {difference_to_avg:.6f}, Difference to last ={difference_to_last:.6f} , nlc_CP = {nlc_CP_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
+                #print(f"Iteration {len(self.best_objective_values)}: Current Objective = {current_best_value:.6f}, Avg of Last 30 = {average_recent_values:.6f}, Difference to avg = {difference_to_avg:.6f}, Difference to last ={difference_to_last:.6f} , nlc_CP = {nlc_CP_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
 
                 # Check if the difference is less than the tolerance (i.e., convergence criterion)
                 if difference_to_avg < self.tolerance and difference_to_last < self.tolerance and -100 < nlc_Power_xk < 100 and nlc_CP_xk>0 and nlc_DoE_xk>0:
