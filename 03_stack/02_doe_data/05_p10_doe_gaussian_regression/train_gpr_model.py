@@ -129,8 +129,10 @@ def train_gpr_model(target='voltage', cutoff_current=0, pretrained_model=None, d
         writer = csv.writer(file)
         writer.writerows(zip(iterations, loss_list, test_loss_list))
 
-    # Plot the partial dependence plots
-    os.mkdir('partial_dependence_plots')
+    # Create PDP directories
+    os.mkdir('partial_dependence_analysis')
+    os.mkdir('partial_dependence_analysis/partial_dependence_plots')
+    os.mkdir('partial_dependence_analysis/partial_dependence_data')
 
     # Plot the partial dependence plots
     for current_value in [200, 300, 400, 500, 600, 700]:

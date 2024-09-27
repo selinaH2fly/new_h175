@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import csv
 import gpytorch
 import matplotlib.pyplot as plt
 
@@ -86,10 +87,6 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltag
             grid, pdp = partial_dependence(model, train_x_np, i, fixed_feature_index=fixed_feature_index, fixed_value=fixed_value_norm)
 
             # Denormalize the grid and pdp values
-            # Convert tensor to numpy array
-            input
-
-
             grid = grid * np.array(input_normalization[1][i]) + np.array(input_normalization[0][i])
             pdp = pdp * np.array(target_normalization[1]) + np.array(target_normalization[0])
 
@@ -97,20 +94,16 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltag
             ax = axes[i // 2, i % 2]
             ax.plot(grid, pdp)
 
-            # ax.set_ylim([0, 300])
-            # extract target unit and check for lower and upper case
-            # if (target[0].lower() + target[1:]) in feature_units:
-            #     ax.set_ylabel(f'{target} ({feature_units[target[0].lower() + target[1:]]})')
-            # elif (target[0].upper() + target[1:]) in feature_units:
-            #     ax.set_ylabel(f'{target} ({feature_units[target[0].upper() + target[1:]]})')
-            # else:
-            #     ax.set_ylabel(f'{target} (-)')
-
             # Set the axes labels
             ax.set_ylabel(f'{target}')
             ax.set_xlabel(f'{feature_names[i]}')
 
             ax.grid(True, zorder=1)
+
+            # Save the grid and pdp values to a .csv file
+            with open(f'partial_dependence_analysis/partial_dependence_data/pdp_data_{feature_names[i]}_{fixed_feature}_{fixed_value}.csv', 'w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerows(zip(grid, pdp))
         else:
             # Write the fixed feature value in the subplot in bold
             ax = axes[i // 2, i % 2]
@@ -137,9 +130,9 @@ def plot_partial_dependence(model, train_x_tensor, feature_names, target='voltag
 
     # Save the figure with title according to the fixed feature value to the partial dependence plots folder
     if fixed_feature is not None:
-        plt.savefig(f'partial_dependence_plots/partial_dependence_plot_{fixed_feature}_{fixed_value}.png', bbox_inches='tight')    
+        plt.savefig(f'partial_dependence_analysis/partial_dependence_plots/pdp_plot_{fixed_feature}_{fixed_value}.png', bbox_inches='tight')    
     else:
-        plt.savefig(f'partial_dependence_plots/partial_dependence_plot.png', bbox_inches='tight')
+        plt.savefig(f'partial_dependence_analysis/partial_dependence_plots/pdp_plot.png', bbox_inches='tight')
 
     # Close the figure
     plt.close()
