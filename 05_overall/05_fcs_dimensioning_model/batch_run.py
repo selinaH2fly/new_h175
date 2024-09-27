@@ -66,12 +66,12 @@ if __name__ == '__main__':
 
     elif args.testing == "False":
       
-        _step_p = 30
+        _step_p = 5
         _step_c = 50
         _step_fl = 30
         #range_power is ugly deined atm. due to not starting at 0 and want to have inclusive bounds.... maybe there is a better way?
-        #range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
-        range_power = np.array([20, 50, 80, 125, 150, 175])
+        range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
+        #range_power = np.array([20, 50, 80, 125, 150, 175])
         range_cellcount = [400,450,500]#np.arange(args.cellcount[0],args.cellcount[1]+_step_c,_step_c)
         range_fl = np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
         
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_map, range_eol, range_DoE_constraint))
     
     # Start parallel execution using ProcessPoolExecutor
-    max_workers = min(55, len(parameters))  # Define the number of processes based on available resources (55 processes to avoid memory limit)
+    max_workers = min(61, len(parameters))  # Define the number of processes based on available resources
     
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(run_subprocess, param): param for param in parameters}
