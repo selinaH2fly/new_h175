@@ -4,10 +4,10 @@ import numpy as np
 
 class MoistExchanger:
     def __init__(self, air_flow_rate, temperature, pressure, rh):
-        self.air_flow_rate = air_flow_rate  # m^3/s
-        self.temperature = temperature  # Celsius
-        self.pressure = pressure * 1000  # Pa (from kPa)
-        self.rh = rh / 100  # Relative humidity in decimal
+        self.air_flow_rate = air_flow_rate
+        self.temperature = temperature
+        self.pressure = pressure
+        self.rh = rh / 100
 
     def calculate_cp(self, T, RH, P):
         # Calculate specific heat capacity of moist air (Cp) using CoolProp
@@ -22,7 +22,7 @@ class MoistExchanger:
         A = 6.1094  # hPa
         B = 17.625
         C = 243.04  # °C
-        return A * np.exp((B * T) / (T + C)) * 100  # Convert to Pa
+        return A * np.exp((B * T) / (T + C)) * 100
 
     def calculate_water_transfer(self, p_vap_wet_in, p_vap_dry_out, T_dry_out, RH_dry_out, T_wet_in, RH_wet_in):
         # Calculate mass flow of water vapor
@@ -38,13 +38,13 @@ class Humidifier(MoistExchanger):
                  T_dry_out, P_dry_out, RH_dry_out,
                  T_wet_in, P_wet_in, RH_wet_in, P_wet_out):
         super().__init__(air_flow_rate, T_dry_in, P_dry_in, RH_dry_in)
-        self.T_dry_out = T_dry_out  # Celsius
-        self.P_dry_out = P_dry_out * 1000  # Pa
-        self.RH_dry_out = RH_dry_out / 100  # Relative humidity in decimal
-        self.T_wet_in = T_wet_in  # Celsius
-        self.P_wet_in = P_wet_in * 1000  # Pa
-        self.RH_wet_in = RH_wet_in / 100  # Relative humidity in decimal
-        self.P_wet_out = P_wet_out * 1000  # Pa
+        self.T_dry_out = T_dry_out
+        self.P_dry_out = P_dry_out * 1000
+        self.RH_dry_out = RH_dry_out / 100
+        self.T_wet_in = T_wet_in
+        self.P_wet_in = P_wet_in * 1000
+        self.RH_wet_in = RH_wet_in / 100
+        self.P_wet_out = P_wet_out * 1000  
 
         # Calculate properties
         self.calculate_properties()
