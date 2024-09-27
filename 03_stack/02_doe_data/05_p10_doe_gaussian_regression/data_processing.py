@@ -64,7 +64,7 @@ def load_high_temp_doe_data():
 def preprocess_data(df, target='eta_lhv', cutoff_current=0, params_pyhsics=None, data='high_amp'):
 
     # Drop data points from the dataframe with current values below the cutoff value
-    df = df[df['current'] > cutoff_current]
+    df = df[df['current'] >= cutoff_current]
 
     # Assign target data and input data
     target_data, input_data_dict, feature_names = assign_input_and_target_data(df, target, params_pyhsics, data)
