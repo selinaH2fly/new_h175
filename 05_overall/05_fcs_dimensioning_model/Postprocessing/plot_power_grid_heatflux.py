@@ -166,7 +166,7 @@ def plot_power_needs_heatflux(data, titles, fl_set, components, power_range = [2
         ax2.set_xticks(positions)
     
         # Adjust labels for the secondary x-axis
-        names = ["Stack (+)", "Intercooler (+)", "Evaporator (-)", "Radiator (+)"]
+        names = ["Stack (+)", "Intercooler (+)", "Evaporator (-)", "Radiator (-)"]
         ax2.set_xticklabels([col.replace(' Heat Flux (kW)_bol', '').replace(' Power (kW)_eol', '') for col in df.columns[1::2]])
         ax2.set_xticklabels(names)
         #ax2.set_xlabel('Components', labelpad=10)

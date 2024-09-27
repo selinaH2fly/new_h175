@@ -5,7 +5,7 @@ import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 
 # %% PLOT: Compressormap from data
-def plot_compressor_map(data, titles, fl_set, colors, markers, saving=True):
+def plot_compressor_map(data, titles, colors, markers, saving=True):
     """
     Plots the compressor map for multiple datasets in one plot.
 
@@ -54,13 +54,13 @@ def plot_compressor_map(data, titles, fl_set, colors, markers, saving=True):
     ax.set_ylim([1, 8])
     
     # Add title and a legend for the datasets
-    ax.set_title(f'Ideal Compressor Map at FL {fl_set}', fontsize=14)
+    ax.set_title('Ideal Compressor Map', fontsize=14)
     ax.legend(loc='best')
     fig.tight_layout()
 
     # Save the plot as a PNG file if saving is True
     if saving:
-        plt.savefig('compressor_map_FL_{fl_set}.png')
+        plt.savefig('compressor_map.png')
     
     # Show the plot
     plt.show()

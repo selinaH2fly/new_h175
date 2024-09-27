@@ -166,7 +166,7 @@ def plot_power_needs(data, titles, fl_set, components, saving=True, power_range 
         ax2.set_xticks(positions)
     
         # Adjust labels for the secondary x-axis
-        names = ["Compressor (+)", "Turbine (-)", "Reci. Pump (+)", "Coolant Pump (+)", "Stack (-)"]
+        names = ["Compressor (-)", "Turbine (+)", "Reci. Pump (-)", "Coolant Pump (-)", "Stack (+)"]
         #ax2.set_xticklabels([col.replace(' Power (kW)_bol', '').replace(' Power (kW)_eol', '') for col in df.columns[1::2]])
         ax2.set_xticklabels(names)
         
