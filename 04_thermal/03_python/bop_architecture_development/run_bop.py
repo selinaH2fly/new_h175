@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Do you want to vary one boundary condition? If not no plots will be made, but results will be safed in excel.
-vary_bc = True
+vary_bc = False
 
 # How do you want to plot?
 # Do you want to compare results of different architectures in one plot (has effect if vary_bc is set True)
@@ -69,16 +69,16 @@ result_dict = {"Vdot_in" :              ['', [], 'BoP Input flow in [l/s]'],
 ##########   calculation ###########################################################################################
 excel_dict = {}
 all_result_dict = {}
+result_dict_new = {}
 for arch in arch_list:      # each architecture is evaluated
     key_init = "%s.initialize(%s, %s, %s)" %(arch, input_dict, result_dict, bc_dict)
-    circ, input_dict, result_dict = eval(key_init)
+    circ, input_dict, result_dict_new = eval(key_init)
     print("Start to evaluate architecture %s"%arch)
-    result_dict = circ.analyse_arch(input_dict, result_dict)
+    result_dict_new = circ.analyse_arch(input_dict, result_dict_new)
 
-    for name in result_dict:    # rewrite results in one dictionary
-        all_result_dict["%s_%s"%(arch,name)] = [result_dict[name][0], result_dict[name][1], result_dict[name][2]]
-        excel_dict["%s_%s"%(arch,name)] = result_dict[name][1]
-        result_dict[name][1] = []   # delete values
+    for name in result_dict_new:    # rewrite results in one dictionary
+        all_result_dict["%s_%s"%(arch,name)] = [result_dict_new[name][0], result_dict_new[name][1], result_dict_new[name][2]]
+        excel_dict["%s_%s"%(arch,name)] = result_dict_new[name][1]
 
 #max_len = 0    # fills gap in excel_dict with 0, important for architectures without second pump
 #for name in excel_dict:

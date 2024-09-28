@@ -9,8 +9,8 @@ vary_bc = False
 # Do you want to compare results of different architectures in one plot (only has effect if vary_bc is set True)
 compare_res = False
 
-# Which Architectures do you want to evaluate? ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08"]
-arch_list = ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
+# Which Architectures do you want to evaluate? ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08"] , "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "AchShy4"
+arch_list = ["Arch01", "Arch03a"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
 
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
@@ -50,6 +50,7 @@ result_dict = {"pump_vdot" : ["", [], 'flow over pump1 in [l/S]'],
 excel_dict = {}
 all_result_dict = {}
 result_dict_new = {}
+y = 0
 if input_dict is not None:
     for name in input_dict:
             excel_dict[input_dict[name][2]] = input_dict[name][1]
@@ -59,9 +60,19 @@ for arch in arch_list:      # each architecture is evaluated
     circ, input_dict, result_dict_new = eval(key_init)
     result_dict_new = circ.analyse_arch(input_dict, result_dict_new)
 
+    if "pump_vdot" in result_dict_new.keys() and "pump_delta_p" in result_dict_new.keys(): #calculates the entire pump power
+            result_dict_new["pump_power"] = ["", [], "combined optimal pump power in [W]"]
+            for y in range(len(result_dict_new["pump_vdot"][1])):
+                result_dict_new["pump_power"][1].append(result_dict_new["pump_vdot"][1][y] * result_dict_new["pump_delta_p"][1][y] * 100)
+            if "pump2_vdot" in result_dict_new.keys() and "pump2_delta_p" in result_dict_new.keys():
+                for y in range(len(result_dict_new["pump2_vdot"][1])):
+                    result_dict_new["pump_power"][1][y] += (result_dict_new["pump2_vdot"][1][y] * result_dict_new["pump2_delta_p"][1][y] * 100)
+
     for name in result_dict_new:    # rewrite results in one dictionary
         all_result_dict["%s_%s"%(arch,name)] = [result_dict_new[name][0], result_dict_new[name][1], result_dict_new[name][2]]
         excel_dict["%s_%s"%(arch,name)] = result_dict_new[name][1]
+
+
 
 data = pd.DataFrame(excel_dict)
 datatoexcel = pd.ExcelWriter('results.xlsx')

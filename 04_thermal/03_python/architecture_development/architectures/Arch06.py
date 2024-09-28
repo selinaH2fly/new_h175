@@ -61,9 +61,8 @@ def initialize(input_dict, result_dict, bc_dict):
     circ.add_bc("delta_p_bop1 = - (0.000425124 * 60 ** 2 * Vdot_3 ** 2 + 0.003355931 * Vdot_3)")
     circ.add_bc("delta_p_bop2 = - - (4.4760 * 10 ** (-4) * Vdot_11 ** 2 * 60 ** 2 + 2.2828 * 10 ** (-3) * Vdot_11 * 60)")
 
-
-    circ.add_bc("delta_p_stack1 = - (5.6629  * 10 ** (-6) * 60 ** 2 * Vdot_7 ** 2 + 6.3347 * 10 ** (-4) * 60 * Vdot_7)")
-    circ.add_bc("delta_p_radiator1 = - (8.2958 * 10 ** (-6) * 60 ** 2 * Vdot_1 + 1.6622 * 10 ** (-3) * 60 * Vdot_1)")
+    circ.add_bc("delta_p_stack1 = - (5.6629  * 10 ** (-6) * 60 ** 2 * %s ** 2 + 6.3347 * 10 ** (-4) * 60 * %s)"%(stack1.Vdot_in, stack1.Vdot_in))
+    circ.add_bc("delta_p_radiator1 = - (8.2958 * 10 ** (-6) * 60 ** 2 * %s + 1.6622 * 10 ** (-3) * 60 * %s)"%(radiator1.Vdot_in, radiator1.Vdot_in))
 
     circ.add_bc("delta_p_1_tcv1 = 0.0")
 
@@ -100,20 +99,21 @@ def initialize(input_dict, result_dict, bc_dict):
     if "pump2_delta_p" in result_dict.keys():
         del result_dict["pump2_delta_p"]   
     
-    for name in input_dict:
-        if name == "stack_t_in":
-            input_dict[name][0] = stack1.T_in              #
-        elif name == "stack_t_out":
-            input_dict[name][0] = stack1.T_out              #
-        elif name == "sys_t_in":
-            input_dict[name][0] = radiator1.T_out            #
-        elif name == "bop_q":
-            input_dict[name][0] = bop1.Qdot
-        elif name == "stack_q":
-            input_dict[name][0] = stack1.Qdot
-        elif name == "bop_vdot":
-            input_dict[name][0] = bop1.Vdot_in          #
-        elif name == "bop_dp":
-            input_dict[name][0] = bop1.delta_p
+    if input_dict is not None: 
+        for name in input_dict:
+            if name == "stack_t_in":
+                input_dict[name][0] = stack1.T_in              #
+            elif name == "stack_t_out":
+                input_dict[name][0] = stack1.T_out              #
+            elif name == "sys_t_in":
+                input_dict[name][0] = radiator1.T_out            #
+            elif name == "bop_q":
+                input_dict[name][0] = bop1.Qdot
+            elif name == "stack_q":
+                input_dict[name][0] = stack1.Qdot
+            elif name == "bop_vdot":
+                input_dict[name][0] = bop1.Vdot_in          #
+            elif name == "bop_dp":
+                input_dict[name][0] = bop1.delta_p
 
     return circ, input_dict, result_dict

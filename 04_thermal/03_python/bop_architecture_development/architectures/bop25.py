@@ -86,13 +86,14 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Relate the variable name in the circuit to the variable in result_dict and input_dict
     """
-    for name in input_dict:
-        if name == "Vdot_in":
-            input_dict[name][0] = evap.Vdot_in
-        if name == "throttle_delta_p":
-            input_dict[name][0] = "ha"        # depends on architecture
-        if name == "p_in":
-            input_dict[name][0] = evap.p_in
+    if input_dict is not None: 
+        for name in input_dict:
+            if name == "Vdot_in":
+                input_dict[name][0] = evap.Vdot_in
+            if name == "throttle_delta_p":
+                input_dict[name][0] = "ha"        # depends on architecture
+            if name == "p_in":
+                input_dict[name][0] = evap.p_in
 
     for name in result_dict:
         if name == "t_in_lvdcdc":
