@@ -18,7 +18,7 @@ arch_list = ["bop10", "bop21", "bop22", "bop23", "bop24", "bop25", "bop26", "bop
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
-    #input_dict = {"Vdot_in" : ["", [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60], "BoP Eingangsvolumenstrom l/s"]}
+    #input_dict = {"Vdot_in" : ["Vdot_1", [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60], "BoP Eingangsvolumenstrom l/s"]}
     input_dict = {"p_in": ["p_1", [1.35, 1.4, 1.45, 1.5, 1.55, 1.6], "Input Pressure [bar]"]} #1.3, 1.35,
     #input_dict = {"throttle_delta_p" : ["", [0.1, 0.15, 0.2, 0.25, 0.3], "Thottle pressure drop [bar]"]}
 else:
@@ -28,7 +28,7 @@ else:
 critical_operation = True
 if critical_operation is True:
     bc_dict = {"T_in" : 273.15 + 60.0,
-                #"Vdot_in" : 0.5,
+                #"Vdot_in" : 0.5,   # either vdot or p_in
                 "p_in" : 1.5,
                 "p_end" : 1,
                 "Qdot_hpdu" : 1000,
@@ -40,7 +40,7 @@ if critical_operation is True:
                 "Qdot_evap" : -13500}
 else: 
     bc_dict = {"T_in" : 273.15 + 50.0,
-               #"Vdot_in" : 0.5,
+               #"Vdot_in" : 0.5,        # either vdot or p_in
                 "p_in" : 1.5,
                 "p_end" : 1,
                 "Qdot_hpdu" : 500,
@@ -51,20 +51,20 @@ else:
                 "Qdot_compressor" : 500,
                 "Qdot_evap" : -13500}
     
-result_dict = {"Vdot_in" :              ['', [], 'BoP Input flow in [l/s]'], 
+result_dict = {"Vdot_in" :              ['', [], 'BoP Input flow [l/s]'], 
                 "Vdot_1" :              ['', [], ''], 
                 "Vdot_2" :              ['', [],''],
                 "Vdot_3" :              ['', [],''],
                 "Vdot_4" :              ['', [],''],
-                "t_in_lvdcdc":          ["", [],'LV DCDC T_in'],
-                "t_in_hvdcdc" :         ["", [], 'HV DCDC T_in'],
-                "t_in_inverter" :       ["", [], 'Inverter T_in'],
-                "t_in_hpdu" :           ["", [], 'HPDU T_in'],
-                "t_in_compressor" :     ["", [], 'Compressor T_in'],
-                "t_in_intercooler" :    ["", [], "Intercooler T_in"],
-                "t_out_intercooler" :   ["", [], "Intercooler T_out"],
-                "t_out_Bop" :           ["", [],'BoP T_out'],
-                "p_in" :                ["", [], 'bop pressure drop in [bar]']}
+                "t_in_lvdcdc":          ["", [],'LV DCDC T_in [K]'],
+                "t_in_hvdcdc" :         ["", [], 'HV DCDC T_in [K]'],
+                "t_in_inverter" :       ["", [], 'Inverter T_in [K]'],
+                "t_in_hpdu" :           ["", [], 'HPDU T_in [K]'],
+                "t_in_compressor" :     ["", [], 'Compressor T_in [K]'],
+                "t_in_intercooler" :    ["", [], "Intercooler T_in [K]"],
+                "t_out_intercooler" :   ["", [], "Intercooler T_out [K]"],
+                "t_out_Bop" :           ["", [],'BoP T_out [K]'],
+                "p_in" :                ["", [], 'bop pressure drop [bar]']}
 
 ##########   calculation ###########################################################################################
 excel_dict = {}

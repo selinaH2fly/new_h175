@@ -47,24 +47,21 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Provide input on boundary conditions
     """
-
-    circ.add_bc("p_9 = %f" %bc_dict["pump_p_in"])
-    circ.add_bc("delta_p_bop1 = - (0.000425124 * 60 ** 2 * %s ** 2 + 0.003355931 * %s)"%(bop1.Vdot_in, bop1.Vdot_in))
-    circ.add_bc("delta_p_stack1 = - (5.6629  * 10 ** (-6) * 60 ** 2 * %s ** 2 + 6.3347 * 10 ** (-4) * 60 * %s)"%(stack1.Vdot_in, stack1.Vdot_in))
-    circ.add_bc("delta_p_radiator1 = - (8.2958 * 10 ** (-6) * 60 ** 2 * %s + 1.6622 * 10 ** (-3) * 60 * %s)"%(radiator1.Vdot_in, radiator1.Vdot_in))
-
     circ.add_bc("delta_p_1_tcv1 = 0.0")
 
-    circ.add_bc("T_6 = %f" %bc_dict["stack_t_in"])
-    circ.add_bc("T_7 = %f" %bc_dict["stack_t_out"])
-    circ.add_bc("T_3 = %f" %bc_dict["sys_t_in"])
+    # boundary conditions, user input:
+    circ.add_bc("%s = %f" %(pump1.p_in, bc_dict["pump_p_in"]))
+    circ.add_bc("%s = %f" %(stack1.T_in, bc_dict["stack_t_in"]))
+    circ.add_bc("%s = %f" %(stack1.T_out, bc_dict["stack_t_out"]))
+    circ.add_bc("%s = %f" %(radiator1.T_out, bc_dict["sys_t_in"]))
+    circ.add_bc("%s = %f" %(bop1.Qdot, bc_dict["bop_q"]))
+    circ.add_bc("%s = %f" %(stack1.Qdot, bc_dict["stack_q"]))
+    circ.add_bc("%s = %f" %(bop1.Vdot_in,bc_dict["bop_vdot"]))
 
-    circ.add_bc("Qdot_bop1 = %f" %bc_dict["bop_q"])
-    circ.add_bc("Qdot_stack1 = %f" %bc_dict["stack_q"])
-    # circ.add_bc("Qdot_stack1 = %.1f"%(np.interp(600, [20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600], [2.6, 9.7, 20.8, 33.1, 46.7, 60.5, 75.0, 90.2, 106.4, 123.6, 142.5, 162.0, 178.5], left=np.nan, right=np.nan) * 1000.0))
-
-    circ.add_bc("Vdot_3 = %f" %bc_dict["bop_vdot"])
-
+    # fixed boundary conditiones:
+    circ.add_bc("%s = - (0.000425124 * 60 ** 2 * %s ** 2 + 0.003355931 * %s)"%(bop1.delta_p, bop1.Vdot_in, bop1.Vdot_in))
+    circ.add_bc("%s = - (5.6629  * 10 ** (-6) * 60 ** 2 * %s ** 2 + 6.3347 * 10 ** (-4) * 60 * %s)"%(stack1.delta_p, stack1.Vdot_in, stack1.Vdot_in))
+    circ.add_bc("%s = - (8.2958 * 10 ** (-6) * 60 ** 2 * %s + 1.6622 * 10 ** (-3) * 60 * %s)"%(radiator1.delta_p, radiator1.Vdot_in, radiator1.Vdot_in))
 
     """
     Evaluate and generate output
@@ -81,6 +78,8 @@ def initialize(input_dict, result_dict, bc_dict):
             result_dict[name][0] = mixer2.nmix_2
         elif name == "radiator_t_in":
             result_dict[name][0] = radiator1.T_in
+        elif name == "stack_delta_p":
+            result_dict[name][0] = stack1.delta_p
     if "pump2_vdot" in result_dict.keys():
         del result_dict["pump2_vdot"]
     if "pump2_delta_p" in result_dict.keys():

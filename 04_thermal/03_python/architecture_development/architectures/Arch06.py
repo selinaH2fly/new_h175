@@ -28,7 +28,7 @@ def initialize(input_dict, result_dict, bc_dict):
     circ.add_comp(splitter1)
     throttle1 = ThermSim.Throttle(2, 3, "throttle1")
     circ.add_comp(throttle1)
-    bop1 = ThermSim.Heatsource(3, 4, "bop1")
+    bop1 = ThermSim.Heatsink(3, 4, "bop1")
     circ.add_comp(bop1)
     mixer1 = ThermSim.ConnectorPassive2to1(4, 7, 9, "mixer1")
     circ.add_comp(mixer1)
@@ -53,30 +53,29 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Provide input on boundary conditions
     """
-
-    circ.add_bc("p_9 = %f" %bc_dict["pump_p_in"])
-
+    circ.add_bc("delta_p_1_tcv1 = 0.0")
     # pressure drop for bop1 for all bop components including intercooler, must be adapted to without intercooler!
     # pressure drop bop2 is equal to intercooler pressure drop, already adapted!
     circ.add_bc("delta_p_bop1 = - (0.000425124 * 60 ** 2 * Vdot_3 ** 2 + 0.003355931 * Vdot_3)")
     circ.add_bc("delta_p_bop2 = - - (4.4760 * 10 ** (-4) * Vdot_11 ** 2 * 60 ** 2 + 2.2828 * 10 ** (-3) * Vdot_11 * 60)")
 
-    circ.add_bc("delta_p_stack1 = - (5.6629  * 10 ** (-6) * 60 ** 2 * %s ** 2 + 6.3347 * 10 ** (-4) * 60 * %s)"%(stack1.Vdot_in, stack1.Vdot_in))
-    circ.add_bc("delta_p_radiator1 = - (8.2958 * 10 ** (-6) * 60 ** 2 * %s + 1.6622 * 10 ** (-3) * 60 * %s)"%(radiator1.Vdot_in, radiator1.Vdot_in))
-
-    circ.add_bc("delta_p_1_tcv1 = 0.0")
-
-    circ.add_bc("T_6 = %f" %bc_dict["stack_t_in"])
-    circ.add_bc("T_7 = %f" %bc_dict["stack_t_out"])
-    circ.add_bc("T_3 = %f" %bc_dict["sys_t_in"])
-
-    circ.add_bc("Qdot_bop1 = 1650")
-    circ.add_bc("Qdot_bop2 = 9000")
-    circ.add_bc("Qdot_stack1 = %f" %bc_dict["stack_q"])
-    #circ.add_bc("Qdot_stack1 = %.1f"%(np.interp(600, [20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600], [2.6, 9.7, 20.8, 33.1, 46.7, 60.5, 75.0, 90.2, 106.4, 123.6, 142.5, 162.0, 178.5], left=np.nan, right=np.nan) * 1000.0))
+    circ.add_bc("Qdot_bop1 = -8000")
+    circ.add_bc("Qdot_bop2 = 21000")
 
     circ.add_bc("Vdot_3 = %f" %bc_dict["bop_vdot"])
     circ.add_bc("Vdot_11 = %f" %bc_dict["bop_vdot"])
+    # boundary conditions, user input:
+    circ.add_bc("%s = %f" %(pump1.p_in, bc_dict["pump_p_in"]))
+    circ.add_bc("%s = %f" %(stack1.T_in, bc_dict["stack_t_in"]))
+    circ.add_bc("%s = %f" %(stack1.T_out, bc_dict["stack_t_out"]))
+    circ.add_bc("%s = %f" %(radiator1.T_out, bc_dict["sys_t_in"]))
+    circ.add_bc("%s = %f" %(stack1.Qdot, bc_dict["stack_q"]))
+
+
+    # fixed boundary conditiones:
+    # circ.add_bc("%s = - (0.000425124 * 60 ** 2 * %s ** 2 + 0.003355931 * %s)"%(bop1.delta_p, bop1.Vdot_in, bop1.Vdot_in))
+    circ.add_bc("%s = - (5.6629  * 10 ** (-6) * 60 ** 2 * %s ** 2 + 6.3347 * 10 ** (-4) * 60 * %s)"%(stack1.delta_p, stack1.Vdot_in, stack1.Vdot_in))
+    circ.add_bc("%s = - (8.2958 * 10 ** (-6) * 60 ** 2 * %s + 1.6622 * 10 ** (-3) * 60 * %s)"%(radiator1.delta_p, radiator1.Vdot_in, radiator1.Vdot_in))
 
 
     """
@@ -94,6 +93,8 @@ def initialize(input_dict, result_dict, bc_dict):
             result_dict[name][0] = tcv1.nmix_2
         elif name == "radiator_t_in":
             result_dict[name][0] = radiator1.T_in
+        elif name == "stack_delta_p":
+            result_dict[name][0] = stack1.delta_p
     if "pump2_vdot" in result_dict.keys():
         del result_dict["pump2_vdot"]
     if "pump2_delta_p" in result_dict.keys():
