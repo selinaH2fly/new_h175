@@ -181,7 +181,7 @@ class Evaporator_Parameters:
         self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
         self.ALLOWED_FLUIDS = ['H2','INCOMP::MEG-50%']
     
-class Eol_Parameter:
+class Eol_Parameters:
 
     def __init__(self):
 
