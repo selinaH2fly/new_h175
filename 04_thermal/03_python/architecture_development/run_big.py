@@ -10,16 +10,16 @@ vary_bc = True
 compare_res = True
 
 # Which Architectures do you want to evaluate? ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08"] 
-arch_list = ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "ArchShy4"]      # which architecture should be analysed?, also possible to evaluate multiple architectures
+arch_list = ["Arch03a", "Arch03b", "Arch04", "Arch05", "Arch08", "ArchShy4"]#, ]      # which architecture should be analysed?, also possible to evaluate multiple architectures
 #"Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", 
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
 #    input_dict = {"stack_t_out" : ["", [273.15 + 70 + 8, 273.15 + 70 + 10], 'Stackausgangstemperatur [K]']}
-    #input_dict = {"stack_t_in" : ["", [273.15 + 68, 273.15 + 70, 273.15 + 72], 'Stackeingangstemperatur [K]']} #, 273.15 + 60 + 14, 273.15 + 60 + 16
-    input_dict = {"sys_t_in" : ["", [273.15 + 55, 273.15 + 57.5, 273.15 + 60, 273.15 + 62.5, 273.15 + 65], 'Systemeingangstemperatur [K]']}
+    input_dict = {"stack_t_in" : ["", [273.15 + 68, 273.15 + 70, 273.15 + 72, 273.15 + 74], 'Stackeingangstemperatur [K]']} #, 273.15 + 60 + 14, 273.15 + 60 + 16
+    #input_dict = {"sys_t_in" : ["", [273.15 + 50, 273.15 + 55, 273.15 + 60, 273.15 + 65], 'Systemeingangstemperatur [K]']}
     #input_dict = {"bop_q" : ["",[5000, 7000, 9000, 11000, 13000], 'Wärmeeintrag BoP Komponenten [W]']}
-    #input_dict = {"stack_q" : ["", [140000, 160000, 180000, 200000, 220000], 'Wärmeeintrag Stack [W]']}    # circ.add_bc("Qdot_stack1 = %.1f"%(np.interp(600, [20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600], [2.6, 9.7, 20.8, 33.1, 46.7, 60.5, 75.0, 90.2, 106.4, 123.6, 142.5, 162.0, 178.5], left=np.nan, right=np.nan) * 1000.0))
+    # input_dict = {"stack_q" : ["", [160000, 180000, 200000, 220000], 'Wärmeeintrag Stack [W]']}    # circ.add_bc("Qdot_stack1 = %.1f"%(np.interp(600, [20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600], [2.6, 9.7, 20.8, 33.1, 46.7, 60.5, 75.0, 90.2, 106.4, 123.6, 142.5, 162.0, 178.5], left=np.nan, right=np.nan) * 1000.0))
     #input_dict = {"bop_vdot" : ["", [20/60, 30/60, 40/60, 50/60, 60/60], 'Volumenstrom über BoP Komponenten [l/s]']}
     ###M#input_dict = {"bop_dp" : ["", [0.1, 0.2, 0.3, 0.4, 0.5], 'Druckverlust über die BoP Komponenten [bar]']}
 else: 
@@ -33,7 +33,7 @@ bc_dict = {"pump_p_in" : 1,                     # pressure before pump, lowest p
            "sys_t_in" : 273.15 + 60.0,          # System entry temperature, temperature after external radiatior
            "bop_q" : 13000,                     # bop heat 
            "stack_q" : 200000,                  # stack heat
-           "bop_vdot" : 0.5                     # flow over bop components (whole block) 30L/min
+           "bop_vdot" : 0.3                     # flow over bop components (whole block) 30L/min
 }
 
 # Which variables should be safed in excel and be plotted
@@ -44,7 +44,8 @@ result_dict = {"pump_vdot" : ["", [], 'flow over pump1 [l/S]'],
                 "radiator_t_in" : ["", [],'System Output Temperature [K]'],
                 "pump2_vdot" : ["", [], "flow over pump2 [l/s]"],
                 "pump2_delta_p" : ["", [], "pump2 pressure difference [bar]"],
-                "stack_delta_p" : ["", [], "pressure loss over stack [bar]"]
+                "stack_delta_p" : ["", [], "pressure loss over stack [bar]"],
+                "pump_power" : ["", [], "optimal pump power [W]"],
 }
 
 ############################################################ calculation ############################################################
@@ -62,12 +63,11 @@ for arch in arch_list:      # each architecture is evaluated
     result_dict_new = circ.analyse_arch(input_dict, result_dict_new)
 
     if "pump_vdot" in result_dict_new.keys() and "pump_delta_p" in result_dict_new.keys(): #calculates the entire pump power
-            result_dict_new["pump_power"] = ["", [], "combined optimal pump power in [W]"]
-            for y in range(len(result_dict_new["pump_vdot"][1])):
-                result_dict_new["pump_power"][1].append(result_dict_new["pump_vdot"][1][y] * result_dict_new["pump_delta_p"][1][y] * 100)
-            if "pump2_vdot" in result_dict_new.keys() and "pump2_delta_p" in result_dict_new.keys():
-                for y in range(len(result_dict_new["pump2_vdot"][1])):
-                    result_dict_new["pump_power"][1][y] += (result_dict_new["pump2_vdot"][1][y] * result_dict_new["pump2_delta_p"][1][y] * 100)
+        for y in range(len(result_dict_new["pump_vdot"][1])):
+            result_dict_new["pump_power"][1].append(result_dict_new["pump_vdot"][1][y] * result_dict_new["pump_delta_p"][1][y] * 100)
+        if "pump2_vdot" in result_dict_new.keys() and "pump2_delta_p" in result_dict_new.keys():
+            for y in range(len(result_dict_new["pump2_vdot"][1])):
+                result_dict_new["pump_power"][1][y] += (result_dict_new["pump2_vdot"][1][y] * result_dict_new["pump2_delta_p"][1][y] * 100)
 
     for name in result_dict_new:    # rewrite results in one dictionary
         all_result_dict["%s_%s"%(arch,name)] = [result_dict_new[name][0], result_dict_new[name][1], result_dict_new[name][2]]
