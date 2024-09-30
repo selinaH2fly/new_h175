@@ -350,7 +350,13 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                          zip(_params_optimization.bounds, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
 
     def pop_init():
-        
+        """
+        Function to generate a initilization population to accelerate convergence
+
+        Returns:
+        - population that is defined between the bounds and the DoE envelope
+        """
+
         #define current bounds by initial voltage and brutto deviation
         current_lower = power_constraint_kW*1000/_params_optimization.init_cell_voltage/cellcount
         current_upper =power_constraint_kW*1000*_params_optimization.brutto_deviation/_params_optimization.init_cell_voltage/cellcount
@@ -408,6 +414,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         return adjusted_pop_init
 
     class ConvergenceTracker:
+        """
+        Class to get detailed optimization informations and set manual convergence criteria
+
+        Returns:
+        - callback[True, False]: return of "True" stops optimizer
+        """
         def __init__(self, tolerance=1e-4, window_size=30, constraint_check=1):
             self.best_objective_values = []  # Stores the best objective values at each iteration
             self.tolerance = tolerance       # Convergence tolerance (10e-4)
