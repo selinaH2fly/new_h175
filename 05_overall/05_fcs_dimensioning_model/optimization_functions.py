@@ -337,7 +337,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         return power_balance_offset        
         #optimized_cell_voltage_V = cell_voltage * cell_voltage_model.target_data_std + cell_voltage_model.target_data_mean
 
-    nlc_Power = NonlinearConstraint(nonlinear_constraint_Power, -100, 100)
+    nlc_Power = NonlinearConstraint(nonlinear_constraint_Power, 0, 1000)
 
     def nonlinear_constraint_CoolantPump(x):
         optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
@@ -375,11 +375,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     def pop_init():
         
         #define current bounds by initial voltage and brutto deviation
-        current_lower = power_constraint_kW/_params_optimization.init_cell_voltage
-        current_upper =power_constraint_kW*_params_optimization.brutto_deviation/_params_optimization.init_cell_voltage
+        current_lower = power_constraint_kW*1000/_params_optimization.init_cell_voltage/cellcount
+        current_upper =power_constraint_kW*1000*_params_optimization.brutto_deviation/_params_optimization.init_cell_voltage/cellcount
         adjusted_lower = Optimized_DoE_data_variables[Optimized_DoE_data_variables['current_A'] < current_lower]['current_A'].max()
         adjusted_upper = Optimized_DoE_data_variables[Optimized_DoE_data_variables['current_A'] > current_upper]['current_A'].min()
-
+        print(current_lower, current_upper)
+        print(adjusted_lower, adjusted_upper)
         if pd.isna(adjusted_lower):
             adjusted_lower = Optimized_DoE_data_variables['current_A'].min()
         if pd.isna(adjusted_upper):
@@ -387,28 +388,62 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         filtered_DoE = Optimized_DoE_data_variables[(Optimized_DoE_data_variables['current_A'] >= adjusted_lower) & (Optimized_DoE_data_variables['current_A'] <= adjusted_upper)]
 
         #filter DoE data by min,max bounds of estimatet current
-        #filtered_DoE = Optimized_DoE_data_variables[(Optimized_DoE_data_variables['current_A'] >= Optimized_DoE_data_variables[Optimized_DoE_data_variables['current A']<current_lower]['current A'].max()) & (Optimized_DoE_data_variables['current_A'] >= Optimized_DoE_data_variables[Optimized_DoE_data_variables['current A']>current_upper]['current A'].min())]  #*0.75) & (Optimized_DoE_data_variables['current_A'] <= current_upper*1.1)]
         n_bounds = 6
         bounds_pop = np.zeros((n_bounds,2))
         init_pop = np.zeros((_params_optimization.popsize, n_bounds))
-
         #build and normalize init population bounds
         for i, column in enumerate(filtered_DoE.columns):
             bounds_pop[i,0] = filtered_DoE[column].min()
             bounds_pop[i,1] = filtered_DoE[column].max()
-        normalized_bounds_pop = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
-                         zip(bounds_pop, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
-    
+
+        # normalized_bounds_pop = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
+        #                  zip(bounds_pop, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
+
+        print('population bounds \n',bounds_pop)
         # build init population
+        #for i in range(n_bounds):
+        #    lower_bound, upper_bound = normalized_bounds_pop[i]
+        #    init_pop[:,i] = np.random.uniform(lower_bound,upper_bound,_params_optimization.popsize)
+        
         for i in range(n_bounds):
-            lower_bound, upper_bound = normalized_bounds_pop[i]
+            lower_bound, upper_bound = bounds_pop[i]
             init_pop[:,i] = np.random.uniform(lower_bound,upper_bound,_params_optimization.popsize)
-       
-        return init_pop
+        
+        def is_inside_convex_hull(point,delaunay):
+            return delaunay.find_simplex(point)>=0
+        
+        def generate_point_in_doe_envelope(delaunay, bounds):
+            while True:
+                DoE_point = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1])
+                if delaunay.find_simplex(DoE_point) >=0:
+                    return DoE_point                    
+        def evaluate_pop_in_DoE(points, delaunay):
+            points_scaled = points*cell_voltage_model.input_data_std.numpy()+cell_voltage_model.input_data_mean.numpy()
+            simplex = delaunay.find_simplex(points_scaled)
+            num_simplex = np.sum(simplex)
+            outside_simplex = np.sum(simplex== -1)
+            return num_simplex, outside_simplex
+
+        adjusted_pop_init = []
+        for point in init_pop:
+            if is_inside_convex_hull(point, DoE_envelope_Delaunay):
+                point = (point-cell_voltage_model.input_data_mean.numpy())/cell_voltage_model.input_data_std.numpy()
+                adjusted_pop_init.append(point)
+                
+            else:
+                generated_point = (generate_point_in_doe_envelope(DoE_envelope_Delaunay, bounds_pop)-cell_voltage_model.input_data_mean.numpy())/cell_voltage_model.input_data_std.numpy()
+                adjusted_pop_init.append(generated_point)
+        adjusted_pop_init = np.array(adjusted_pop_init)
+        pop_init_bounds = np.zeros((2, adjusted_pop_init.shape[1]))
+        pop_init_bounds[0,:] = np.min(adjusted_pop_init, axis=0)
+        pop_init_bounds[1,:] = np.max(adjusted_pop_init, axis=0)
+        all_points, outside_points = evaluate_pop_in_DoE(adjusted_pop_init, DoE_envelope_Delaunay)
+        print('The population consists of ', all_points,". Number of points outside of DoE envelope",outside_points)
+        return adjusted_pop_init
 
     class ConvergenceTracker:
 
-        def __init__(self, tolerance=1e-4, window_size=30, constraint_check=50):
+        def __init__(self, tolerance=1e-4, window_size=30, constraint_check=1):
             self.best_objective_values = []  # Stores the best objective values at each iteration
             self.tolerance = tolerance       # Convergence tolerance (10e-4)
             self.window_size = window_size   # The window size (e.g., 30 iterations)
@@ -424,9 +459,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             nlc_DoE_xk = nonlinear_constraint_DoE(xk)
 
             if len(self.best_objective_values) == self.constraint_check and nlc_DoE_xk < 0 and self.constraint_check<self.window_size:
-                print(f"Iteration {len(self.best_objective_values)}: Constraint not satisfied, restarting optimization...")
+                #print(f"Iteration {len(self.best_objective_values)}: Constraint not satisfied, restarting optimization...")
                 self.constraint_satisfied = False
-                #print("hiet steht mein satisfied_constraint",self.constraint_satisfied)
                 return True
 
             elif len(self.best_objective_values) >= self.window_size:
@@ -440,10 +474,10 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                 
 
                 # Print iteration details
-                #print(f"Iteration {len(self.best_objective_values)}: Current Objective = {current_best_value:.6f}, Avg of Last 30 = {average_recent_values:.6f}, Difference to avg = {difference_to_avg:.6f}, Difference to last ={difference_to_last:.6f} , nlc_CP = {nlc_CP_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
+                #print(f"Iteration {len(self.best_objective_values)}: Current Objective = {current_best_value:.6f}, Avg of Last {self.window_size:.6f} = {average_recent_values:.6f}, Difference to avg = {difference_to_avg:.6f}, Difference to last ={difference_to_last:.6f} , nlc_CP = {nlc_CP_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
 
                 # Check if the difference is less than the tolerance (i.e., convergence criterion)
-                if difference_to_avg < self.tolerance and difference_to_last < self.tolerance and -100 < nlc_Power_xk < 100 and nlc_CP_xk>0 and nlc_DoE_xk>0:
+                if difference_to_avg < self.tolerance and difference_to_last < self.tolerance and 0 <= nlc_Power_xk < 1000 and nlc_CP_xk>0 and nlc_DoE_xk>0:
                     #print("Convergence criterion met! Stopping optimization.")
                     self.constraint_satisfied = True
                     return True  # Return True to stop the optimization early
@@ -460,13 +494,13 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                 return False
 
     def optimize_with_constraint_check():
-        max_attempts = 10
+        max_attempts = 5
         attempt = 0
 
         while attempt < max_attempts:
             print(f"\nStarting optimization attempt {attempt + 1}...")
             # Reset the callback for each new attempt
-            callback = ConvergenceTracker(tolerance=1e-4, window_size=40, constraint_check=100)
+            callback = ConvergenceTracker(tolerance=1e-5, window_size=40, constraint_check=100)
             result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=callback,
                                     maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
                                     seed=_params_optimization.seed, recombination=_params_optimization.recombination, strategy=_params_optimization.strategy, 

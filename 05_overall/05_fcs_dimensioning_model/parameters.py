@@ -6,7 +6,7 @@ class Optimization_Parameters:
     def __init__(self):
 
         # Bounds for the optimization problem TODO: make these a dictionary
-        self.bounds = [(50, 800),       # current_A
+        self.bounds = [(0, 2e3),       # current_A
                         (30, 140),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
                         (1.6, 12),       # stoich_cathode (lambda_min = 1.6 according to P10 manual)
                         (1.1, 3.3),     # pressure_cathode_in_bara (p_max = 2.3 barg according to P10 manual)
