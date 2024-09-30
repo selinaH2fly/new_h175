@@ -307,26 +307,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Evaluate the models with the normalized input
         optimal_input, cell_voltage, compressor_power_W, turbine_power_W, \
             reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
-        
-        # # Compute the penalty term for the power constraint
-        # if power_constraint_kW is not None:
-        #     power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
-        #         - compressor_power_W + turbine_power_W - reci_pump_power_W  - coolant_pump_power_W \
-        #             - power_constraint_kW * 1000
-        #     penalty = _params_optimization.penalty_weight * (power_balance_offset**2)
-        # else:
-        #     penalty = 0
-        
+               
         return hydrogen_supply_rate_g_s #+ penalty
    
-    #define nonlinear constraints
-    # def nonlinear_constraint_Temp(x):
-
-    #     return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
-    #         - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4]))
-    
-    # nlc_Temp = NonlinearConstraint(nonlinear_constraint_Temp, 0, np.inf)
-
     def nonlinear_constraint_Power(x):
         optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
 
@@ -335,7 +318,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                 - power_constraint_kW * 1000
 
         return power_balance_offset        
-        #optimized_cell_voltage_V = cell_voltage * cell_voltage_model.target_data_std + cell_voltage_model.target_data_mean
 
     nlc_Power = NonlinearConstraint(nonlinear_constraint_Power, 0, 1000)
 
@@ -343,7 +325,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
 
         return coolant_pump_power_W        
-        #optimized_cell_voltage_V = cell_voltage * cell_voltage_model.target_data_std + cell_voltage_model.target_data_mean
 
     nlc_Coolant_Pump = NonlinearConstraint(nonlinear_constraint_CoolantPump, 0, np.inf)
 
@@ -353,13 +334,10 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Define the nonlinear constraint for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 0 K
         def nonlinear_constraint_DoE(x):
             # Constraint if results are inside convex hull of DoE
-
             x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
             x_scaled = x_scaled.reshape(1,6)
 
             return DoE_envelope_Delaunay.find_simplex(x_scaled)
-            #return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
-            #    - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4])) - 0
             
         nlc_DoE = NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)
         nlc = [nlc_Power, nlc_DoE, nlc_Coolant_Pump]
@@ -370,7 +348,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # Normalize the bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
                          zip(_params_optimization.bounds, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
-    # Perform the optimization using differential evolution
 
     def pop_init():
         
@@ -379,8 +356,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         current_upper =power_constraint_kW*1000*_params_optimization.brutto_deviation/_params_optimization.init_cell_voltage/cellcount
         adjusted_lower = Optimized_DoE_data_variables[Optimized_DoE_data_variables['current_A'] < current_lower]['current_A'].max()
         adjusted_upper = Optimized_DoE_data_variables[Optimized_DoE_data_variables['current_A'] > current_upper]['current_A'].min()
-        print(current_lower, current_upper)
-        print(adjusted_lower, adjusted_upper)
         if pd.isna(adjusted_lower):
             adjusted_lower = Optimized_DoE_data_variables['current_A'].min()
         if pd.isna(adjusted_upper):
@@ -391,20 +366,11 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         n_bounds = 6
         bounds_pop = np.zeros((n_bounds,2))
         init_pop = np.zeros((_params_optimization.popsize, n_bounds))
-        #build and normalize init population bounds
         for i, column in enumerate(filtered_DoE.columns):
             bounds_pop[i,0] = filtered_DoE[column].min()
             bounds_pop[i,1] = filtered_DoE[column].max()
 
-        # normalized_bounds_pop = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
-        #                  zip(bounds_pop, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
-
-        print('population bounds \n',bounds_pop)
-        # build init population
-        #for i in range(n_bounds):
-        #    lower_bound, upper_bound = normalized_bounds_pop[i]
-        #    init_pop[:,i] = np.random.uniform(lower_bound,upper_bound,_params_optimization.popsize)
-        
+        # build init population        
         for i in range(n_bounds):
             lower_bound, upper_bound = bounds_pop[i]
             init_pop[:,i] = np.random.uniform(lower_bound,upper_bound,_params_optimization.popsize)
@@ -423,7 +389,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             num_simplex = np.sum(simplex)
             outside_simplex = np.sum(simplex== -1)
             return num_simplex, outside_simplex
-
+        
+        #fit init population into DoE envelope
         adjusted_pop_init = []
         for point in init_pop:
             if is_inside_convex_hull(point, DoE_envelope_Delaunay):
@@ -438,11 +405,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         pop_init_bounds[0,:] = np.min(adjusted_pop_init, axis=0)
         pop_init_bounds[1,:] = np.max(adjusted_pop_init, axis=0)
         all_points, outside_points = evaluate_pop_in_DoE(adjusted_pop_init, DoE_envelope_Delaunay)
-        print('The population consists of ', all_points,". Number of points outside of DoE envelope",outside_points)
         return adjusted_pop_init
 
     class ConvergenceTracker:
-
         def __init__(self, tolerance=1e-4, window_size=30, constraint_check=1):
             self.best_objective_values = []  # Stores the best objective values at each iteration
             self.tolerance = tolerance       # Convergence tolerance (10e-4)
@@ -493,38 +458,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                 #print(f"Iteration {len(self.best_objective_values)}: Best Objective = {current_best_value:.6f}, nlc_CP = {nlc_CP_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
                 return False
 
-    def optimize_with_constraint_check():
-        max_attempts = 5
-        attempt = 0
-
-        while attempt < max_attempts:
-            print(f"\nStarting optimization attempt {attempt + 1}...")
-            # Reset the callback for each new attempt
-            callback = ConvergenceTracker(tolerance=1e-5, window_size=40, constraint_check=100)
-            result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=callback,
+    # Perform the optimization using differential evolution
+    #callback = ConvergenceTracker(tolerance=1e-5, window_size=40, constraint_check=100) #activate if you need some convergence information
+    result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=None,
                                     maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
                                     seed=_params_optimization.seed, recombination=_params_optimization.recombination, strategy=_params_optimization.strategy, 
                                     tol=_params_optimization.tol, polish=False, init=pop_init(), disp=False)
-    
-            if callback.constraint_satisfied:
-                print("Optimization completed successfully.")
-                return result  # Return the successful result
-            else:
-                print("Optimization failed to satisfy the constraint, retrying...")
-
-            attempt += 1  # Increment the attempt counter
-        
-        print(f"\nStarting optimization attempt {attempt + 1}...")
-        # Reset the callback for each new attempt
-        callback = ConvergenceTracker(tolerance=1e-4, window_size=40, constraint_check=_params_optimization.maxiter+1)
-        result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=callback,
-                                maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
-                                seed=_params_optimization.seed, recombination=_params_optimization.recombination, strategy=_params_optimization.strategy,
-                                tol=_params_optimization.tol, polish=False, init=pop_init(), disp=False)
-        print("Maximum attempts reached. Result based on last attempt.")
-        return result
-
-    result = optimize_with_constraint_check()
     optimization_converged = result.success
     print(f'{result.message}')
 
