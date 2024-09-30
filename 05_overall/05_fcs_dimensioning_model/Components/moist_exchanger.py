@@ -3,13 +3,35 @@ import numpy as np
 
 
 class MoistExchanger:
-    def __init__(self, air_flow_rate, temperature, pressure, rh):
-        self.air_flow_rate = air_flow_rate
-        self.temperature = temperature
-        self.pressure = pressure
-        self.rh = rh / 100
+    """
+    A class to model the basic physics of a moisture exchanger.
+    This class will later be used as a superclass for multiple moisture exchanger types.
+    """
 
-    def calculate_cp(self, T, RH, P):
+    def __init__(self, air_mass_flow_kg_s_dry=0.086, air_mass_flow_kg_s_wet=0.026,
+                 temperature_in_K_dry_in=346.1, pressure_in_Pa_dry_in=21700, rh_dry_in=0.05,
+                 temperature_in_K_dry_out=337.8, pressure_in_Pa_dry_out=211000, rh_dry_out=0.88,
+                 temperature_in_K_wet_in=348, pressure_in_Pa_wet_in=190000, rh_wet_in=1.0,
+                 pressure_in_Pa_wet_out=190000):
+        # Dry air parameters
+        self.air_mass_flow_kg_s_dry = air_mass_flow_kg_s_dry
+        self.temperature_in_K_dry_in = temperature_in_K_dry_in
+        self.pressure_in_Pa_dry_in = pressure_in_Pa_dry_in
+        self.rh_dry_in = rh_dry_in
+
+        self.temperature_in_K_dry_out = temperature_in_K_dry_out
+        self.pressure_in_Pa_dry_out = pressure_in_Pa_dry_out
+        self.rh_dry_out = rh_dry_out
+
+        # Wet air parameters
+        self.air_mass_flow_kg_s_wet = air_mass_flow_kg_s_wet
+        self.temperature_in_K_wet_in = temperature_in_K_wet_in
+        self.pressure_in_Pa_wet_in = pressure_in_Pa_wet_in
+        self.rh_wet_in = rh_wet_in
+
+        self.pressure_in_Pa_wet_out = pressure_in_Pa_wet_out
+
+    def calculate_specific_heat(self, T, RH, P):
         # Calculate specific heat capacity of moist air (Cp) using CoolProp
         return HAP.HAPropsSI('C', 'T', T + 273.15, 'P', P, 'R', RH)
 
@@ -44,71 +66,15 @@ class Humidifier(MoistExchanger):
         self.T_wet_in = T_wet_in
         self.P_wet_in = P_wet_in * 1000
         self.RH_wet_in = RH_wet_in / 100
-        self.P_wet_out = P_wet_out * 1000  
+        self.P_wet_out = P_wet_out * 1000
 
         # Calculate properties
         self.calculate_properties()
 
     def calculate_properties(self):
         # Calculate properties for both dry and wet air
-        self.Cp_dry = self.calculate_cp(self.temperature, self.rh, self.pressure)
-        self.Cp_wet = self.calculate_cp(self.T_wet_in, self.RH_wet_in, self.P_wet_in)
+        self.Cp_dry = self.calculate_specific_heat(self.temperature, self.rh, self.pressure)
+        self.Cp_wet = self.calculate_specific_heat(self.T_wet_in, self.RH_wet_in, self.P_wet_in)
 
         self.dewpoint_dry_in = self.calculate_dewpoint(self.temperature, self.rh, self.pressure)
-        self.dewpoint_dry_out = self.calculate_dewpoint(self.T_dry_out, self.RH_dry_out, self.P_dry_out)
-        self.dewpoint_wet_in = self.calculate_dewpoint(self.T_wet_in, self.RH_wet_in, self.P_wet_in)
-        self.dewpoint_wet_out = self.calculate_dewpoint(self.T_wet_in, 1, self.P_wet_out)  # RH=1 for saturated vapor
-
-        self.p_sat_dry_in = self.calculate_saturation_pressure(self.temperature)
-        self.p_sat_dry_out = self.calculate_saturation_pressure(self.T_dry_out)
-        self.p_sat_wet_in = self.calculate_saturation_pressure(self.T_wet_in)
-
-        self.p_vap_dry_in = self.p_sat_dry_in * self.rh
-        self.p_vap_dry_out = self.p_sat_dry_out * self.RH_dry_out
-        self.p_vap_wet_in = self.p_sat_wet_in * self.RH_wet_in
-
-        # Mass flow of water vapor transfer
-        # Wrong Result!!
-        self.water_transfer = self.calculate_water_transfer(self.p_vap_wet_in, self.p_vap_dry_out, self.T_dry_out,
-                                                            self.RH_dry_out, self.T_wet_in, self.RH_wet_in)
-    """
-    def display_results(self):
-        print("=== Humidifier Results ===")
-        print(f"Air Flow Rate: {self.air_flow_rate:.4f} m³/s")
-
-        print(
-            f"Dry Air In: T = {self.temperature:.2f} °C, P = {self.pressure / 1000:.2f} kPa, RH = {self.rh * 100:.2f} %")
-        print(
-            f"Dry Air Out: T = {self.T_dry_out:.2f} °C, P = {self.P_dry_out / 1000:.2f} kPa, RH = {self.RH_dry_out * 100:.2f} %")
-
-        print(
-            f"Wet Air In: T = {self.T_wet_in:.2f} °C, P = {self.P_wet_in / 1000:.2f} kPa, RH = {self.RH_wet_in * 100:.2f} %")
-        print(f"Wet Air Out: P = {self.P_wet_out / 1000:.2f} kPa")  # Assuming you will calculate T_wet_out
-
-        print(f"Dew Point Dry In: {self.dewpoint_dry_in:.2f} °C")
-        print(f"Dew Point Dry Out: {self.dewpoint_dry_out:.2f} °C")
-        print(f"Dew Point Wet In: {self.dewpoint_wet_in:.2f} °C")
-        print(f"Dew Point Wet Out: {self.dewpoint_wet_out:.2f} °C")
-
-        print(f"Water Vapor Transfer: {self.water_transfer:.4f} kg/s")
-
-        # Add more results as needed
-
-
-# Example usage
-humidifier = Humidifier(
-    air_flow_rate=5500 / 60000,  # Convert to m³/s
-    T_dry_in=80.3,
-    P_dry_in=105,  # kPa
-    RH_dry_in=18.8,  # %
-    T_dry_out=73.9,
-    P_dry_out=101,  # kPa
-    RH_dry_out=75.7,  # %
-    T_wet_in=80.2,
-    P_wet_in=76.6,  # kPa
-    RH_wet_in=99,  # %
-    P_wet_out=76.6  # kPa
-)
-
-humidifier.display_results()
-"""
+        self.dew
