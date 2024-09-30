@@ -3,8 +3,6 @@ import torch
 import gpytorch
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 from scipy.optimize import differential_evolution, NonlinearConstraint
 from scipy.spatial import ConvexHull, Delaunay
 import CoolProp.CoolProp as CP
@@ -264,22 +262,11 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         coolant_pump_power_W = coolant_pump_ht.calculate_power() + coolant_pump_lt.calculate_power()
 
         # %% Intercooler
-        #set T, p and m_dots here
 
         intercooler.primary_T_in_K = compressor.temperature_out_K
         intercooler.primary_T_out_K = optimized_temp_coolant_inlet_degC + 273.15 # degC into K
         intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
-        intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
-        
-        #TODO: Implement this if needed for Coolant_T increase
-        # intercooler.coolant_T_in_K = #Evap t out
-        # intercooler.coolant_T_out_K = # berechnen
-        # intercooler.coolant_mdot_in_kg_s = #?
-        # intercooler.coolant_p_in_Pa = #?
-        
-        #intercooler_T_out_K = intercooler.calculate_coolant_T_out()
-        #intercooler.coolant_T_out_K = intercooler_T_out_K
-        
+        intercooler.primary_p_in_Pa = compressor.pressure_out_Pa       
         
         # %% Consumed hydrogen mass flow rate
 
@@ -319,9 +306,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         return hydrogen_supply_rate_g_s + penalty
    
-    # define nonlinear constraints
+    # Define the nonlinear constraint for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 0 K
     def nonlinear_constraint_Temp(x):
-        # Constraint if results are inside convex hull of DoE
 
         return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
             - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4]))
@@ -330,16 +316,13 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
     if constraint:
         
-        # Define the nonlinear constraint for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 0 K
+        # Define the nonlinear constraint that optimized operating points are inside the convex hull of the DoE data
         def nonlinear_constraint_DoE(x):
-            # Constraint if results are inside convex hull of DoE
 
             x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
             x_scaled = x_scaled.reshape(1,6)
 
             return DoE_envelope_Delaunay.find_simplex(x_scaled)
-            #return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
-            #    - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4])) - 0
             
         nlc_DoE = NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)
         nlc = [nlc_Temp, nlc_DoE]

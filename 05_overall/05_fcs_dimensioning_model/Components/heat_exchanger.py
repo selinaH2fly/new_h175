@@ -206,6 +206,3 @@ class Evaporator(HeatExchanger):
 
 # Q_dot = intercooler.calculate_heat_flux("coolant")
 # print(f"Heat Transfer Rate (Qdot): {Q_dot:.2f} kW")
-
-#%%
-    
