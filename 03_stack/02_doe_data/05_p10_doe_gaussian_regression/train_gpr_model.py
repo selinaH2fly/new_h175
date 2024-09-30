@@ -21,11 +21,11 @@ import argparse
 import parameters
 from file_handling import create_experiment_folder
 from gpr_model import ExactGPModel
-from data_processing import load_high_amp_doe_data, preprocess_data
+from data_processing import load_high_amp_doe_data, load_high_temp_doe_data, preprocess_data
 from prediction_performance_evaluation import eval_prediction_performance, plot_prediction_performance, create_prediction_performance_video
 from partial_dependence_analysis import plot_partial_dependence
 
-def train_gpr_model(target='voltage', cutoff_current=0, plot=True, pretrained_model=None):
+def train_gpr_model(target='voltage', cutoff_current=0, pretrained_model=None, data='high_amp'):
     # Load parameters
     _params_training = parameters.Training_Parameters()
     _params_logging = parameters.Logging_Parameters()
@@ -38,12 +38,18 @@ def train_gpr_model(target='voltage', cutoff_current=0, plot=True, pretrained_mo
         torch.manual_seed(_params_training.seed)
 
     # Create a folder to store the training results
-    create_experiment_folder(_params_training=_params_training, _params_logging=_params_logging, type='training')
+    create_experiment_folder(_params_training=_params_training, _params_logging=_params_logging, data=data)
 
     # Load and assign the data
-    pd_dataframe, _ = load_high_amp_doe_data()
+    if data == 'high_amp':
+        pd_dataframe, _ = load_high_amp_doe_data()
+    elif data == 'high_temp':
+        pd_dataframe, _ = load_high_temp_doe_data()
+    else:
+        raise ValueError('Invalid data selection!')
+            
     train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, (input_data_mean, input_data_std), (target_data_mean, target_data_std), feature_names = \
-        preprocess_data(pd_dataframe, target, cutoff_current, params_pyhsics=_params_pyhsics)
+        preprocess_data(pd_dataframe, target, cutoff_current, params_pyhsics=_params_pyhsics, data=data)
 
     # Likelihood and model
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
@@ -123,8 +129,10 @@ def train_gpr_model(target='voltage', cutoff_current=0, plot=True, pretrained_mo
         writer = csv.writer(file)
         writer.writerows(zip(iterations, loss_list, test_loss_list))
 
-    # Plot the partial dependence plots
-    os.mkdir('partial_dependence_plots')
+    # Create PDP directories
+    os.mkdir('partial_dependence_analysis')
+    os.mkdir('partial_dependence_analysis/partial_dependence_plots')
+    os.mkdir('partial_dependence_analysis/partial_dependence_data')
 
     # Plot the partial dependence plots
     for current_value in [200, 300, 400, 500, 600, 700]:
@@ -156,11 +164,12 @@ def train_gpr_model(target='voltage', cutoff_current=0, plot=True, pretrained_mo
 if __name__ == '__main__':
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Train a Gaussian process regression model on Powercell DoE data")
-    parser.add_argument("-t", "--target", type=str, help="Target variable for Gaussian process regression", default="voltage")
+    parser.add_argument("-t", "--target", type=str, help="Target variable for Gaussian process regression", default="cell_voltage")
     parser.add_argument("-c", "--cutoff", type=float, help="Datapoints below cutoff current are removed from training data", default=0.0)
     parser.add_argument("-m", "--model", type=str, help="Load a pretrained GPR model", default=None)
+    parser.add_argument("--data", type=str, choices=["high_amp","high_temp"], help="Select the DoE dataset", default="high_temp")
 
     args = parser.parse_args()
 
     # Call the train_gpr_model function                        
-    train_gpr_model(args.target, args.cutoff, args.model)
+    train_gpr_model(args.target, args.cutoff, args.model, args.data)
