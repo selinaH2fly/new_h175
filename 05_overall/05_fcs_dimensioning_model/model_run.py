@@ -12,7 +12,7 @@ from optimization_functions import optimize_inputs_evolutionary
 
 from data_export_csv import export_to_csv
  
-def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, consider_turbine=True, compressor_map=None, end_of_life=True, constraint=True):
+def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, consider_turbine=True, compressor_map=None, end_of_life=True, constraint=True, multiobjective_weighting=0.0):
     
     # Load parameters
     _params_optimization = parameters.Optimization_Parameters()  
@@ -89,6 +89,7 @@ if __name__ == '__main__':
     parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
     parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.85 to account for end of life (default: False).")
     parser.add_argument("--constraint", type=str, choices=["True","False"], default="True", help="Activates the DoE envelope constraint condition for the optimizer. (default: True)")
+    parser.add_argument("-w", "--weighting", type=float, default=0.0, help="Weighting factor for multiobjective-optimization; 0 -> optimization for efficiency (default), 1 -> optimization for specific power.")
     args = parser.parse_args()
 
     # Convert string inputs
@@ -98,4 +99,5 @@ if __name__ == '__main__':
     constraint = args.constraint == "True"
 
     # Call the optimize_with_trained_model function
-    optimize_input_variables(args.power, args.cellcount, args.flightlevel, consider_turbine=consider_turbine, compressor_map=compressor_map, end_of_life=end_of_life, constraint=constraint)
+    optimize_input_variables(power_constraint_kW=args.power, specified_cell_count=args.cellcount, flight_level_100ft=args.flightlevel, consider_turbine=consider_turbine, compressor_map=compressor_map,
+                             end_of_life=end_of_life, constraint=constraint, multiobjective_weighting=args.weighting)
