@@ -3,7 +3,7 @@
 from parameters import Physical_Parameters
 import CoolProp.CoolProp as CP
 from scipy.constants import physical_constants
-
+import inspect # for unit conversion
 
 def icao_atmosphere(flight_level_100ft):
     """
@@ -38,9 +38,86 @@ def compute_air_mass_flow(stoichiometry, current_A, cellcount=275):
 
     return air_flow_kg_s
 
-#%% Example usage
 
-temperature_K, pressure_Pa = icao_atmosphere(flight_level_100ft=120)
+# %% Unit conversion function:
 
-print(f"Temperature at 12000 ft: {temperature_K:.2f} K")
-print(f"Pressure at 12000 ft: {pressure_Pa:.2f} Pa")
+# Dictionary to store allowed conversion functions
+CONVERSION_FACTORS = {
+    'temperature': {
+        ('degC', 'K'): lambda c: c + 273.15,    # Celsius to Kelvin
+        ('K', 'degC'): lambda k: k - 273.15,    # Kelvin to Celsius
+    },
+    'pressure': {
+        ('Pa', 'bar'): lambda p: p / 1e5,       # Pascals to bar
+        ('bar', 'Pa'): lambda b: b * 1e5,       # Bar to Pascals
+    }
+}
+
+def get_variable_type(variable_name):
+    """
+    Determines the variable type (temperature or pressure) and extracts the unit from the variable name.
+    
+    Parameters:
+    - variable_name: The variable name containing the unit suffix (e.g., "*_degC", "*_Pa").
+    
+    Returns:
+    - A tuple of (variable_type, unit), where variable_type is either 'temperature' or 'pressure',
+      and unit is the detected unit (e.g., 'degC', 'K', 'Pa', 'bar').
+    """
+    
+    if "_" not in variable_name:
+        raise ValueError(f"Invalid variable name format: {variable_name}")
+    
+    # Extract the unit after the last underscore
+    unit = variable_name.split('_')[-1]
+
+    # Determine the variable type based on the unit
+    if unit in ["degC", "K"]:
+        return 'temperature', unit
+    elif unit in ["Pa", "bar"]:
+        return 'pressure', unit
+    else:
+        raise ValueError(f"Unrecognized unit in variable: {variable_name}")
+
+def convert(value, target_unit):
+    """
+    Converts a given value from its detected unit (from the variable name) to the target unit.
+    
+    Parameters:
+    - value: The numerical value to convert.
+    - target_unit: The target unit as a string (e.g., "degC", "K", "Pa", "bar").
+    
+    Returns:
+    - Converted value in the target unit.
+    """
+    
+    if not isinstance(value, (int, float)):
+        raise ValueError("Value must be a numerical type, not a string.")
+    
+    # Extract the varaible name from the function call
+    caller_locals = inspect.currentframe().f_back.f_locals
+    variable_name = next(name for name, var in caller_locals.items() if var is value)
+
+    # Get the variable type and the current unit
+    variable_type, unit = get_variable_type(variable_name)
+    
+    # Check if there is a direct conversion between the unit and target unit
+    conversion_key = (unit, target_unit)
+    
+    # Fetch the conversion function from the dictionary
+    conversion_function = CONVERSION_FACTORS[variable_type].get(conversion_key)
+    
+    if conversion_function is None:
+        raise ValueError(f"Unsupported conversion from {unit} to {target_unit}")
+    
+    # Perform the conversion using the fetched function
+    return conversion_function(value)
+
+#Basic example:
+# Pressure conversion: Pascals to bar
+#Inlet_Pressure_Pa = 101325  # Inlet pressure in Pascals
+#outlet_Pressure_bar = convert(Inlet_Pressure_Pa, "bar")
+
+# Pressure conversion: bar to Pascals
+#Inlet_Pressure_bar = 1.01325  # Inlet pressure in bar
+#outlet_Pressure_Pa = convert(Inlet_Pressure_bar, "Pa")
