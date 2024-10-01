@@ -179,21 +179,21 @@ class Evaporator(HeatExchanger):
 # %% Example usage of the code:
 
 # # Create an instance of Intercooler
-# intercooler = Intercooler(
-#     efficiency=0.9,
-#     primary_fluid="Water",
-#     coolant_fluid="Air",
-#     primary_mdot_in_kg_s=2.0,
-#     primary_T_in_K=350.0,
-#     primary_T_out_K=300.0,
-#     primary_p_in_Pa=200000,
-#     coolant_mdot_in_kg_s=0.5,
-#     coolant_T_in_K=281.0
-# )
+intercooler = Intercooler(
+    efficiency=0.9,
+    primary_fluid="Water",
+    coolant_fluid="Air",
+    primary_mdot_in_kg_s=2.0,
+    primary_T_in_K=350.0,
+    primary_T_out_K=300.0,
+    primary_p_in_Pa=200000,
+    coolant_mdot_in_kg_s=0.5,
+    coolant_T_in_K=281.0
+)
 
 # # Calculate specific heat
-# specific_heat = intercooler.calculate_specific_heat(intercooler.primary_T_in_K,intercooler.primary_p_in_Pa,intercooler.primary_fluid)
-# print(f"Specific Heat Capacity: {specific_heat:.2f} J/kg.K")
+specific_heat = intercooler.calculate_specific_heat(intercooler.primary_T_in_K,intercooler.primary_p_in_Pa,intercooler.primary_fluid)
+print(f"Specific Heat Capacity: {specific_heat:.2f} J/kg.K")
 
 # # Calculate heatflux 
 # Q_dot = intercooler.calculate_heat_flux("primary")

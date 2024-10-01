@@ -46,6 +46,25 @@ class MoistExchanger:
         C = 243.04
         return A * np.exp((B * (t - 273.15)) / ((t - 273.15) + C)) * 100
 
+    def calculate_partial_pressure(self, t, rh):
+        """
+        Calculate the water vapor partial pressure for a given temperature and relative humidity.
+
+        Args:
+            temperature_k: Temperature in Kelvin.
+            relative_humidity: Relative humidity as a fraction (0-1).
+
+        Returns:
+            float: Vapor pressure in Pascals.
+        """
+        # Calculate saturation pressure for the given temperature
+        p_sat = self.calculate_saturation_pressure(t)
+
+        # Calculate partial pressure using saturation pressure and relative humidity
+        p_vap = p_sat * rh
+
+        return p_vap
+
     def calculate_water_transfer(self, p_vap_dry_in, p_vap_dry_out, p_vap_wet_in, v_dot_dry, v_dot_wet, t_dry_in, t_dry_out, t_wet_in):
         """
         Calculate the mass flow rate of water vapor transfer and efficiency.
@@ -66,9 +85,9 @@ class MoistExchanger:
         R_water = self.R_Vap
 
         # Calculate number of moles/s
-        n_vap_dry_in = (p_vap_dry_in * 1e-5 * v_dot_dry) / (R_water * t_dry_in)  # Conversion from Pa to bar
-        n_vap_dry_out = (p_vap_dry_out * 1e-5 * v_dot_dry) / (R_water * t_dry_out)
-        n_vap_wet_in = (p_vap_wet_in * 1e-5 * v_dot_wet) / (R_water * t_wet_in)
+        n_vap_dry_in = (p_vap_dry_in  * v_dot_dry) / (R_water * t_dry_in)
+        n_vap_dry_out = (p_vap_dry_out  * v_dot_dry) / (R_water * t_dry_out)
+        n_vap_wet_in = (p_vap_wet_in  * v_dot_wet) / (R_water * t_wet_in)
 
         molar_mass_water = 0.01801528  # kg/mol
 
@@ -97,17 +116,17 @@ class Humidifier(MoistExchanger):
 # Create an instance of Humidifier
 humidifier = Humidifier(
     air_mass_flow_kg_s_dry=0.09,
-    air_mass_flow_kg_s_wet=0.026,
+    air_mass_flow_kg_s_wet=0.053,
     temperature_in_k_dry_in=353.3,
     pressure_in_pa_dry_in=105000,
     rh_dry_in=0.18,
-    temperature_in_k_dry_out=290,
-    pressure_in_pa_dry_out=100,
-    rh_dry_out=0.7,
-    temperature_in_k_wet_in=310,
-    pressure_in_pa_wet_in=100,
-    rh_wet_in=1.0,
-    pressure_in_pa_wet_out=101
+    temperature_in_k_dry_out=346.9,
+    pressure_in_pa_dry_out=101000,
+    rh_dry_out=0.75,
+    temperature_in_k_wet_in=353.2,
+    pressure_in_pa_wet_in=76000,
+    rh_wet_in=0.99,
+    pressure_in_pa_wet_out=76000
 )
 
 # Calculate specific heat
@@ -115,5 +134,26 @@ specific_heat = humidifier.calculate_specific_heat(humidifier.temperature_in_k_d
 print(f"Specific Heat Capacity: {specific_heat:.2f} J/kg.K")
 
 # Calculate and print dew point temperature
-dew_point_temp = humidifier.calculate_dewpoint(humidifier.temperature_in_k_dry_in, humidifier.pressure_in_pa_dry_in, humidifier.rh_dry_in)
-print(f"Dew Point Temperature: {dew_point_temp-273:.2f} K")
+dew_point_temp_wet_in = humidifier.calculate_dewpoint(humidifier.temperature_in_k_wet_in, humidifier.pressure_in_pa_wet_in, humidifier.rh_wet_in)
+print(f"Dew Point Temperature Wet In: {dew_point_temp_wet_in-273:.2f} K")
+
+# Calculate and print dew point temperature
+dew_point_temp_dry_in = humidifier.calculate_dewpoint(humidifier.temperature_in_k_dry_in, humidifier.pressure_in_pa_dry_in, humidifier.rh_dry_in)
+print(f"Dew Point Temperature Dry In: {dew_point_temp_dry_in-273:.2f} K")
+
+# For dry air inlet
+p_sat_dry_in = humidifier.calculate_saturation_pressure(humidifier.temperature_in_k_dry_in)
+print(f"Saturation pressure (dry air inlet): {p_sat_dry_in:.2f} Pa")
+
+# For dry air inlet
+p_vap_dry_in = humidifier.calculate_partial_pressure(humidifier.temperature_in_k_dry_in, humidifier.rh_dry_in)
+print(f"Vapor pressure (dry air inlet): {p_vap_dry_in:.2f} Pa")
+
+# For dry air outlet
+p_vap_dry_out = humidifier.calculate_partial_pressure(humidifier.temperature_in_k_dry_out, humidifier.rh_dry_out)
+print(f"Vapor pressure (dry air outlet): {p_vap_dry_out:.2f} Pa")
+
+# For wet air inlet
+p_vap_wet_in = humidifier.calculate_partial_pressure(humidifier.temperature_in_k_wet_in, humidifier.rh_wet_in)
+print(f"Vapor pressure (wet air inlet): {p_vap_wet_in:.2f} Pa")
+
