@@ -22,7 +22,8 @@ from basic_physics import compute_air_mass_flow, icao_atmosphere
 
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275,
-                                 power_constraint_kW=None, consider_turbine=True, compressor_map=None, end_of_life=False, constraint=True):
+                                 power_constraint_kW=None, consider_turbine=True, compressor_map=None, end_of_life=False, 
+                                 multiobjective_weighting=0, constraint=True):
     """
     Optimize the (cell) voltage predicted by the GPyTorch model with a (cell) power constraint using differential evolution.
 
@@ -35,6 +36,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     - consider_turbine: Whether to consider power recuperation in the optimization.
     - compressor_map: The compressor map to be used in the optimization.
     - end_of_life: Whether to consider the end of life derating factor.
+    - multiobjective_weighting: Weighting factor for multiobjective-optimization; 0 -> optimization for efficiency (default), 1 -> optimization for power-specific mass.
+    - constraint: Whether to consider the constraint that the optimized operating points are inside the convex hull of the DoE data.
 
     Returns:
     - optimal_input: The optimal input values in the original scale.
@@ -68,7 +71,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     DoE_envelope = ConvexHull(Optimized_DoE_data_variables.values)
     DoE_envelope_Delaunay = Delaunay(Optimized_DoE_data_variables.values[DoE_envelope.vertices])
     
-   
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
 
