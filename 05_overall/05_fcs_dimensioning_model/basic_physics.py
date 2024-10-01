@@ -48,8 +48,12 @@ CONVERSION_FACTORS = {
         ('K', 'degC'): lambda k: k - 273.15,    # Kelvin to Celsius
     },
     'pressure': {
-        ('Pa', 'bar'): lambda p: p / 1e5,       # Pascals to bar
-        ('bar', 'Pa'): lambda b: b * 1e5,       # Bar to Pascals
+        ('Pa', 'bara'): lambda p: p / 1e5,      # Pascals to bar
+        ('Pa', 'bar'):  lambda p: p / 1e5,      # Pascals to bar
+        ('bara', 'Pa'): lambda b: b * 1e5,      # Bar to Pascals
+        ('bar', 'Pa'):  lambda b: b * 1e5,      # Bar to Pascals
+        
+        
     }
 }
 
@@ -74,7 +78,7 @@ def get_variable_type(variable_name):
     # Determine the variable type based on the unit
     if unit in ["degC", "K"]:
         return 'temperature', unit
-    elif unit in ["Pa", "bar"]:
+    elif unit in ["Pa", "bara", "bar"]:
         return 'pressure', unit
     else:
         raise ValueError(f"Unrecognized unit in variable: {variable_name}")
@@ -85,7 +89,7 @@ def convert(value, target_unit):
     
     Parameters:
     - value: The numerical value to convert.
-    - target_unit: The target unit as a string (e.g., "degC", "K", "Pa", "bar").
+    - target_unit: The target unit as a string (e.g., "degC", "K", "Pa", "bara").
     
     Returns:
     - Converted value in the target unit.
