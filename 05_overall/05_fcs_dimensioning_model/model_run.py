@@ -41,11 +41,12 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
         stack_power_kW, compressor_power_kW, turbine_power_kW, \
             reci_pump_power_kW, coolant_pump_power_kW, compressor_corrected_air_flow_g_s, \
                 compressor_pressure_ratio, stack_heat_flux_kW, intercooler_heat_flux_kW, \
-                    evaporator_heat_flux_kW, radiator_heat_flux_kW, converged = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
-                                                                                    flight_level_100ft, cellcount=specified_cell_count,
-                                                                                    power_constraint_kW=power_constraint_kW,
-                                                                                    consider_turbine=consider_turbine, compressor_map=compressor_map,
-                                                                                    end_of_life=end_of_life, constraint=constraint)
+                    evaporator_heat_flux_kW, radiator_heat_flux_kW, system_mass_kg, converged = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
+                                                                                                                             flight_level_100ft, cellcount=specified_cell_count,
+                                                                                                                             power_constraint_kW=power_constraint_kW,
+                                                                                                                             consider_turbine=consider_turbine, compressor_map=compressor_map,
+                                                                                                                             end_of_life=end_of_life, multiobjective_weighting=multiobjective_weighting,
+                                                                                                                             constraint=constraint)
     
     system_power_kW = stack_power_kW - compressor_power_kW + turbine_power_kW - reci_pump_power_kW - coolant_pump_power_kW
 
@@ -55,7 +56,8 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
         lower_bound_formatted = f"{bound[0]}" if abs(bound[0]) < 1e3 else f"{bound[0]:.1e}"
         upper_bound_formatted = f"{bound[1]}" if abs(bound[1]) < 1e3 else f"{bound[1]:.1e}"
         print(f"  {name}: {value:.4f} (Bounds: [{lower_bound_formatted}, {upper_bound_formatted}])")
-    print(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  Hydrogen Supply Rate: {hydrogen_supply_rate_g_s:.4f} g/s\n")
+    print(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  
+          Hydrogen Supply Rate: {hydrogen_supply_rate_g_s:.4f} g/s (Weighting: {1 - multiobjective_weighting}, Power-Specific Mass: {system_mass_kg/system_power_kW} kg/kW\n")
     print(f"Cell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {cell_voltage:.4f} V\n")
 
     # Print the resultant power numbers
@@ -89,7 +91,7 @@ if __name__ == '__main__':
     parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
     parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.85 to account for end of life (default: False).")
     parser.add_argument("--constraint", type=str, choices=["True","False"], default="True", help="Activates the DoE envelope constraint condition for the optimizer. (default: True)")
-    parser.add_argument("-w", "--weighting", type=float, default=0.0, help="Weighting factor for multiobjective-optimization; 0 -> optimization for efficiency (default), 1 -> optimization for specific power.")
+    parser.add_argument("-w", "--weighting", type=float, default=0.0, help="Weighting factor for multiobjective-optimization; 0 -> optimization for efficiency (default), 1 -> optimization for power-specific mass.")
     args = parser.parse_args()
 
     # Convert string inputs
