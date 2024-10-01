@@ -41,9 +41,27 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
     Returns:
     - optimal_input: The optimal input values in the original scale.
-    - hydrogen_mass_flow_g_s: The minimized target.
-    - compressor_power: The power of the compressor.
+    - cell_voltage: The cell voltage at the optimized operating point.
+    - hydrogen_supply_rate_g_s: The minimized target.
+    - stack_power_kW: The electrical (gross) power produced by the stack.
+    - compressor_power_kW: The power demand of the compressor at the optimized operating point.
+    - turbine_power_kW: The power recuperated by the turbine at the optimized operating point.
+    - reci_pump_power_kW: The power demand of the recirculation pump at the optimized operating point.
+    - coolant_pump_power_kW: The power demand of the coolant pump at the optimized operating point.
+    - compressor_corrected_air_flow_g_s: The (corrected) air mass flow rate.
+    - compressor_pressure_ratio: The pressure ratio of the compressor.
+    - stack_heat_flux_kW: The heating power produced by the stack.
+    - intercooler_heat_flux_kW: The heating power input to the coolant by the intercooler.
+    - evaporator_heat_flux_kW: The heating power removed from the coolant by the evaporator.
+    - radiator_heat_flux_kW: The total heating power that needs to be dissipated by the radiator.
+    - system_mass_kg: The mass estimate of the system.
+    - optimization_converged: Flag whether the optimization terminated succesfully.
+
     """
+
+    optimal_input, cell_voltage, hydrogen_supply_rate_g_s , stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
+        reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.calculate_corrected_mass_flow()*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, \
+            stack_heat_flux_W/1000, intercooler_heat_flux_W/1000, evaporator_heat_flux_W/1000, radiator_heat_flux_W/1000, system_mass_kg, optimization_converged
     
     # Load parameters
     _params_optimization = parameters.Optimization_Parameters()
@@ -363,4 +381,4 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
     return optimal_input, cell_voltage, hydrogen_supply_rate_g_s , stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
         reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.calculate_corrected_mass_flow()*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, \
-            stack_heat_flux_W/1000, intercooler_heat_flux_W/1000, evaporator_heat_flux_W/1000, radiator_heat_flux_W/1000, optimization_converged
+            stack_heat_flux_W/1000, intercooler_heat_flux_W/1000, evaporator_heat_flux_W/1000, radiator_heat_flux_W/1000, system_mass_kg, optimization_converged
