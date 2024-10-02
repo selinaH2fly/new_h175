@@ -80,11 +80,11 @@ def analyze_data(_file_path1, saving=True):
   
     # Split the data based on 'Specified Cell Count'
     df_400 = df1[df1['Specified Cell Count'] == 400]
-    df_450 = df1[df1['Specified Cell Count'] == 450]
+    df_455 = df1[df1['Specified Cell Count'] == 455]
     df_500 = df1[df1['Specified Cell Count'] == 500]
     
-    data   = [     df_400,       df_450,     df_500]
-    titles = ['400 Cells',  '450 Cells','500 Cells']
+    data   = [     df_400,       df_455,     df_500]
+    titles = ['400 Cells',  '455 Cells','500 Cells']
     colors = [ "tab:blue", "tab:orange",  "tab:red"]
     markers= ["o", "v", "s"]
     

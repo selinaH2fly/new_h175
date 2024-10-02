@@ -64,7 +64,7 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
                     
     # Highlight power levels
     highlight_powers = [20, 50, 80, 125, 150, 175]
-    cell_counts = [400, 450, 500]
+    cell_counts = [400, 455, 500]
 
     # Filter data for BOL and EOL
     bol_data = filter_data(df1, eol=False, cell_counts=cell_counts)
