@@ -8,7 +8,7 @@ from file_handling import load_gpr_model
 
 # Define plot settings
 secondary_y_axis = False
-relative_deviation = False
+relative_deviation = True
 
 # Define the fixed feature, the fixed value, and the target
 num_features = 6
@@ -31,7 +31,7 @@ fig, axes = plt.subplots(int(np.ceil(num_features / 2)), 2, figsize=(12, 12))
 fig.subplots_adjust(hspace=2)
 
 # Create figure title
-fig.suptitle('GPR DoE-Data Models - Partial Dependence Plots')
+fig.suptitle('GPR DoE-Data Models - Partial Dependence Plots', y=1.005)
 
 # Loop through each feature and plot its partial dependence TODO: Make agnostic to the number of features
 for i in range(num_features):
@@ -58,10 +58,31 @@ for i in range(num_features):
         grid_high_temp, pdp_high_temp = load_pdp_data(f'2_experiment_gpr_doe_model_high_temp/partial_dependence_analysis/partial_dependence_data/pdp_data_{feature}_{fixed_feature}_{fixed_value}.csv')
         grid_high_amp, pdp_high_amp = load_pdp_data(f'2_experiment_gpr_doe_model_high_amp/partial_dependence_analysis/partial_dependence_data/pdp_data_{feature}_{fixed_feature}_{fixed_value}.csv')
 
-        # Plot the partial dependence
         ax = axes[i // 2, i % 2]
-        high_amp_line, = ax.plot(grid_high_amp, pdp_high_amp, color='cornflowerblue', label='High Current DoE-Data')
-        high_temp_line, = ax.plot(grid_high_temp, pdp_high_temp, color='orange', label='High Temperature DoE-Data')
+
+        if relative_deviation:
+            # Calculate the mean value of the high-amp pdp values
+            mean_pdp_high_amp = np.mean(pdp_high_amp)
+
+            # Calculate the relative deviation of the high-temp pdp values
+            pdp_high_amp_relative = 100 / mean_pdp_high_amp * pdp_high_amp - 100
+            pdp_high_temp_relatve = 100 / mean_pdp_high_amp * pdp_high_temp - 100
+
+            # Plot the partial dependence in terms of relative deviation
+            high_amp_line, = ax.plot(grid_high_amp, pdp_high_amp_relative, color='cornflowerblue', label='High-Current DoE-Data')
+            high_temp_line, = ax.plot(grid_high_temp, pdp_high_temp_relatve, color='orange', label='High-Temperature DoE-Data')
+
+            # Set x-axis label
+            ax.set_ylabel(r'Relative Cell Voltage Deviation$^1$ (%)')
+
+        else:
+        
+            # Plot the partial dependence
+            high_amp_line, = ax.plot(grid_high_amp, pdp_high_amp, color='cornflowerblue', label='High-Current DoE-Data')
+            high_temp_line, = ax.plot(grid_high_temp, pdp_high_temp, color='orange', label='High-Temperature DoE-Data')
+
+            # Set x-axis label
+            ax.set_ylabel(f'{target}')
 
         if secondary_y_axis:
             
@@ -85,23 +106,23 @@ for i in range(num_features):
             # Combine the handles and labels from both axes
             lines = [high_amp_line, high_temp_line, rel_dev_line]
 
+        # Create legend
         lines = [high_amp_line, high_temp_line]
         labels = [line.get_label() for line in lines]
-
-        # Create a single legend for both axes
         ax.legend(lines, labels, loc='upper left')
 
-        # Set the axes labels
-        ax.set_ylabel(f'{target}')
+        # Set plot properties
         ax.set_xlabel(f'{feature}')
-
         ax.grid(True, zorder=1)
 
     else:
         # Write the fixed feature value in the subplot in bold
         ax = axes[i // 2, i % 2]
-        ax.text(0.5, 0.5, f'{fixed_feature} fixed at {fixed_value}', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12, fontweight='bold')
+        ax.text(0.5, 0.5, f'{fixed_feature} fixed at {fixed_value} A', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12, fontweight='bold')
 
+# Include footnote in case of relative deviation
+if relative_deviation:
+    fig.text(0.52, -0.02, r'$^1$Relative deviation with respect to the mean value of the high-current DoE-data', ha='left')
 
 # Remove empty subplot (if any)
 if len(axes.flatten()) > num_features:
@@ -119,7 +140,7 @@ for ax in axes.flatten():
 plt.tight_layout()
 
 # Draw the canvas
-fig.canvas.draw()
+# fig.canvas.draw()
 
 # Save the figure with title according to the fixed feature value
 plt.savefig(f'pdp_plot_{fixed_feature}_{fixed_value}.png', bbox_inches='tight')    
