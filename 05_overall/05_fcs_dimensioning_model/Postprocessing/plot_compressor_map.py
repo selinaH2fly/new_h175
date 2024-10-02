@@ -5,7 +5,7 @@ import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 
 # %% PLOT: Compressormap from data
-def plot_compressor_map(data, titles, fl_set, colors, markers, saving=True):
+def plot_compressor_map(data, titles, colors, markers, saving=True, mode="bol"):
     """
     Plots the compressor map for multiple datasets in one plot.
 
@@ -16,7 +16,16 @@ def plot_compressor_map(data, titles, fl_set, colors, markers, saving=True):
     - markers: List of markers for each dataset.
     - saving: Boolean, if True, saves the plots as PNG files.
     """
+    # Filter option for eol or bol plot: 
+    # If sizing for eol, Turbine and Compressor power tend to increase, and thus the estimated cathode mass would be higher.
     
+    if mode == "eol":
+        filter_mode = True
+        mode_name = "EoL"
+    elif mode == "bol":
+        filter_mode = False
+        mode_name = "BoL"
+            
     fig, ax = plt.subplots(figsize=(12, 8))
     
     # Create a colormap and normalize for the color gradient
@@ -25,7 +34,7 @@ def plot_compressor_map(data, titles, fl_set, colors, markers, saving=True):
     
     # Iterate through the data, titles, colors, and markers
     for df, title, color, marker in zip(data, titles, colors, markers):
-        df = df[(df["eol (t/f)"] == False) & (df['Flight Level (100x ft)'] == fl_set) & (df['current_A (Value)'] <= 700)] # filter out eol points, FL and points above 700 A 
+        df = df[(df["eol (t/f)"] == filter_mode) & (df['current_A (Value)'] <= 700)] # filter out eol points, FL and points above 700 A 
         
         # Scatter plot with color based on 'System Power (kW)'
         scatter = ax.scatter(df["Compressor Corrected Air Flow (g/s)"]
@@ -48,13 +57,13 @@ def plot_compressor_map(data, titles, fl_set, colors, markers, saving=True):
     ax.set_ylim([1, 8])
     
     # Add title and a legend for the datasets
-    ax.set_title(f'Compressor Pressure Ratio vs Corrected Air Flow, FL {fl_set}', fontsize=14)
+    ax.set_title(f'Compressor Pressure Ratio vs Corrected Air Flow, {mode_name}', fontsize=14)
     ax.legend(loc='best')
     fig.tight_layout()
 
     # Save the plot as a PNG file if saving is True
     if saving:
-        plt.savefig('ideal_compressor_map_FL_{fl_set}.png')
+        plt.savefig('ideal_compressor_map_{mode_name}.png')
     
     # Show the plot
     plt.show()

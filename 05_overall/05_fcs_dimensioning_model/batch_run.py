@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="Main script to call optimize_input_variables.py")
     parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[20,175])
-    parser.add_argument("-n", "--cellcount", type=float, nargs='+', help="Stack cell number for optimizing subject to power constraint", default=[400,450,500])
+    parser.add_argument("-n", "--cellcount", type=float, nargs='+', help="Stack cell number for optimizing subject to power constraint", default=[400,455,500])
     parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[0,100])
     # parser.add_argument("-t", "--turbine", type=str, choices=["True"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
     parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     
     if args.testing == "True":
         range_power = np.array([20, 100, 175])
-        range_cellcount = np.array([400])
+        range_cellcount = np.array([455])
         range_fl = np.array([0])
         # Convert turbine and eol to boolean lists
         range_turbine =[True]#, args.turbine.lower() == "false"]
@@ -66,13 +66,13 @@ if __name__ == '__main__':
 
     elif args.testing == "False":
       
-        _step_p = 30
+        _step_p = 5
         _step_c = 50
         _step_fl = 30
         #range_power is ugly deined atm. due to not starting at 0 and want to have inclusive bounds.... maybe there is a better way?
-        #range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
-        range_power = np.array([20, 50, 80, 125, 150, 175])
-        range_cellcount = [400,450,500]#np.arange(args.cellcount[0],args.cellcount[1]+_step_c,_step_c)
+        range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
+        #range_power = np.array([20, 50, 80, 125, 150, 175])
+        range_cellcount = [400, 455, 500]#np.arange(args.cellcount[0],args.cellcount[1]+_step_c,_step_c)
         range_fl = np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
         
         # Convert turbine and eol to boolean lists
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_map, range_eol, range_DoE_constraint))
     
     # Start parallel execution using ProcessPoolExecutor
-    max_workers = min(55, len(parameters))  # Define the number of processes based on available resources (55 processes to avoid memory limit)
+    max_workers = min(61, len(parameters))  # Define the number of processes based on available resources
     
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(run_subprocess, param): param for param in parameters}

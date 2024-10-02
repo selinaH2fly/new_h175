@@ -4,14 +4,14 @@ import numpy as np
 import torch
 import argparse
 import random
-
 # Import custom classes and functions
 import parameters
 from file_handling import create_experiment_folder, load_gpr_model
 from optimization_functions import optimize_inputs_evolutionary
 
 from data_export_csv import export_to_csv
- 
+
+
 def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275, flight_level_100ft=50, consider_turbine=True, compressor_map=None, end_of_life=True, constraint=True):
     
     # Load parameters

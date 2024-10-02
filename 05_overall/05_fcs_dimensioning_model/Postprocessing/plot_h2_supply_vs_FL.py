@@ -16,7 +16,7 @@ def plot_h2_supply_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
     - mode: string "eol" or "bol", setting a filter to see eol or bol data.
     """
     # List of cell counts and corresponding icons
-    cells = [400, 450, 500]
+    cells = [400, 455, 500]
     markers = ["o", "v", "s"]
 
     # Define power levels to highlight
