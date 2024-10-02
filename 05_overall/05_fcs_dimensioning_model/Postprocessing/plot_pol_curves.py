@@ -6,7 +6,7 @@ import matplotlib.cm as cm
 import matplotlib.lines as mlines
 
 # %% PLOT: Polcurve single BoL/EoL
-def plot_polarization_curves(data, titles, fl_set, saving=True):
+def plot_polarization_curves(data, titles, fl_set, markers_oL, saving=True):
     """
     Plots the polarization curves for multiple datasets.
 
@@ -35,14 +35,14 @@ def plot_polarization_curves(data, titles, fl_set, saving=True):
                                  df_bol['Cell Voltage (V)'], 
                                  c=df_bol['System Power (kW)'], 
                                  cmap='viridis', norm=norm, 
-                                 edgecolor='k', s=100, label='BoL')
+                                 edgecolor='k', s=100, marker=markers_oL[0], label='BoL')
 
         # Plot EoL points (use squares for distinction)
         scatter_eol = ax.scatter(df_eol['current_A (Value)'], 
                                  df_eol['Cell Voltage (V)'], 
                                  c=df_eol['System Power (kW)'], 
                                  cmap='viridis', norm=norm, 
-                                 edgecolor='k', s=100, marker='s', label='EoL')
+                                 edgecolor='k', s=100, marker=markers_oL[1], label='EoL')
 
         # Add colorbar for the gradient
         cbar = plt.colorbar(cmap, ax=ax)
@@ -63,22 +63,22 @@ def plot_polarization_curves(data, titles, fl_set, saving=True):
         ax.set_xlim([0, 800])
         ax.set_ylim([0, 1.25])
 
-        # Annotate EoL points with text
-        for i, row in df_eol.iterrows():
-            ax.annotate('EoL', 
-                        (row['current_A (Value)'], row['Cell Voltage (V)']),
-                        textcoords="offset points", xytext=(2, -20), 
-                        ha='center', fontsize=11, color='black')
+        # # Annotate EoL points with text
+        # for i, row in df_eol.iterrows():
+        #     ax.annotate('EoL', 
+        #                 (row['current_A (Value)'], row['Cell Voltage (V)']),
+        #                 textcoords="offset points", xytext=(2, -20), 
+        #                 ha='center', fontsize=11, color='black')
 
         # Create a custom legend (optional)
-        legend_circle = mlines.Line2D([], [], color='none', marker='o', 
+        legend_bol = mlines.Line2D([], [], color='none', marker=markers_oL[0], 
                                       markerfacecolor='none', markeredgecolor='black', 
                                       markersize=11, linestyle='None', label='System Power BoL [kW]')
-        legend_square = mlines.Line2D([], [], color='none', marker='s', 
+        legend_eol = mlines.Line2D([], [], color='none', marker=markers_oL[1],
                                       markerfacecolor='none', markeredgecolor='black', 
                                       markersize=11, linestyle='None', label='System Power EoL [kW]')
         
-        ax.legend(handles=[legend_circle,legend_square], loc='best')
+        ax.legend(handles=[legend_bol,legend_eol], loc='best')
 
         # Adjust layout and save the plot if necessary
         fig.tight_layout()
