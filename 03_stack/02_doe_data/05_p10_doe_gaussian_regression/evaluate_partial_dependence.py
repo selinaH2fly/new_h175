@@ -28,10 +28,10 @@ def load_pdp_data(file_path):
 fig, axes = plt.subplots(int(np.ceil(num_features / 2)), 2, figsize=(12, 12))
 
 # Adjust the layout
-fig.subplots_adjust(hspace=2)
+# fig.subplots_adjust(hspace=4)
 
 # Create figure title
-fig.suptitle('GPR DoE-Data Models - Partial Dependence Plots', y=1.005)
+fig.suptitle('GPR DoE-Data Models - Partial Dependence Plots', y=1.002)
 
 # Loop through each feature and plot its partial dependence TODO: Make agnostic to the number of features
 for i in range(num_features):
@@ -120,6 +120,12 @@ for i in range(num_features):
         ax = axes[i // 2, i % 2]
         ax.text(0.5, 0.5, f'{fixed_feature} fixed at {fixed_value} A', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes, fontsize=12, fontweight='bold')
 
+        # No ticks and labels for the fixed feature subplot
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+
 # Include footnote in case of relative deviation
 if relative_deviation:
     fig.text(0.52, -0.02, r'$^1$Relative deviation with respect to the mean value of the high-current DoE-data', ha='left')
@@ -138,6 +144,7 @@ for ax in axes.flatten():
 
 # Finalize the layout
 plt.tight_layout()
+fig.subplots_adjust(hspace=0.3, wspace=0.25)
 
 # Draw the canvas
 # fig.canvas.draw()
