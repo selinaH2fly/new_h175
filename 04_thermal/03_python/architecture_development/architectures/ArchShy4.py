@@ -53,6 +53,8 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     circ.add_bc("%s = -0.0"%(tcv1.delta_p_1))
     circ.add_bc("%s = -0.0"%(tcv1.delta_p_2))
+
+    
     # boundary conditions, user input:
     circ.add_bc("%s = %f" %(pump1.p_in, bc_dict["pump_p_in"]))
     circ.add_bc("%s = %f" %(stack1.T_in, bc_dict["stack_t_in"]))

@@ -47,7 +47,9 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Provide input on boundary conditions
     """
-    circ.add_bc("delta_p_1_tcv1 = 0.0")
+
+    circ.add_bc("0.0 = %s * %s"%(tcv1.delta_p_1, tcv1.delta_p_2))
+
 
     # boundary conditions, user input:
     circ.add_bc("%s = %f" %(pump1.p_in, bc_dict["pump_p_in"]))

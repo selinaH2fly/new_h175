@@ -53,11 +53,11 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Provide input on boundary conditions
     """
-    circ.add_bc("delta_p_1_tcv1 = 0.0")
+    circ.add_bc("0.0 = %s * %s"%(tcv1.delta_p_1, tcv1.delta_p_2))
     # pressure drop for bop1 for all bop components including intercooler, must be adapted to without intercooler!
     # pressure drop bop2 is equal to intercooler pressure drop, already adapted!
     circ.add_bc("delta_p_bop1 = - (0.000425124 * 60 ** 2 * Vdot_3 ** 2 + 0.003355931 * Vdot_3)")
-    circ.add_bc("delta_p_bop2 = - - (4.4760 * 10 ** (-4) * Vdot_11 ** 2 * 60 ** 2 + 2.2828 * 10 ** (-3) * Vdot_11 * 60)")
+    circ.add_bc("delta_p_bop2 = - (4.4760 * 10 ** (-4) * Vdot_11 ** 2 * 60 ** 2 + 2.2828 * 10 ** (-3) * Vdot_11 * 60)")
 
     circ.add_bc("Qdot_bop1 = -8000")
     circ.add_bc("Qdot_bop2 = 21000")

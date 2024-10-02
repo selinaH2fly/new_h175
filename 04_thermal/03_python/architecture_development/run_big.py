@@ -9,9 +9,8 @@ vary_bc = True
 # Do you want to compare results of different architectures in one plot (only has effect if vary_bc is set True)
 compare_res = True
 
-# Which Architectures do you want to evaluate? ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08"] 
-arch_list = ["Arch03a", "Arch03b", "Arch04", "Arch05", "Arch08", "ArchShy4"]#, ]      # which architecture should be analysed?, also possible to evaluate multiple architectures
-#"Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", 
+# Which Architectures do you want to evaluate? ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"] 
+arch_list = ["Arch06"]    # which architecture should be analysed?, also possible to evaluate multiple architectures
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
@@ -60,6 +59,7 @@ if input_dict is not None:
 for arch in arch_list:      # each architecture is evaluated
     key_init = "%s.initialize(%s, %s, %s)" %(arch, input_dict, result_dict, bc_dict)
     circ, input_dict, result_dict_new = eval(key_init)
+    print("Start to evaluate architecture %s"%arch)
     result_dict_new = circ.analyse_arch(input_dict, result_dict_new)
 
     if "pump_vdot" in result_dict_new.keys() and "pump_delta_p" in result_dict_new.keys(): #calculates the entire pump power
