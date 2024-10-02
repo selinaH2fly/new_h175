@@ -8,8 +8,15 @@ import numpy as np
 import parameters
 from file_handling import load_gpr_model
 
-# Instantiate the parameters
-_params_pyhsics = parameters.Physical_Parameters()
+# Define what shall be analyzed
+secondary_y_axis = False
+relative_deviation = False
+
+num_features = 6
+fixed_feature = 'current_A'
+fixed_feature_index = 0
+fixed_value = 700
+target = 'Cell Voltage (V)'
 
 # Load the grid and pdp values from the .csv files
 def load_pdp_data(file_path):
@@ -17,13 +24,6 @@ def load_pdp_data(file_path):
         reader = csv.reader(file)
         grid, pdp = zip(*[(float(row[0]), float(row[1])) for row in reader])
     return np.array(grid), np.array(pdp)
-
-# Number of features
-num_features = 6
-fixed_feature = 'current_A'
-fixed_feature_index = 0
-fixed_value = 700
-target = 'Cell Voltage (V)'
 
 # Create subplots with 2 columns
 fig, axes = plt.subplots(int(np.ceil(num_features / 2)), 2, figsize=(12, 12))
@@ -64,24 +64,29 @@ for i in range(num_features):
         high_amp_line, = ax.plot(grid_high_amp, pdp_high_amp, color='cornflowerblue', label='High Current DoE-Data')
         high_temp_line, = ax.plot(grid_high_temp, pdp_high_temp, color='orange', label='High Temperature DoE-Data')
 
-        # clip grid to range where both pdp values are available
-        grid_min = np.max([np.min(grid_high_amp), np.min(grid_high_temp)])
-        grid_max = np.min([np.max(grid_high_amp), np.max(grid_high_temp)])
-        grid_clipped = np.linspace(grid_min, grid_max, 100)
+        if secondary_y_axis:
+            
+            # Clip the grid to the overlapping range
+            grid_min = np.max([np.min(grid_high_amp), np.min(grid_high_temp)])
+            grid_max = np.min([np.max(grid_high_amp), np.max(grid_high_temp)])
+            grid_clipped = np.linspace(grid_min, grid_max, 100)
 
-        # map pdp values to clipped grid
-        pdp_high_temp_clipped = np.interp(grid_clipped, grid_high_temp, pdp_high_temp)
-        pdp_high_amp_clipped = np.interp(grid_clipped, grid_high_amp, pdp_high_amp)
+            # Map pdp values to clipped grid
+            pdp_high_temp_clipped = np.interp(grid_clipped, grid_high_temp, pdp_high_temp)
+            pdp_high_amp_clipped = np.interp(grid_clipped, grid_high_amp, pdp_high_amp)
 
-        # Plot the relative improvement on a secondary y-axis
-        ax2 = ax.twinx()
-        relative_deviation_perc = 100 / pdp_high_amp_clipped * pdp_high_temp_clipped - 100
-        rel_dev_line, = ax2.plot(grid_clipped, relative_deviation_perc, color='red', linestyle='--', label='Relative Deviation (%)')
+            # Plot the relative improvement on a secondary y-axis
+            ax2 = ax.twinx()
+            relative_deviation_perc = 100 / pdp_high_amp_clipped * pdp_high_temp_clipped - 100
+            rel_dev_line, = ax2.plot(grid_clipped, relative_deviation_perc, color='red', linestyle='--', label='Relative Deviation (%)')
 
-        ax2.set_ylim([-10, 10])
+            ax2.set_ylim([-10, 10])
+            ax2.set_ylabel('Relative Deviation (%)')
 
-        # Combine the handles and labels from both axes
-        lines = [high_amp_line, high_temp_line, rel_dev_line]
+            # Combine the handles and labels from both axes
+            lines = [high_amp_line, high_temp_line, rel_dev_line]
+
+        lines = [high_amp_line, high_temp_line]
         labels = [line.get_label() for line in lines]
 
         # Create a single legend for both axes
@@ -90,7 +95,6 @@ for i in range(num_features):
         # Set the axes labels
         ax.set_ylabel(f'{target}')
         ax.set_xlabel(f'{feature}')
-        ax2.set_ylabel('Relative Deviation (%)')
 
         ax.grid(True, zorder=1)
 
