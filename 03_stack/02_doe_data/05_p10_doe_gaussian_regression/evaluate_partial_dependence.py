@@ -1,17 +1,16 @@
-import os
-import torch
-import gpytorch
+# Import libraries
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
 
-import parameters
+# Import custom functions
 from file_handling import load_gpr_model
 
-# Define what shall be analyzed
+# Define plot settings
 secondary_y_axis = False
 relative_deviation = False
 
+# Define the fixed feature, the fixed value, and the target
 num_features = 6
 fixed_feature = 'current_A'
 fixed_feature_index = 0
