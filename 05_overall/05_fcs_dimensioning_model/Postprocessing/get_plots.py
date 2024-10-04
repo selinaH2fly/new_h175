@@ -14,8 +14,7 @@ import data_processing
 import parameters
 
 # Import plot functions defined in a separate file
-from get_plots_operating_parameters import plot_cathode_inlet_pressure, plot_cathode_inlet_realtive_humidity, \
-    plot_cathode_stoichiomtrey, plot_coolant_inlet_temperature, plot_coolant_outlet_temperature
+from get_plots_operating_parameters import plot_optimized_parameters
 from plot_pol_curves import plot_polarization_curves
 from plot_pol_curves_connected import plot_polarization_curves_bol_eol
 from plot_power_grid import plot_power_needs #annotate_boxes, format_data_for_plot, 
@@ -23,7 +22,6 @@ from plot_power_grid_heatflux import plot_power_needs_heatflux
 from plot_h2_supply_vs_systempower import plot_h2_supply_vs_systempower
 from plot_system_efficiency import plot_system_efficiency
 from plot_h2_supply_vs_FL import plot_h2_supply_vs_FL
-#from plot_system_mass_estimate_old import plot_mass_estimate # old version of wenzel (errorbar chart of system mass)
 from plot_system_mass_estimate import plot_system_mass_estimate
 from evaluate_DoE_envelope_constraint import plot_optimized_parameter_DoE_envelope
 from plot_compressor_map import plot_compressor_map
@@ -87,15 +85,16 @@ def analyze_data(_file_path1, saving=True):
     titles = ['400 Cells',  '455 Cells','500 Cells']
     colors = [ "tab:blue", "tab:orange",  "tab:red"]
     markers= ["o", "v", "s"]
+    markers_oL = ["o","P"]
     
     fl_set = 120 #TODO: Pass that as an argument to the function
     fl_max = max(df1["Flight Level (100x ft)"])
     
     ###########PLOT: Polcurves
-    plot_polarization_curves(data, titles, fl_set, saving=saving)
+    plot_polarization_curves(data, titles, fl_set, markers_oL, saving=saving)
     
     ############PLOT: Polcurves eol vs bol connected
-    plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=saving)
+    plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, saving=saving)
     
     ############PLOT: System Power Grid Plot
     #List of pd column names of data for components which will be considered.
@@ -121,10 +120,10 @@ def analyze_data(_file_path1, saving=True):
     plot_power_needs_heatflux(data, titles, fl_set, components, saving=saving)    
         
     ###########PLOT: H2 supply
-    plot_h2_supply_vs_systempower(data, titles, colors, fl_set, saving=saving)
+    plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, saving=saving)
     
     ###########PLOT: System eff vs Net Power: Flade Plot, 
-    plot_system_efficiency(data, titles, colors, fl_set, saving=saving)
+    plot_system_efficiency(data, titles, colors, fl_set, markers_oL, saving=saving)
     
     #############PLOT: H2 supply vs Flightlevel:
     plot_h2_supply_vs_FL(df1, markers, fl_max, saving=saving, mode="bol")
@@ -137,8 +136,8 @@ def analyze_data(_file_path1, saving=True):
                          "Turbine Power (kW)":      0}
     
     # New grouped, stacked bar chart function
-    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
-    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="eol")
+    #plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
+    #plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="eol")
     
     ###########PLOT: Compressormap
     plot_compressor_map(data, titles, colors, markers, saving=True, mode="bol")
@@ -157,13 +156,20 @@ def analyze_data(_file_path1, saving=True):
     os.makedirs("Optimized_Operating_Parameters", exist_ok=True)
     os.chdir("Optimized_Operating_Parameters")
 
-    # call the plot functions
-    plot_cathode_inlet_pressure(data, titles, fl_set, saving=saving)
-    plot_cathode_inlet_realtive_humidity(data, titles, fl_set, saving=saving)
-    plot_cathode_stoichiomtrey(data, titles, fl_set, saving=saving)
-    plot_coolant_inlet_temperature(data, titles, fl_set, saving=saving)
-    plot_coolant_outlet_temperature(data, titles, fl_set, saving=saving)
-
+    # define opt parametersfor plotting
+    # sequence is important here!
+    opt_parameters = ['cathode_rh_in_perc (Value)',
+                      'stoich_cathode (Value)',
+                      'pressure_cathode_in_bara (Value)',
+                      'temp_coolant_inlet_degC (Value)',
+                      'temp_coolant_outlet_degC (Value)']
+    # define ranges of plots
+    yranges = [[0,140],[1,6],[1,3.4],[50,100],[50,100]]
+    
+    for i, (opt_parameter, yrange) in enumerate(zip(opt_parameters,yranges)):
+        #We will plot current df.iloc[0] with the last column df.iloc[-1], therefore we pass columns 0:n
+        doe_data_column = Optimized_DoE_data_variables.iloc[:,0:i+2] 
+        plot_optimized_parameters(data, doe_data_column, titles, fl_set, markers_oL, opt_parameter, yrange, saving=True)
 
     # go back to the parent directory
     os.chdir("../")
@@ -175,7 +181,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_20-175kW_400-500_0-120ft__2\optimized_parameters_20-175kW_400-500_0-120ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_20-175kW_400-500_0-120ft__3\optimized_parameters_20-175kW_400-500_0-120ft.csv")
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
     
