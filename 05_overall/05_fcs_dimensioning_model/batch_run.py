@@ -47,7 +47,7 @@ if __name__ == '__main__':
     parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
     # parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
     parser.add_argument("--testing", type=str, choices=["True", "False"], default="False", help="Specifies whether a short test run is initiated.")
-    parser.add_argument("--constraint", type=str, choices=["True","False"], default="False", help="Activates the DoE envelope constraint condition for the optimizer. (default: True)")
+    parser.add_argument("--constraint", type=str, choices=["True","False"], default="True", help="Activates the DoE envelope constraint condition for the optimizer. (default: True)")
     
     args = parser.parse_args()
     
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_map, range_eol, range_DoE_constraint))
     
     # Start parallel execution using ProcessPoolExecutor
-    max_workers = min(61, len(parameters))  # Define the number of processes based on available resources
+    max_workers = min(26, len(parameters))  # Define the number of processes based on available resources
     
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(run_subprocess, param): param for param in parameters}

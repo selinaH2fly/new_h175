@@ -87,7 +87,7 @@ def plot_compressor_map(data, titles, colors, markers, saving=True, mode="bol"):
 
     # Save the plot as a PNG file if saving is True
     if saving:
-        plt.savefig('ideal_compressor_map_{mode_name}.png')
+        plt.savefig(f'ideal_compressor_map_{mode_name}.png')
     
     # Show the plot
     plt.show()
