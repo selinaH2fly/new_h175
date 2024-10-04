@@ -19,23 +19,24 @@ def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, savi
     
     # Print out nummerical example between points:
     #1: 400 vs 500, BoL, FL 120, 125 kW:
-    _H2_400 = data[0][(data[0]["Flight Level (100x ft)"] == 120) & 
-                      (data[0]["Power Constraint (kW)"] == 125) &
-                      (data[0]["eol (t/f)"] == False)]["Hydrogen Supply Rate (g/s)"].iloc[0]
-
-    _H2_500 = data[2][(data[2]["Flight Level (100x ft)"] == 120) & 
-                      (data[2]["Power Constraint (kW)"] == 125) &
-                      (data[2]["eol (t/f)"] == False)]["Hydrogen Supply Rate (g/s)"].iloc[0]
+    if len(data) == 3:
+        _H2_400 = data[0][(data[0]["Flight Level (100x ft)"] == 120) & 
+                          (data[0]["Power Constraint (kW)"] == 125) &
+                          (data[0]["eol (t/f)"] == False)]["Hydrogen Supply Rate (g/s)"].iloc[0]
     
-    _H2_500_eol = data[2][(data[2]["Flight Level (100x ft)"] == 120) & 
+        _H2_500 = data[2][(data[2]["Flight Level (100x ft)"] == 120) & 
                           (data[2]["Power Constraint (kW)"] == 125) &
-                          (data[2]["eol (t/f)"] == True)]["Hydrogen Supply Rate (g/s)"].iloc[0]
-    
-    print("H2 Supply Rate, FL 120, 125 kW, BoL, 400 vs 500 cells:")
-    print(f"{100-(_H2_500/_H2_400*100):.2f} % ")
-       
-    print("H2 Supply Rate, FL 120, 125 kW, 500 cells, BoL vs EoL:")
-    print(f"{(_H2_500_eol/_H2_500)*100-100:.2f} % ")
+                          (data[2]["eol (t/f)"] == False)]["Hydrogen Supply Rate (g/s)"].iloc[0]
+        
+        _H2_500_eol = data[2][(data[2]["Flight Level (100x ft)"] == 120) & 
+                              (data[2]["Power Constraint (kW)"] == 125) &
+                              (data[2]["eol (t/f)"] == True)]["Hydrogen Supply Rate (g/s)"].iloc[0]
+        
+        print("H2 Supply Rate, FL 120, 125 kW, BoL, 400 vs 500 cells:")
+        print(f"{100-(_H2_500/_H2_400*100):.2f} % ")
+           
+        print("H2 Supply Rate, FL 120, 125 kW, 500 cells, BoL vs EoL:")
+        print(f"{(_H2_500_eol/_H2_500)*100-100:.2f} % ")
         
     fig, ax = plt.subplots(figsize=(12, 8))
     fig.tight_layout()

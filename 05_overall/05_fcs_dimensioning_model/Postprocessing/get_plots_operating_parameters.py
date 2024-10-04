@@ -12,7 +12,7 @@ _params_optimization = Optimization_Parameters()
 
 
 # Plot the optimized cathode inlet rel. humidity for each dataset
-def plot_optimized_parameters(data, titles, fl_set, markers_oL, var, saving=True):
+def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, yrange, saving=True):
     """
     Plots the optimized operating paramter for multiple datasets.
 
@@ -21,9 +21,18 @@ def plot_optimized_parameters(data, titles, fl_set, markers_oL, var, saving=True
     - titles: List of strings, corresponding to the titles for each dataset.
     - fl_set: Integer, the flight level to be plotted.
     - markers_oL: which marker is used for bol and eol plots
-    - var: which optimized variable will be ploted.
+    - var: which optimized variable will be ploted. 
     - saving: Boolean, if True, saves the plots as PNG files.
     """
+    parameter_list = ["current_A (Value)",
+                      'cathode_rh_in_perc (Value)',
+                      'stoich_cathode (Value)',
+                      'pressure_cathode_in_bara (Value)',
+                      'temp_coolant_inlet_degC (Value)',
+                      'temp_coolant_outlet_degC (Value)']
+    #For plotting the dashed lines we need to know which plot we are doing
+    num_columns = data_doe.shape[1]
+    
     for df, title in zip(data, titles):
         df = df[df['Flight Level (100x ft)'] == fl_set]
         fig, ax = plt.subplots(figsize=(12, 8))
@@ -37,8 +46,8 @@ def plot_optimized_parameters(data, titles, fl_set, markers_oL, var, saving=True
         df_eol = df[df["eol (t/f)"] == True]
         
         # plot min/max bounds according to parameters.py
-        lower_bound = ax.axhline(min(_params_optimization.bounds[1]), color='black', linestyle='--', label=f'{var} Bounds', zorder=0)
-        upper_bound = ax.axhline(max(_params_optimization.bounds[1]), color='black', linestyle='--', zorder=0)
+        lower_bound = ax.axhline(min(_params_optimization.bounds[num_columns-1]), color='black', linestyle='--', label=f'{var} Bounds', zorder=0)
+        upper_bound = ax.axhline(max(_params_optimization.bounds[num_columns-1]), color='black', linestyle='--', zorder=0)
         
         # Scatter plot with color based on 'System Power (kW)'
         scatter_bol = ax.scatter(df_bol['current_A (Value)'], 
@@ -54,7 +63,11 @@ def plot_optimized_parameters(data, titles, fl_set, markers_oL, var, saving=True
                                  cmap='viridis', norm=norm, 
                                  edgecolor='k', s=100, marker=markers_oL[1], label='EoL', zorder=1)
         
-
+        # Plot DOE data in the background
+        scatter_eol = ax.scatter(data_doe["current_A"], 
+                                 data_doe.iloc[:,-1], c="k", edgecolor='k', 
+                                 s=100, marker="o", label='DOE data', zorder=0, alpha=0.2)
+        
         # Add colorbar for the gradient
         cbar = plt.colorbar(cmap, ax=ax)
         cbar.set_label('System Power [kW]')
@@ -72,7 +85,7 @@ def plot_optimized_parameters(data, titles, fl_set, markers_oL, var, saving=True
         ax.set_ylabel(f'{var}')
         ax.grid(True)
         ax.set_xlim([0, 800])
-        ax.set_ylim([0, 110])
+        ax.set_ylim([yrange[0], yrange[1]])
         fig.tight_layout()
 
         # # Annotate points where 'eol (t/f)' is True
@@ -93,7 +106,8 @@ def plot_optimized_parameters(data, titles, fl_set, markers_oL, var, saving=True
                                       markersize=11, linestyle='None', label='System Power EoL [kW]')
         
         ax.legend(handles=[legend_bol,legend_eol], loc='best')
-
+    
+        
         # Save the plot as a PNG file if saving is True
         if saving:
             plt.savefig(f'{var}_{title}.png')

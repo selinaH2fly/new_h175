@@ -136,8 +136,8 @@ def analyze_data(_file_path1, saving=True):
                          "Turbine Power (kW)":      0}
     
     # New grouped, stacked bar chart function
-    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
-    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="eol")
+    #plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
+    #plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="eol")
     
     ###########PLOT: Compressormap
     plot_compressor_map(data, titles, colors, markers, saving=True, mode="bol")
@@ -156,15 +156,20 @@ def analyze_data(_file_path1, saving=True):
     os.makedirs("Optimized_Operating_Parameters", exist_ok=True)
     os.chdir("Optimized_Operating_Parameters")
 
-    # call the plot functions
-    opt_parameters = ['pressure_cathode_in_bara (Value)',
-                      'cathode_rh_in_perc (Value)',
+    # define opt parametersfor plotting
+    # sequence is important here!
+    opt_parameters = ['cathode_rh_in_perc (Value)',
                       'stoich_cathode (Value)',
+                      'pressure_cathode_in_bara (Value)',
                       'temp_coolant_inlet_degC (Value)',
                       'temp_coolant_outlet_degC (Value)']
+    # define ranges of plots
+    yranges = [[0,140],[1,6],[1,3.4],[50,100],[50,100]]
     
-    for opt_parameter in opt_parameters:
-        plot_optimized_parameters(data, titles, fl_set, markers_oL, opt_parameter, saving=True)
+    for i, (opt_parameter, yrange) in enumerate(zip(opt_parameters,yranges)):
+        #We will plot current df.iloc[0] with the last column df.iloc[-1], therefore we pass columns 0:n
+        doe_data_column = Optimized_DoE_data_variables.iloc[:,0:i+2] 
+        plot_optimized_parameters(data, doe_data_column, titles, fl_set, markers_oL, opt_parameter, yrange, saving=True)
 
     # go back to the parent directory
     os.chdir("../")
