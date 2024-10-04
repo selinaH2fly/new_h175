@@ -18,6 +18,15 @@ class Valve:
         """
         return self.valve_position_percent * 100
 
+    def set_valve_position(self, new_valve_position):
+        """
+        Update the valve position.
+
+        Args:
+            new_valve_position: The new valve position (0.0 to 1.0).
+        """
+        self.valve_position = new_valve_position
+
     def calculate_bypass_flow(self):
         """
         Calculates the mass flow rates of air going through the bypass and the main branch based on the valve position.
