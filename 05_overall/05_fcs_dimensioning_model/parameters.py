@@ -6,12 +6,12 @@ class Optimization_Parameters:
     def __init__(self):
 
         # Bounds for the optimization problem TODO: make these a dictionary
-        self.bounds = [(0, 2e3),       # current_A
-                        (30, 140),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
-                        (1.6, 12),       # stoich_cathode (lambda_min = 1.6 according to P10 manual)
+        self.bounds = [(20, 2e3),       # current_A
+                        (30, 100),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
+                        (1.6, 5.0),       # stoich_cathode (lambda_min = 1.6 according to P10 manual)
                         (1.1, 3.3),     # pressure_cathode_in_bara (p_max = 2.3 barg according to P10 manual)
-                        (20, 90),       # temp_coolant_inlet_degC
-                        (20, 100)]       # temp_coolant_outlet_degC
+                        (60, 90),       # temp_coolant_inlet_degC
+                        (60, 90)]       # temp_coolant_outlet_degC
         
         # Evolutionary algorithm settings: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html
         self.tol = 1e-4                 # tolerance for the optimization: np.std(pop) <= atol + tol * np.abs(np.mean(population_energies))
@@ -192,6 +192,27 @@ class Eol_Parameter:
 
         self.reference_derating_factor = 0.85
         self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A
+
+class Valve_Parameters:
+
+    def __init__(self):
+        """
+        This class contains the empirical data for the bypass valve opening percentages and
+        the corresponding mass flow rates in g/s, represented in dictionary format.
+        """
+        self.bypass_valve_flow_map = {
+            6.0: 0.0,
+            20.0: 11.8,
+            30.0: 22.30,
+            40.0: 33.18,
+            50.0: 46.0,
+            60.0: 61.50,
+            70.0: 79.60,
+            80.0: 98.18,
+            90.0: 110.0,
+            94.0: 112.0
+        }
+
 
 class Mass_Parameters:
     def __init__(self):
