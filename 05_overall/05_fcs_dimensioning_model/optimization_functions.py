@@ -319,31 +319,25 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         return power_balance_offset        
 
-    nlc_Power = NonlinearConstraint(nonlinear_constraint_Power, 0, 1000)
+    # Constraint to ensure that the coolant outlet temperature is higher than the inlet temperature
+    def nonlinear_constraint_Temp(x):
 
-    def nonlinear_constraint_CoolantPump(x):
-        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
+        return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
+            - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4]))
 
-        return coolant_pump_power_W        
+    # Constraint to ensure that the optimized input is within the DoE envelope
+    def nonlinear_constraint_DoE(x):
 
-    nlc_Coolant_Pump = NonlinearConstraint(nonlinear_constraint_CoolantPump, 0, np.inf)
+        x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
+        x_scaled = x_scaled.reshape(1,6)
 
+        return DoE_envelope_Delaunay.find_simplex(x_scaled)
 
-    if constraint:
-        
-        # Define the nonlinear constraint for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 0 K
-        def nonlinear_constraint_DoE(x):
-            # Constraint if results are inside convex hull of DoE
-            x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
-            x_scaled = x_scaled.reshape(1,6)
-
-            return DoE_envelope_Delaunay.find_simplex(x_scaled)
-            
-        nlc_DoE = NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)
-        nlc = [nlc_Power, nlc_DoE, nlc_Coolant_Pump]
-    
+    # Check for DoE constraint setting and define the nonlinear constraints
+    if constraint:            
+        nlc = [NonlinearConstraint(nonlinear_constraint_Power, 0, 1000), NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)]
     else:
-        nlc = [nlc_Power, nlc_Coolant_Pump]  
+        nlc = [NonlinearConstraint(nonlinear_constraint_Power, 0, 1000), NonlinearConstraint(nonlinear_constraint_Temp, 0, np.inf)]
 
     # Normalize the bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
