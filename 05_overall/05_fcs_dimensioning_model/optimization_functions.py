@@ -334,10 +334,11 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         return DoE_envelope_Delaunay.find_simplex(x_scaled)
 
     # Check for DoE constraint setting and define the nonlinear constraints
+    nlc_power = NonlinearConstraint(nonlinear_constraint_Power, 0, 1000)
     if constraint:            
-        nlc = [NonlinearConstraint(nonlinear_constraint_Power, 0, 1000), NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)]
+        nlc = [nlc_power, NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)]
     else:
-        nlc = [NonlinearConstraint(nonlinear_constraint_Power, 0, 1000), NonlinearConstraint(nonlinear_constraint_Temp, 0, np.inf)]
+        nlc = [nlc_power, NonlinearConstraint(nonlinear_constraint_Temp, 0, np.inf)]
 
     # Normalize the bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
