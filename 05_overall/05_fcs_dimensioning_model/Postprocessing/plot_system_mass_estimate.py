@@ -59,7 +59,7 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, sa
     points = [125, 150, 175]
     
     # Define cell numbers we would like to iterate through
-    cell_no = np.array([400, 450, 500])
+    cell_no = np.array([400, 455, 500])
     
     # Calculate m_stack using the formula
     m_stack_values = 0.0766 * cell_no + 9.2813  

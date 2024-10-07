@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 #%% PLOT: Polcurve bol vs eol connected points
-def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
+def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, saving=True):
     """
     Plots the polarization curves for multiple datasets into one plot and connects bol and eol operating points.
     aka. Spaghetti Plot.
@@ -29,8 +29,8 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
             bol_df, eol_df = bol_data[count], eol_data[count]
 
             # Plot BOL and EOL data
-            ax.scatter(bol_df['current_A (Value)'], bol_df['Cell Voltage (V)'], color=color, label=f'{title}, BoL', marker="p")
-            ax.scatter(eol_df['current_A (Value)'], eol_df['Cell Voltage (V)'], color=color, label=f'{title}, EoL', marker='X')
+            ax.scatter(bol_df['current_A (Value)'], bol_df['Cell Voltage (V)'], color=color, label=f'{title}, BoL', marker=markers_oL[0])
+            ax.scatter(eol_df['current_A (Value)'], eol_df['Cell Voltage (V)'], color=color, label=f'{title}, EoL', marker=markers_oL[1])
 
             # Connect corresponding BOL and EOL points and annotate
             for power in highlight_powers:
@@ -64,7 +64,7 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, saving=True):
                     
     # Highlight power levels
     highlight_powers = [20, 50, 80, 125, 150, 175]
-    cell_counts = [400, 450, 500]
+    cell_counts = [400, 455, 500]
 
     # Filter data for BOL and EOL
     bol_data = filter_data(df1, eol=False, cell_counts=cell_counts)

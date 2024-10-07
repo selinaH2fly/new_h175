@@ -50,7 +50,7 @@ class Stack:
                             self.cooling_pressure_drop_coefficients[1]*coolant_flow_l_min + 
                             self.cooling_pressure_drop_coefficients[2])*100
 
-        return pressure_drop_Pa
+        return abs(pressure_drop_Pa)
 
     def calculate_stack_mass(self) -> float:
         """

@@ -20,7 +20,7 @@ from Components.coolant_pump import Coolant_Pump
 from Components.radiator import Radiator
 from Components.stack import Stack
 from Components.heat_exchanger import Intercooler, Evaporator
-from basic_physics import compute_air_mass_flow, icao_atmosphere
+from basic_physics import compute_air_mass_flow, icao_atmosphere, convert
 
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275,
@@ -162,8 +162,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Set stack attributes:
         stack.current_A = optimized_current_A
         stack.cell_voltage_V = optimized_cell_voltage_V
-        stack.temp_coolant_in_K = optimized_temp_coolant_inlet_degC + 273.15
-        stack.temp_coolant_out_K = optimized_temp_coolant_outlet_degC + 273.15
+        stack.temp_coolant_in_K = convert(optimized_temp_coolant_inlet_degC, "K")
+        stack.temp_coolant_out_K = convert(optimized_temp_coolant_outlet_degC , "K")
         
         # Compute the coolant flow rate
         stack.coolant_flow_m3_s = stack.calculate_coolant_flow(pressure_ambient_Pa)
@@ -175,7 +175,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Set compressor attributes
         compressor.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A, cellcount=cellcount)
-        compressor.pressure_out_Pa = optimized_pressure_cathode_in_bara*1e5 + compressor.calculate_BoP_pressure_drop() # compressor_out == cathode_in + BoP_pressure_drop (compressor out -> cathode in)
+        compressor.pressure_out_Pa = convert(optimized_pressure_cathode_in_bara, "Pa") + compressor.calculate_BoP_pressure_drop() # compressor_out == cathode_in + BoP_pressure_drop (compressor out -> cathode in)
         compressor.temperature_out_K = compressor.calculate_T_out()
         # Calculate compressor power
         compressor_power_W = compressor.calculate_power()
@@ -213,8 +213,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
             # Set turbine attributes
             turbine.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A, cellcount=cellcount)
-            turbine.pressure_in_Pa     = max(cathode_pressure_out_bar*1e5 - turbine.calculate_BoP_pressure_drop(), 1e-9) # turbine_in == cathode_out - BoP_pressure_drop (cathode out -> turbine in)
-            turbine.temperature_in_K   = max(optimized_temp_coolant_outlet_degC + 273.15, 1e-9) 
+            turbine.pressure_in_Pa     = max(convert(cathode_pressure_out_bar, "Pa") - turbine.calculate_BoP_pressure_drop(), 1e-9) # turbine_in == cathode_out - BoP_pressure_drop (cathode out -> turbine in)
+            turbine.temperature_in_K   = max(convert(optimized_temp_coolant_outlet_degC,"K"), 1e-9) 
             
             # Compute the turbine power        
             turbine_power_W = turbine.calculate_power()
@@ -228,8 +228,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Set recirculation pump attributes
         reci_pump.current_A = optimized_current_A
-        reci_pump.temperature_in_K = max(optimized_temp_coolant_outlet_degC + 273.15, 1e-9)
-        reci_pump.pressure_out_Pa = 1e5*(optimized_pressure_cathode_in_bara + 0.200)    # reci_out == anode_in \approx: cathode_in + 0.2 bar (cf. PowerLayout); TODO: include p_anode_in in cell voltage model
+        reci_pump.temperature_in_K = max(convert(optimized_temp_coolant_outlet_degC,"K"), 1e-9)
+        reci_pump.pressure_out_Pa = convert(optimized_pressure_cathode_in_bara, "Pa") + 1e5*0.200    # reci_out == anode_in \approx: cathode_in + 0.2 bar (cf. PowerLayout); TODO: include p_anode_in in cell voltage model
         reci_pump.stoich_anode = 1.5                                                    # TODO: include anode stoichiometry in cell voltage model
 
         # Estimate the anode pressure drop
@@ -267,7 +267,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         #set T, p and m_dots here
 
         intercooler.primary_T_in_K = compressor.temperature_out_K
-        intercooler.primary_T_out_K = optimized_temp_coolant_inlet_degC + 273.15 # degC into K
+        intercooler.primary_T_out_K = convert(optimized_temp_coolant_inlet_degC, "K")
         intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
         intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
         
@@ -305,13 +305,13 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     def objective_function(x):
 
         # Evaluate the models with the normalized input
-        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, \
-            reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
+        _, _, _, _, _, _, hydrogen_supply_rate_g_s = evaluate_models(x)
                
         return hydrogen_supply_rate_g_s #+ penalty
    
+   # Constraint to ensure that the specified system net power is met
     def nonlinear_constraint_Power(x):
-        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
+        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, _ = evaluate_models(x)
 
         power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
             - compressor_power_W + turbine_power_W - reci_pump_power_W  - coolant_pump_power_W \
@@ -319,31 +319,26 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         return power_balance_offset        
 
-    nlc_Power = NonlinearConstraint(nonlinear_constraint_Power, 0, 1000)
+    # Constraint to ensure that the coolant outlet temperature is higher than the inlet temperature
+    def nonlinear_constraint_Temp(x):
 
-    def nonlinear_constraint_CoolantPump(x):
-        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
+        return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
+            - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4]))
 
-        return coolant_pump_power_W        
+    # Constraint to ensure that the optimized input is within the DoE envelope
+    def nonlinear_constraint_DoE(x):
 
-    nlc_Coolant_Pump = NonlinearConstraint(nonlinear_constraint_CoolantPump, 0, np.inf)
+        x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
+        x_scaled = x_scaled.reshape(1,6)
 
+        return DoE_envelope_Delaunay.find_simplex(x_scaled)
 
-    if constraint:
-        
-        # Define the nonlinear constraint for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 0 K
-        def nonlinear_constraint_DoE(x):
-            # Constraint if results are inside convex hull of DoE
-            x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
-            x_scaled = x_scaled.reshape(1,6)
-
-            return DoE_envelope_Delaunay.find_simplex(x_scaled)
-            
-        nlc_DoE = NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)
-        nlc = [nlc_Power, nlc_DoE, nlc_Coolant_Pump]
-    
+    # Check for DoE constraint setting and define the nonlinear constraints
+    nlc_power = NonlinearConstraint(nonlinear_constraint_Power, 0, 1000)
+    if constraint:            
+        nlc = [nlc_power, NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)]
     else:
-        nlc = [nlc_Power, nlc_Coolant_Pump]  
+        nlc = [nlc_power, NonlinearConstraint(nonlinear_constraint_Temp, 0, np.inf)]
 
     # Normalize the bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
@@ -407,12 +402,13 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                 generated_point = (generate_point_in_doe_envelope(DoE_envelope_Delaunay, bounds_pop)-cell_voltage_model.input_data_mean.numpy())/cell_voltage_model.input_data_std.numpy()
                 adjusted_pop_init.append(generated_point)
         adjusted_pop_init = np.array(adjusted_pop_init)
-        pop_init_bounds = np.zeros((2, adjusted_pop_init.shape[1]))
-        pop_init_bounds[0,:] = np.min(adjusted_pop_init, axis=0)
-        pop_init_bounds[1,:] = np.max(adjusted_pop_init, axis=0)
-        all_points, outside_points = evaluate_pop_in_DoE(adjusted_pop_init, DoE_envelope_Delaunay)
+        # pop_init_bounds = np.zeros((2, adjusted_pop_init.shape[1]))
+        # pop_init_bounds[0,:] = np.min(adjusted_pop_init, axis=0)
+        # pop_init_bounds[1,:] = np.max(adjusted_pop_init, axis=0)
+        # all_points, outside_points = evaluate_pop_in_DoE(adjusted_pop_init, DoE_envelope_Delaunay)
         return adjusted_pop_init
 
+    '''
     class ConvergenceTracker:
         """
         Class to get detailed optimization informations and set manual convergence criteria
@@ -469,6 +465,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                 # For initial iterations, print the basic info
                 #print(f"Iteration {len(self.best_objective_values)}: Best Objective = {current_best_value:.6f}, nlc_CP = {nlc_CP_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
                 return False
+    '''
 
     # Perform the optimization using differential evolution
     #callback = ConvergenceTracker(tolerance=1e-5, window_size=40, constraint_check=100) #activate if you need some convergence information

@@ -6,12 +6,12 @@ class Optimization_Parameters:
     def __init__(self):
 
         # Bounds for the optimization problem TODO: make these a dictionary
-        self.bounds = [(0, 2e3),       # current_A
-                        (30, 140),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
-                        (1.6, 12),       # stoich_cathode (lambda_min = 1.6 according to P10 manual)
+        self.bounds = [(20, 2e3),       # current_A
+                        (30, 100),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
+                        (1.6, 5.0),       # stoich_cathode (lambda_min = 1.6 according to P10 manual)
                         (1.1, 3.3),     # pressure_cathode_in_bara (p_max = 2.3 barg according to P10 manual)
-                        (20, 90),       # temp_coolant_inlet_degC
-                        (20, 100)]       # temp_coolant_outlet_degC
+                        (60, 90),       # temp_coolant_inlet_degC
+                        (60, 90)]       # temp_coolant_outlet_degC
         
         # Evolutionary algorithm settings: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html
         self.tol = 1e-4                 # tolerance for the optimization: np.std(pop) <= atol + tol * np.abs(np.mean(population_energies))
