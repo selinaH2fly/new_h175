@@ -335,10 +335,11 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
     # Check for DoE constraint setting and define the nonlinear constraints
     nlc_power = NonlinearConstraint(nonlinear_constraint_Power, 0, 1000)
+    nlc_temp = NonlinearConstraint(nonlinear_constraint_Temp, 1e-3, np.inf)
     if constraint:            
-        nlc = [nlc_power, NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)]
+        nlc = [nlc_power, nlc_temp, NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)]
     else:
-        nlc = [nlc_power, NonlinearConstraint(nonlinear_constraint_Temp, 0, np.inf)]
+        nlc = [nlc_power, nlc_temp]
 
     # Normalize the bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
