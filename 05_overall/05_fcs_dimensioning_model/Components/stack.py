@@ -1,5 +1,7 @@
 import CoolProp.CoolProp as CP
 from parameters import Physical_Parameters
+import torch
+import gpytorch
 
 class Stack:
     """
@@ -26,15 +28,36 @@ class Stack:
         self.temp_coolant_in_K = temp_coolant_in_K
         self.temp_coolant_out_K = temp_coolant_out_K
 
-    def calculate_pressure_drop_anode(self)->float:
+    def calculate_pressure_drop_anode(self, anode_pressure_drop_model, optimized_current_A, optimized_stoich_anode, optimized_pressure_anode_in_bara, optimized_temp_coolant_inlet_degC)->float:
         """
         Calculate the pressure drop across the anode for a given current.
         The "model" is a simple quadratic relationship between pressure drop and current.
         """
-
-        pressure_drop_Pa = (self.anode_pressure_drop_coefficients[0]*self.current_A**2 + 
-                            self.anode_pressure_drop_coefficients[1]*self.current_A + 
-                            self.anode_pressure_drop_coefficients[2])*100
+# Normalize current, stoichiometry, and pressure and temperature for evaluating the anode pressure drop model
+        current_for_dp_normalized_anode = (optimized_current_A - anode_pressure_drop_model.input_data_mean[0]) / \
+            anode_pressure_drop_model.input_data_std[0]
+        stoichiometry_for_dp_normalized_anode = (optimized_stoich_anode - anode_pressure_drop_model.input_data_mean[1]) / \
+            anode_pressure_drop_model.input_data_std[1]
+        pressure_for_dp_normalized_anode = (optimized_pressure_anode_in_bara - anode_pressure_drop_model.input_data_mean[2]) / \
+            anode_pressure_drop_model.input_data_std[2]
+        temperature_for_dp_normalized_anode = (optimized_temp_coolant_inlet_degC - anode_pressure_drop_model.input_data_mean[3]) / \
+            anode_pressure_drop_model.input_data_std[3]
+            
+        anode_pressure_drop_model_input = torch.tensor([current_for_dp_normalized_anode, stoichiometry_for_dp_normalized_anode, pressure_for_dp_normalized_anode,
+                                                      temperature_for_dp_normalized_anode], dtype=torch.float).unsqueeze(0)
+        # Evaluate the cathode pressure drop model
+        anode_pressure_drop_model.model.eval()
+        with torch.no_grad(), gpytorch.settings.fast_pred_var():
+            anode_pressure_drop = anode_pressure_drop_model.model(anode_pressure_drop_model_input).mean.item()
+        # Denormalize
+        anode_pressure_drop_bar = anode_pressure_drop * anode_pressure_drop_model.target_data_std \
+            + anode_pressure_drop_model.target_data_mean
+            
+        # Limit the cathode pressure drop to be non-negative
+        anode_pressure_drop_bar = max(anode_pressure_drop_bar.item(), 1e-9)
+        pressure_drop_Pa = anode_pressure_drop_bar*100000     #(self.anode_pressure_drop_coefficients[0]*self.current_A**2 + 
+                                 #   self.anode_pressure_drop_coefficients[1]*self.current_A + 
+                                  #  self.anode_pressure_drop_coefficients[2])*100
 
         return pressure_drop_Pa
     
@@ -105,9 +128,7 @@ class Stack:
         #TODO: maybe move this to a component coolant in the future and use it in all cooled components...?
         coolant = "INCOMP::MEG-50%" # 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
         coolant_cp_J_kgK = CP.PropsSI('C', 'T', (self.temp_coolant_in_K + self.temp_coolant_out_K) / 2, 'P', pressure_ambient_Pa, coolant)
-
         # Calculate the coolant flow rate
         coolant_flow_kg_s = heat_generated_W / (coolant_cp_J_kgK * (self.temp_coolant_out_K - self.temp_coolant_in_K))
         coolant_flow_m3_s = coolant_flow_kg_s / CP.PropsSI('D', 'T', (self.temp_coolant_in_K + self.temp_coolant_out_K) / 2, 'P', pressure_ambient_Pa, coolant)
-
         return coolant_flow_m3_s
