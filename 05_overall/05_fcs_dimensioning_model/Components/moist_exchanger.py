@@ -1,4 +1,5 @@
 import CoolProp.HumidAirProp as HAP
+import CoolProp.CoolProp as CP
 import numpy as np
 from parameters import Physical_Parameters
 
@@ -23,15 +24,12 @@ class MoistExchanger:
         self.temperature_in_k_wet_in = temperature_in_k_wet_in
         self.pressure_in_pa_wet_in = pressure_in_pa_wet_in
         self.rh_wet_in = rh_wet_in
-
         self.pressure_in_pa_wet_out = pressure_in_pa_wet_out
 
         # Use the constants from Physical_Parameters
         params_physics = Physical_Parameters()
         self.R_Air = params_physics.R_Air
         self.R_Vap = params_physics.R_Vap
-        self.molar_mass_water = params_physics.molar_mass_water
-
 
     def calculate_specific_heat(self, t, p, rh) -> float:
         return HAP.HAPropsSI('C', 'T', t, 'P', p, 'R', rh)
@@ -96,9 +94,9 @@ class MoistExchanger:
         n_vap_wet_in = (p_vap_wet_in  * v_dot_wet) / (R_water * t_wet_in)
 
         # Calculate mass flow rates of water vapor
-        m_vap_dry_in = molar_mass_water * n_vap_dry_in  # kg/s
-        m_vap_dry_out = molar_mass_water * n_vap_dry_out  # kg/s
-        m_vap_wet_in = molar_mass_water * n_vap_wet_in  # kg/s
+        m_vap_dry_in = CP.PropsSI('M','Water')* n_vap_dry_in  # kg/s
+        m_vap_dry_out = mCP.PropsSI('M','Water') * n_vap_dry_out  # kg/s
+        m_vap_wet_in = CP.PropsSI('M','Water')* n_vap_wet_in  # kg/s
 
         eta_water_trans = m_vap_dry_out / m_vap_wet_in if m_vap_wet_in != 0 else 0
 
