@@ -28,10 +28,13 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     print(f"Specified Cell Count: {specified_cell_count}")
 
     # Load the trained cell voltage model from the "Trained_Models" folder
-    gpr_model_cell_voltage = load_gpr_model(os.path.join(os.getcwd(), "Trained_Models", "gpr_model_cell_voltage.pth"))
+    gpr_model_cell_voltage = load_gpr_model(os.path.join(os.getcwd(), "My_Trained_Models", "gpr_model_cell_voltage.pth"))
 
     # Load the trained cathode pressure drop model from the "Trained_Models" folder
-    gpr_model_cathode_pressure_drop = load_gpr_model(os.path.join(os.getcwd(), "Trained_Models", "gpr_model_cathode_pressure_drop.pth"))
+    gpr_model_cathode_pressure_drop = load_gpr_model(os.path.join(os.getcwd(), "My_Trained_Models", "gpr_model_cathode_pressure_drop.pth"))
+    
+    # Load the trained anode pressure drop model from the "Trained_Models" folder
+    gpr_model_anode_pressure_drop = load_gpr_model(os.path.join(os.getcwd(), "My_Trained_Models", "gpr_model_anode_pressure_drop.pth"))
 
     # Create a folder to store the training results
     create_experiment_folder(_params_optimization=_params_optimization, type='optimization')
@@ -41,7 +44,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
         stack_power_kW, compressor_power_kW, turbine_power_kW, \
             reci_pump_power_kW, coolant_pump_power_kW, compressor_corrected_air_flow_g_s, \
                 compressor_pressure_ratio, stack_heat_flux_kW, intercooler_heat_flux_kW, \
-                    evaporator_heat_flux_kW, radiator_heat_flux_kW, converged = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
+                    evaporator_heat_flux_kW, radiator_heat_flux_kW, converged = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop, gpr_model_anode_pressure_drop, 
                                                                                     flight_level_100ft, cellcount=specified_cell_count,
                                                                                     power_constraint_kW=power_constraint_kW,
                                                                                     consider_turbine=consider_turbine, compressor_map=compressor_map,
@@ -82,9 +85,9 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
 if __name__ == '__main__':
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Optimize input variables using a trained Gaussian process regression model")
-    parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=150.0)
+    parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=120.0)
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=455)
-    parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=120)
+    parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=0)
     parser.add_argument("-t", "--turbine", type=str, choices=["True", "False"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
     parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
     parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.85 to account for end of life (default: False).")

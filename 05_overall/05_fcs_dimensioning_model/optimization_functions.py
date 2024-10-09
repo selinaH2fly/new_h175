@@ -63,40 +63,32 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     # Load DoE-Data 
     DoE_data, _ = data_processing.load_high_amp_doe_data()
-    
+    time_start = time.time()
+
     # reduce DoE-Data to optimized parameters
     Optimized_DoE_data_variables = data_processing.voltage_input_data_dict(DoE_data,_params_physics)
     Optimized_DoE_data_variables = pd.DataFrame(Optimized_DoE_data_variables)
 
     ## export DoE Convex Hull
-    # # build convex hull of DoE parameters
-    # DoE_envelope = ConvexHull(Optimized_DoE_data_variables.values)
-    # DoE_envelope_vertices_df = pd.DataFrame(Optimized_DoE_data_variables.values[DoE_envelope.vertices], columns=[f'x{i}' for i in range(1,9)])
-    # DoE_envelope_simplices_df = pd.DataFrame(DoE_envelope.simplices, columns=[f'point_{i}' for i in range(DoE_envelope.simplices.shape[1])])
+    # build convex hull of DoE parameters
+    DoE_envelope = ConvexHull(Optimized_DoE_data_variables.values)
 
-    # DoE_envelope_vertices_df.to_csv("convex_hull_DoE_vertices.csv", index=False)
-    # DoE_envelope_simplices_df.to_csv("DoE_envelope_simplices.csv", index=False)
-
-    # DoE_envelope_Delaunay = Delaunay(Optimized_DoE_data_variables.values[DoE_envelope.vertices])
-    # DoE_envelope_Delaunay_df = pd.DataFrame(DoE_envelope_Delaunay.simplices, columns=[f"point_{i}" for i in range(DoE_envelope_Delaunay.simplices.shape[1])])
-
-    # DoE_envelope_Delaunay_df.to_csv("DoE_envelope_triangulation.csv", index=False)
+    DoE_envelope_Delaunay = Delaunay(Optimized_DoE_data_variables.values[DoE_envelope.vertices])
 
     ##import DoE Convex Hull
-    time_start = time.time()
-    my_dir = os.getcwd()
-    filename = ["convex_hull_DoE_vertices.csv","DoE_envelope_simplices.csv","DoE_envelope_triangulation.csv"]
+    # my_dir = os.getcwd()
+    # filename = ["convex_hull_DoE_vertices.csv","DoE_envelope_simplices.csv","DoE_envelope_triangulation.csv"]
     
-    convex_hull_DoE_vertices = pd.read_csv(os.path.join(Path(my_dir).parents[0],'My_Trained_Models',filename[0]))
-    convex_hull_DoE_simplices = pd.read_csv(os.path.join(Path(my_dir).parents[0],'My_Trained_Models',filename[1]))
-    convex_hull_triangulation = pd.read_csv(os.path.join(Path(my_dir).parents[0],'My_Trained_Models',filename[2]))
+    # convex_hull_DoE_vertices = pd.read_csv(os.path.join(Path(my_dir).parents[0],'My_Trained_Models',filename[0]))
+    # convex_hull_DoE_simplices = pd.read_csv(os.path.join(Path(my_dir).parents[0],'My_Trained_Models',filename[1]))
+    # convex_hull_triangulation = pd.read_csv(os.path.join(Path(my_dir).parents[0],'My_Trained_Models',filename[2]))
 
-    convex_hull_DoE_vertices = convex_hull_DoE_vertices.to_numpy()
-    convex_hull_triangulation = convex_hull_triangulation.to_numpy()
-    DoE_envelope_Delaunay=Delaunay(convex_hull_DoE_vertices)
+    # convex_hull_DoE_vertices = convex_hull_DoE_vertices.to_numpy()
+    # convex_hull_triangulation = convex_hull_triangulation.to_numpy()
+    # DoE_envelope_Delaunay=Delaunay(convex_hull_DoE_vertices)
     time_end = time.time()
     time_delta = time_end-time_start
-    print("imported and build delaunay triangulation in :",time_delta)
+    print("Generated delaunay triangulation in :",time_delta)
 
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
