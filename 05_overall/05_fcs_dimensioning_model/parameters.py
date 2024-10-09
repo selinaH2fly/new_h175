@@ -51,8 +51,6 @@ class Physical_Parameters:
         # Constants
         self.R_Air = 287.06  # Specific gas constant for air in J/(kg·K)
         self.R_Vap = 461.52  # Specific gas constant for water vapor in J/(kg·K)
-        self.molar_mass_water = 0.01801528  # kg/mol
-
 
 class Assumptions:
         
