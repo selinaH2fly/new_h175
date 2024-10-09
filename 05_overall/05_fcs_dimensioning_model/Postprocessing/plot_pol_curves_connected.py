@@ -79,7 +79,7 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, sa
     ax.set(title=f"System Polarization Curve - EoL vs BoL, FL {fl_set}", xlabel='Current [A]', xlim=[0, 1000], ylabel='Cell Voltage [V]', ylim=[0.3, 1])
     ax.grid(True)
     ax.legend(loc='upper right')
-
+    ax.set_xlim([0, 800])
     # Save and show plot
     if saving:
         plt.savefig('bol_eol_polarization_curve.png', bbox_inches='tight')

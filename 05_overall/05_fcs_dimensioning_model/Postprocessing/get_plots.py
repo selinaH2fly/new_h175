@@ -65,6 +65,7 @@ def analyze_data(_file_path1, saving=True):
     # reduce DoE-Data to optimized parameters
     Optimized_DoE_data_variables = data_processing.voltage_input_data_dict(DoE_data,parameters.Physical_Parameters())
     Optimized_DoE_data_variables = pd.DataFrame(Optimized_DoE_data_variables)
+    current_upper_bound = Optimized_DoE_data_variables["current_A"].max()
     
     # Create a new directory for plots
     os.makedirs("00_Plots", exist_ok=True)
@@ -75,11 +76,12 @@ def analyze_data(_file_path1, saving=True):
     df1 = filter_converged_points(df1, tolerance=7)
     df1 = df1.sort_values(by=['idx'])
     df1 = df1.reset_index(drop=True)
-  
+    df1 = df1[(df1["current_A (Value)"] < current_upper_bound)]
+    
     # Split the data based on 'Specified Cell Count'
-    df_400 = df1[df1['Specified Cell Count'] == 400]
-    df_455 = df1[df1['Specified Cell Count'] == 455]
-    df_500 = df1[df1['Specified Cell Count'] == 500]
+    df_400 = df1[(df1['Specified Cell Count'] == 400)]
+    df_455 = df1[(df1['Specified Cell Count'] == 455)]
+    df_500 = df1[(df1['Specified Cell Count'] == 500)] 
     
     data   = [     df_400,       df_455,     df_500]
     titles = ['400 Cells',  '455 Cells','500 Cells']
