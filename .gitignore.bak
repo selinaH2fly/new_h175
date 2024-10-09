@@ -1,0 +1,27 @@
+# List of untracked files to ignore
+**/slprj/
+/thermal/validation_data/
+# File formats
+*.slxc
+*.autosave
+*.original
+*.asv
+stack/p10_doe_ann_emulation/__pycache__/
+stack/p10_doe_ann_emulation/.idea/
+*experiment*
+stack/p10_doe_data_evaluation/results/
+04_thermal/01_simscape/sim_results/
+*.zip
+03_stack/02_doe_data/03_p10_doe_data_evaluation/python/.idea/
+03_stack/02_doe_data/05_p10_doe_gaussian_regression/*-2024/
+*.pyc
+03_stack/02_doe_data/05_p10_doe_gaussian_regression/archive/
+*~$*
+05_overall/05_fcs_dimensioning_model/*consolidated*
+05_overall/05_fcs_dimensioning_model/failed_cases.txt
+05_overall/05_fcs_dimensioning_model/.VSCodeCounter/
+<<<<<<< HEAD
+05_overall/05_fcs_dimensioning_model/.idea/
+=======
+05_overall/05_fcs_dimensioning_model/.idea/
+>>>>>>> a6a07e7 (Revert changes)

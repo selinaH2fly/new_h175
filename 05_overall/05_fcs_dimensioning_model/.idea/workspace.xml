@@ -5,48 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="af6c87ee-8b68-4876-8504-102cabba419a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../../.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../04_thermal/03_python/.idea/03_python.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../04_thermal/03_python/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../04_thermal/03_python/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../04_thermal/03_python/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../04_thermal/03_python/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../04_thermal/03_python/.idea/workspace.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/05_fcs_dimensioning_model.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/cathode_model_run.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Components/heat_exchanger.py" beforeDir="false" afterPath="$PROJECT_DIR$/Components/heat_exchanger.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/400 Cells_polarization_curve.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/450 Cells_polarization_curve.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/500 Cells_polarization_curve.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Component_Powers_Power Consumption of Components [kW], 400 Cells, FL 120.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Component_Powers_Power Consumption of Components [kW], 450 Cells, FL 120.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Component_Powers_Power Consumption of Components [kW], 500 Cells, FL 120.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/H2_Consumption.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/H2_consumption_vs_flightlevel_bol.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/H2_consumption_vs_flightlevel_eol.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/400 Cells_cathode_inlet_pressure.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/400 Cells_cathode_inlet_rel_humidity.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/400 Cells_cathode_stoichiometry.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/400 Cells_coolant_inlet.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/400 Cells_coolant_outlet.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/450 Cells_cathode_inlet_pressure.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/450 Cells_cathode_inlet_rel_humidity.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/450 Cells_cathode_stoichiometry.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/450 Cells_coolant_inlet.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/450 Cells_coolant_outlet.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/500 Cells_cathode_inlet_pressure.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/500 Cells_cathode_inlet_rel_humidity.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/500 Cells_cathode_stoichiometry.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/500 Cells_coolant_inlet.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Optimized_Operating_Parameters/500 Cells_coolant_outlet.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/System_Efficiency_vs_Power.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Weight_estimation_vs_power_bol.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/Weight_estimation_vs_power_eol.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/00_Plots/bol_eol_polarization_curve.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/optimized_parameters_20-175kW_400-500_0-150ft.csv" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,6 +35,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python.cathode_arch.executor": "Run",
     "Python.compressor.executor": "Run",
     "Python.get_plots.executor": "Run",
     "Python.heat_exchanger.executor": "Run",
@@ -81,13 +43,15 @@
     "Python.mass_estimation.executor": "Run",
     "Python.model_run.executor": "Run",
     "Python.moist_exchanger.executor": "Run",
+    "Python.optimization_functions.executor": "Run",
     "Python.parameters.executor": "Run",
     "Python.recirculation_pump.executor": "Run",
     "Python.stack.executor": "Run",
     "Python.turbine.executor": "Run",
+    "Python.valve.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "feature/HWI-431/Cathode__Architecture",
-    "last_opened_file_path": "C:/Users/debjani.ghosh/Documents/GIT/WG/h175_model/05_overall/05_fcs_dimensioning_model",
+    "last_opened_file_path": "C:/Users/debjani.ghosh/Documents/TestGit/h175_model/h175_model/04_thermal/03_python",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>
