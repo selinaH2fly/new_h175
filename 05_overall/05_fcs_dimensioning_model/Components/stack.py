@@ -1,5 +1,5 @@
 import CoolProp.CoolProp as CP
-from parameters import Physical_Parameters
+from parameters import Physical_Parameters, Stack_Parameters
 import torch
 import gpytorch
 
@@ -33,7 +33,8 @@ class Stack:
         Calculate the pressure drop across the anode for a given current.
         The "model" is a simple quadratic relationship between pressure drop and current.
         """
-# Normalize current, stoichiometry, and pressure and temperature for evaluating the anode pressure drop model
+        params_physics = Stack_Parameters()
+    # Normalize current, stoichiometry, pressure, temperature and H2 concentration for evaluating the anode pressure drop model
         current_for_dp_normalized_anode = (optimized_current_A - anode_pressure_drop_model.input_data_mean[0]) / \
             anode_pressure_drop_model.input_data_std[0]
         stoichiometry_for_dp_normalized_anode = (optimized_stoich_anode - anode_pressure_drop_model.input_data_mean[1]) / \
@@ -42,10 +43,12 @@ class Stack:
             anode_pressure_drop_model.input_data_std[2]
         temperature_for_dp_normalized_anode = (optimized_temp_coolant_inlet_degC - anode_pressure_drop_model.input_data_mean[3]) / \
             anode_pressure_drop_model.input_data_std[3]
-            
+        H2_concentration_for_dp_normalized_anode = (params_physics.H2_concentration_fix - anode_pressure_drop_model.input_data_mean[4]) / \
+            anode_pressure_drop_model.input_data_std[4]
+
         anode_pressure_drop_model_input = torch.tensor([current_for_dp_normalized_anode, stoichiometry_for_dp_normalized_anode, pressure_for_dp_normalized_anode,
-                                                      temperature_for_dp_normalized_anode], dtype=torch.float).unsqueeze(0)
-        # Evaluate the cathode pressure drop model
+                                                      temperature_for_dp_normalized_anode, H2_concentration_for_dp_normalized_anode], dtype=torch.float).unsqueeze(0)
+        # Evaluate the anode pressure drop model
         anode_pressure_drop_model.model.eval()
         with torch.no_grad(), gpytorch.settings.fast_pred_var():
             anode_pressure_drop = anode_pressure_drop_model.model(anode_pressure_drop_model_input).mean.item()
@@ -53,7 +56,7 @@ class Stack:
         anode_pressure_drop_bar = anode_pressure_drop * anode_pressure_drop_model.target_data_std \
             + anode_pressure_drop_model.target_data_mean
             
-        # Limit the cathode pressure drop to be non-negative
+        # Limit the anode pressure drop to be non-negative
         anode_pressure_drop_bar = max(anode_pressure_drop_bar.item(), 1e-9)
         pressure_drop_Pa = anode_pressure_drop_bar*100000     #(self.anode_pressure_drop_coefficients[0]*self.current_A**2 + 
                                  #   self.anode_pressure_drop_coefficients[1]*self.current_A + 

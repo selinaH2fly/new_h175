@@ -21,9 +21,6 @@ from Components.radiator import Radiator
 from Components.stack import Stack
 from Components.heat_exchanger import Intercooler, Evaporator
 from basic_physics import compute_air_mass_flow, icao_atmosphere, convert
-import time
-import os
-from pathlib import Path
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, anode_pressure_drop_model, flight_level_100ft, cellcount=275,
                                  power_constraint_kW=None, consider_turbine=True, compressor_map=None, end_of_life=False, constraint=True):
@@ -63,8 +60,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     # Load DoE-Data 
     DoE_data, _ = data_processing.load_high_amp_doe_data()
-    time_start = time.time()
-
     # reduce DoE-Data to optimized parameters
     Optimized_DoE_data_variables = data_processing.voltage_input_data_dict(DoE_data,_params_physics)
     Optimized_DoE_data_variables = pd.DataFrame(Optimized_DoE_data_variables)
@@ -74,21 +69,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     DoE_envelope = ConvexHull(Optimized_DoE_data_variables.values)
 
     DoE_envelope_Delaunay = Delaunay(Optimized_DoE_data_variables.values[DoE_envelope.vertices])
-
-    ##import DoE Convex Hull
-    # my_dir = os.getcwd()
-    # filename = ["convex_hull_DoE_vertices.csv","DoE_envelope_simplices.csv","DoE_envelope_triangulation.csv"]
-    
-    # convex_hull_DoE_vertices = pd.read_csv(os.path.join(Path(my_dir).parents[0],'My_Trained_Models',filename[0]))
-    # convex_hull_DoE_simplices = pd.read_csv(os.path.join(Path(my_dir).parents[0],'My_Trained_Models',filename[1]))
-    # convex_hull_triangulation = pd.read_csv(os.path.join(Path(my_dir).parents[0],'My_Trained_Models',filename[2]))
-
-    # convex_hull_DoE_vertices = convex_hull_DoE_vertices.to_numpy()
-    # convex_hull_triangulation = convex_hull_triangulation.to_numpy()
-    # DoE_envelope_Delaunay=Delaunay(convex_hull_DoE_vertices)
-    time_end = time.time()
-    time_delta = time_end-time_start
-    print("Generated delaunay triangulation in :",time_delta)
 
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
@@ -246,20 +226,18 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Set recirculation pump attributes
         reci_pump.current_A = optimized_current_A
-        reci_pump.temperature_in_K = max(convert(optimized_temp_coolant_outlet_degC,"K"), 1e-9)
+        reci_pump.temperature_in_K = convert(optimized_temp_coolant_outlet_degC,"K")
         reci_pump.pressure_out_Pa = convert(optimized_pressure_anode_in_bara,'Pa') #convert(optimized_pressure_cathode_in_bara, "Pa") + 1e5*0.200    # reci_out == anode_in \approx: cathode_in + 0.2 bar (cf. PowerLayout); TODO: include p_anode_in in cell voltage model
         reci_pump.stoich_anode = optimized_stoich_anode                                                   # TODO: include anode stoichiometry in cell voltage model
 
         # Estimate the anode pressure drop         
         anode_pressure_drop_Pa = stack.calculate_pressure_drop_anode(anode_pressure_drop_model, optimized_current_A, optimized_stoich_anode, optimized_pressure_anode_in_bara, optimized_temp_coolant_inlet_degC)
+        
         # Compute the cathode pressure out        
-        anode_pressure_out_Pa = optimized_input[7] + anode_pressure_drop_Pa
-
-        # Estimate the BoP pressure drop in the recirculation loop
-        #anode_BoP_pressure_drop_Pa = reci_pump.calculate_BoP_pressure_drop()
+        anode_pressure_out_Pa = convert(optimized_pressure_anode_in_bara,'Pa') - anode_pressure_drop_Pa
 
         # Compute the pressure at the anode outlet
-        reci_pump.pressure_in_Pa =  max(anode_pressure_out_Pa, 1e-9) #max(reci_pump.pressure_out_Pa -
+        reci_pump.pressure_in_Pa =  anode_pressure_out_Pa #max(reci_pump.pressure_out_Pa -
                                         #anode_pressure_drop_Pa -
                                         #anode_BoP_pressure_drop_Pa, 1e-9) # reci_in == anode_out \approx: anode_in - dp_anode; TODO: include DoE data-based GPR anode pressure drop model
         # Compute the recirculation pump power
@@ -392,7 +370,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         for i, column in enumerate(filtered_DoE.columns):
             bounds_pop[i,0] = filtered_DoE[column].min()
             bounds_pop[i,1] = filtered_DoE[column].max()
-        print(bounds_pop)
         # build init population        
         for i in range(n_bounds):
             lower_bound, upper_bound = bounds_pop[i]
@@ -430,6 +407,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         #all_points, outside_points = evaluate_pop_in_DoE(adjusted_pop_init, DoE_envelope_Delaunay)
         return adjusted_pop_init
 
+    '''
     class ConvergenceTracker:
         """
         Class to get detailed optimization informations and set manual convergence criteria
@@ -475,13 +453,13 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
                 else:
                     print(f"Iteration {len(self.best_objective_values)}: Best Objective = {current_best_value:.6f}, nlc_Temp = {nlc_Temp_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
-                    return False   
-            
+                    return False               
     
+    '''
 
     # Perform the optimization using differential evolution
-    callback = ConvergenceTracker(tolerance=1e-5, window_size=40) #activate if you need some convergence information
-    result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=callback,
+    #callback = ConvergenceTracker(tolerance=1e-5, window_size=40) #activate if you need some convergence information
+    result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=None,
                                     maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
                                     seed=_params_optimization.seed, recombination=_params_optimization.recombination, strategy=_params_optimization.strategy, 
                                     tol=_params_optimization.tol, init=pop_init(), polish=False, disp=False)

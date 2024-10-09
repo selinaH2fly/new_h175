@@ -125,7 +125,7 @@ class Recirculation_Pump:
 
         return hydrogen_recirculated_mol_s, nitrogen_recirculated_mol_s
     
-    def calculate_flows_fixed_recirculation_ratio(self, recirculation_ratio=None):
+    def calculate_flows_fixed_recirculation_ratio(self, recirculation_ratio=70/30):
         """
         Calculate the mass flows of hydrogen and nitrogen in the recirculation pump for a fixed recirculation ratio.
         

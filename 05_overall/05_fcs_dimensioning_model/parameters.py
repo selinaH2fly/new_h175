@@ -12,7 +12,7 @@ class Optimization_Parameters:
                         (1.1, 3.3),     # pressure_cathode_in_bara (p_max = 2.3 barg according to P10 manual)
                         (60, 90),       # temp_coolant_inlet_degC
                         (60, 90),       # temp_coolant_outlet_degC
-                        (1,10),         # stoich_anode
+                        (1.1,10),         # stoich_anode
                         (1,5)]          # pressure_anode_in_bara
         
         # Evolutionary algorithm settings: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html
@@ -128,7 +128,7 @@ class Recirculation_Pump_Parameters:
         self.electric_efficiency = 0.95
         self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
 
-        self.fixed_recirculation_ratio = 70/30
+        self.fixed_recirculation_ratio = None #70/30
 
         # Assumption: ~0.1 bar constant pressure drop in the recirculation loop
         self.nominal_BoP_pressure_drop_Pa = 0.1*1e5
@@ -162,7 +162,7 @@ class Stack_Parameters:
 
         self.anode_pressure_drop_coefficients = [4*1e-4, 9.4*1e-3, 49.7]    # cf. PowerLayout, DoE Evaluation
         self.cooling_pressure_drop_coefficients = [6.5e-3, 0.477, 0]        # cf. PowerLayout, DoE Evaluation
-
+        self.H2_concentration_fix = 70      #fix H2 concentration in percent default = 70 
 class Intercooler_Parameters:
 
     def __init__(self):

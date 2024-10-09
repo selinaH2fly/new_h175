@@ -224,5 +224,5 @@ def anode_dp_input_data_dict(df_dict, params_physics):
     input_data_dict['stoich_anode'] = df_dict['anode_stoich']
     input_data_dict['pressure_anode_in_bara'] = [pressure_barg + params_physics.sea_level_ambient_pressure_bar for pressure_barg in df_dict['pressure_anode_inlet']]
     input_data_dict['temp_coolant_inlet_degC'] = df_dict['temp_coolant_inlet'] # assumption: gas temperature \approx "stack" temperature, right after gas enters stack (cf. Powercell assumption for dewpoint computations)
-
+    input_data_dict['H2_concentration'] = df_dict['Anode_H2_Concentration'] 
     return input_data_dict
