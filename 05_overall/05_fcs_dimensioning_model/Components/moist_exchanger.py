@@ -1,5 +1,6 @@
 import CoolProp.HumidAirProp as HAP
 import numpy as np
+from parameters import Physical_Parameters
 
 class MoistExchanger:
     def __init__(self, air_mass_flow_kg_s_dry=0.086, air_mass_flow_kg_s_wet=0.026,
@@ -25,9 +26,12 @@ class MoistExchanger:
 
         self.pressure_in_pa_wet_out = pressure_in_pa_wet_out
 
-        # Constants
-        self.R_Air = 287.06  # Specific gas constant for air in J/(kg·K)
-        self.R_Vap = 461.52  # Specific gas constant for water vapor in J/(kg·K)
+        # Use the constants from Physical_Parameters
+        params_physics = Physical_Parameters()
+        self.R_Air = params_physics.R_Air
+        self.R_Vap = params_physics.R_Vap
+        self.molar_mass_water = params_physics.molar_mass_water
+
 
     def calculate_specific_heat(self, t, p, rh) -> float:
         return HAP.HAPropsSI('C', 'T', t, 'P', p, 'R', rh)
@@ -90,10 +94,6 @@ class MoistExchanger:
         n_vap_dry_in = (p_vap_dry_in  * v_dot_dry) / (R_water * t_dry_in)
         n_vap_dry_out = (p_vap_dry_out  * v_dot_dry) / (R_water * t_dry_out)
         n_vap_wet_in = (p_vap_wet_in  * v_dot_wet) / (R_water * t_wet_in)
-
-        #Todo: Transfer it to parameters
-
-        molar_mass_water = 0.01801528  # kg/mol
 
         # Calculate mass flow rates of water vapor
         m_vap_dry_in = molar_mass_water * n_vap_dry_in  # kg/s
@@ -210,5 +210,5 @@ humidifier = Humidifier(
 # print(f"Vapor pressure (wet air inlet): {p_vap_wet_in:.2f} Pa")
 
 # Calculate mass flows
-mass_flows = humidifier.calculate_mass_flows()
-print(f"Mass flows: {mass_flows}")
+# mass_flows = humidifier.calculate_mass_flows()
+# print(f"Mass flows: {mass_flows}")
