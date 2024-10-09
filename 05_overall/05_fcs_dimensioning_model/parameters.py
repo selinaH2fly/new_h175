@@ -48,6 +48,12 @@ class Physical_Parameters:
         #Docu: https://h2fly.atlassian.net/browse/HWI-428?focusedCommentId=13070
         self.mean_cp_H2 = 14500 #J/kg.K for 20K --> 300K
 
+        # Constants
+        self.R_Air = 287.06  # Specific gas constant for air in J/(kg·K)
+        self.R_Vap = 461.52  # Specific gas constant for water vapor in J/(kg·K)
+        self.molar_mass_water = 0.01801528  # kg/mol
+
+
 class Assumptions:
         
     def __init__(self):
