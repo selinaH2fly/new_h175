@@ -27,6 +27,7 @@ def initialize(input_dict, result_dict, bc_dict):
     splitter1 = ThermSim.ConnectorPassive1to2(1, 2, 5, "splitter1")
     circ.add_comp(splitter1)
     throttle1 = ThermSim.Throttle(2, 3, "throttle1")
+    
     circ.add_comp(throttle1)
     bop1 = ThermSim.Heatsink(3, 4, "bop1")
     circ.add_comp(bop1)
@@ -54,16 +55,18 @@ def initialize(input_dict, result_dict, bc_dict):
     Provide input on boundary conditions
     """
     circ.add_bc("0.0 = %s * %s"%(tcv1.delta_p_1, tcv1.delta_p_2))
+    #circ.add_bc("0.0 = %s"%(tcv1.delta_p_1))
+    # circ.add_bc("0.0 = %s * %s"%(tcv1.delta_p_1, tcv1.delta_p_2))
     # pressure drop for bop1 for all bop components including intercooler, must be adapted to without intercooler!
-    # pressure drop bop2 is equal to intercooler pressure drop, already adapted!
-    circ.add_bc("delta_p_bop1 = - (0.000425124 * 60 ** 2 * Vdot_3 ** 2 + 0.003355931 * Vdot_3)")
-    circ.add_bc("delta_p_bop2 = - (4.4760 * 10 ** (-4) * Vdot_11 ** 2 * 60 ** 2 + 2.2828 * 10 ** (-3) * Vdot_11 * 60)")
+    # pressure drop bop2 is equal to intercooler pressure drop, already adapted
+    circ.add_bc("%s = - (0.78139 * %s ** 2 + 0.1369 * %s)"%(bop1.delta_p, bop1.Vdot_in, bop1.Vdot_in))  # bop41
+    circ.add_bc("delta_p_bop2 = - (4.4760 * 10 ** (-4) * %s ** 2 * 60 ** 2 + 2.2828 * 10 ** (-3) * %s * 60)"%(bop2.Vdot_in, bop2.Vdot_in)) # intercooler
 
-    circ.add_bc("Qdot_bop1 = -8000")
-    circ.add_bc("Qdot_bop2 = 21000")
+    circ.add_bc("Qdot_bop1 = 0")
+    circ.add_bc("Qdot_bop2 = 13000")
 
-    circ.add_bc("Vdot_3 = %f" %bc_dict["bop_vdot"])
-    circ.add_bc("Vdot_11 = %f" %bc_dict["bop_vdot"])
+    circ.add_bc("%s = %f" %(bop1.Vdot_in, bc_dict["bop_vdot"]))
+    circ.add_bc("%s = %f" %(bop2.Vdot_in, bc_dict["bop_vdot"]))    
     # boundary conditions, user input:
     circ.add_bc("%s = %f" %(pump1.p_in, bc_dict["pump_p_in"]))
     circ.add_bc("%s = %f" %(stack1.T_in, bc_dict["stack_t_in"]))

@@ -9,16 +9,16 @@ vary_bc = True
 # Do you want to compare results of different architectures in one plot (only has effect if vary_bc is set True)
 compare_res = True
 
-# Which Architectures do you want to evaluate? ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"] 
-arch_list = ["Arch06"]    # which architecture should be analysed?, also possible to evaluate multiple architectures
+# Which Architectures do you want to evaluate? ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"]
+arch_list = ["ArchShy4"] #, "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"] # ]    # which architecture should be analysed?, also possible to evaluate multiple architectures
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
 #    input_dict = {"stack_t_out" : ["", [273.15 + 70 + 8, 273.15 + 70 + 10], 'Stackausgangstemperatur [K]']}
-    input_dict = {"stack_t_in" : ["", [273.15 + 68, 273.15 + 70, 273.15 + 72, 273.15 + 74], 'Stackeingangstemperatur [K]']} #, 273.15 + 60 + 14, 273.15 + 60 + 16
-    #input_dict = {"sys_t_in" : ["", [273.15 + 50, 273.15 + 55, 273.15 + 60, 273.15 + 65], 'Systemeingangstemperatur [K]']}
+  #  input_dict = {"stack_t_in" : ["", [273.15 + 66, 273.15 + 68, 273.15 + 70, 273.15 + 72], 'Stackeingangstemperatur [K]']} #, 273.15 + 60 + 14, 273.15 + 60 + 16
+    input_dict = {"sys_t_in" : ["", [273.15 + 50, 273.15 + 55, 273.15 + 60, 273.15 + 65], 'Systemeingangstemperatur [K]']}
     #input_dict = {"bop_q" : ["",[5000, 7000, 9000, 11000, 13000], 'Wärmeeintrag BoP Komponenten [W]']}
-    # input_dict = {"stack_q" : ["", [160000, 180000, 200000, 220000], 'Wärmeeintrag Stack [W]']}    # circ.add_bc("Qdot_stack1 = %.1f"%(np.interp(600, [20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600], [2.6, 9.7, 20.8, 33.1, 46.7, 60.5, 75.0, 90.2, 106.4, 123.6, 142.5, 162.0, 178.5], left=np.nan, right=np.nan) * 1000.0))
+    # input_dict = {"stack_q" : ["", [180000, 190000, 200000, 210000, 220000], 'Wärmeeintrag Stack [W]']}    # circ.add_bc("Qdot_stack1 = %.1f"%(np.interp(600, [20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600], [2.6, 9.7, 20.8, 33.1, 46.7, 60.5, 75.0, 90.2, 106.4, 123.6, 142.5, 162.0, 178.5], left=np.nan, right=np.nan) * 1000.0))
     #input_dict = {"bop_vdot" : ["", [20/60, 30/60, 40/60, 50/60, 60/60], 'Volumenstrom über BoP Komponenten [l/s]']}
     ###M#input_dict = {"bop_dp" : ["", [0.1, 0.2, 0.3, 0.4, 0.5], 'Druckverlust über die BoP Komponenten [bar]']}
 else: 
@@ -32,7 +32,8 @@ bc_dict = {"pump_p_in" : 1,                     # pressure before pump, lowest p
            "sys_t_in" : 273.15 + 60.0,          # System entry temperature, temperature after external radiatior
            "bop_q" : 13000,                     # bop heat 
            "stack_q" : 200000,                  # stack heat
-           "bop_vdot" : 0.3                     # flow over bop components (whole block) 30L/min
+           "bop_vdot" : 0.5,                     # flow over bop components (whole block) 30L/min
+           "bop_delta_p" : 1                    # choose the bop number: 10, 21,22,23,24,25,26,27,31,32,33,41 or42
 }
 
 # Which variables should be safed in excel and be plotted
@@ -120,3 +121,31 @@ if vary_bc is True and compare_res is True:
             plt.legend()
             plt.grid()
             plt.show()
+
+def bop_delta_p(bop_arch):
+    if bop_arch == 10:
+        bop_delta_p = "= 2,9653E+01x2 + 9,4479E-01x"
+    elif bop_arch == 21: 
+        bop_delta_p = "3,5471E+00x2 + 3,2617E-01x"
+    elif bop_arch == 22: 
+        bop_delta_p = "2,0263E+00x2 + 2,4735E-01x"
+    elif bop_arch == 23: 
+        bop_delta_p = "2,7341E+00x2 + 3,1410E-01x"
+    elif bop_arch == 24: 
+        bop_delta_p = "4,8421E+00x2 + 4,2018E-01x"
+    elif bop_arch == 25: 
+        bop_delta_p = "5,5433E+00x2 + 4,0187E-01x"
+    elif bop_arch == 26: 
+        bop_delta_p = "6,4742E+00x2 + 4,5768E-01x"
+    elif bop_arch == 27: 
+        bop_delta_p = "6,4742E+00x2 + 4,5768E-01x"
+    elif bop_arch == 31: 
+        bop_delta_p = "= 1,0509E+00x2 + 1,6437E-01x"
+    elif bop_arch == 32: 
+        bop_delta_p = "= 1,0019E+00x2 + 1,6645E-01x"
+    elif bop_arch == 33: 
+        bop_delta_p = "1,2261E+00x2 + 1,8181E-01x"
+    elif bop_arch == 41: 
+        bop_delta_p = "7,8087E-01x2 + 1,3715E-01x"
+    elif bop_arch == 42: 
+        bop_delta_p = "7,9734E-01x2 + 1,3849E-01x"

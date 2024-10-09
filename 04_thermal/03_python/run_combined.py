@@ -5,21 +5,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # what combination do you want to test? Only choose one for each!
-big_arch = []           # "Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08"
-bop_arch = []           # "bop10", "bop21","bop22", "bop23", "bop24","bop25", "bop26", "bop27","bop31", "bop33", "bop41" & "bop42"
+big_arch_list = []           # "Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08"
+bop_arch_list = []           # "bop10", "bop21","bop22", "bop23", "bop24","bop25", "bop26", "bop27","bop31", "bop33", "bop41" & "bop42"
 
 # Do you want to vary one boundary condition? If not no plots will be made, but results will be safed in excel.
 vary_bc = True
 
 # How do you want to plot?
 # Do you want to compare results of different architectures in one plot (has effect if vary_bc is set True)
-compare_res = True
-# if you don't want to compare architectures in one plot: Do you want to compare all temperatures, all pressures and all flows in each one plot?
-plot_temp_pr_vd = False
-
-# Which Architectures do you want to evaluate? 
-arch_list = ["bop10", "bop21", "bop22", "bop23", "bop24", "bop25", "bop26", "bop27", "bop31","bop32", "bop33", "bop41","bop42"] #,"bop25", "bop26", "bop27"
-
 
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
@@ -30,10 +23,19 @@ if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary cond
 else:
     input_dict = None
 
-# input
+# What boundary conditions do you want to set? 
+big_bc_dict = {"pump_p_in" : 1,                     # pressure before pump, lowest pressure level
+           "stack_t_in" : 273.15 + 68.0,        # temperature at stack inlet
+           "stack_t_out" : 273.15 + 80.0,       # temperature at stack outlet
+           "sys_t_in" : 273.15 + 60.0,          # System entry temperature, temperature after external radiatior
+           "bop_q" : 13000,                     # bop heat 
+           "stack_q" : 200000,                  # stack heat
+           "bop_vdot" : 0.5                     # flow over bop components (whole block) 30L/min
+           }
+
 critical_operation = True
 if critical_operation is True:
-    bc_dict = {"T_in" : 273.15 + 60.0,
+    bop_bc_dict = {"T_in" : 273.15 + 60.0,
                 #"Vdot_in" : 0.5,
                 "p_in" : 1.5,
                 "p_end" : 1,
@@ -45,7 +47,7 @@ if critical_operation is True:
                 "Qdot_compressor" : 1000,
                 "Qdot_evap" : -13500}
 else: 
-    bc_dict = {"T_in" : 273.15 + 50.0,
+    bop_bc_dict = {"T_in" : 273.15 + 50.0,
                #"Vdot_in" : 0.5,
                 "p_in" : 1.5,
                 "p_end" : 1,
@@ -57,7 +59,19 @@ else:
                 "Qdot_compressor" : 500,
                 "Qdot_evap" : -13500}
     
-result_dict = {"Vdot_in" :              ['', [], 'BoP Input flow in [l/s]'], 
+# Which variables should be safed in excel and be plotted
+big_result_dict = {"pump_vdot" : ["", [], 'flow over pump1 [l/S]'],
+                "pump_delta_p" : ["", [],'pump pressure difference [bar]'],
+                "radiator_vdot" : ["", [], 'flow over radiator [l/S]'],
+                "perc_recirc": ["", [], 'Percentage recirculated'],
+                "radiator_t_in" : ["", [],'System Output Temperature [K]'],
+                "pump2_vdot" : ["", [], "flow over pump2 [l/s]"],
+                "pump2_delta_p" : ["", [], "pump2 pressure difference [bar]"],
+                "stack_delta_p" : ["", [], "pressure loss over stack [bar]"],
+                "pump_power" : ["", [], "optimal pump power [W]"],
+}
+    
+bop_result_dict = {"Vdot_in" :              ['', [], 'BoP Input flow in [l/s]'], 
                 "Vdot_1" :              ['', [], ''], 
                 "Vdot_2" :              ['', [],''],
                 "Vdot_3" :              ['', [],''],
@@ -72,10 +86,11 @@ result_dict = {"Vdot_in" :              ['', [], 'BoP Input flow in [l/s]'],
                 "t_out_Bop" :           ["", [],'BoP T_out'],
                 "p_in" :                ["", [], 'bop pressure drop in [bar]']}
 
+
 ##########   calculation ###########################################################################################
 excel_dict = {}
 all_result_dict = {}
-for arch in arch_list:      # each architecture is evaluated
+for arch in big_arch_list:      # each architecture is evaluated
     key_init = "%s.initialize(%s, %s, %s)" %(arch, input_dict, result_dict, bc_dict)
     circ, input_dict, result_dict = eval(key_init)
     print("Start to evaluate architecture %s"%arch)

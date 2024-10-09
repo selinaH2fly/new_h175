@@ -3,11 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Do you want to vary one boundary condition? If not no plots will be made, but results will be safed in excel.
-vary_bc = False
+vary_bc = True
 
 # How do you want to plot?
 # Do you want to compare results of different architectures in one plot (has effect if vary_bc is set True)
-compare_res = True
+compare_res = False
 # if you don't want to compare architectures in one plot: Do you want to compare all temperatures, all pressures and all flows in each one plot?
 plot_temp_pr_vd = False
 
