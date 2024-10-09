@@ -10,7 +10,7 @@ vary_bc = True
 compare_res = True
 
 # Which Architectures do you want to evaluate? ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"]
-arch_list = ["ArchShy4"] #, "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"] # ]    # which architecture should be analysed?, also possible to evaluate multiple architectures
+arch_list = ["Arch01"] #, "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"] # ]    # which architecture should be analysed?, also possible to evaluate multiple architectures
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
@@ -33,7 +33,7 @@ bc_dict = {"pump_p_in" : 1,                     # pressure before pump, lowest p
            "bop_q" : 13000,                     # bop heat 
            "stack_q" : 200000,                  # stack heat
            "bop_vdot" : 0.5,                     # flow over bop components (whole block) 30L/min
-           "bop_delta_p" : 1                    # choose the bop number: 10, 21,22,23,24,25,26,27,31,32,33,41 or42
+           "bop_delta_p" : 41                    # choose the bop number: 10, 21,22,23,24,25,26,27,31,32,33,41 or 42
 }
 
 # Which variables should be safed in excel and be plotted
@@ -47,8 +47,40 @@ result_dict = {"pump_vdot" : ["", [], 'flow over pump1 [l/S]'],
                 "stack_delta_p" : ["", [], "pressure loss over stack [bar]"],
                 "pump_power" : ["", [], "optimal pump power [W]"],
 }
+############################################################ bop delta p ############################################################
+def func_bop_delta_p(bop_arch):
+    if bop_arch == 10:
+        bop_delta_list = [29.653, 0.94479] # "y = 29,653 * x ** 2 + 0,94479 * x"
+    elif bop_arch == 21: 
+        bop_delta_list = [3.5471, 0.32617] # " y = 3,5471E+00 x ** 2 + 3,2617E-01x"
+    elif bop_arch == 22: 
+        bop_delta_list = [2.0263, 0.24735] # "y = 2,0263E+00x2 + 2,4735E-01x"
+    elif bop_arch == 23: 
+        bop_delta_list = [2.7341, 0.31410] # "y = 2,7341E+00x2 + 3,1410E-01x"
+    elif bop_arch == 24: 
+        bop_delta_list = [4.8421, 0.42018] # "y = 4,8421E+00x2 + 4,2018E-01x"
+    elif bop_arch == 25: 
+        bop_delta_list = [5.5433, 0.40187] # "5,5433E+00x2 + 4,0187E-01x"
+    elif bop_arch == 26: 
+        bop_delta_list = [6.4742, 0.45768] # "y = 6,4742E+00x2 + 4,5768E-01x"
+    elif bop_arch == 27: 
+        bop_delta_list = [6.4742, 0.45768] # "y = 6,4742E+00x2 + 4,5768E-01x"
+    elif bop_arch == 31: 
+        bop_delta_list = [1.0509, 0.16437] # "y = 1,0509E+00x2 + 1,6437E-01x"
+    elif bop_arch == 32: 
+        bop_delta_list = [1.0019, 0.16645] # "y = 1,0019E+00x2 + 1,6645E-01x"
+    elif bop_arch == 33: 
+        bop_delta_list = [1.2261, 0.18181] # "y = 1,2261E+00x2 + 1,8181E-01x"
+    elif bop_arch == 41: 
+        bop_delta_list = [0.78087, 0.13715] # "y = 7,8087E-01x2 + 1,3715E-01x"
+    elif bop_arch == 42: 
+        bop_delta_list = [0.79734, 0.13849] # "y = 7,9734E-01x2 + 1,3849E-01x"
+    else:
+        print("bop_arch %f is not defined"%bop_arch)
 
+    return bop_delta_list
 ############################################################ calculation ############################################################
+bc_dict["bop_delta_p"] = func_bop_delta_p(bc_dict["bop_delta_p"])
 excel_dict = {}
 all_result_dict = {}
 result_dict_new = {}
@@ -122,30 +154,3 @@ if vary_bc is True and compare_res is True:
             plt.grid()
             plt.show()
 
-def bop_delta_p(bop_arch):
-    if bop_arch == 10:
-        bop_delta_p = "= 2,9653E+01x2 + 9,4479E-01x"
-    elif bop_arch == 21: 
-        bop_delta_p = "3,5471E+00x2 + 3,2617E-01x"
-    elif bop_arch == 22: 
-        bop_delta_p = "2,0263E+00x2 + 2,4735E-01x"
-    elif bop_arch == 23: 
-        bop_delta_p = "2,7341E+00x2 + 3,1410E-01x"
-    elif bop_arch == 24: 
-        bop_delta_p = "4,8421E+00x2 + 4,2018E-01x"
-    elif bop_arch == 25: 
-        bop_delta_p = "5,5433E+00x2 + 4,0187E-01x"
-    elif bop_arch == 26: 
-        bop_delta_p = "6,4742E+00x2 + 4,5768E-01x"
-    elif bop_arch == 27: 
-        bop_delta_p = "6,4742E+00x2 + 4,5768E-01x"
-    elif bop_arch == 31: 
-        bop_delta_p = "= 1,0509E+00x2 + 1,6437E-01x"
-    elif bop_arch == 32: 
-        bop_delta_p = "= 1,0019E+00x2 + 1,6645E-01x"
-    elif bop_arch == 33: 
-        bop_delta_p = "1,2261E+00x2 + 1,8181E-01x"
-    elif bop_arch == 41: 
-        bop_delta_p = "7,8087E-01x2 + 1,3715E-01x"
-    elif bop_arch == 42: 
-        bop_delta_p = "7,9734E-01x2 + 1,3849E-01x"

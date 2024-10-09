@@ -58,7 +58,7 @@ def initialize(input_dict, result_dict, bc_dict):
     circ.add_bc("%s = %f" %(bop1.Vdot_in,bc_dict["bop_vdot"]))
 
     # fixed boundary conditiones:
-    circ.add_bc("%s = - (0.78139 * %s ** 2 + 0.1369 * %s)"%(bop1.delta_p, bop1.Vdot_in, bop1.Vdot_in))  # bop41
+    circ.add_bc("%s = - (%f * %s ** 2 + %f * %s)"%(bop1.delta_p, bc_dict["bop_delta_p"][0], bop1.Vdot_in, bc_dict["bop_delta_p"][1], bop1.Vdot_in)) 
     circ.add_bc("%s = - (5.6629  * 10 ** (-6) * 60 ** 2 * %s ** 2 + 6.3347 * 10 ** (-4) * 60 * %s)"%(stack1.delta_p, stack1.Vdot_in, stack1.Vdot_in))
     circ.add_bc("%s = - (8.2958 * 10 ** (-6) * 60 ** 2 * %s + 1.6622 * 10 ** (-3) * 60 * %s)"%(radiator1.delta_p, radiator1.Vdot_in, radiator1.Vdot_in))
 
