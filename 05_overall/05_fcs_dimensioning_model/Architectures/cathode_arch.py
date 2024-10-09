@@ -24,9 +24,6 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
     # Instantiate Pressure Parameters
     pressures = PressureParameters()
 
-    # Access pressure values
-    print(f"Pressure after compressor stage 2: {pressures.PTC211_p_bara} bar")
-
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
     print(f"Ambient temperature: {temperature_ambient_K} K, pressure: {pressure_ambient_Pa} Pa")
@@ -49,6 +46,7 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
 
     # Calculate air mass flow using the compute_air_mass_flow function
     compressor.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=stoich_cathode, current_A=current_A, cellcount=cellcount)
+    compressor.pressure_out_Pa = pressures.PTC211_p_Pa
 
     # Calculate outlet temperature and power
     compressor.temperature_out_K = compressor.calculate_T_out()
@@ -59,25 +57,26 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
     print(f"Compressor power for stage 1: {compressor_power_W / 1000:.2f} kW")  # Convert W to kW
     print(f"Air mass flow rate: {compressor.air_mass_flow_kg_s:.4f} kg/s")
 
-    # Instantiate the intercooler using compressor outputs
-
-    intercooler     =   Intercooler(efficiency=_params_intercooler.efficiency,
-                                    primary_fluid = _params_intercooler.primary_fluid,
-                                    coolant_fluid=_params_intercooler.primary_fluid,
-                                    ALLOWED_FLUIDS=_params_intercooler.ALLOWED_FLUIDS
-    )
-
-
-    intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
-    intercooler.primary_T_in_K = compressor.temperature_out_K
-    intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
-
-    #TODO: IC Tout and Power??
-    # Calculate intercooler outlet temperature and other properties as necessary
-    intercooler.temperature_out_K =
-    intercooler_power_W = intercooler.calculate_power()
-
-
+ #    # Instantiate the intercooler using compressor outputs
+ #    intercooler = Intercooler(
+ #        primary_p_in_Pa=convert(pressures.PTC301_p_bara, 'Pa'),  # Pressure after air-air intercooler, warm side
+ #        primary_t_in_K=compressor.temperature_out_K,
+ #        primary_mass_flow_kg_s=compressor.air_mass_flow_kg_s
+ #    )
+ #
+ #
+ #    #TODO: IC Tout and Power??
+ #    # Calculate intercooler outlet temperature and other properties as necessary
+ #    # intercooler.temperature_out_K =
+ #    # intercooler_power_W = intercooler.calculate_power()
+ #    intercooler_heat_flux_W = intercooler.calculate_heat_flux("primary")
+ #
+ #
+ # # Print values for debugging
+ #    print(f"Compressor outlet pressure (from cathode_model_run): {convert(pressures.PTC301_p_bara, 'Pa')} Pa")
+ #    print(f"Intercooler primary inlet temperature: {intercooler.primary_t_in_K} K")
+ #    print(f"Compressor power: {compressor.power_out_W / 1000:.2f} kW")  # Convert to kW
+ #    print(f"Air mass flow rate: {compressor.air_mass_flow_kg_s:.4f} kg/s")
 
 # Uncomment the following to run the simulation when the script is executed
 if __name__ == "__main__":

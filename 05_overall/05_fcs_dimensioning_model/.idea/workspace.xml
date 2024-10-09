@@ -5,9 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="af6c87ee-8b68-4876-8504-102cabba419a" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/cathode_model_run.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Components/heat_exchanger.py" beforeDir="false" afterPath="$PROJECT_DIR$/Components/heat_exchanger.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Architectures/cathode_arch.py" beforeDir="false" afterPath="$PROJECT_DIR$/Architectures/cathode_arch.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cathode_model_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/cathode_model_run.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,6 +36,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Python.cathode_arch.executor": "Run",
+    "Python.cathode_model_run.executor": "Run",
     "Python.compressor.executor": "Run",
     "Python.get_plots.executor": "Run",
     "Python.heat_exchanger.executor": "Run",
