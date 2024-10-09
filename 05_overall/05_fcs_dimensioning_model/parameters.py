@@ -194,7 +194,7 @@ class Eol_Parameter:
         self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A
 
 
-class HumidifierParameters:
+class Humidifier_Parameters:
 
     def __init__(self):
         self.air_mass_flow_kg_s_dry = 0.09
