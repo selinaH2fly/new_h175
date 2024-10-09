@@ -193,6 +193,24 @@ class Eol_Parameter:
         self.reference_derating_factor = 0.85
         self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A
 
+
+class HumidifierParameters:
+
+    def __init__(self):
+        self.air_mass_flow_kg_s_dry = 0.09
+        self.air_mass_flow_kg_s_wet = 0.053
+        self.temperature_in_k_dry_in = 353.3
+        self.pressure_in_pa_dry_in = 105000
+        self.rh_dry_in = 0.18
+        self.temperature_in_k_dry_out = 346.9
+        self.pressure_in_pa_dry_out = 101000
+        self.rh_dry_out = 0.75
+        self.temperature_in_k_wet_in = 353.2
+        self.pressure_in_pa_wet_in = 76000
+        self.rh_wet_in = 0.99
+        self.pressure_in_pa_wet_out = 76000
+
+
 class Valve_Parameters:
 
     def __init__(self):
