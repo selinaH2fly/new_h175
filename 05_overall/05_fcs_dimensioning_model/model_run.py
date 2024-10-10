@@ -28,13 +28,13 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     print(f"Specified Cell Count: {specified_cell_count}")
 
     # Load the trained cell voltage model from the "Trained_Models" folder
-    gpr_model_cell_voltage = load_gpr_model(os.path.join(os.getcwd(), "My_Trained_Models", "gpr_model_cell_voltage.pth"))
+    gpr_model_cell_voltage = load_gpr_model(os.path.join(os.getcwd(), "Trained_Models", "gpr_model_cell_voltage.pth"))
 
     # Load the trained cathode pressure drop model from the "Trained_Models" folder
-    gpr_model_cathode_pressure_drop = load_gpr_model(os.path.join(os.getcwd(), "My_Trained_Models", "gpr_model_cathode_pressure_drop.pth"))
+    gpr_model_cathode_pressure_drop = load_gpr_model(os.path.join(os.getcwd(), "Trained_Models", "gpr_model_cathode_pressure_drop.pth"))
     
     # Load the trained anode pressure drop model from the "Trained_Models" folder
-    gpr_model_anode_pressure_drop = load_gpr_model(os.path.join(os.getcwd(), "My_Trained_Models", "gpr_model_anode_pressure_drop.pth"))
+    gpr_model_anode_pressure_drop = load_gpr_model(os.path.join(os.getcwd(), "Trained_Models", "gpr_model_anode_pressure_drop.pth"))
 
     # Create a folder to store the training results
     create_experiment_folder(_params_optimization=_params_optimization, type='optimization')
