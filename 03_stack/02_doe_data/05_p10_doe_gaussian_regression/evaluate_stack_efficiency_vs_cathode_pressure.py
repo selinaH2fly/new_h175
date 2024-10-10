@@ -3,6 +3,7 @@ import torch
 import gpytorch
 import csv
 import matplotlib.pyplot as plt
+import numpy as np
 
 import parameters
 from file_handling import load_gpr_model
@@ -16,6 +17,8 @@ os.chdir(experiment_folder)
 
 # Load the saved model
 gpr_model_cell_voltage = load_gpr_model("gpr_model_cell_voltage.pth")
+
+#%% Define Input Data
 
 # Specify the input data
 feature_names = gpr_model_cell_voltage.feature_names
@@ -82,6 +85,8 @@ input_data_tensor = torch.tensor([[input_data_dict[feature_name] for feature_nam
 # Normalize the input data
 x_tensor = (input_data_tensor - gpr_model_cell_voltage.input_data_mean) / gpr_model_cell_voltage.input_data_std
 
+#%% Evaluate Model
+
 # Predict the cell voltage
 gpr_model_cell_voltage.model.eval()
 with torch.no_grad(), gpytorch.settings.fast_pred_var():
@@ -89,6 +94,8 @@ with torch.no_grad(), gpytorch.settings.fast_pred_var():
 
 # Denormalize the cell voltage prediction
 cell_voltage_tensor_V = cell_voltage_prediction_tensor * gpr_model_cell_voltage.target_data_std + gpr_model_cell_voltage.target_data_mean
+
+#%% Save and Print Predictions
 
 # Print the cell voltage predictions
 for cell_voltage_V, input_data_dict in zip(cell_voltage_tensor_V, input_data_dict_list):
@@ -109,12 +116,45 @@ with open(file_name, "w", newline='') as file:
         writer.writerow([input_data_dict[feature_name] for feature_name in feature_names] + [f"{cell_voltage_V.item():.4f}"])
     file.close()
 
-# Create a scatter plot of the cell voltage predictions
+#%% Create Plot
+
+# Extract the pressures, cell voltages, and currents from the input data dictionaries and tensors
+currents = [input_data_dict[feature_names[0]] for input_data_dict in input_data_dict_list]
+pressures = [input_data_dict[feature_names[3]] for input_data_dict in input_data_dict_list]
+cell_voltages = [cell_voltage_V.item() for cell_voltage_V in cell_voltage_tensor_V]
+
+# Convert currents to a numpy array (useful for grouping and color mapping)
+currents = np.array(currents)
+
+# Get the distinct current values
+distinct_currents = np.unique(currents)
+
+# Define a colormap based on the number of distinct current values
+cmap = plt.get_cmap('viridis', len(distinct_currents))
+
+# Create the scatter plot, using the normalized current values for colors
 fig, ax = plt.subplots()
-ax.scatter([input_data_dict[feature_names[3]] for input_data_dict in input_data_dict_list], [cell_voltage_V.item() for cell_voltage_V in cell_voltage_tensor_V])
+
+
+# Plot each group with its own color
+for i, current in enumerate(distinct_currents):
+    # Get the corresponding indices for this current value
+    indices = currents == current
+    ax.scatter(np.array(pressures)[indices], np.array(cell_voltages)[indices],
+               color=cmap(i), label=f'{current} A', s=100, zorder=2)
+
+# Add labels and grid
 ax.set_xlabel('Pressure (bara)')
 ax.set_ylabel('Cell Voltage (V)')
-ax.grid()
+ax.grid(zorder=1)
+
+# Add a legend
+ax.legend(loc='lower center', bbox_to_anchor=(0.5, 0), 
+          borderaxespad=0.1, ncol=len(distinct_currents), 
+          handlelength=0.2, handletextpad=0.5, borderpad=0.3)
+
+plt.tight_layout()
+
 plt.show()
 
 
