@@ -12,7 +12,7 @@ class Optimization_Parameters:
                         (1.1, 3.3),     # pressure_cathode_in_bara (p_max = 2.3 barg according to P10 manual)
                         (60, 90),       # temp_coolant_inlet_degC
                         (60, 90),       # temp_coolant_outlet_degC
-                        (1,10),       # stoich_anode
+                        (1,10),         # stoich_anode
                         (1,5)]          # pressure_anode_in_bara
         
         # Evolutionary algorithm settings: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html

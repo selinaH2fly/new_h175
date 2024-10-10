@@ -472,6 +472,18 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # Evaluate the models with the optimal input
     optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(result.x)
     
+    #check convergence criteria 
+    if optimization_converged:
+        if constraint and nonlinear_constraint_DoE(result.x)>0 and 0<=nonlinear_constraint_Power(result.x)<=1000:
+            optimization_converged="True"
+        elif constraint and (nonlinear_constraint_Power(result.x)<0 or nonlinear_constraint_Power(result.x)>1000 or nonlinear_constraint_DoE(result.x)<0):
+            optimization_converged= "False"
+        elif nonlinear_constraint_Power(result.x)<0 or nonlinear_constraint_Power(result.x)>1000 or nonlinear_constraint_Anode_Pressure(result.x)<0.05 or nonlinear_constraint_Temp(result.x)<0:
+            optimization_converged= "False"
+        else:
+            optimization_converged="True"
+    else:
+        optimization_converged="False"   
     # Compute stack power 
     stack_power_kW = stack.current_A * stack.cell_voltage_V * stack.cellcount / 1000
     

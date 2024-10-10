@@ -60,6 +60,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
         print(f"  {name}: {value:.4f} (Bounds: [{lower_bound_formatted}, {upper_bound_formatted}])")
     print(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  Hydrogen Supply Rate: {hydrogen_supply_rate_g_s:.4f} g/s\n")
     print(f"Cell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {cell_voltage:.4f} V\n")
+    print(f'Convergence Criteria satisfied: {converged} \n')
 
     # Print the resultant power numbers
     label_width = 45
@@ -85,7 +86,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
 if __name__ == '__main__':
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Optimize input variables using a trained Gaussian process regression model")
-    parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=120.0)
+    parser.add_argument("-p", "--power", type=float, help="Power constraint for input variable optimization", default=150.0)
     parser.add_argument("-n", "--cellcount", type=int, help="Stack cell number for optimizing subject to power constraint", default=455)
     parser.add_argument("-f", "--flightlevel", type=int, help="Flight level in 100x feets", default=0)
     parser.add_argument("-t", "--turbine", type=str, choices=["True", "False"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
