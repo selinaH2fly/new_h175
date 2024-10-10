@@ -121,7 +121,7 @@ for i, current in enumerate(distinct_currents):
     # Get the corresponding indices for this current value
     indices = currents == current
     ax.scatter(np.array(pressures)[indices], efficiencies[indices],
-               color=cmap(i), label=f'{current} A', s=100, zorder=2)
+               color=cmap(i), label=f'{current} A', s=100, zorder=2, marker='x')
     
 # Set axis limits
 ax.set_xlim([1.0, 3.1])
@@ -137,7 +137,7 @@ fig.text(0.39, -0.02, r'$^1$Referring to a lower heating value voltage equivalen
 # Add a legend
 ax.legend(loc='lower center', bbox_to_anchor=(0.5, 0), 
           borderaxespad=0.1, ncol=len(distinct_currents), 
-          handlelength=0.2, handletextpad=0.5, borderpad=0.3)
+          handlelength=0.2, handletextpad=0.5, borderpad=0.5)
 
 plt.tight_layout()
 
