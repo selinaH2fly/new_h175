@@ -123,8 +123,19 @@ for i, current in enumerate(distinct_currents):
     ax.scatter(np.array(pressures)[indices], efficiencies[indices],
                color=cmap(i), label=f'{current} A', s=100, zorder=2, marker='x')
     
+    # Create 2nd order polynomial fits for each current value
+    z = np.polyfit(np.array(pressures)[indices], efficiencies[indices], 2)
+    p = np.poly1d(z)
+    ax.plot(np.array(pressures)[indices], p(np.array(pressures)[indices]), color=cmap(i), zorder=2)
+
+    # Add the polymonial fit equation to the plot; use scientific notation for small numbers#
+    coeffs = p.coefficients
+    equation_str = f"${coeffs[0]:.4f}x^2 + {coeffs[1]:.2f}x + {coeffs[2]:.2f}$"
+    ax.text(3.15, 0.675 - 0.028 * i, equation_str, color=cmap(i), fontsize=8, backgroundcolor='lightgray')
+    
+    
 # Set axis limits
-ax.set_xlim([1.0, 3.1])
+ax.set_xlim([1.0, 4.1])
 ax.set_ylim([0.35, 0.75])
 
 # Add labels and grid
