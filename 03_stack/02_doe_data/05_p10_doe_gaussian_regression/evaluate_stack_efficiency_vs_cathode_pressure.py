@@ -95,33 +95,13 @@ with torch.no_grad(), gpytorch.settings.fast_pred_var():
 # Denormalize the cell voltage prediction
 cell_voltage_tensor_V = cell_voltage_prediction_tensor * gpr_model_cell_voltage.target_data_std + gpr_model_cell_voltage.target_data_mean
 
-#%% Save and Print Predictions
-
-# Print the cell voltage predictions
-for cell_voltage_V, input_data_dict in zip(cell_voltage_tensor_V, input_data_dict_list):
-    print(f"Current: {input_data_dict[feature_names[0]]} A, Pressure: {input_data_dict[feature_names[3]]:.1f} A, Cell voltage: {cell_voltage_V.item():.4f} V")
-
-# Save the cell voltage predictions alongside the corresponding input data to a .csv file
-evaluation_ID = 1
-file_name = "{}_cell_voltage_predictions.csv".format(evaluation_ID)
-
-while os.path.exists(file_name):
-    evaluation_ID += 1
-    file_name = "{}_".format(evaluation_ID) + file_name.split('_', 1)[1]
-
-with open(file_name, "w", newline='') as file:
-    writer = csv.writer(file)
-    writer.writerow([feature_names, "cell_voltage_V"])
-    for cell_voltage_V, input_data_dict in zip(cell_voltage_tensor_V, input_data_dict_list):
-        writer.writerow([input_data_dict[feature_name] for feature_name in feature_names] + [f"{cell_voltage_V.item():.4f}"])
-    file.close()
-
 #%% Create Plot
 
 # Extract the pressures, cell voltages, and currents from the input data dictionaries and tensors
 currents = [input_data_dict[feature_names[0]] for input_data_dict in input_data_dict_list]
 pressures = [input_data_dict[feature_names[3]] for input_data_dict in input_data_dict_list]
 cell_voltages = [cell_voltage_V.item() for cell_voltage_V in cell_voltage_tensor_V]
+efficiencies = np.array(cell_voltages) / 1.253
 
 # Convert currents to a numpy array (useful for grouping and color mapping)
 currents = np.array(currents)
@@ -134,19 +114,25 @@ cmap = plt.get_cmap('viridis', len(distinct_currents))
 
 # Create the scatter plot, using the normalized current values for colors
 fig, ax = plt.subplots()
-
+ax.set_title('Efficiency vs. Cathode Inlet Pressure')
 
 # Plot each group with its own color
 for i, current in enumerate(distinct_currents):
     # Get the corresponding indices for this current value
     indices = currents == current
-    ax.scatter(np.array(pressures)[indices], np.array(cell_voltages)[indices],
+    ax.scatter(np.array(pressures)[indices], efficiencies[indices],
                color=cmap(i), label=f'{current} A', s=100, zorder=2)
+    
+# Set axis limits
+ax.set_xlim([1.0, 3.1])
+ax.set_ylim([0.35, 0.75])
 
 # Add labels and grid
-ax.set_xlabel('Pressure (bara)')
-ax.set_ylabel('Cell Voltage (V)')
+ax.set_xlabel('Cathode Inlet Pressure (Bara)')
+ax.set_ylabel(r'Fuel Cell Efficiency$^1$ (-)')
 ax.grid(zorder=1)
+
+fig.text(0.39, -0.02, r'$^1$Referring to a lower heating value voltage equivalent of 1.253 V', ha='left', fontsize=8)
 
 # Add a legend
 ax.legend(loc='lower center', bbox_to_anchor=(0.5, 0), 
@@ -155,6 +141,28 @@ ax.legend(loc='lower center', bbox_to_anchor=(0.5, 0),
 
 plt.tight_layout()
 
-plt.show()
+# Save the figure
+plt.savefig('efficiency_vs_cathode_pressure.png', bbox_inches='tight')
+
+#%% Save and Print Predictions
+
+# Print the cell voltage predictions
+for cell_voltage_V, input_data_dict in zip(cell_voltage_tensor_V, input_data_dict_list):
+    print(f"Current: {input_data_dict[feature_names[0]]} A, Pressure: {input_data_dict[feature_names[3]]:.1f} A, Cell voltage: {cell_voltage_V.item():.4f} V")
+
+# Save the cell voltage predictions alongside the corresponding input data to a .csv file
+evaluation_ID = 1
+file_name = "{}_efficiency_vs_cathode_pressure_raw_data.csv".format(evaluation_ID)
+
+while os.path.exists(file_name):
+    evaluation_ID += 1
+    file_name = "{}_".format(evaluation_ID) + file_name.split('_', 1)[1]
+
+with open(file_name, "w", newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow([feature_names, "cell_voltage_V", "efficiency"])
+    for cell_voltage_V, efficiency, input_data_dict in zip(cell_voltage_tensor_V, efficiencies, input_data_dict_list):
+        writer.writerow([input_data_dict[feature_name] for feature_name in feature_names] + [f"{cell_voltage_V.item():.4f}"] + [f"{efficiency.item():.4f}"])
+    file.close()
 
 
