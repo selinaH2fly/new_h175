@@ -56,9 +56,9 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
         lower_bound_formatted = f"{bound[0]}" if abs(bound[0]) < 1e3 else f"{bound[0]:.1e}"
         upper_bound_formatted = f"{bound[1]}" if abs(bound[1]) < 1e3 else f"{bound[1]:.1e}"
         print(f"  {name}: {value:.4f} (Bounds: [{lower_bound_formatted}, {upper_bound_formatted}])")
-    print(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  
-          Hydrogen Supply Rate: {hydrogen_supply_rate_g_s:.4f} g/s (Weighting: {1 - multiobjective_weighting}, Power-Specific Mass: {system_mass_kg/system_power_kW} kg/kW\n")
-    print(f"Cell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {cell_voltage:.4f} V\n")
+    print(f"\nOptimized Target (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n \
+          Hydrogen Supply Rate: {hydrogen_supply_rate_g_s:.4f} g/s (Weighting: {1 - multiobjective_weighting}), Power-Specific Mass: {system_mass_kg/system_power_kW} kg/kW")
+    print(f"\nCell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {cell_voltage:.4f} V\n")
 
     # Print the resultant power numbers
     label_width = 45
