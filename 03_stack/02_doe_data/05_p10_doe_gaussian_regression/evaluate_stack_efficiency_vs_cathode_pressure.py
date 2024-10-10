@@ -121,10 +121,21 @@ for i, current in enumerate(distinct_currents):
     # Get the corresponding indices for this current value
     indices = currents == current
     ax.scatter(np.array(pressures)[indices], efficiencies[indices],
-               color=cmap(i), label=f'{current} A', s=100, zorder=2)
+               color=cmap(i), label=f'{current} A', s=100, zorder=2, marker='x')
+    
+    # Create 2nd order polynomial fits for each current value
+    z = np.polyfit(np.array(pressures)[indices], efficiencies[indices], 2)
+    p = np.poly1d(z)
+    ax.plot(np.array(pressures)[indices], p(np.array(pressures)[indices]), color=cmap(i), zorder=2)
+
+    # Add the polymonial fit equation to the plot; use scientific notation for small numbers#
+    coeffs = p.coefficients
+    equation_str = f"${coeffs[0]:.4f}x^2 + {coeffs[1]:.2f}x + {coeffs[2]:.2f}$"
+    ax.text(3.15, 0.675 - 0.028 * i, equation_str, color=cmap(i), fontsize=8, backgroundcolor='lightgray')
+    
     
 # Set axis limits
-ax.set_xlim([1.0, 3.1])
+ax.set_xlim([1.0, 4.1])
 ax.set_ylim([0.35, 0.75])
 
 # Add labels and grid
@@ -137,7 +148,7 @@ fig.text(0.39, -0.02, r'$^1$Referring to a lower heating value voltage equivalen
 # Add a legend
 ax.legend(loc='lower center', bbox_to_anchor=(0.5, 0), 
           borderaxespad=0.1, ncol=len(distinct_currents), 
-          handlelength=0.2, handletextpad=0.5, borderpad=0.3)
+          handlelength=0.2, handletextpad=0.5, borderpad=0.5)
 
 plt.tight_layout()
 
