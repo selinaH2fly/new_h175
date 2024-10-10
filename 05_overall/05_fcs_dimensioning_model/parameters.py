@@ -6,9 +6,9 @@ class Optimization_Parameters:
     def __init__(self):
 
         # Bounds for the optimization problem TODO: make these a dictionary
-        self.bounds = [(50, 2e3),       # current_A
+        self.bounds = [(20, 2e3),       # current_A
                         (30, 100),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
-                        (1.6, 5),       # stoich_cathode (lambda_min = 1.6 according to P10 manual)
+                        (1.6, 5.0),       # stoich_cathode (lambda_min = 1.6 according to P10 manual)
                         (1.1, 3.3),     # pressure_cathode_in_bara (p_max = 2.3 barg according to P10 manual)
                         (60, 90),       # temp_coolant_inlet_degC
                         (60, 90)]       # temp_coolant_outlet_degC
@@ -18,10 +18,15 @@ class Optimization_Parameters:
         self.maxiter = 1000             # maximum number of iterations
         self.popsize = 30               # population size for the evolutionary algorithm
         self.recombination = 0.9        # recombination rate \in [0, 1];
+        self.strategy = 'best1bin'      # default:'best1bin'
         self.seed = None                # set random seed for reproducibility
+        self.init_cell_voltage = 0.7    # cell voltage for init population
+        self.brutto_deviation = 1.3     # estimated deviation brutto/netto power
 
         self.penalty_weight = 1e-6      # penalty factor for power constraint violation TODO: try making this a constraint (instead of a penalty) -> probably needs to define the cell voltage as an input variable!?
 
+
+        
 class Physical_Parameters:
      
     def __init__(self):

@@ -69,6 +69,17 @@ class HeatExchanger:
         
         return Qdot_W
 
+
+    def calculate_primary_T_out(self) -> float:
+        """
+        Calculate the increase in primary fuid temperature depending on the primary/coolant input temperatures.
+        This equation was provided by Chris Burger.
+        """
+        
+        primary_T_out_K = self.primary_T_in_K - self.efficiency * (self.primary_T_in_K - self.coolant_T_in_K)
+        self.primary_T_out_K = primary_T_out_K
+        return primary_T_out_K
+        
     def calculate_coolant_T_out(self) -> float:
         """
         Calculate the increase in coolant temperature depending on the heat flux from the primary fluid.
@@ -79,6 +90,7 @@ class HeatExchanger:
         coolant_T_out_K = self.coolant_T_in_K + (Q_dot_primary / (c_p_coolant * self.coolant_mdot_in_kg_s))
         
         return coolant_T_out_K
+    
                    
 class Intercooler(HeatExchanger):
     def __init__(self, **kwargs):

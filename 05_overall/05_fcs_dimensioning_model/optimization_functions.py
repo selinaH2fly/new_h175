@@ -3,6 +3,8 @@ import torch
 import gpytorch
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from scipy.optimize import differential_evolution, NonlinearConstraint
 from scipy.spatial import ConvexHull, Delaunay
 import CoolProp.CoolProp as CP
@@ -18,12 +20,11 @@ from Components.coolant_pump import Coolant_Pump
 from Components.radiator import Radiator
 from Components.stack import Stack
 from Components.heat_exchanger import Intercooler, Evaporator
-from basic_physics import compute_air_mass_flow, icao_atmosphere
+from basic_physics import compute_air_mass_flow, icao_atmosphere, convert
 
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275,
-                                 power_constraint_kW=None, consider_turbine=True, compressor_map=None, end_of_life=False, 
-                                 multiobjective_weighting=0, constraint=True):
+                                 power_constraint_kW=None, consider_turbine=True, compressor_map=None, end_of_life=False, constraint=True):
     """
     Optimize the (cell) voltage predicted by the GPyTorch model with a (cell) power constraint using differential evolution.
 
@@ -36,32 +37,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     - consider_turbine: Whether to consider power recuperation in the optimization.
     - compressor_map: The compressor map to be used in the optimization.
     - end_of_life: Whether to consider the end of life derating factor.
-    - multiobjective_weighting: Weighting factor for multiobjective-optimization; 0 -> optimization for efficiency (default), 1 -> optimization for power-specific mass.
-    - constraint: Whether to consider the constraint that the optimized operating points are inside the convex hull of the DoE data.
 
     Returns:
     - optimal_input: The optimal input values in the original scale.
-    - cell_voltage: The cell voltage at the optimized operating point.
-    - hydrogen_supply_rate_g_s: The minimized target.
-    - stack_power_kW: The electrical (gross) power produced by the stack.
-    - compressor_power_kW: The power demand of the compressor at the optimized operating point.
-    - turbine_power_kW: The power recuperated by the turbine at the optimized operating point.
-    - reci_pump_power_kW: The power demand of the recirculation pump at the optimized operating point.
-    - coolant_pump_power_kW: The power demand of the coolant pump at the optimized operating point.
-    - compressor_corrected_air_flow_g_s: The (corrected) air mass flow rate.
-    - compressor_pressure_ratio: The pressure ratio of the compressor.
-    - stack_heat_flux_kW: The heating power produced by the stack.
-    - intercooler_heat_flux_kW: The heating power input to the coolant by the intercooler.
-    - evaporator_heat_flux_kW: The heating power removed from the coolant by the evaporator.
-    - radiator_heat_flux_kW: The total heating power that needs to be dissipated by the radiator.
-    - system_mass_kg: The mass estimate of the system.
-    - optimization_converged: Flag whether the optimization terminated succesfully.
-
+    - hydrogen_mass_flow_g_s: The minimized target.
+    - compressor_power: The power of the compressor.
     """
-
-    optimal_input, cell_voltage, hydrogen_supply_rate_g_s , stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
-        reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.calculate_corrected_mass_flow()*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, \
-            stack_heat_flux_W/1000, intercooler_heat_flux_W/1000, evaporator_heat_flux_W/1000, radiator_heat_flux_W/1000, system_mass_kg, optimization_converged
     
     # Load parameters
     _params_optimization = parameters.Optimization_Parameters()
@@ -72,7 +53,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_coolant_pump = parameters.Coolant_Pump_Parameters()
     _params_radiator = parameters.Radiator_Parameters()
     _params_stack = parameters.Stack_Parameters()
-    _params_Eol = parameters.Eol_Parameters()
+    _params_Eol = parameters.Eol_Parameter()
     _params_physics = parameters.Physical_Parameters()
     _params_intercooler = parameters.Intercooler_Parameters()
     _params_evaporator = parameters.Evaporator_Parameters()
@@ -89,6 +70,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     DoE_envelope = ConvexHull(Optimized_DoE_data_variables.values)
     DoE_envelope_Delaunay = Delaunay(Optimized_DoE_data_variables.values[DoE_envelope.vertices])
     
+   
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
 
@@ -180,8 +162,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Set stack attributes:
         stack.current_A = optimized_current_A
         stack.cell_voltage_V = optimized_cell_voltage_V
-        stack.temp_coolant_in_K = optimized_temp_coolant_inlet_degC + 273.15
-        stack.temp_coolant_out_K = optimized_temp_coolant_outlet_degC + 273.15
+        stack.temp_coolant_in_K = convert(optimized_temp_coolant_inlet_degC, "K")
+        stack.temp_coolant_out_K = convert(optimized_temp_coolant_outlet_degC , "K")
         
         # Compute the coolant flow rate
         stack.coolant_flow_m3_s = stack.calculate_coolant_flow(pressure_ambient_Pa)
@@ -193,7 +175,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Set compressor attributes
         compressor.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A, cellcount=cellcount)
-        compressor.pressure_out_Pa = optimized_pressure_cathode_in_bara*1e5 + compressor.calculate_BoP_pressure_drop() # compressor_out == cathode_in + BoP_pressure_drop (compressor out -> cathode in)
+        compressor.pressure_out_Pa = convert(optimized_pressure_cathode_in_bara, "Pa") + compressor.calculate_BoP_pressure_drop() # compressor_out == cathode_in + BoP_pressure_drop (compressor out -> cathode in)
         compressor.temperature_out_K = compressor.calculate_T_out()
         # Calculate compressor power
         compressor_power_W = compressor.calculate_power()
@@ -231,8 +213,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
             # Set turbine attributes
             turbine.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A, cellcount=cellcount)
-            turbine.pressure_in_Pa     = max(cathode_pressure_out_bar*1e5 - turbine.calculate_BoP_pressure_drop(), 1e-9) # turbine_in == cathode_out - BoP_pressure_drop (cathode out -> turbine in)
-            turbine.temperature_in_K   = max(optimized_temp_coolant_outlet_degC + 273.15, 1e-9) 
+            turbine.pressure_in_Pa     = max(convert(cathode_pressure_out_bar, "Pa") - turbine.calculate_BoP_pressure_drop(), 1e-9) # turbine_in == cathode_out - BoP_pressure_drop (cathode out -> turbine in)
+            turbine.temperature_in_K   = max(convert(optimized_temp_coolant_outlet_degC,"K"), 1e-9) 
             
             # Compute the turbine power        
             turbine_power_W = turbine.calculate_power()
@@ -246,8 +228,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Set recirculation pump attributes
         reci_pump.current_A = optimized_current_A
-        reci_pump.temperature_in_K = max(optimized_temp_coolant_outlet_degC + 273.15, 1e-9)
-        reci_pump.pressure_out_Pa = 1e5*(optimized_pressure_cathode_in_bara + 0.200)    # reci_out == anode_in \approx: cathode_in + 0.2 bar (cf. PowerLayout); TODO: include p_anode_in in cell voltage model
+        reci_pump.temperature_in_K = max(convert(optimized_temp_coolant_outlet_degC,"K"), 1e-9)
+        reci_pump.pressure_out_Pa = convert(optimized_pressure_cathode_in_bara, "Pa") + 1e5*0.200    # reci_out == anode_in \approx: cathode_in + 0.2 bar (cf. PowerLayout); TODO: include p_anode_in in cell voltage model
         reci_pump.stoich_anode = 1.5                                                    # TODO: include anode stoichiometry in cell voltage model
 
         # Estimate the anode pressure drop
@@ -282,11 +264,22 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         coolant_pump_power_W = coolant_pump_ht.calculate_power() + coolant_pump_lt.calculate_power()
 
         # %% Intercooler
+        #set T, p and m_dots here
 
         intercooler.primary_T_in_K = compressor.temperature_out_K
-        intercooler.primary_T_out_K = optimized_temp_coolant_inlet_degC + 273.15 # degC into K
+        intercooler.primary_T_out_K = convert(optimized_temp_coolant_inlet_degC, "K")
         intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
-        intercooler.primary_p_in_Pa = compressor.pressure_out_Pa       
+        intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
+        
+        #TODO: Implement this if needed for Coolant_T increase
+        # intercooler.coolant_T_in_K = #Evap t out
+        # intercooler.coolant_T_out_K = # berechnen
+        # intercooler.coolant_mdot_in_kg_s = #?
+        # intercooler.coolant_p_in_Pa = #?
+        
+        #intercooler_T_out_K = intercooler.calculate_coolant_T_out()
+        #intercooler.coolant_T_out_K = intercooler_T_out_K
+        
         
         # %% Consumed hydrogen mass flow rate
 
@@ -312,53 +305,175 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     def objective_function(x):
 
         # Evaluate the models with the normalized input
-        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, \
-            reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(x)
-        
-        # Compute the penalty term for the power constraint
-        if power_constraint_kW is not None:
-            power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
-                - compressor_power_W + turbine_power_W - reci_pump_power_W  - coolant_pump_power_W \
-                    - power_constraint_kW * 1000
-            penalty = _params_optimization.penalty_weight * (power_balance_offset**2)
-        else:
-            penalty = 0
-        
-        return hydrogen_supply_rate_g_s + penalty
+        _, _, _, _, _, _, hydrogen_supply_rate_g_s = evaluate_models(x)
+               
+        return hydrogen_supply_rate_g_s #+ penalty
    
-    # Define the nonlinear constraint for the (denormalized) coolant temperatures: T_C_out - T_C_in >= 0 K
+   # Constraint to ensure that the specified system net power is met
+    def nonlinear_constraint_Power(x):
+        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, _ = evaluate_models(x)
+
+        power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
+            - compressor_power_W + turbine_power_W - reci_pump_power_W  - coolant_pump_power_W \
+                - power_constraint_kW * 1000
+
+        return power_balance_offset        
+
+    # Constraint to ensure that the coolant outlet temperature is higher than the inlet temperature
     def nonlinear_constraint_Temp(x):
 
         return (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
             - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4]))
-    
-    nlc_Temp = NonlinearConstraint(nonlinear_constraint_Temp, 0, np.inf)
 
-    if constraint:
-        
-        # Define the nonlinear constraint that optimized operating points are inside the convex hull of the DoE data
-        def nonlinear_constraint_DoE(x):
+    # Constraint to ensure that the optimized input is within the DoE envelope
+    def nonlinear_constraint_DoE(x):
 
-            x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
-            x_scaled = x_scaled.reshape(1,6)
+        x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
+        x_scaled = x_scaled.reshape(1,6)
 
-            return DoE_envelope_Delaunay.find_simplex(x_scaled)
-            
-        nlc_DoE = NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)
-        nlc = [nlc_Temp, nlc_DoE]
-    
+        return DoE_envelope_Delaunay.find_simplex(x_scaled)
+
+    # Check for DoE constraint setting and define the nonlinear constraints
+    nlc_power = NonlinearConstraint(nonlinear_constraint_Power, 0, 1000)
+    nlc_temp = NonlinearConstraint(nonlinear_constraint_Temp, 1e-3, np.inf)
+    if constraint:            
+        nlc = [nlc_power, nlc_temp, NonlinearConstraint(nonlinear_constraint_DoE, 0, np.inf)]
     else:
-        nlc = nlc_Temp  
+        nlc = [nlc_power, nlc_temp]
 
     # Normalize the bounds
     normalized_bounds = [((min_val - mean) / std, (max_val - mean) / std ) for (min_val, max_val), mean, std in \
                          zip(_params_optimization.bounds, cell_voltage_model.input_data_mean.numpy(), cell_voltage_model.input_data_std.numpy())]
 
+    def pop_init():
+        """
+        Function to generate a initilization population to accelerate convergence
+
+        Returns:
+        - population that is defined between the bounds and the DoE envelope
+        """
+
+        #define current bounds by initial voltage and brutto deviation
+        current_lower = power_constraint_kW*1000/_params_optimization.init_cell_voltage/cellcount
+        current_upper =power_constraint_kW*1000*_params_optimization.brutto_deviation/_params_optimization.init_cell_voltage/cellcount
+        adjusted_lower = Optimized_DoE_data_variables[Optimized_DoE_data_variables['current_A'] < current_lower]['current_A'].max()
+        adjusted_upper = Optimized_DoE_data_variables[Optimized_DoE_data_variables['current_A'] > current_upper]['current_A'].min()
+        if pd.isna(adjusted_lower):
+            adjusted_lower = Optimized_DoE_data_variables['current_A'].min()
+        if pd.isna(adjusted_upper):
+            adjusted_upper = Optimized_DoE_data_variables['current_A'].max()
+        filtered_DoE = Optimized_DoE_data_variables[(Optimized_DoE_data_variables['current_A'] >= adjusted_lower) & (Optimized_DoE_data_variables['current_A'] <= adjusted_upper)]
+
+        #filter DoE data by min,max bounds of estimatet current
+        n_bounds = 6
+        bounds_pop = np.zeros((n_bounds,2))
+        init_pop = np.zeros((_params_optimization.popsize, n_bounds))
+        for i, column in enumerate(filtered_DoE.columns):
+            bounds_pop[i,0] = filtered_DoE[column].min()
+            bounds_pop[i,1] = filtered_DoE[column].max()
+
+        # build init population        
+        for i in range(n_bounds):
+            lower_bound, upper_bound = bounds_pop[i]
+            init_pop[:,i] = np.random.uniform(lower_bound,upper_bound,_params_optimization.popsize)
+        
+        def is_inside_convex_hull(point,delaunay):
+            return delaunay.find_simplex(point)>=0
+        
+        def generate_point_in_doe_envelope(delaunay, bounds):
+            while True:
+                DoE_point = np.random.uniform(low=bounds[:, 0], high=bounds[:, 1])
+                if delaunay.find_simplex(DoE_point) >=0:
+                    return DoE_point                    
+        def evaluate_pop_in_DoE(points, delaunay):
+            points_scaled = points*cell_voltage_model.input_data_std.numpy()+cell_voltage_model.input_data_mean.numpy()
+            simplex = delaunay.find_simplex(points_scaled)
+            num_simplex = np.sum(simplex)
+            outside_simplex = np.sum(simplex== -1)
+            return num_simplex, outside_simplex
+        
+        #fit init population into DoE envelope
+        adjusted_pop_init = []
+        for point in init_pop:
+            if is_inside_convex_hull(point, DoE_envelope_Delaunay):
+                point = (point-cell_voltage_model.input_data_mean.numpy())/cell_voltage_model.input_data_std.numpy()
+                adjusted_pop_init.append(point)
+                
+            else:
+                generated_point = (generate_point_in_doe_envelope(DoE_envelope_Delaunay, bounds_pop)-cell_voltage_model.input_data_mean.numpy())/cell_voltage_model.input_data_std.numpy()
+                adjusted_pop_init.append(generated_point)
+        adjusted_pop_init = np.array(adjusted_pop_init)
+        # pop_init_bounds = np.zeros((2, adjusted_pop_init.shape[1]))
+        # pop_init_bounds[0,:] = np.min(adjusted_pop_init, axis=0)
+        # pop_init_bounds[1,:] = np.max(adjusted_pop_init, axis=0)
+        # all_points, outside_points = evaluate_pop_in_DoE(adjusted_pop_init, DoE_envelope_Delaunay)
+        return adjusted_pop_init
+
+    '''
+    class ConvergenceTracker:
+        """
+        Class to get detailed optimization informations and set manual convergence criteria
+
+        Returns:
+        - callback[True, False]: return of "True" stops optimizer
+        """
+        def __init__(self, tolerance=1e-4, window_size=30, constraint_check=1):
+            self.best_objective_values = []  # Stores the best objective values at each iteration
+            self.tolerance = tolerance       # Convergence tolerance (10e-4)
+            self.window_size = window_size   # The window size (e.g., 30 iterations)
+            self.constraint_check = constraint_check #Iteration point to check for DoE constraint
+            self.constraint_satisfied = True
+
+        def __call__(self, xk, convergence):
+            # Store the best objective value
+            current_best_value = objective_function(xk)
+            self.best_objective_values.append(current_best_value)
+            nlc_CP_xk = nonlinear_constraint_CoolantPump(xk)
+            nlc_Power_xk = nonlinear_constraint_Power(xk)
+            nlc_DoE_xk = nonlinear_constraint_DoE(xk)
+
+            if len(self.best_objective_values) == self.constraint_check and nlc_DoE_xk < 0 and self.constraint_check<self.window_size:
+                #print(f"Iteration {len(self.best_objective_values)}: Constraint not satisfied, restarting optimization...")
+                self.constraint_satisfied = False
+                return True
+
+            elif len(self.best_objective_values) >= self.window_size:
+                # Calculate the average of the last 30 objective values
+                recent_values = self.best_objective_values[-self.window_size:]
+                average_recent_values = np.mean(recent_values)
+                
+                # Calculate the difference between the current value and the moving average
+                difference_to_avg = np.abs(current_best_value - average_recent_values)
+                difference_to_last = np.abs(current_best_value-recent_values[-2])
+                
+
+                # Print iteration details
+                #print(f"Iteration {len(self.best_objective_values)}: Current Objective = {current_best_value:.6f}, Avg of Last {self.window_size:.6f} = {average_recent_values:.6f}, Difference to avg = {difference_to_avg:.6f}, Difference to last ={difference_to_last:.6f} , nlc_CP = {nlc_CP_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
+
+                # Check if the difference is less than the tolerance (i.e., convergence criterion)
+                if difference_to_avg < self.tolerance and difference_to_last < self.tolerance and 0 <= nlc_Power_xk < 1000 and nlc_CP_xk>0 and nlc_DoE_xk>0:
+                    #print("Convergence criterion met! Stopping optimization.")
+                    self.constraint_satisfied = True
+                    return True  # Return True to stop the optimization early
+
+                elif len(self.best_objective_values) == self.constraint_check and nlc_DoE_xk < 0:
+                    #print(f"Iteration {len(self.best_objective_values)}: Constraint not satisfied, restarting optimization...")
+                    self.constraint_satisfied = False
+                    return True   
+            
+            # Return False to continue the optimization
+            else:
+                # For initial iterations, print the basic info
+                #print(f"Iteration {len(self.best_objective_values)}: Best Objective = {current_best_value:.6f}, nlc_CP = {nlc_CP_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
+                return False
+    '''
+
     # Perform the optimization using differential evolution
-    result = differential_evolution(objective_function, normalized_bounds, constraints=nlc,
+    #callback = ConvergenceTracker(tolerance=1e-5, window_size=40, constraint_check=100) #activate if you need some convergence information
+    result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=None,
                                     maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
-                                    seed=_params_optimization.seed, recombination=_params_optimization.recombination,
-                                    tol=_params_optimization.tol, polish=False, disp=False)
+                                    seed=_params_optimization.seed, recombination=_params_optimization.recombination, strategy=_params_optimization.strategy, 
+                                    tol=_params_optimization.tol, polish=False, init=pop_init(), disp=False)
     optimization_converged = result.success
     print(f'{result.message}')
 
@@ -381,4 +496,4 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
     return optimal_input, cell_voltage, hydrogen_supply_rate_g_s , stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
         reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.calculate_corrected_mass_flow()*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, \
-            stack_heat_flux_W/1000, intercooler_heat_flux_W/1000, evaporator_heat_flux_W/1000, radiator_heat_flux_W/1000, system_mass_kg, optimization_converged
+            stack_heat_flux_W/1000, intercooler_heat_flux_W/1000, evaporator_heat_flux_W/1000, radiator_heat_flux_W/1000, optimization_converged
