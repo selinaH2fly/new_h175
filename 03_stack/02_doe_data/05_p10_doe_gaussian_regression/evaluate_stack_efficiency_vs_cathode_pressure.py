@@ -2,6 +2,7 @@ import os
 import torch
 import gpytorch
 import csv
+import matplotlib.pyplot as plt
 
 import parameters
 from file_handling import load_gpr_model
@@ -91,7 +92,7 @@ cell_voltage_tensor_V = cell_voltage_prediction_tensor * gpr_model_cell_voltage.
 
 # Print the cell voltage predictions
 for cell_voltage_V, input_data_dict in zip(cell_voltage_tensor_V, input_data_dict_list):
-    print(f"Current: {input_data_dict[feature_names[0]]} A, Cell voltage: {cell_voltage_V.item():.4f} V")
+    print(f"Current: {input_data_dict[feature_names[0]]} A, Pressure: {input_data_dict[feature_names[3]]:.1f} A, Cell voltage: {cell_voltage_V.item():.4f} V")
 
 # Save the cell voltage predictions alongside the corresponding input data to a .csv file
 evaluation_ID = 1
@@ -107,5 +108,13 @@ with open(file_name, "w", newline='') as file:
     for cell_voltage_V, input_data_dict in zip(cell_voltage_tensor_V, input_data_dict_list):
         writer.writerow([input_data_dict[feature_name] for feature_name in feature_names] + [f"{cell_voltage_V.item():.4f}"])
     file.close()
+
+# Create a scatter plot of the cell voltage predictions
+fig, ax = plt.subplots()
+ax.scatter([input_data_dict[feature_names[3]] for input_data_dict in input_data_dict_list], [cell_voltage_V.item() for cell_voltage_V in cell_voltage_tensor_V])
+ax.set_xlabel('Pressure (bara)')
+ax.set_ylabel('Cell Voltage (V)')
+ax.grid()
+plt.show()
 
 
