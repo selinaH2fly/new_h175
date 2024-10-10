@@ -76,6 +76,23 @@ class Turbine:
         "sd": turbine_mass_sd_kg
         }
     
+    def calculate_T_out(self) -> float:
+        """
+        Calculate the outlet Temperature of the isentropic relaxation by the turbine
+
+        Returns:
+        - temperature_out_K: T in K at the turbine outlet
+
+        """
+        # Compute the specific heat ratio of air
+        specific_heat_ratio = CP.PropsSI('C', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Air') / \
+            CP.PropsSI('O', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Air')
+        
+        temperature_out_K = self.temperature_in_K * (((self.pressure_out_Pa/self.pressure_in_Pa)**((specific_heat_ratio-1)/specific_heat_ratio)-1)*(self.isentropic_efficiency) + 1)
+        #self.temperature_out_K = temperature_out_K
+        
+        return temperature_out_K
+    
 # %% Example usage:
 
 mass_estimator = Mass_Parameters()
