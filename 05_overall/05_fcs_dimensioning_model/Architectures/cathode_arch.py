@@ -25,7 +25,7 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
 
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
-    print(f"Ambient temperature: {temperature_ambient_K} K, pressure: {pressure_ambient_Pa} Pa")
+    print(f"Ambient temperature: {temperature_ambient_K:.2f} K, pressure: {pressure_ambient_Pa:.2f} Pa")
 
     # Instantiate the compressor
     compressor = Compressor(
@@ -58,18 +58,36 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
 
     # Instantiate the intercooler using compressor outputs
     intercooler = Intercooler(
-        primary_p_in_Pa=compressor.pressure_out_Pa,  # Pressure after air-air intercooler, warm side
-        primary_T_in_K=compressor.temperature_out_K,  # Use primary_T_in_K instead of intercooler.primary_T_in_K
-        primary_mdot_in_kg_s=compressor.air_mass_flow_kg_s  # Mass flow rate into the intercooler
+        efficiency=0.41, primary_fluid="Air", coolant_fluid="Air",
+        primary_p_in_Pa=compressor.pressure_out_Pa,
+        primary_T_in_K=compressor.temperature_out_K,
+        primary_mdot_in_kg_s=compressor.air_mass_flow_kg_s,
+        coolant_mdot_in_kg_s=0.5, coolant_T_in_K=323
     )
 
+    intercooler.temperature_out_K = intercooler.calculate_primary_T_out()
     intercooler.heat_flux_W = intercooler.calculate_heat_flux("primary")
 
-    # Print values for debugging
-    print(f"Intercooler primary inlet temperature: {intercooler.primary_T_in_K} K")
+    # Print intercooler results
+    print(f"Intercooler primary outlet temperature: {intercooler.temperature_out_K:.2f} K")
     print(f"Intercooler heat flux: {intercooler.heat_flux_W / 1000:.4f} kW")  # Convert to kW
+
+    # Instantiate the humidifier with intercooler output as input for dry air inlet
+    humidifier = Humidifier()
+    humidifier.dry_air_temperature_in_K = intercooler.temperature_out_K
+    humidifier.dry_air_pressure_in_Pa = intercooler.primary_p_in_Pa
+    humidifier.dry_air_mass_flow_kg_s = intercooler.primary_mdot_in_kg_s
+
+    # Humidifier calculations (assuming some method to calculate outlet conditions)
+    humidifier.dry_air_temperature_out_K = humidifier.dry_air_temperature_in_K - 5  # Hypothetical cooling
+    humidifier.dry_air_pressure_out_Pa = humidifier.dry_air_pressure_in_Pa - 1000  # Hypothetical pressure drop
+
+    # Print humidifier results
+    print(f"Humidifier dry air inlet temperature: {humidifier.dry_air_temperature_in_K:.2f} K")
+    print(f"Humidifier dry air outlet temperature: {humidifier.dry_air_temperature_out_K:.2f} K")
+    print(f"Humidifier dry air outlet pressure: {humidifier.dry_air_pressure_out_Pa:.2f} Pa")
 
 # Uncomment the following to run the simulation when the script is executed
 if __name__ == "__main__":
-    # Call the function with a valid flight level (e.g., 30 for 3000 feet)
+    # Call the function with a valid flight level (e.g., 100 for 10000 feet)
     simulate_cathode_architecture(flight_level_100ft=100)
