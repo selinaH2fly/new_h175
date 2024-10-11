@@ -316,7 +316,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Compute the objective function
         objective = hydrogen_supply_rate_g_s * (1 - multiobjective_weighting) + system_mass_equivalent * multiobjective_weighting
                
-        return hydrogen_supply_rate_g_s #TODO: Implement multiobjective optimization
+        return objective
    
    # Constraint to ensure that the specified system net power is met
     def nonlinear_constraint_Power(x):
