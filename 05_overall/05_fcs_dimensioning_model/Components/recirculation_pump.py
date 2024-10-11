@@ -45,11 +45,11 @@ class Recirculation_Pump:
         self.hydrogen_concentration_supply = 1          # H2 concentration in tank
 
         # Ensure the component is available in masses_FCM_depended; raise error if missing
-        if 'Recirculation_Pump' not in mass_estimator.masses_FCM_depended:
+        if 'Recirculation_Pump' not in mass_estimator.masses_FCM_power_depended:
             raise ValueError("Component 'Recirculation Pump' not found in mass estimator's dependent masses.")
 
         # Retrieve mass data from the mass_estimator instance
-        self.mass_by_power_kg_kW = mass_estimator.masses_FCM_depended['Recirculation_Pump']
+        self.mass_by_power_kg_kW = mass_estimator.masses_FCM_power_depended['Recirculation_Pump']
 
     def calculate_power(self)->float:
         """

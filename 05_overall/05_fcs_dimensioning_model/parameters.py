@@ -222,8 +222,8 @@ class Mass_Parameters:
                       'HV+LV Cable': 0.0}
         }
         # Mass estimates for dependent mass components, change the values as needed
-        self.masses_FCM_depended = {
-            'Compressor': {"mean": 0.0, "sd": 0.0},
+        self.masses_FCM_power_depended = {
+            'Compressor': {"mean": 0.63, "sd": 0.0},
             'Recirculation_Pump': {"mean": 0.0, "sd": 0.0},
             'Turbine': {"mean": 0.0, "sd": 0.0},
         }
