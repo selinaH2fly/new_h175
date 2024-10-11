@@ -37,6 +37,7 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, sa
                                    ,'Other':{'FCCU':1.5,'Electrical connectors':0.4,'Unnamed':4.0,'Frame':5.0,'Connectors':2.0,'Screws':0.27, 'HV+LV Cable':0.67}}    
     """
     # Updated with reduced mass estimates for E_VTOL applications
+    # TODO: This is a duplicate of the property "masses_FCM_constants" of the class "Mass_Parameters" defined in "parameters.py". Refactor!
     masses_FCM_constants = {'Stack':{'Stack':0, 'CVM':0.5, 'SMI':1.5, 'Hose clamps': 0.18, 'Screws':0.09, 'HV+LV Cable': 1.20} \
                                    ,'Cathode':{'Filter': 0.2, 'HFM': 0.1, 'Compressor':0, 'Compressor inverter':6.0, 'Intercooler':1.0, 'Humidifier': 1.0, 'Valves': 1.5, 'Drain valve': 0.05, 'Water separator': 0.2, 'Cathode pressure control valve': 0.0, 'Sensors': 0.3, 'Silicon hoses':0.5, 'Hose clamps': 0.12, 'Connectors': 0.8, 'Screws': 0.18, 'HV+LV Cable': 0.67, 'Turbine':0.0} \
                                    ,'Anode': {'Shut-Off valve':0.2, 'Pressure control valve':0.2, 'Water separator':0, 'Particle filter':0.2, 'Recirculation pump':4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.20, 'Anode piping':0.5, 'Swagelok connector':0.28, 'Screws':0.09, 'HV+LV Cable': 0.34}\
@@ -62,9 +63,11 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, sa
     cell_no = np.array([400, 455, 500])
     
     # Calculate m_stack using the formula
+    # TODO: This is a duplicate of the method "calculate_stack_mass" of the class "Stack" defined in "Components/stack.py". Refactor!
     m_stack_values = 0.0766 * cell_no + 9.2813  
     
-    # A mass of 7 kg of coolant was measured for a 455 cell stack. We scale this value linearly to account for changing coolant masses in different stack sizes. 
+    # A mass of 7 kg of coolant was measured for a 455 cell stack. We scale this value linearly to account for changing coolant masses in different stack sizes.
+    # TODO: This is a duplicate of the method "calculate_coolant_mass" of the class "Stack" defined in "Components/stack.py". Refactor!
     m_coolant_values = cell_no * 7/455
     
     #Populating the final data array with lists of zeros. Feels like there should be a quicker way.
