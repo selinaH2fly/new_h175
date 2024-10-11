@@ -281,7 +281,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         #intercooler_T_out_K = intercooler.calculate_coolant_T_out()
         #intercooler.coolant_T_out_K = intercooler_T_out_K
         
-        
         # %% Consumed hydrogen mass flow rate
 
         # Compute the hydrogen mass flow rate (supply = const. * consumption)
@@ -310,6 +309,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Evaluate the models with the normalized input
         _, _, _, _, _, _, hydrogen_supply_rate_g_s, system_mass_kg = evaluate_models(x)
+
+        # Scale the system mass such that 2 g/s hydrogen supply rate is equivalent to 100 kg system mass
+        system_mass_equivalent = system_mass_kg / 100 * 2
+
+        # Compute the objective function
+        objective = hydrogen_supply_rate_g_s * (1 - multiobjective_weighting) + system_mass_equivalent * multiobjective_weighting
                
         return hydrogen_supply_rate_g_s #TODO: Implement multiobjective optimization
    
