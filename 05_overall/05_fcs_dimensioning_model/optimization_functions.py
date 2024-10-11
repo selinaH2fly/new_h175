@@ -22,7 +22,6 @@ from Components.stack import Stack
 from Components.heat_exchanger import Intercooler, Evaporator
 from basic_physics import compute_air_mass_flow, icao_atmosphere, convert
 
-
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275,
                                  power_constraint_kW=None, consider_turbine=True, compressor_map=None, end_of_life=False,
                                  multiobjective_weighting=0, constraint=True):
@@ -58,7 +57,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_physics = parameters.Physical_Parameters()
     _params_intercooler = parameters.Intercooler_Parameters()
     _params_evaporator = parameters.Evaporator_Parameters()
-    _mass_estimator = parameters.Mass_Parameters()
+    _params_mass = parameters.Mass_Parameters()
     
     # Load DoE-Data 
     DoE_data, _ = data_processing.load_high_amp_doe_data()
@@ -80,19 +79,19 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
 
     # Instantiate components
-    compressor      =   Compressor(mass_estimator=_mass_estimator, isentropic_efficiency=_params_compressor.isentropic_efficiency,
+    compressor      =   Compressor(mass_estimator=_params_mass, isentropic_efficiency=_params_compressor.isentropic_efficiency,
                                    electric_efficiency=_params_compressor.electric_efficiency,
                                    temperature_in_K=temperature_ambient_K, pressure_in_Pa=pressure_ambient_Pa,
                                    nominal_BoP_pressure_drop_Pa=_params_compressor.nominal_BoP_pressure_drop_Pa,
                                    compressor_map=compressor_map, nominal_air_flow_kg_s=_params_compressor.nominal_air_flow_kg_s,
                                    reference_ambient_conditions=(_params_compressor.reference_pressure_Pa, _params_compressor.reference_temperature_K))
     
-    turbine         =   Turbine(mass_estimator=_mass_estimator, isentropic_efficiency=_params_turbine.isentropic_efficiency,
+    turbine         =   Turbine(mass_estimator=_params_mass, isentropic_efficiency=_params_turbine.isentropic_efficiency,
                                 temperature_out_K=temperature_ambient_K, pressure_out_Pa=pressure_ambient_Pa,
                                 nominal_BoP_pressure_drop_Pa=_params_turbine.nominal_BoP_pressure_drop_Pa,
                                 nominal_air_flow_kg_s=_params_turbine.nominal_air_flow_kg_s)
     
-    reci_pump       =   Recirculation_Pump(mass_estimator=_mass_estimator, isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
+    reci_pump       =   Recirculation_Pump(mass_estimator=_params_mass, isentropic_efficiency=_params_recirculation_pump.isentropic_efficiency,
                                            electric_efficiency=_params_recirculation_pump.electric_efficiency,
                                            n_cell=cellcount, cell_area_m2=_params_stack.cell_area_m2,
                                            fixed_recirculation_ratio=_params_recirculation_pump.fixed_recirculation_ratio,
