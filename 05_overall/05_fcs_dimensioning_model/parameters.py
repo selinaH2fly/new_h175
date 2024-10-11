@@ -22,10 +22,6 @@ class Optimization_Parameters:
         self.seed = None                # set random seed for reproducibility
         self.init_cell_voltage = 0.7    # cell voltage for init population
         self.brutto_deviation = 1.3     # estimated deviation brutto/netto power
-
-        self.penalty_weight = 1e-6      # penalty factor for power constraint violation TODO: try making this a constraint (instead of a penalty) -> probably needs to define the cell voltage as an input variable!?
-
-
         
 class Physical_Parameters:
      
