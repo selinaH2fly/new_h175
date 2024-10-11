@@ -38,6 +38,11 @@ if __name__ == "__main__":
     # Call the sum_fixed_mass method to calculate and print the subsystem and total masses
     subsystem_totals, total_fixed_mass = mass_calculator.sum_fixed_mass()
 
+    print("\nFixed Masses:")
+    for subsystem, mass in subsystem_totals.items():
+        print(f"  {subsystem:<{10}}: {mass:.2f} kg")
+
+
 """
 ToDo: Add sum of all masses for power dependent components as well as stack and coolant masses for 
 different cell count
