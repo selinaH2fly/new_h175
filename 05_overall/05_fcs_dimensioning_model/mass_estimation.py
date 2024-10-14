@@ -18,7 +18,7 @@ def sum_fixed_mass(masses_FCM_constants_dict):
         # Add the subsystem mass to the total mass
         total_constant_mass += subsystem_mass
 
-    return subsystem_constant_mass_dict, total_constant_mass
+    return total_constant_mass, subsystem_constant_mass_dict
 
 def sum_power_dependent_mass(masses_FCM_power_depended_dict):
     """
@@ -31,8 +31,9 @@ def sum_power_dependent_mass(masses_FCM_power_depended_dict):
     total_power_dependent_mass = 0.0
 
     # TODO: Implement the function
+    
 
-    return subsystem_power_dependent_mass_dict, total_power_dependent_mass
+    return total_power_dependent_mass, subsystem_power_dependent_mass_dict
 
 def sum_cellcount_dependent_mass(masses_FCM_cellcount_dependent_dict):
     """
@@ -46,7 +47,7 @@ def sum_cellcount_dependent_mass(masses_FCM_cellcount_dependent_dict):
 
     # TODO: Implement the function
 
-    return subsystem_cellcount_dependent_mass_dict, total_cellcount_dependent_mass
+    return total_cellcount_dependent_mass, subsystem_cellcount_dependent_mass_dict
 
 
 if __name__ == "__main__":

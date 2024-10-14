@@ -21,6 +21,7 @@ from Components.radiator import Radiator
 from Components.stack import Stack
 from Components.heat_exchanger import Intercooler, Evaporator
 from basic_physics import compute_air_mass_flow, icao_atmosphere, convert
+from mass_estimation import sum_fixed_mass, sum_power_dependent_mass, sum_cellcount_dependent_mass
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, flight_level_100ft, cellcount=275,
                                  power_constraint_kW=None, consider_turbine=True, compressor_map=None, end_of_life=False,
@@ -293,8 +294,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         evaporator.primary_mdot_in_kg_s = hydrogen_supply_rate_g_s/1000 #g -> kg
 
         # %% Compute System Mass
-        system_mass_kg = 0.0 # TODO: Implement system mass computation
-        
+        fixed_mass, _ = sum_fixed_mass(_params_mass.masses_FCM_constants)
+        power_dependent_mass = compressor.calculate_mass()["mean"]
+        cellcount_dependent_mass = stack.calculate_mass()
+
+        system_mass_kg = fixed_mass + power_dependent_mass + cellcount_dependent_mass
+
         # %% Return
         
         return optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \

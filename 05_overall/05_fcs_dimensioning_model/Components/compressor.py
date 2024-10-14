@@ -221,6 +221,7 @@ class Compressor:
         compressor_el_power_W = self.calculate_power()
         compressor_mass_mean_kg = self.mass_by_power_kg_kW["mean"] * compressor_el_power_W / 1000
         compressor_mass_sd_kg = self.mass_by_power_kg_kW["sd"] * compressor_el_power_W / 1000
+        
         return {
         "mean": compressor_mass_mean_kg,
         "sd": compressor_mass_sd_kg
