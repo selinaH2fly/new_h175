@@ -165,9 +165,9 @@ if __name__ == '__main__':
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Train a Gaussian process regression model on Powercell DoE data")
     parser.add_argument("-t", "--target", type=str, help="Target variable for Gaussian process regression", default="cell_voltage")
-    parser.add_argument("-c", "--cutoff", type=float, help="Datapoints below cutoff current are removed from training data", default=0.0)
+    parser.add_argument("-c", "--cutoff", type=float, help="Datapoints below cutoff current are removed from training data", default=20.0)
     parser.add_argument("-m", "--model", type=str, help="Load a pretrained GPR model", default=None)
-    parser.add_argument("--data", type=str, choices=["high_amp","high_temp"], help="Select the DoE dataset", default="high_temp")
+    parser.add_argument("--data", type=str, choices=["high_amp","high_temp"], help="Select the DoE dataset (data s.t. std. MEA is default)", default="high_amp")
 
     args = parser.parse_args()
 
