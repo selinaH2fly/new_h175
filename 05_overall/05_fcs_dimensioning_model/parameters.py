@@ -201,18 +201,18 @@ class Eol_Parameter:
 class Humidifier_Parameters:
 
     def __init__(self):
-        self.dry_air_mass_flow_kg_s = 0.09
-        self.wet_air_mass_flow_kg_s = 0.053
+        self.dry_air_mass_flow_kg_s = 0.165
+        self.wet_air_mass_flow_kg_s = 0.155
         self.dry_air_temperature_in_K = 353.3
-        self.dry_air_pressure_in_Pa = 105000
-        self.dry_air_rh_in= 0.18
+        self.dry_air_pressure_in_Pa = 246000
+        self.dry_air_rh_in= 0.3
         self.dry_air_temperature_out_K = 346.9
-        self.dry_air_pressure_out_Pa = 101000
+        self.dry_air_pressure_out_Pa = 230000
         self.dry_air_rh_out = 0.75
         self.wet_air_temperature_in_K = 353.2
-        self.wet_air_pressure_in_Pa = 76000
+        self.wet_air_pressure_in_Pa = 210000
         self.wet_air_rh_in = 0.99
-        self.wet_air_pressure_out_Pa = 76000
+        self.wet_air_pressure_out_Pa = 196000
 
 class Valve_Parameters:
 
