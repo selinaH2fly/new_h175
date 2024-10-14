@@ -3,11 +3,11 @@ cathode_model_run.py
 
 This file contains parameter classes for various components used in the cathode model, including:
 - Input: Contains pressure and temperature values for different stages of the cathode system.
-- CompressorParameters: Defines parameters for the compressor, including mass flow rate, efficiency, and pressure ratio.
-- IntercoolerParameters: Holds parameters for the intercooler, such as mass flow rate, inlet/outlet temperatures, and pressure drop.
-- HumidifierParameters: Contains mass flow rates, temperatures, pressures, and relative humidity values for the humidifier.
-- TurbineParameters: Contains turbine parameters like mass flow rate, inlet temperature, and efficiency.
-- PhysicalParameters: Contains physical constants, including the specific gas constants for air and water vapor.
+- Compressor_Parameters: Defines parameters for the compressor, including mass flow rate, efficiency, and pressure ratio.
+- Intercooler_Parameters: Holds parameters for the intercooler, such as mass flow rate, inlet/outlet temperatures, and pressure drop.
+- Humidifier_Parameters: Contains mass flow rates, temperatures, pressures, and relative humidity values for the humidifier.
+- Turbine_Parameters: Contains turbine parameters like mass flow rate, inlet temperature, and efficiency.
+- Physical_Parameters: Contains physical constants, including the specific gas constants for air and water vapor.
 """
 
 class Input:
