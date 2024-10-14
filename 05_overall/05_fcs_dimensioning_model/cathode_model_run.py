@@ -1,4 +1,17 @@
-class PressureParameters:
+"""
+cathode_model_run.py
+
+This file contains parameter classes for various components used in the cathode model, including:
+- Pressure_Parameters: Contains pressure values for different stages of the cathode system, with conversions from bar to Pa.
+- Compressor_Parameters: Defines parameters for the compressor, including mass flow rate, efficiency, and pressure ratio.
+- Intercooler_Parameters: Holds parameters for the intercooler, such as mass flow rate, inlet/outlet temperatures, and pressure drop.
+- Humidifier_Parameters: Contains mass flow rates, temperatures, pressures, and relative humidity values for the humidifier.
+- Turbine_Parameters: Defines turbine-specific parameters like mass flow rate, inlet temperature, and efficiency.
+- Physical_Parameters: Contains physical constants, including the specific gas constants for air and water vapor.
+"""
+
+
+class Pressure_Parameters:
     def __init__(self):
         # Pressure initialization in bar (bara)
         self.PTC001_p_bara = 0.7  # Ambient pressure for FL270
@@ -20,12 +33,54 @@ class PressureParameters:
         self.PTC601_p_Pa = self.PTC601_p_bara * 1e5
         self.p_8_Pa = self.p_8 * 1e5
 
-    def print_pressures(self):
-        print("Pressure Values:")
-        print(f"PTC001: {self.PTC001_p_bara} bara = {self.PTC001_p_Pa:.2f} Pa")
+class PhysicalParameters:
+    def __init__(self):
+        self.R_air = 287.06  # Specific gas constant for air [J/(kg*K)]
+        self.R_water_vapor = 461.52  # Specific gas constant for water vapor [J/(kg*K)]
+
+class Compressor_Parameters:
+    def __init__(self):
+        self.mass_flow_rate_kg_s = 1.2
+        self.efficiency = 0.85
+        self.pressure_ratio = 2.5
+
+class Intercooler_Parameters:
+    def __init__(self):
+        self.mass_flow_rate_kg_s = 1.1
+        self.inlet_temp_K = 400
+        self.outlet_temp_K = 310
+        self.pressure_drop_Pa = 20000
+
+class Humidifier_Parameters:
+    def __init__(self):
+        self.dry_air_mass_flow_kg_s = 0.09
+        self.wet_air_mass_flow_kg_s = 0.053
+        self.dry_air_temperature_in_K = 353.3
+        self.dry_air_pressure_in_Pa = 105000
+        self.dry_air_rh_in = 0.18
+        self.dry_air_temperature_out_K = 346.9
+        self.dry_air_pressure_out_Pa = 101000
+        self.dry_air_rh_out = 0.75
+        self.wet_air_temperature_in_K = 353.2
+        self.wet_air_pressure_in_Pa = 76000
+        self.wet_air_rh_in = 0.99
+        self.wet_air_pressure_out_Pa = 76000
+
+class Turbine_Parameters:
+    def __init__(self):
+        self.mass_flow_rate_kg_s = 0.95
+        self.inlet_temp_K = 1200
+        self.efficiency = 0.88
 
 
-# Example usage
-if __name__ == "__main__":
-    pressures = PressureParameters()
-    pressures.print_pressures()  # Call the print method to display the pressure values
+#
+# # Example usage
+# if __name__ == "__main__":
+#     pressures = PressureParameters()
+#     compressor = CompressorParameters()
+#     intercooler = IntercoolerParameters()
+#     humidifier = HumidifierParameters()
+#     turbine = TurbineParameters()
+#     physical = PhysicalParameters()
+#
+#     pressures.print_pressures()
