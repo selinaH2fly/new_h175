@@ -59,7 +59,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
 
     print(f"\nOptimized Targets (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):")
     print(f"  Hydrogen Supply Rate: {hydrogen_supply_rate_g_s:.4f} g/s (Weighting: {1 - multiobjective_weighting})")
-    print(f"  Power-Specific Mass: {system_mass_kg/system_power_kW:.4f} kg/kW (Weighting: {multiobjective_weighting})")
+    print(f"  Specific Power: {system_power_kW/system_mass_kg:.4f} kW/kg (Weighting: {multiobjective_weighting})")
 
     print(f"\nCell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {cell_voltage:.4f} V\n")
 
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
     parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.85 to account for end of life (default: False).")
     parser.add_argument("--constraint", type=str, choices=["True","False"], default="True", help="Activates the DoE envelope constraint condition for the optimizer. (default: True)")
-    parser.add_argument("-w", "--weighting", type=float, default=0.0, help="Weighting factor for multiobjective-optimization; 0 -> optimization for efficiency (default), 1 -> optimization for power-specific mass.")
+    parser.add_argument("-w", "--weighting", type=float, default=0.0, help="Weighting factor for multiobjective-optimization; 0 -> optimization for efficiency (default), 1 -> optimization for (power-specific) mass.")
     args = parser.parse_args()
 
     # Convert string inputs
