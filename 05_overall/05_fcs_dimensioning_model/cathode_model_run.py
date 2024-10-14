@@ -6,12 +6,11 @@ This file contains parameter classes for various components used in the cathode 
 - Compressor_Parameters: Defines parameters for the compressor, including mass flow rate, efficiency, and pressure ratio.
 - Intercooler_Parameters: Holds parameters for the intercooler, such as mass flow rate, inlet/outlet temperatures, and pressure drop.
 - Humidifier_Parameters: Contains mass flow rates, temperatures, pressures, and relative humidity values for the humidifier.
-- Turbine_Parameters: Defines turbine-specific parameters like mass flow rate, inlet temperature, and efficiency.
+- Turbine_Parameters: Contains turbine parameters like mass flow rate, inlet temperature, and efficiency.
 - Physical_Parameters: Contains physical constants, including the specific gas constants for air and water vapor.
 """
 
-
-class Pressure_Parameters:
+class Input:
     def __init__(self):
         # Pressure initialization in bar (bara)
         self.PTC001_p_bara = 0.7  # Ambient pressure for FL270
@@ -23,6 +22,7 @@ class Pressure_Parameters:
         self.PTC601_p_bara = 1.8  # Pressure after water separator
         self.p_8 = 1.7  # Pressure at intercooler, air-air, cold side
 
+    #TODO: change later to convert funct when that works
         # Convert from bara to Pa manually
         self.PTC001_p_Pa = self.PTC001_p_bara * 1e5  # 1 bara = 100000 Pa
         self.PTC211_p_Pa = self.PTC211_p_bara * 1e5
@@ -32,6 +32,22 @@ class Pressure_Parameters:
         self.PTC501_p_Pa = self.PTC501_p_bara * 1e5
         self.PTC601_p_Pa = self.PTC601_p_bara * 1e5
         self.p_8_Pa = self.p_8 * 1e5
+
+        # Temperature initialization in degrees Celsius
+        self.TTC001_T_degC = -5     # Ambient temperature for FL270
+        self.TTC311_T_degC = 80     # Temperature after intercooler, air-liq
+        self.TTC401_T_degC = 80      # Temperature after humidifier, to be calculated
+        self.TTC501_T_degC = 80      # Temperature after stack
+        self.TTC601_T_degC = 80      # Temperature after water separator
+        self.T_cool = 50             # Temperature of coolant input to IC air-liq
+    # TODO: change later to convert funct when that works
+        # Convert temperatures to Kelvin
+        self.TTC001_T_K = self.TTC001_T_degC + 273.15
+        self.TTC311_T_K = self.TTC311_T_degC + 273.15
+        self.TTC401_T_K = self.TTC401_T_degC + 273.15
+        self.TTC501_T_K = self.TTC501_T_degC + 273.15
+        self.TTC601_T_K = self.TTC601_T_degC + 273.15
+        self.T_cool_K = self.T_cool + 273.15
 
 class PhysicalParameters:
     def __init__(self):
