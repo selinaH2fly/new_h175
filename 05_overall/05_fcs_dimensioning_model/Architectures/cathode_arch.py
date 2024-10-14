@@ -1,6 +1,6 @@
 # Import custom classes and functions
 import parameters
-from cathode_model_run import Pressure_Parameters
+from cathode_model_run import Input  
 from Components.compressor import Compressor
 from Components.heat_exchanger import Intercooler
 from Components.moist_exchanger import Humidifier
@@ -22,8 +22,8 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
     _params_turbine = parameters.Turbine_Parameters()  # Ensure this is instantiated
     _mass_estimator = parameters.Mass_Parameters()
 
-    # Instantiate Pressure Parameters
-    pressures = Pressure_Parameters()
+    # Instantiate Input Parameters
+    inputs = Input()  # Using the new Input class
 
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
@@ -47,7 +47,7 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
 
     # Calculate air mass flow using the compute_air_mass_flow function
     compressor.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=stoich_cathode, current_A=current_A, cellcount=cellcount)
-    compressor.pressure_out_Pa = pressures.PTC211_p_Pa
+    compressor.pressure_out_Pa = inputs.pressures_Pa["PTC211"]  # Accessing pressures from Input class
 
     # Calculate outlet temperature and power
     compressor.temperature_out_K = compressor.calculate_T_out()
@@ -113,7 +113,7 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
         mass_estimator=_mass_estimator,
         isentropic_efficiency=_params_turbine.isentropic_efficiency,
         temperature_in_K=intercooler.coolant_temperature_out_K,
-        pressure_in_Pa=pressures.p_8_Pa,
+        pressure_in_Pa=inputs.pressures_Pa["p_8"],  # Accessing pressures from Input class
         pressure_out_Pa=pressure_ambient_Pa,
         air_mass_flow_kg_s=humidifier.wet_air_mass_flow_kg_s
     )
