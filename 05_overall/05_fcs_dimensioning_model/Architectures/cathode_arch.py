@@ -1,7 +1,6 @@
-import CoolProp.CoolProp as CP
 # Import custom classes and functions
 import parameters
-from cathode_model_run import PressureParameters
+from cathode_model_run import Pressure_Parameters
 from Components.compressor import Compressor
 from Components.heat_exchanger import Intercooler
 from Components.moist_exchanger import Humidifier
@@ -24,7 +23,7 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
     _mass_estimator = parameters.Mass_Parameters()
 
     # Instantiate Pressure Parameters
-    pressures = PressureParameters()
+    pressures = Pressure_Parameters()
 
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
@@ -103,14 +102,12 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
         humidifier.wet_air_temperature_in_K, humidifier.wet_air_pressure_in_Pa, humidifier.wet_air_rh_in)
 
     # calculate water transfer
-    m_dot_water_trans, eta_water_trans = humidifier.calculate_water_transfer(
-        p_vap_dry_in, p_vap_dry_out, p_vap_wet_in, v_dot_dry, v_dot_wet,
-        humidifier.dry_air_temperature_in_K, humidifier.dry_air_temperature_out_K, humidifier.wet_air_temperature_in_K
-    )
+    m_dot_water_trans, eta_water_trans = humidifier.calculate_water_transfer()
 
     # Print humidifier results
     print(f"Mass flow rate of water transfer: {m_dot_water_trans:.6f} kg/s")
     print(f"Efficiency of water transfer: {eta_water_trans:.6f}")
+
     # Instantiate the turbine using humidifier output and PressureParameters
     turbine = Turbine(
         mass_estimator=_mass_estimator,
