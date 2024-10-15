@@ -1,7 +1,6 @@
 import CoolProp.HumidAirProp as HAP
-import CoolProp.CoolProp as CP
 import numpy as np
-from parameters import Physical_Parameters
+from parameters import Physical_Parameters   #TODO change to cathode_model_run?
 
 
 class MoistExchanger:
@@ -27,7 +26,7 @@ class MoistExchanger:
         self.wet_air_rh_in = wet_air_rh_in
         self.wet_air_pressure_out_Pa = wet_air_pressure_out_Pa
 
-        # Use the constants from Physical_Parameters
+        # Use the constants from PhysicalParameters
         params_physics = Physical_Parameters()
         self.R_Air = params_physics.R_Air
         self.R_Vap = params_physics.R_Vap
@@ -44,6 +43,20 @@ class MoistExchanger:
         return dew_point_temp
 
     def calculate_saturation_pressure(self, t):
+        """
+         Calculate the saturation pressure of water vapor at a given temperature.
+
+         This function uses the August-Roche-Magnus (or Magnus-Tetens or Magnus) equation to calculate
+         the saturation pressure in pascals (Pa).
+
+         Args:
+             t (float): Temperature in Kelvin at which to calculate the saturation pressure.
+                        Note: The input temperature is expected to be in Kelvin.
+
+         Returns:
+             float: The saturation pressure of water vapor at the specified temperature in pascals (Pa).
+         """
+
         A = 6.1094
         B = 17.625
         C = 243.04
@@ -71,31 +84,39 @@ class MoistExchanger:
     def calculate_mass_flows(self):
         """
         Calculate the mass flows of air and vapor for both dry and wet air at inlet and outlet.
+
         Returns:
             Dictionary of mass flow rates.
         """
+
         # Calculate dry inlet vapor and air mass flows
-        x_dry_in = (self.R_Air / self.R_Vap) * self.calculate_partial_pressure(self.dry_air_temperature_in_K,
-                                                                               self.dry_air_rh_in) / (
+        x_dry_in = (self.R_Air / self.R_Vap) * self.calculate_partial_pressure(
+            self.dry_air_temperature_in_K, self.dry_air_rh_in) / (
                            self.dry_air_pressure_in_Pa - self.calculate_partial_pressure(
-                       self.dry_air_temperature_in_K, self.dry_air_rh_in))
+                       self.dry_air_temperature_in_K, self.dry_air_rh_in)
+                   )
+
         m_dot_air_dry_in = self.dry_air_mass_flow_kg_s / (1 + x_dry_in)
         m_dot_vap_dry_in = self.dry_air_mass_flow_kg_s - m_dot_air_dry_in
 
         # Calculate dry outlet vapor and air mass flows
-        x_dry_out = (self.R_Air / self.R_Vap) * self.calculate_partial_pressure(self.dry_air_temperature_out_K,
-                                                                                self.dry_air_rh_out) / (
+        x_dry_out = (self.R_Air / self.R_Vap) * self.calculate_partial_pressure(
+            self.dry_air_temperature_out_K, self.dry_air_rh_out) / (
                             self.dry_air_pressure_out_Pa - self.calculate_partial_pressure(
-                        self.dry_air_temperature_out_K, self.dry_air_rh_out))
+                        self.dry_air_temperature_out_K, self.dry_air_rh_out)
+                    )
+
         m_dot_air_dry_out = m_dot_air_dry_in  # Air mass flow remains the same
         m_dot_vap_dry_out = x_dry_out * m_dot_air_dry_out
         m_dot_dry_out = m_dot_vap_dry_out + m_dot_air_dry_out
 
         # Calculate wet inlet vapor and air mass flows
-        x_wet_in = (self.R_Air / self.R_Vap) * self.calculate_partial_pressure(self.wet_air_temperature_in_K,
-                                                                               self.wet_air_rh_in) / (
+        x_wet_in = (self.R_Air / self.R_Vap) * self.calculate_partial_pressure(
+            self.wet_air_temperature_in_K, self.wet_air_rh_in) / (
                            self.wet_air_pressure_in_Pa - self.calculate_partial_pressure(
-                       self.wet_air_temperature_in_K, self.wet_air_rh_in))
+                       self.wet_air_temperature_in_K, self.wet_air_rh_in)
+                   )
+
         m_dot_air_wet_in = self.wet_air_mass_flow_kg_s / (1 + x_wet_in)
         m_dot_vap_wet_in = self.wet_air_mass_flow_kg_s - m_dot_air_wet_in
 
@@ -150,22 +171,22 @@ class Humidifier(MoistExchanger):
         super().__init__(**kwargs)
 
 
-# # %% Example usage of the code:
-# # Create an instance of Humidifier
-# humidifier = Humidifier(
-#     dry_air_mass_flow_kg_s=0.1665,
-#     wet_air_mass_flow_kg_s=0.1553,
-#     dry_air_temperature_in_K=353.3,
-#     dry_air_pressure_in_Pa=246000,
-#     dry_air_rh_in=0.3,
-#     dry_air_temperature_out_K=346.9,
-#     dry_air_pressure_out_Pa=230000,
-#     dry_air_rh_out=0.75,
-#     wet_air_temperature_in_K=353.2,
-#     wet_air_pressure_in_Pa=210000,
-#     wet_air_rh_in=0.99,
-#     wet_air_pressure_out_Pa=196000
-# )
+# %% Example usage of the code:
+# Create an instance of Humidifier
+humidifier = Humidifier(
+    dry_air_mass_flow_kg_s=0.1665,
+    wet_air_mass_flow_kg_s=0.1553,
+    dry_air_temperature_in_K=353.3,
+    dry_air_pressure_in_Pa=246000,
+    dry_air_rh_in=0.3,
+    dry_air_temperature_out_K=346.9,
+    dry_air_pressure_out_Pa=230000,
+    dry_air_rh_out=0.75,
+    wet_air_temperature_in_K=353.2,
+    wet_air_pressure_in_Pa=210000,
+    wet_air_rh_in=0.99,
+    wet_air_pressure_out_Pa=196000
+)
 # # Calculate partial pressures directly using the attributes of the humidifier object
 # p_vap_dry_in = humidifier.calculate_partial_pressure(humidifier.dry_air_temperature_in_K, humidifier.dry_air_rh_in)
 # p_vap_dry_out = humidifier.calculate_partial_pressure(humidifier.dry_air_temperature_out_K, humidifier.dry_air_rh_out)
