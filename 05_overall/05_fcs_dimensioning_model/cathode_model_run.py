@@ -66,15 +66,6 @@ class CompressorParameters:
 
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
-        self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
-
-        # Assumption: ~0.3 bar BoP pressure drop downstream the compressor at 130 g/s air flow rate
-        self.nominal_BoP_pressure_drop_Pa = 0.3*1e5
-        self.nominal_air_flow_kg_s = 0.165
-
-        # Reference variables for airflow correction
-        self.reference_pressure_Pa = 1.01325 * 1e5
-        self.reference_temperature_K = 25 + 273.15
 
         # Compressor map parameters
         self.compressor_map_VSEC15 = {
