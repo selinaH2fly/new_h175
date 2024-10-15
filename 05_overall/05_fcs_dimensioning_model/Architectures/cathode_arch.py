@@ -57,7 +57,7 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
     print(f"Compressor power : {compressor.power_W / 1000:.2f} kW")  # Convert W to kW
     #print(f"Air mass flow rate: {compressor.air_mass_flow_kg_s:.4f} kg/s")
 
-    # Instantiate the intercooler_air_air Air-Air using compressor outputs
+    # Instantiate the intercooler_air_air using compressor outputs
     intercooler_air_air = Intercooler(
         efficiency=0.41, primary_fluid="Air", coolant_fluid="Air",
         primary_p_in_Pa=compressor.pressure_out_Pa,
