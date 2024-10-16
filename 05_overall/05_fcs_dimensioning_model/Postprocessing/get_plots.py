@@ -53,7 +53,7 @@ def filter_converged_points(df, tolerance=4):
 def analyze_data(_file_path1, saving=True):
     
     # Load the CSV file into a DataFrame
-    df1 = pd.read_csv(_file_path1)
+    df0 = pd.read_csv(_file_path1)
 
     # Change the working directory to the directory containing the .csv file
     file_dir = os.path.dirname(_file_path1)
@@ -72,10 +72,11 @@ def analyze_data(_file_path1, saving=True):
     os.chdir("00_Plots")
     
     # Sort and prefilter data by index and current
-    #df1 =df1[df1["converged (t/f)"] == True]
+    df1 = df0[df0["converged (t/f)"] == True]
     df1 = filter_converged_points(df1, tolerance=7)
     df1 = df1.sort_values(by=['idx'])
     df1 = df1[(df1["current_A (Value)"] < current_upper_bound)]
+    df1 = df1[df1['Coolant Pump Power (kW)']>= 0]
     ## always reset index at last
     df1 = df1.reset_index(drop=True)
 
@@ -165,9 +166,11 @@ def analyze_data(_file_path1, saving=True):
                       'stoich_cathode (Value)',
                       'pressure_cathode_in_bara (Value)',
                       'temp_coolant_inlet_degC (Value)',
-                      'temp_coolant_outlet_degC (Value)']
+                      'temp_coolant_outlet_degC (Value)',
+                      "stoich_anode (Value)", 	
+                      "pressure_anode_in_bara (Value)"]
     # define ranges of plots
-    yranges = [[0,140],[1,6],[1,3.4],[50,100],[50,100]]
+    yranges = [[0,140],[1,6],[1,3.4],[50,100],[50,100],[1,10],[1,5]]
     
     for i, (opt_parameter, yrange) in enumerate(zip(opt_parameters,yranges)):
         #We will plot current df.iloc[0] with the last column df.iloc[-1], therefore we pass columns 0:n
@@ -184,7 +187,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"C:\Users\malte.timmen\Documents\Git\h175_model\05_overall\05_fcs_dimensioning_model\4_testrun_anode\optimized_parameters_20-175kW_400-500_0-120ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_20-175kW_400-500_0-120ft__2\optimized_parameters_20-175kW_400-500_0-120ft.csv")
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
     
