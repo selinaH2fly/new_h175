@@ -81,7 +81,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
                   coolant_pump_power_kW=coolant_pump_power_kW, stack_power_kW=stack_power_kW, power_constraint_kW=power_constraint_kW, specified_cell_count=specified_cell_count,
                   flight_level_100ft=flight_level_100ft, compressor_corrected_air_flow_g_s=compressor_corrected_air_flow_g_s, compressor_pressure_ratio=compressor_pressure_ratio, 
                   stack_heat_flux_kW = stack_heat_flux_kW, intercooler_heat_flux_kW = intercooler_heat_flux_kW, evaporator_heat_flux_kW = evaporator_heat_flux_kW, radiator_heat_flux_kW = radiator_heat_flux_kW,
-                  consider_turbine=consider_turbine, end_of_life=end_of_life, multiobjective_weighting=multiobjective_weighting, converged=converged, filename='optimized_input_data.csv')
+                  system_mass_kg=system_mass_kg, consider_turbine=consider_turbine, end_of_life=end_of_life, multiobjective_weighting=multiobjective_weighting, converged=converged, filename='optimized_input_data.csv')
     
 # Entry point of the script
 if __name__ == '__main__':
