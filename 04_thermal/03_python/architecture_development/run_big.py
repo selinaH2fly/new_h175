@@ -9,13 +9,16 @@ vary_bc = True
 # Do you want to compare results of different architectures in one plot (only has effect if vary_bc is set True)
 compare_res = True
 
+# if you don't want to compare architectures in one plot: Do you want to compare all temperatures, all pressures and all flows in each one plot?
+plot_temp_pr_vd = False
+
 # Which Architectures do you want to evaluate? ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"]
-arch_list = ["Arch01"] #, "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"] # ]    # which architecture should be analysed?, also possible to evaluate multiple architectures
+arch_list = ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"]    
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
-#    input_dict = {"stack_t_out" : ["", [273.15 + 70 + 8, 273.15 + 70 + 10], 'Stackausgangstemperatur [K]']}
-  #  input_dict = {"stack_t_in" : ["", [273.15 + 66, 273.15 + 68, 273.15 + 70, 273.15 + 72], 'Stackeingangstemperatur [K]']} #, 273.15 + 60 + 14, 273.15 + 60 + 16
+    #input_dict = {"stack_t_out" : ["", [273.15 + 70 + 8, 273.15 + 70 + 10], 'Stackausgangstemperatur [K]']}
+    #input_dict = {"stack_t_in" : ["", [273.15 + 66, 273.15 + 68, 273.15 + 70, 273.15 + 72], 'Stackeingangstemperatur [K]']} #, 273.15 + 60 + 14, 273.15 + 60 + 16
     input_dict = {"sys_t_in" : ["", [273.15 + 50, 273.15 + 55, 273.15 + 60, 273.15 + 65], 'Systemeingangstemperatur [K]']}
     #input_dict = {"bop_q" : ["",[5000, 7000, 9000, 11000, 13000], 'Wärmeeintrag BoP Komponenten [W]']}
     # input_dict = {"stack_q" : ["", [180000, 190000, 200000, 210000, 220000], 'Wärmeeintrag Stack [W]']}    # circ.add_bc("Qdot_stack1 = %.1f"%(np.interp(600, [20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600], [2.6, 9.7, 20.8, 33.1, 46.7, 60.5, 75.0, 90.2, 106.4, 123.6, 142.5, 162.0, 178.5], left=np.nan, right=np.nan) * 1000.0))
@@ -76,11 +79,12 @@ def func_bop_delta_p(bop_arch):
     elif bop_arch == 42: 
         bop_delta_list = [0.79734, 0.13849] # "y = 7,9734E-01x2 + 1,3849E-01x"
     else:
-        print("bop_arch %f is not defined"%bop_arch)
+        print("bop_arch %f is not defined. Use default arch41"%bop_arch)
+        bop_delta_list = [0.78087, 0.13715] # "y = 7,8087E-01x2 + 1,3715E-01x"
 
     return bop_delta_list
 ############################################################ calculation ############################################################
-bc_dict["bop_delta_p"] = func_bop_delta_p(bc_dict["bop_delta_p"])
+bc_dict["bop_delta_p"] = func_bop_delta_p(bc_dict["bop_delta_p"])   # fetches pressure curve of bop architecture
 excel_dict = {}
 all_result_dict = {}
 result_dict_new = {}
@@ -95,12 +99,13 @@ for arch in arch_list:      # each architecture is evaluated
     print("Start to evaluate architecture %s"%arch)
     result_dict_new = circ.analyse_arch(input_dict, result_dict_new)
 
-    if "pump_vdot" in result_dict_new.keys() and "pump_delta_p" in result_dict_new.keys(): #calculates the entire pump power
-        for y in range(len(result_dict_new["pump_vdot"][1])):
-            result_dict_new["pump_power"][1].append(result_dict_new["pump_vdot"][1][y] * result_dict_new["pump_delta_p"][1][y] * 100)
-        if "pump2_vdot" in result_dict_new.keys() and "pump2_delta_p" in result_dict_new.keys():
-            for y in range(len(result_dict_new["pump2_vdot"][1])):
-                result_dict_new["pump_power"][1][y] += (result_dict_new["pump2_vdot"][1][y] * result_dict_new["pump2_delta_p"][1][y] * 100)
+    if "pump_power" in  result_dict.keys(): #calculates the entire pump power
+        if "pump_vdot" in result_dict_new.keys() and "pump_delta_p" in result_dict_new.keys(): 
+            for y in range(len(result_dict_new["pump_vdot"][1])):
+                result_dict_new["pump_power"][1].append(result_dict_new["pump_vdot"][1][y] * result_dict_new["pump_delta_p"][1][y] * 100)
+            if "pump2_vdot" in result_dict_new.keys() and "pump2_delta_p" in result_dict_new.keys():
+                for y in range(len(result_dict_new["pump2_vdot"][1])):
+                    result_dict_new["pump_power"][1][y] += (result_dict_new["pump2_vdot"][1][y] * result_dict_new["pump2_delta_p"][1][y] * 100)
 
     for name in result_dict_new:    # rewrite results in one dictionary
         all_result_dict["%s_%s"%(arch,name)] = [result_dict_new[name][0], result_dict_new[name][1], result_dict_new[name][2]]
@@ -113,7 +118,7 @@ datatoexcel = pd.ExcelWriter('results.xlsx')
 data.to_excel(datatoexcel)
 datatoexcel.close()
 
-if vary_bc is True and compare_res is False:
+if vary_bc is True and compare_res is False and plot_temp_pr_vd is False:   # all result variables are plottet seperately
     for input_name in input_dict:                  # just to get the key of input_dict, no loop!
         for result_name in all_result_dict:         # loops through all result
             plt.plot(input_dict[input_name][1], all_result_dict[result_name][1])
@@ -122,7 +127,48 @@ if vary_bc is True and compare_res is False:
             plt.grid()
             plt.show()
 
-if vary_bc is True and compare_res is True:
+if vary_bc is True and compare_res is False and plot_temp_pr_vd is True:        # all temp, vdot and pressure get plottet in each one plot
+     for input_name in input_dict:                  # just to get the key of input_dict, no loop!
+        for arch in arch_list:                      # loops through all arch
+            for result_name in all_result_dict:          # loops through all result
+                if arch in result_name:             # if result matches current arch, it gets plotted
+                    if ("vdot" in result_name) or ("Vdot" in result_name):
+                        plt.plot(input_dict[input_name][1], all_result_dict[result_name][1], label=all_result_dict[result_name][2])
+            plt.ylabel('Flow in Branches in [l/s]')
+            plt.xlabel(input_dict[input_name][2])
+            plt.legend()
+            plt.grid()
+            plt.title(arch)
+            plt.show()
+            for result_name in excel_dict:
+                if arch in result_name:             # if result matches current arch, it gets plotted
+                    if "dot_" not in result_name and (("t_in" in result_name) or ("t_out" in result_name) or ("T_" in result_name)):
+                        plt.plot(input_dict[input_name][1], all_result_dict[result_name][1], label=all_result_dict[result_name][2])
+            plt.ylabel('Temperature in [K]')
+            plt.xlabel(input_dict[input_name][2])
+            plt.legend(loc = 'lower right')
+            plt.grid()
+            plt.title(arch)
+            plt.show()
+            for result_name in excel_dict:
+                if arch in result_name:
+                    if "delta_p" in result_name:
+                        plt.plot(input_dict[input_name][1], all_result_dict[result_name][1], label=all_result_dict[result_name][2])
+                        
+                    if "p_in" in result_name:
+                        y = 0
+                        while y < len(all_result_dict[result_name][1]):
+                            all_result_dict[result_name][1][y] -= 1
+                            y +=1
+                        plt.plot(input_dict[input_name][1], all_result_dict[result_name][1], label=all_result_dict[result_name][2])
+            plt.ylabel('BoP Pressuredrop in [bar]')
+            plt.xlabel(input_dict[input_name][2])
+            plt.legend()
+            plt.grid()
+            plt.title(arch)
+            plt.show()
+
+if vary_bc is True and compare_res is True: # plots pne result variable of all architectures in one plot
     for input_name in input_dict:
         for result_name in result_dict:
             y_begin, y_end = [], [] # y- position of data beginn and end
