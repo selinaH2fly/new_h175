@@ -11,6 +11,7 @@ This file contains parameter classes for various components used in the cathode 
 """
 import numpy as np
 
+
 class Input:
     def __init__(self):
         # Pressure initialization in bar (bara)
@@ -141,6 +142,13 @@ class HumidifierParameters:
         self.wet_air_rh_in = 0.99
         self.wet_air_pressure_out_Pa = 196000
 
+        # Flow rate to efficiency map Fumatech (in SLPM: Standard Liters per Minute, Efficiency in %)
+        self.humidifier_efficiency_map = {
+            2000: 61.0,
+            3000: 50.0,
+            4000: 45.5,
+            5000: 42.0
+        }
 class ValveParameters:
 
     def __init__(self):

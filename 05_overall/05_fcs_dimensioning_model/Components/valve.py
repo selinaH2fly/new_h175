@@ -8,9 +8,7 @@ class Valve:
         Initializes the Valve with total air mass flow rate and valve position.
 
         Args:
-            stoichiometry: Stoichiometric ratio for air flow calculation.
-            current_A: Current in Amperes for calculating air flow.
-            cellcount: Number of cells (default is 275).
+           total_air_mass_flow_kg_s : total mass flow of air before valve entrance
             valve_position_percent: The valve position in percentage (0-100%) where 0% is fully closed
                                     and 100% is fully open.
         """
@@ -41,6 +39,8 @@ class Valve:
 
         # Interpolating mass flow between given valve positions
         return np.interp(position, valve_opening_percentages, mass_flow_rates_g_s)
+
+#TODO: bypass flow calculation shall go to architecture file
 
     def calculate_bypass_flow(self):
         """

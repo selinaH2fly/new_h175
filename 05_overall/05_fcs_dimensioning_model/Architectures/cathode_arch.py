@@ -1,3 +1,9 @@
+"""
+    Simulates the behavior of a cathode air supply system for a fuel cell at a given flight level.
+    The function models the performance of components like compressors, intercoolers, humidifiers,
+    and turbines, calculating key outputs such as temperature, pressure, humidity, and power.
+    """
+
 # Import custom classes and functions
 import cathode_model_run
 from Components.compressor import Compressor
@@ -8,7 +14,21 @@ from basic_physics import compute_air_mass_flow, convert, icao_atmosphere
 
 # Function to simulate the architecture
 def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoich_cathode=1.8, current_A=600, cellcount=455):
+    """
+    Arguments:
+    - flight_level_100ft (int): Altitude in flight levels.
+      This is used to compute ambient conditions (temperature and pressure) for the simulation.
 
+    - compressor_map: A performance map for the compressor. If provided,
+      it supplies specific efficiency curves or other characteristics for the compressor. If not
+      provided, default values will be used.
+
+    - stoich_cathode : Stoichiometry of the cathode.
+
+    - current_A: The electrical current in amperes drawn by the fuel cell stack.
+
+    - cellcount: The number of individual cells in the fuel cell stack.
+    """
     # Print heading
     print("=" * 50)  # Creates a line of equal signs for emphasis
     print(f"Starting simulation for flight level: {flight_level_100ft}")  # Simulated flight level message
@@ -63,7 +83,8 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
         primary_p_in_Pa=compressor.pressure_out_Pa,
         primary_T_in_K=compressor.temperature_out_K,
         primary_mdot_in_kg_s=compressor.air_mass_flow_kg_s,
-        coolant_mdot_in_kg_s=0.5, coolant_T_in_K=323
+        coolant_mdot_in_kg_s=compressor.air_mass_flow_kg_s,
+        coolant_T_in_K=inputs.temperatures_K["TTC601"]
     )
     # Calculate outlet temperature and heat flux
     intercooler_air_air.primary_temperature_out_K = intercooler_air_air.calculate_primary_T_out()
@@ -78,7 +99,7 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
 
     # Print intercooler_air_air results
     print(f"Intercooler air-air primary outlet temperature: {intercooler_air_air.primary_temperature_out_K:.2f} K")
-    print(f"Intercooler air-air  coolant outlet temperature: {intercooler_air_air.coolant_temperature_out_K:.2f} K")
+    print(f"Intercooler air-air coolant outlet temperature: {intercooler_air_air.coolant_temperature_out_K:.2f} K")
     print(f"Intercooler air-air outlet pressure: {intercooler_air_air.pressure_out_Pa :.2f} Pa")
     print(f"Intercooler air-air heat flux: {intercooler_air_air.heat_flux_W / 1000:.4f} kW")
 
@@ -158,7 +179,7 @@ def simulate_cathode_architecture(flight_level_100ft, compressor_map=None, stoic
 
     # Calculate turbine outlet temperature and power
     turbine.temperature_out_K = turbine.calculate_T_out()
-    turbine.power_W = turbine.calculate_power()
+    turbine.power_W =  turbine.calculate_power() /turbine.isentropic_efficiency
 
     print("-" * 20)  # Creates a line of equal signs for emphasis
     print("Turbine Results:")

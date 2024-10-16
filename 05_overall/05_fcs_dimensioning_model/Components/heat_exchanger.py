@@ -75,7 +75,7 @@ class HeatExchanger:
         Calculate the increase in primary fuid temperature depending on the primary/coolant input temperatures.
         This equation was provided by Chris Burger.
         """
-        
+
         primary_T_out_K = self.primary_T_in_K - self.efficiency * (self.primary_T_in_K - self.coolant_T_in_K)
         self.primary_T_out_K = primary_T_out_K
         return primary_T_out_K
@@ -199,20 +199,22 @@ intercooler = Intercooler(
     primary_T_in_K=434.0,
     primary_p_in_Pa=260000,
     coolant_mdot_in_kg_s=0.5,
-    coolant_T_in_K=323
+    coolant_T_in_K=353
 )
 
-# Calculate specific heat
-specific_heat = intercooler.calculate_specific_heat(intercooler.primary_T_in_K,intercooler.primary_p_in_Pa,intercooler.primary_fluid)
-print(f"Specific Heat Capacity: {specific_heat:.2f} J/kg.K")
-
-intercooler.primary_T_out_K = intercooler.calculate_primary_T_out()
-print(intercooler.primary_T_out_K)
-
-# Calculate heatflux
-Q_dot = intercooler.calculate_heat_flux("primary")
-print(f"Heat Transfer Rate (Qdot): {Q_dot/1000:.2f} kW")
-
-
-#%%
-    
+# # Calculate specific heat
+# # specific_heat = intercooler.calculate_specific_heat(intercooler.primary_T_in_K,intercooler.primary_p_in_Pa,intercooler.primary_fluid)
+# # print(f"Specific Heat Capacity: {specific_heat:.2f} J/kg.K")
+#
+# intercooler.primary_T_out_K = intercooler.calculate_primary_T_out()
+# #print(intercooler.primary_T_out_K)
+#
+# #Calculate heatflux
+# Q_dot = intercooler.calculate_heat_flux("primary")
+# print(f"Heat Transfer Rate (Qdot): {Q_dot/1000:.2f} kW")
+#
+# intercooler.coolant_T_out_K = intercooler.calculate_coolant_T_out()
+# print(intercooler.coolant_T_out_K)
+#
+#
+# #%%
