@@ -23,7 +23,8 @@ def build_command(parameter):
         "--turbine", str(parameter[3]),
         "--map", str(parameter[4]),
         "--eol", str(parameter[5]),
-        "--constraint", str(parameter[6])
+        "--constraint", str(parameter[6]),
+        "--weighting", str(parameter[7])
     ]
     return command
 
@@ -63,6 +64,7 @@ if __name__ == '__main__':
         #Handle downstream data and plots
         saving = False
         dir_prefix = "testing__"
+        weighting = 0
 
     elif args.testing == "False":
       
@@ -70,17 +72,17 @@ if __name__ == '__main__':
         _step_c = 50
         _step_fl = 30
         #range_power is ugly deined atm. due to not starting at 0 and want to have inclusive bounds.... maybe there is a better way?
-        range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
-        #range_power = np.array([20, 50, 80, 125, 150, 175])
+        #range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
+        range_power = np.array([150])#[20, 50, 80, 125, 150, 175])
         range_cellcount = [400, 455, 500]#np.arange(args.cellcount[0],args.cellcount[1]+_step_c,_step_c)
-        range_fl = np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
+        range_fl = [120]#np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
         
         # Convert turbine and eol to boolean lists
         range_turbine =[True]
         range_eol = [False, True]
         range_map = [args.map]
         range_DoE_constraint = [args.constraint]
-
+        weighting = [0,0.5,1]
         #Handle downstream data and plots
         saving = True
         dir_prefix =""
@@ -89,7 +91,7 @@ if __name__ == '__main__':
         print("User Error: wrong input for --testing, sould be True/False")
 
     # Generate all combinations of parameters
-    parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_map, range_eol, range_DoE_constraint))
+    parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_map, range_eol, range_DoE_constraint, weighting))
     
     # Start parallel execution using ProcessPoolExecutor
     max_workers = min(26, len(parameters))  # Define the number of processes based on available resources
