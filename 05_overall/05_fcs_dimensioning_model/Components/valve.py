@@ -1,5 +1,5 @@
 import numpy as np
-from parameters import Valve_Parameters
+from cathode_model_run import ValveParameters
 
 
 class Valve:
@@ -15,7 +15,7 @@ class Valve:
         # Compute total air mass flow rate in kg/s
         self.total_air_mass_flow_kg_s = total_air_mass_flow_kg_s
         self.valve_position_percent = valve_position_percent
-        self.valve_parameters = Valve_Parameters()  # Access valve map data
+        self.valve_parameters = ValveParameters()  # Access valve map data
 
     def get_valve_position(self):
         """Returns the current valve position in percentage."""
