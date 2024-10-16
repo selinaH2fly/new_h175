@@ -1,9 +1,9 @@
 import numpy as np
 from parameters import Valve_Parameters
-from basic_physics import compute_air_mass_flow
+
 
 class Valve:
-    def __init__(self, stoichiometry, current_A, cellcount=275, valve_position_percent=0):
+    def __init__(self, total_air_mass_flow_kg_s, valve_position_percent=0):
         """
         Initializes the Valve with total air mass flow rate and valve position.
 
@@ -15,7 +15,7 @@ class Valve:
                                     and 100% is fully open.
         """
         # Compute total air mass flow rate in kg/s
-        self.total_air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry, current_A, cellcount)
+        self.total_air_mass_flow_kg_s = total_air_mass_flow_kg_s
         self.valve_position_percent = valve_position_percent
         self.valve_parameters = Valve_Parameters()  # Access valve map data
 
@@ -59,11 +59,9 @@ class Valve:
 # Example usage:
 if __name__ == "__main__":
     # Example inputs
-    stoichiometry = 2.3 # Example stoichiometry value
-    current_A = 650.0     # Example current in Amperes
 
     # Create a Valve object with initial valve position
-    valve = Valve(stoichiometry, current_A, valve_position_percent=40)
+    valve = Valve(0.165, valve_position_percent=40)
 
     # Print initial total air mass flow rate
     print(f"Total air mass flow (kg/s): {valve.total_air_mass_flow_kg_s:.4f}")
@@ -76,5 +74,5 @@ if __name__ == "__main__":
     # Get the mass flow rates through bypass and humidifier
     mass_flow_bypass, mass_flow_humidifier = valve.calculate_bypass_flow()
 
-    print(f"Mass flow through bypass: {mass_flow_bypass:.4f} kg/s")
-    print(f"Mass flow through humidifier: {mass_flow_humidifier:.4f} kg/s")
+    print(f"Mass flow through bypass: {mass_flow_bypass:.2f} kg/s")
+    print(f"Mass flow through humidifier: {mass_flow_humidifier:.2f} kg/s")
