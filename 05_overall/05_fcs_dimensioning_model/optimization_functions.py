@@ -31,7 +31,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     Parameters:
     - cell_voltage_model: The trained GPyTorch model (alongside likelihood and input/target data statistics).
     - cathode_pressure_drop_model: The trained GPyTorch model for the cathode pressure drop. (alongside likelihood and input/target data statistics).
-    - flight_level_100ft: Flight level in 100 feet units.
+    - flight_level: Flight level in 100 feet units.
     - cellcount: Number of cells.
     - power_constraint_kW: Power constraint in kilowatts.
     - consider_turbine: Whether to consider power recuperation in the optimization.

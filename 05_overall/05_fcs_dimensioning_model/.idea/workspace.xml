@@ -9,11 +9,10 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Architectures/cathode_arch.py" beforeDir="false" afterPath="$PROJECT_DIR$/Architectures/cathode_arch.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Components/heat_exchanger.py" beforeDir="false" afterPath="$PROJECT_DIR$/Components/heat_exchanger.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Components/moist_exchanger.py" beforeDir="false" afterPath="$PROJECT_DIR$/Components/moist_exchanger.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Components/turbine.py" beforeDir="false" afterPath="$PROJECT_DIR$/Components/turbine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Components/valve.py" beforeDir="false" afterPath="$PROJECT_DIR$/Components/valve.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Postprocessing/evaluate_compressor_map.py" beforeDir="false" afterPath="$PROJECT_DIR$/Postprocessing/evaluate_compressor_map.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cathode_model_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/cathode_model_run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/optimization_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/optimization_functions.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -58,7 +57,7 @@
     &quot;Python.valve.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;feature/HWI-431/Cathode__Architecture&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/debjani.ghosh/Documents/GIT/MT/h175_model-feature-HWI-424-Anode-Model-Enhancement/h175_model-feature-HWI-424-Anode-Model-Enhancement/05_overall/05_fcs_dimensioning_model&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/debjani.ghosh/Documents/GitHub/h175_model/05_overall/05_fcs_dimensioning_model&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
 }</component>

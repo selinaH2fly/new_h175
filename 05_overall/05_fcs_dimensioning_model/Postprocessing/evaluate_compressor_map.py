@@ -8,7 +8,7 @@ from scipy.spatial import ConvexHull, Delaunay
 # Add the parent directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Now import the CompressorParameters class from parameters.py
+# Now import the Compressor_Parameters class from parameters.py
 from parameters import Compressor_Parameters
 
 def plot_compressor_map(operating_point_pressure_ratio, operating_point_corrected_massflow_g_s):
@@ -21,7 +21,7 @@ def plot_compressor_map(operating_point_pressure_ratio, operating_point_correcte
     - operating_point_corrected_massflow_g_s (float): The corrected mass flow of the operating point in g/s.
     """
     
-    # Create an instance of the CompressorParameters class
+    # Create an instance of the Compressor_Parameters class
     cp = Compressor_Parameters()
 
     # Extract the original grid points and efficiency values

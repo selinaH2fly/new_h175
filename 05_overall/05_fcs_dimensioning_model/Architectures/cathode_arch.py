@@ -179,7 +179,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
 
     # Calculate turbine outlet temperature and power
     turbine.temperature_out_K = turbine.calculate_T_out()
-    turbine.power_W =  turbine.calculate_power() /turbine.isentropic_efficiency
+    turbine.power_W =  turbine.calculate_power()
 
     print("-" * 20)  # Creates a line of equal signs for emphasis
     print("Turbine Results:")
