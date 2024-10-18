@@ -18,7 +18,7 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, saving
 
     for df, title in zip(data, titles):
         # Filter data for the specified flight level
-        df = df[(df['Flight Level (100x ft)'] == fl_set) & (df['weighting'] == weighting)]
+        df = df[(df['Flight Level (100x ft)'] == fl_set) & (df['weighting ([0,1])'] == weighting)]
         
         # Create the figure and axis
         fig, ax = plt.subplots(figsize=(12, 8))

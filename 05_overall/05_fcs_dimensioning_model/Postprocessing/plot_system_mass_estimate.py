@@ -90,7 +90,7 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, we
         # Filter the df for eol, bol and flight level
         df = df[(df["eol (t/f)"] == filter_mode) & 
                 (df["Flight Level (100x ft)"] == 120) &
-                (df["weighting"] == weighting)]
+                (df["weighting ([0,1])"] == weighting)]
         
         # Extract all power points from the filtered DataFrame
         all_points = sorted(df["System Power (kW)"].unique())

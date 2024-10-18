@@ -58,7 +58,7 @@ def format_data_for_plot(df, components, fl_set, power_range, weighting, eol_col
     # Create an empty DataFrame to store formatted data
     formatted_df = pd.DataFrame()
     #current = df["current_A (Value)"]
-    df = df[(df['Flight Level (100x ft)'] == fl_set) & (df['Power Constraint (kW)'].isin(power_range)) & (df['weighting'] == weighting)]
+    df = df[(df['Flight Level (100x ft)'] == fl_set) & (df['Power Constraint (kW)'].isin(power_range)) & (df['weighting ([0,1])'] == weighting)]
     for component in components:
         # Filter out the columns related to the component
         component_df = df[[component, eol_col]].copy()

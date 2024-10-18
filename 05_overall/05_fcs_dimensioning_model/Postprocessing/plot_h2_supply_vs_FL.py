@@ -40,7 +40,7 @@ def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, saving=True, mode="eol
         filter_mode = False
         mode_name = "BoL"
     #Filter the DF for currents in range and the filter omde
-    df1 = df1[(df1["current_A (Value)"] <= 700) & (df1["eol (t/f)"] == filter_mode) & (df1["weighting"] == weighting)]
+    df1 = df1[(df1["current_A (Value)"] <= 700) & (df1["eol (t/f)"] == filter_mode) & (df1["weighting ([0,1])"] == weighting)]
     
     # Loop through each cell count and plot the data
     for cell, icon in zip(cells, markers):

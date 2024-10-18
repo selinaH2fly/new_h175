@@ -65,7 +65,7 @@ def plot_compressor_map(data, titles, colors, markers, weighting, saving=True, m
         
         df = df[(df["eol (t/f)"] == filter_mode) & 
                 (df['current_A (Value)'] <= 700) &
-                (df['weighting'] == weighting)] # filter out eol points, FL and points above 700 A 
+                (df['weighting ([0,1])'] == weighting)] # filter out eol points, FL and points above 700 A 
         
         # Scatter plot with color based on 'System Power (kW)'
         scatter = ax.scatter(df["Compressor Corrected Air Flow (g/s)"]

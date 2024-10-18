@@ -95,13 +95,10 @@ def analyze_data(_file_path1, saving=True):
     
     fl_set = 120 #TODO: Pass that as an argument to the function
     fl_max = max(df1["Flight Level (100x ft)"])
-    weighting=0
+    weighting = 1
 
-    ########Plot test:
-        
-    #plot_h2_vs_mass(data, titles, colors, fl_set)
-    #plot_h2_vs_mass(data, titles, colors, fl_set, 0.5)
-    #plot_h2_vs_mass(data, titles, colors, fl_set, 1)
+    ########Plot H2 vs Mass:
+    plot_h2_vs_mass(data, titles, colors, fl_set)
     
     ###########PLOT: Polcurves
     plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, saving=saving)
@@ -182,7 +179,7 @@ def analyze_data(_file_path1, saving=True):
     for i, (opt_parameter, yrange) in enumerate(zip(opt_parameters,yranges)):
         #We will plot current df.iloc[0] with the last column df.iloc[-1], therefore we pass columns 0:n
         doe_data_column = Optimized_DoE_data_variables.iloc[:,0:i+2] 
-        plot_optimized_parameters(data, doe_data_column, titles, fl_set, markers_oL, opt_parameter, yrange, saving=True)
+        plot_optimized_parameters(data, doe_data_column, titles, fl_set, markers_oL, opt_parameter, yrange, weighting, saving=True)
 
     # go back to the parent directory
     os.chdir("../")
@@ -194,7 +191,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_20-175kW_400-500_0-120ft__1\optimized_parameters_20-175kW_400-500_0-120ft.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()

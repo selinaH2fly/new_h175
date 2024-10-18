@@ -12,7 +12,7 @@ _params_optimization = Optimization_Parameters()
 
 
 # Plot the optimized cathode inlet rel. humidity for each dataset
-def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, yrange, saving=True):
+def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, yrange, weighting, saving=True):
     """
     Plots the optimized operating paramter for multiple datasets.
 
@@ -34,7 +34,7 @@ def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, y
     num_columns = data_doe.shape[1]
     
     for df, title in zip(data, titles):
-        df = df[df['Flight Level (100x ft)'] == fl_set]
+        df = df[(df['Flight Level (100x ft)'] == fl_set) & (df["weighting ([0,1])"] == weighting)]
         fig, ax = plt.subplots(figsize=(12, 8))
         
         # Create a colormap and normalize for the color gradient

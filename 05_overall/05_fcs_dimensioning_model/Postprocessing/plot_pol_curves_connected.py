@@ -21,7 +21,7 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, we
             count: df[(df['Flight Level (100x ft)'] == fl_set) & 
                       (df['Specified Cell Count'] == count) & 
                       (df['eol (t/f)'] == eol) &
-                      (df['weighting'] == weighting)]
+                      (df['weighting ([0,1])'] == weighting)]
             for count in cell_counts
         }
 
