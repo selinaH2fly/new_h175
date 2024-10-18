@@ -186,7 +186,6 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     print("-" * 20)  # Creates another line of equal signs for emphasis
 
     # Print turbine results
-    print(f"Turbine Inlet temperature: {turbine.temperature_in_K:.2f} K")
     print(f"Turbine outlet temperature: {turbine.temperature_out_K:.2f} K")
     print(f"Turbine power: {turbine.power_W / 1000:.2f} kW")  # Convert W to kW
 
