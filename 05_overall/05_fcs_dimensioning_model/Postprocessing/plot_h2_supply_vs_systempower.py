@@ -5,7 +5,7 @@ import numpy as np
 
 
 # %% PLOT: h2_supply
-def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, saving=True):
+def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weighting, saving=True):
     """
     Plot of H2 supply vs system power with polynomial fit.
     Further it prints an nummerical comparison between 400-500 cells and 500 stack @ bol and eol
@@ -45,7 +45,7 @@ def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, savi
     labels = []
 
     for df, title, color in zip(data, titles, colors):
-        df = df[df['Flight Level (100x ft)'] == fl_set]
+        df = df[(df['Flight Level (100x ft)'] == fl_set) & (df["weighting"] == weighting)]
         for filter_eol, linestyle, marker, label_suffix in [(False, '-', markers_oL[0], 'BoL'), (True, '--', markers_oL[1], 'EoL')]:
             # Apply the filter based on the function argument
             filtered_df = df[(df["eol (t/f)"] == filter_eol) 

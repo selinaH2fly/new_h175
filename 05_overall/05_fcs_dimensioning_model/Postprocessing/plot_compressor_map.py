@@ -15,7 +15,7 @@ def scale_convex_hull(hull_points, center_point, scale_factor):
     return scaled_points
 
 # %% PLOT: Compressormap from data
-def plot_compressor_map(data, titles, colors, markers, saving=True, mode="bol"):
+def plot_compressor_map(data, titles, colors, markers, weighting, saving=True, mode="bol"):
     """
     Plots the compressor map for multiple datasets in one plot.
 
@@ -63,7 +63,9 @@ def plot_compressor_map(data, titles, colors, markers, saving=True, mode="bol"):
         # Set the subfigure title
         ax.set_title(titles[i])  # Add subfigure title for each subplot
         
-        df = df[(df["eol (t/f)"] == filter_mode) & (df['current_A (Value)'] <= 700)] # filter out eol points, FL and points above 700 A 
+        df = df[(df["eol (t/f)"] == filter_mode) & 
+                (df['current_A (Value)'] <= 700) &
+                (df['weighting'] == weighting)] # filter out eol points, FL and points above 700 A 
         
         # Scatter plot with color based on 'System Power (kW)'
         scatter = ax.scatter(df["Compressor Corrected Air Flow (g/s)"]

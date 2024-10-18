@@ -13,7 +13,7 @@ from Components.stack import Stack
 from parameters import Mass_Parameters
 
 # %%PLOT a stacked bar chart of each subsystem component mass grouped by power level.         
-def plot_system_mass_estimate(data, titles, colors, components_dict, markers, saving=True, mode="bol"):  
+def plot_system_mass_estimate(data, titles, colors, components_dict, markers, weighting, saving=True, mode="bol"):  
     """
     Plot of system mass vs system power as a stack bar chart for each subsystem.
     
@@ -89,7 +89,8 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, sa
     for df, title, color, m_stack_value, marker in zip(data, titles, colors, m_stack_values, markers):
         # Filter the df for eol, bol and flight level
         df = df[(df["eol (t/f)"] == filter_mode) & 
-                (df["Flight Level (100x ft)"] == 120)]
+                (df["Flight Level (100x ft)"] == 120) &
+                (df["weighting"] == weighting)]
         
         # Extract all power points from the filtered DataFrame
         all_points = sorted(df["System Power (kW)"].unique())

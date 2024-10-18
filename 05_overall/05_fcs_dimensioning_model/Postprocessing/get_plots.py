@@ -55,6 +55,10 @@ def analyze_data(_file_path1, saving=True):
     # Load the CSV file into a DataFrame
     df1 = pd.read_csv(_file_path1)
 
+    # for testing, weighting comes actually from csv
+    df1['weighting']=0
+
+
     # Change the working directory to the directory containing the .csv file
     file_dir = os.path.dirname(_file_path1)
     os.chdir(file_dir)
@@ -91,18 +95,19 @@ def analyze_data(_file_path1, saving=True):
     
     fl_set = 120 #TODO: Pass that as an argument to the function
     fl_max = max(df1["Flight Level (100x ft)"])
-    
+    weighting=0
+
     ########Plot test:
         
-    plot_h2_vs_mass(data, titles, colors, fl_set)
+    #plot_h2_vs_mass(data, titles, colors, fl_set)
     #plot_h2_vs_mass(data, titles, colors, fl_set, 0.5)
     #plot_h2_vs_mass(data, titles, colors, fl_set, 1)
     
     ###########PLOT: Polcurves
-    plot_polarization_curves(data, titles, fl_set, markers_oL, saving=saving)
+    plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, saving=saving)
     
     ############PLOT: Polcurves eol vs bol connected
-    plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, saving=saving)
+    plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, weighting, saving=saving)
     
     ############PLOT: System Power Grid Plot
     #List of pd column names of data for components which will be considered.
@@ -114,7 +119,7 @@ def analyze_data(_file_path1, saving=True):
                   "Coolant Pump Power (kW)",	
                   "Stack Power (kW)"]
     
-    plot_power_needs(data, titles, fl_set, components, saving=saving)
+    plot_power_needs(data, titles, fl_set, components, weighting, saving=saving)
     
     ############PLOT: System Power Grid Plot Heat Flux
     #List of pd column names of data for components which will be considered.
@@ -125,17 +130,17 @@ def analyze_data(_file_path1, saving=True):
                   "Evaporator Heat Flux (kW)",	
                   "Radiator Heat Flux (kW)"]
     
-    plot_power_needs_heatflux(data, titles, fl_set, components, saving=saving)    
+    plot_power_needs_heatflux(data, titles, fl_set, components, weighting, saving=saving)    
         
     ###########PLOT: H2 supply
-    plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, saving=saving)
+    plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weighting, saving=saving)
     
     ###########PLOT: System eff vs Net Power: Flade Plot, 
-    plot_system_efficiency(data, titles, colors, fl_set, markers_oL, saving=saving)
+    plot_system_efficiency(data, titles, colors, fl_set, markers_oL, weighting, saving=saving)
     
     #############PLOT: H2 supply vs Flightlevel:
-    plot_h2_supply_vs_FL(df1, markers, fl_max, saving=saving, mode="bol")
-    plot_h2_supply_vs_FL(df1, markers, fl_max, saving=saving, mode="eol")
+    plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, saving=saving, mode="bol")
+    plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, saving=saving, mode="eol")
 
     ############Plot Weight estimate
     #Weight/Power Factor
@@ -144,12 +149,12 @@ def analyze_data(_file_path1, saving=True):
                          "Turbine Power (kW)":      0}
     
     # New grouped, stacked bar chart function
-    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
-    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="eol")
+    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, weighting, saving=saving, mode="bol")
+    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, weighting, saving=saving, mode="eol")
     
     ###########PLOT: Compressormap
-    plot_compressor_map(data, titles, colors, markers, saving=True, mode="bol")
-    plot_compressor_map(data, titles, colors, markers, saving=True, mode="eol")
+    plot_compressor_map(data, titles, colors, markers, weighting, saving=True, mode="bol")
+    plot_compressor_map(data, titles, colors, markers, weighting, saving=True, mode="eol")
         
     ###########PLOT: optimized parameters in DoE envelope
     os.makedirs("DoE_Envelope_Evaluation", exist_ok=True)
@@ -189,7 +194,8 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_20-175kW_400-500_120-120ft__1\optimized_parameters_20-175kW_400-500_120-120ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft.csv")
+
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
     

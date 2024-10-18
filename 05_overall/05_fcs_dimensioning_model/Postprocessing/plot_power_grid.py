@@ -41,7 +41,7 @@ def annotate_boxes(ax, df, cell_width=1, cell_height=2):
                 ax.text(col_pos + cell_width / 2, y_pos + cell_height / 2, 
                         str(cell_value), color='black', ha='center', va='center')
             
-def format_data_for_plot(df, components, fl_set, power_range, eol_col='eol (t/f)', tolerance=0.01):
+def format_data_for_plot(df, components, fl_set, power_range, weighting, eol_col='eol (t/f)', tolerance=0.01):
     """
     Formats the DataFrame for plotting by separating components based on the eol (t/f) column.
     Also checks if 'Power Constraint (kW)_bol' matches the stack power values within a tolerance and sets NaN if not.
@@ -58,7 +58,10 @@ def format_data_for_plot(df, components, fl_set, power_range, eol_col='eol (t/f)
     # Create an empty DataFrame to store formatted data
     formatted_df = pd.DataFrame()
     #current = df["current_A (Value)"]
-    df = df[(df['Flight Level (100x ft)'] == fl_set) & (df['Power Constraint (kW)'].isin(power_range))]
+
+
+
+    df = df[(df['Flight Level (100x ft)'] == fl_set) & (df['Power Constraint (kW)'].isin(power_range)) & (df['weighting'] == weighting)]
     for component in components:
         # Filter out the columns related to the component
         component_df = df[[component, eol_col]].copy()
@@ -104,7 +107,7 @@ def format_data_for_plot(df, components, fl_set, power_range, eol_col='eol (t/f)
 
     return formatted_df
 
-def plot_power_needs(data, titles, fl_set, components, saving=True, power_range = [20,50,80,125,150,175]):
+def plot_power_needs(data, titles, fl_set, components, weighting, saving=True, power_range = [20,50,80,125,150,175]):
     """
     Plot a heatmap-like representation of power needs by components, with specific formatting.
 
@@ -115,9 +118,8 @@ def plot_power_needs(data, titles, fl_set, components, saving=True, power_range 
     """
     
     for df1, title in zip(data, titles):
-        
         #Formate the data to the needed formate:
-        df = format_data_for_plot(df1, components, fl_set, power_range, eol_col='eol (t/f)')
+        df = format_data_for_plot(df1, components, fl_set, power_range, weighting, eol_col='eol (t/f)')
         
         # Set up the figure and axis
         fig, ax = plt.subplots(figsize=(10, 8))
