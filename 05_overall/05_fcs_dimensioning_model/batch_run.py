@@ -41,7 +41,7 @@ if __name__ == '__main__':
     #import argparse
 
     parser = argparse.ArgumentParser(description="Main script to call optimize_input_variables.py")
-    parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[20,175])
+    parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[20,40])
     parser.add_argument("-n", "--cellcount", type=float, nargs='+', help="Stack cell number for optimizing subject to power constraint", default=[400,455,500])
     parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[0,100])
     # parser.add_argument("-t", "--turbine", type=str, choices=["True"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
@@ -74,15 +74,15 @@ if __name__ == '__main__':
         #range_power is ugly deined atm. due to not starting at 0 and want to have inclusive bounds.... maybe there is a better way?
         range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
         #range_power = np.array([20, 50, 80, 125, 150, 175])
-        range_cellcount = [400, 455, 500]#np.arange(args.cellcount[0],args.cellcount[1]+_step_c,_step_c)
-        range_fl = [120]#np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
+        range_cellcount = [275, 455]#np.arange(args.cellcount[0],args.cellcount[1]+_step_c,_step_c)
+        range_fl = [600]#np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
         
         # Convert turbine and eol to boolean lists
         range_turbine =[True]
-        range_eol = [False]
+        range_eol = [True, False]
         range_map = [args.map]
         range_DoE_constraint = [args.constraint]
-        weighting = [0,1]
+        weighting = [0]
         #Handle downstream data and plots
         saving = True
         dir_prefix =""

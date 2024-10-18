@@ -104,7 +104,7 @@ def format_data_for_plot(df, components, fl_set, power_range, eol_col='eol (t/f)
 
     return formatted_df
 
-def plot_power_needs(data, titles, fl_set, components, saving=True, power_range = [20,50,80,125,150,175]):
+def plot_power_needs(data, titles, fl_set, components, saving=True, power_range = [20, 25, 30, 35, 40, 45]):
     """
     Plot a heatmap-like representation of power needs by components, with specific formatting.
 
@@ -124,7 +124,7 @@ def plot_power_needs(data, titles, fl_set, components, saving=True, power_range 
     
         # Define the colormap and normalization
         cmap = plt.cm.coolwarm
-        norm = mcolors.LogNorm(vmin=0.1, vmax=225)  # Logarithmic normalization
+        norm = mcolors.LogNorm(vmin=0.1, vmax=100)  # Logarithmic normalization
         
         # Adjust y-ticks to be centered on the colored boxes
         # Y-Axis should always have 6 entries, regarding of the data (20-175 kW)

@@ -63,8 +63,8 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, sa
                             color=color, alpha=0.5, linestyle='--')
                     
     # Highlight power levels
-    highlight_powers = [20, 50, 80, 125, 150, 175]
-    cell_counts = [400, 455, 500]
+    highlight_powers = [20, 25, 30, 35, 40]
+    cell_counts = [275, 455]
 
     # Filter data for BOL and EOL
     bol_data = filter_data(df1, eol=False, cell_counts=cell_counts)
@@ -79,7 +79,7 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, sa
     ax.set(title=f"System Polarization Curve - EoL vs BoL, FL {fl_set}", xlabel='Current [A]', xlim=[0, 1000], ylabel='Cell Voltage [V]', ylim=[0.3, 1])
     ax.grid(True)
     ax.legend(loc='upper right')
-    ax.set_xlim([0, 800])
+    ax.set_xlim([0, 300])
     # Save and show plot
     if saving:
         plt.savefig('bol_eol_polarization_curve.png', bbox_inches='tight')

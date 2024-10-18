@@ -79,22 +79,22 @@ def analyze_data(_file_path1, saving=True):
     df1 = df1[(df1["current_A (Value)"] < current_upper_bound)]
     
     # Split the data based on 'Specified Cell Count'
-    df_400 = df1[(df1['Specified Cell Count'] == 400)]
+    df_400 = df1[(df1['Specified Cell Count'] == 275)]
     df_455 = df1[(df1['Specified Cell Count'] == 455)]
     df_500 = df1[(df1['Specified Cell Count'] == 500)] 
     
-    data   = [     df_400,       df_455,     df_500]
-    titles = ['400 Cells',  '455 Cells','500 Cells']
-    colors = [ "tab:blue", "tab:orange",  "tab:red"]
-    markers= ["o", "v", "s"]
+    data   = [     df_400,       df_455]#,     df_500]
+    titles = ['275 Cells',  '455 Cells']#,'500 Cells']
+    colors = [ "tab:blue", "tab:orange"]#,  "tab:red"]
+    markers= ["o", "v"]#, "s"]
     markers_oL = ["o","P"]
     
-    fl_set = 120 #TODO: Pass that as an argument to the function
+    fl_set = 600 #TODO: Pass that as an argument to the function
     fl_max = max(df1["Flight Level (100x ft)"])
     
     ########Plot test:
         
-    plot_h2_vs_mass(data, titles, colors, fl_set)
+    #plot_h2_vs_mass(data, titles, colors, fl_set)
     #plot_h2_vs_mass(data, titles, colors, fl_set, 0.5)
     #plot_h2_vs_mass(data, titles, colors, fl_set, 1)
     
@@ -144,8 +144,8 @@ def analyze_data(_file_path1, saving=True):
                          "Turbine Power (kW)":      0}
     
     # New grouped, stacked bar chart function
-    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
-    plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="eol")
+    #plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="bol")
+    #plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, saving=saving, mode="eol")
     
     ###########PLOT: Compressormap
     plot_compressor_map(data, titles, colors, markers, saving=True, mode="bol")
@@ -189,7 +189,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_20-175kW_400-500_120-120ft__1\optimized_parameters_20-175kW_400-500_120-120ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_20-40kW_275-455_600-600ft__1\optimized_parameters_20-40kW_275-455_600-600ft.csv")
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
     

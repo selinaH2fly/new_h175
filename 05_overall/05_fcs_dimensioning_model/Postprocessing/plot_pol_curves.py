@@ -23,7 +23,7 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, saving=True):
         fig, ax = plt.subplots(figsize=(12, 8))
         
         # Set up colormap for 'System Power (kW)'
-        norm = mcolors.Normalize(vmin=20, vmax=175)
+        norm = mcolors.Normalize(vmin=20, vmax=40)
         cmap = cm.ScalarMappable(norm=norm, cmap='viridis')
         
         # Separate BoL (Beginning of Life) and EoL (End of Life) points
@@ -49,7 +49,7 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, saving=True):
         cbar.set_label('System Power [kW]')
         
         # Set custom colorbar ticks
-        cbar.set_ticks([20, 50, 75, 100, 125, 150, 175])
+        cbar.set_ticks([20, 25, 30, 35, 40])
         cbar.ax.set_yticklabels([f'{int(t)} kW' for t in cbar.get_ticks()])
 
         # Add a shaded region to highlight a specific current range
@@ -60,7 +60,7 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, saving=True):
         ax.set_xlabel('Current [A]')
         ax.set_ylabel('Cell Voltage [V]')
         ax.grid(True)
-        ax.set_xlim([0, 800])
+        ax.set_xlim([0, 300])
         ax.set_ylim([0, 1.25])
 
         # # Annotate EoL points with text
