@@ -47,13 +47,13 @@ if __name__ == '__main__':
     # parser.add_argument("-t", "--turbine", type=str, choices=["True"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
     parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
     # parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
-    parser.add_argument("--testing", type=str, choices=["True", "False"], default="False", help="Specifies whether a short test run is initiated.")
+    parser.add_argument("--testing", type=str, choices=["True", "False"], default="True", help="Specifies whether a short test run is initiated.")
     parser.add_argument("--constraint", type=str, choices=["True","False"], default="True", help="Activates the DoE envelope constraint condition for the optimizer. (default: True)")
     
     args = parser.parse_args()
     
     if args.testing == "True":
-        range_power = np.array([20, 100, 175])
+        range_power = np.array([125, 150, 175])
         range_cellcount = np.array([455])
         range_fl = np.array([0])
         # Convert turbine and eol to boolean lists
@@ -64,7 +64,7 @@ if __name__ == '__main__':
         #Handle downstream data and plots
         saving = False
         dir_prefix = "testing__"
-        weighting = 0
+        weighting = [0,1]
 
     elif args.testing == "False":
       
