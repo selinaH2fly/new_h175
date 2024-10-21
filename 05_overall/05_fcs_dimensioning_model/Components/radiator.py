@@ -7,7 +7,7 @@ class Radiator:
     A class to model a liquid/air radiator
     """
 
-    def __init__(self, coolant_flow_m3_s=0.0, nominal_pressure_drop_Pa=500*100, nominal_coolant_flow_m3_s=0.0, mass_by_power_kg_kW=None, thermal_power_W=1000):
+    def __init__(self, coolant_flow_m3_s=0.0, nominal_pressure_drop_Pa=500*100, nominal_coolant_flow_m3_s=0.0, mass_by_power_kg_kW="Herve_Radiator_Model", thermal_power_W=1000):
         """
         Initialize the radiator with a given pressure drop and coolant flow rate.
 
@@ -20,11 +20,13 @@ class Radiator:
         self.nominal_pressure_drop_Pa = nominal_pressure_drop_Pa
         self.nominal_coolant_flow_m3_s = nominal_coolant_flow_m3_s
         # Set default for mass_by_power_kg_kW using Herve_Radiator_Model
-        if mass_by_power_kg_kW is None:
+        if mass_by_power_kg_kW == "Herve_Radiator_Model":
             radiator_params = Radiator_Parameters()  # Create an instance of Radiator_Parameters
-            mass_by_power_kg_kW = radiator_params.mass_by_power_kg_kW["Herve_Radiator_Model"]
+            mass_by_power_kg_kW = radiator_params.mass_by_power_kg_kW#["Herve_Radiator_Model"]
+            self.mass_by_power_kg_kW = mass_by_power_kg_kW
             
         self.thermal_power_W = thermal_power_W
+        
         # Create an interpolation function using scipy's interp1d
         self.interpolation_function = interp1d(
             self.mass_by_power_kg_kW["Herve_Radiator_Model"]["T_stack_out"],
