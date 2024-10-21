@@ -10,6 +10,7 @@ This file contains parameter classes for various components used in the cathode 
 - PhysicalParameters: Contains physical constants the specific gas constants for air and water vapor.
 """
 import numpy as np
+import CoolProp.CoolProp as CP
 
 class Input:
     def __init__(self):
@@ -57,8 +58,25 @@ class Input:
 
 class PhysicalParameters:
     def __init__(self):
-        self.R_air = 287.06  # Specific gas constant for air [J/(kg*K)]
-        self.R_water_vapor = 461.52  # Specific gas constant for water vapor [J/(kg*K)]
+        # Retrieve standard pressure using CoolProp (Pa)
+        self.P_std = CP.PropsSI("P", "T", 273.15, "Q", 0, "Water")  # Standard pressure in Pa
+
+        # Standard temperature in Kelvin (273.15 K)
+        self.T_std = 273.15
+
+        # Retrieve molar mass of air (kg/mol) from CoolProp
+        self.M_air = CP.PropsSI("M", "Air")  # Molar mass of air in kg/mol
+
+        # Universal gas constant R (J/(mol·K)) from CoolProp
+        self.R = CP.PropsSI("gas_constant","T",300,"P", 101325,"Air");
+
+        # Retrieve the specific gas constant for dry air (J/(kg·K))
+        self.R_air = CP.PropsSI('GAS_CONSTANT', 'Air') / self.M_air  # Specific gas constant of air
+
+        # Retrieve the specific gas constant for water vapor (J/(kg·K))
+        self.R_water_vapor = CP.PropsSI('GAS_CONSTANT', 'Water') / CP.PropsSI('M',
+                                                                      'Water')  # Specific gas constant of water vapor
+
 
 class CompressorParameters:
 
