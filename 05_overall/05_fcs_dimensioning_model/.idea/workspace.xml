@@ -5,14 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="af6c87ee-8b68-4876-8504-102cabba419a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../../.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Architectures/cathode_arch.py" beforeDir="false" afterPath="$PROJECT_DIR$/Architectures/cathode_arch.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Components/heat_exchanger.py" beforeDir="false" afterPath="$PROJECT_DIR$/Components/heat_exchanger.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Components/turbine.py" beforeDir="false" afterPath="$PROJECT_DIR$/Components/turbine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocessing/evaluate_compressor_map.py" beforeDir="false" afterPath="$PROJECT_DIR$/Postprocessing/evaluate_compressor_map.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cathode_model_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/cathode_model_run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/optimization_functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/optimization_functions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Components/moist_exchanger.py" beforeDir="false" afterPath="$PROJECT_DIR$/Components/moist_exchanger.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Components/valve.py" beforeDir="false" afterPath="$PROJECT_DIR$/Components/valve.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,29 +33,30 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.cathode_arch.executor&quot;: &quot;Run&quot;,
-    &quot;Python.cathode_model_run.executor&quot;: &quot;Run&quot;,
-    &quot;Python.compressor.executor&quot;: &quot;Run&quot;,
-    &quot;Python.get_plots.executor&quot;: &quot;Run&quot;,
-    &quot;Python.heat_exchanger.executor&quot;: &quot;Run&quot;,
-    &quot;Python.humidifier.executor&quot;: &quot;Run&quot;,
-    &quot;Python.mass_estimation.executor&quot;: &quot;Run&quot;,
-    &quot;Python.model_run.executor&quot;: &quot;Run&quot;,
-    &quot;Python.moist_exchanger.executor&quot;: &quot;Run&quot;,
-    &quot;Python.optimization_functions.executor&quot;: &quot;Run&quot;,
-    &quot;Python.parameters.executor&quot;: &quot;Run&quot;,
-    &quot;Python.recirculation_pump.executor&quot;: &quot;Run&quot;,
-    &quot;Python.stack.executor&quot;: &quot;Run&quot;,
-    &quot;Python.turbine.executor&quot;: &quot;Run&quot;,
-    &quot;Python.valve.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/HWI-431/Cathode__Architecture&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/debjani.ghosh/Documents/GitHub/h175_model/05_overall/05_fcs_dimensioning_model&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.Hum_Valve_arch01.executor": "Run",
+    "Python.cathode_arch.executor": "Run",
+    "Python.cathode_model_run.executor": "Run",
+    "Python.compressor.executor": "Run",
+    "Python.get_plots.executor": "Run",
+    "Python.heat_exchanger.executor": "Run",
+    "Python.humidifier.executor": "Run",
+    "Python.mass_estimation.executor": "Run",
+    "Python.model_run.executor": "Run",
+    "Python.moist_exchanger.executor": "Run",
+    "Python.optimization_functions.executor": "Run",
+    "Python.parameters.executor": "Run",
+    "Python.recirculation_pump.executor": "Run",
+    "Python.stack.executor": "Run",
+    "Python.turbine.executor": "Run",
+    "Python.valve.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "feature/HWI-583/__Humidifer__and__Bypass__Valve__architecture",
+    "last_opened_file_path": "C:/Users/debjani.ghosh/Documents/HWI-583_Humidifer_bypass/h175_model/05_overall/05_fcs_dimensioning_model",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
-}</component>
+}]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

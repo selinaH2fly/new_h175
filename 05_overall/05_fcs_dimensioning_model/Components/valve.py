@@ -25,16 +25,38 @@ class Valve:
         """Update the valve position."""
         self.valve_position_percent = new_valve_position
 
-    def interpolate_mass_flow(self, position, pressure_drop):
+    def interpolate_mass_flow(self, position, pressure_input_pa, pressure_output_pa):
         """
-        Interpolates the mass flow based on valve position using the valve map data.
+        Interpolates the mass flow based on valve position and pressure difference.
 
         Args:
             position: The valve opening percentage (0-100%).
-            pressure_drop: The pressure drop data to use for interpolation
+            pressure_input_pa: The input pressure (in Pa).
+            pressure_output_pa: The output pressure (in Pa).
         """
+        # Convert pressures from Pa to kPa for matching with the attribute
+        pressure_input_kpa = pressure_input_pa / 1000
+        pressure_output_kpa = pressure_output_pa / 1000
+
+        # Calculate pressure difference (in kPa)
+        pressure_difference = pressure_input_kpa - pressure_output_kpa
+
+        # Check if the pressure difference is valid
+        if pressure_difference <= 0:
+            return 0  # No flow if the output pressure is equal to or greater than input pressure
+
+        # Round the pressure difference to the nearest integer for attribute access
+        pressure_difference_rounded = round(pressure_difference)
+
+        # Create the attribute name
+        pressure_attr = f'pressure_{pressure_difference_rounded}kpa'
+
+        # Check if the attribute exists
+        if not hasattr(self.valve_parameters, pressure_attr):
+            raise ValueError(f"Pressure data for {pressure_difference_rounded} kPa not available.")
+
         valve_opening_percentages = np.array(self.valve_parameters.pwm, dtype=float)
-        pressure_data = np.array(getattr(self.valve_parameters, pressure_drop), dtype=float)
+        pressure_data = np.array(getattr(self.valve_parameters, pressure_attr), dtype=float)
 
         if position <= min(valve_opening_percentages):
             return 0  # Return 0 mass flow if position is below the minimum (6%)
@@ -44,16 +66,17 @@ class Valve:
         # Interpolating mass flow between given valve positions
         return np.interp(position, valve_opening_percentages, pressure_data)
 
-#TODO: bypass flow calculation shall go to architecture file
-
-    def calculate_bypass_flow(self, pressure_drop):
+    #TODO: bypass flow calculation shall go to architecture file
+    def calculate_bypass_flow(self, pressure_input_pa, pressure_output_pa):
         """
         Calculates the bypass and main branch mass flow rates based on the valve position.
 
         Args:
-            pressure_drop: The pressure drop condition to use (e.g., 'pressure_1kpa').
+            pressure_input_pa: The input pressure (in Pa).
+            pressure_output_pa: The output pressure (in Pa).
         """
-        bypass_mass_flow_g_s = self.interpolate_mass_flow(self.valve_position_percent, pressure_drop)
+        bypass_mass_flow_g_s = self.interpolate_mass_flow(self.valve_position_percent, pressure_input_pa,
+                                                          pressure_output_pa)
 
         # Convert g/s to kg/s
         bypass_mass_flow_kg_s = bypass_mass_flow_g_s / 1000
@@ -61,6 +84,7 @@ class Valve:
         # Remaining air mass flow through the main branch (humidifier)
         mass_flow_main_kg_s = self.total_air_mass_flow_kg_s - bypass_mass_flow_kg_s
         return bypass_mass_flow_kg_s, mass_flow_main_kg_s
+
 
 # # Example usage:
 # if __name__ == "__main__":
@@ -74,8 +98,8 @@ class Valve:
 #     valve.set_valve_position(94)
 #     print(f"Updated valve position: {valve.get_valve_position()}%")
 #
-#     # Get the mass flow rates through bypass and humidifier using 1kPa pressure drop
-#     mass_flow_bypass, mass_flow_humidifier = valve.calculate_bypass_flow('pressure_5kpa')
+#     # Get the mass flow rates through bypass and humidifier using input and output pressures
+#     mass_flow_bypass, mass_flow_humidifier = valve.calculate_bypass_flow(130000, 125000)  # Example pressures in bara
 #
 #     print(f"Mass flow through bypass (kg/s): {mass_flow_bypass:.4f}")
 #     print(f"Mass flow through humidifier (kg/s): {mass_flow_humidifier:.4f}")
