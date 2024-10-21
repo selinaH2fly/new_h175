@@ -55,10 +55,6 @@ def analyze_data(_file_path1, saving=True):
     # Load the CSV file into a DataFrame
     df1 = pd.read_csv(_file_path1)
 
-    # for testing, weighting comes actually from csv
-    df1['weighting']=0
-
-
     # Change the working directory to the directory containing the .csv file
     file_dir = os.path.dirname(_file_path1)
     os.chdir(file_dir)
@@ -95,10 +91,13 @@ def analyze_data(_file_path1, saving=True):
     
     fl_set = 120 #TODO: Pass that as an argument to the function
     fl_max = max(df1["Flight Level (100x ft)"])
-    weighting = 1
+    weighting=0
 
-    ########Plot H2 vs Mass:
+    ########Plot test:
+        
     plot_h2_vs_mass(data, titles, colors, fl_set)
+    #plot_h2_vs_mass(data, titles, colors, fl_set, 0.5)
+    #plot_h2_vs_mass(data, titles, colors, fl_set, 1)
     
     ###########PLOT: Polcurves
     plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, saving=saving)
@@ -191,7 +190,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_20-175kW_400-500_0-120ft__1\optimized_parameters_20-175kW_400-500_0-120ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
