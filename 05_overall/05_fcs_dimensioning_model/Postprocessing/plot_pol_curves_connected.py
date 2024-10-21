@@ -29,14 +29,15 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, sa
             bol_df, eol_df = bol_data[count], eol_data[count]
 
             # Plot BOL and EOL data
-            ax.scatter(bol_df['current_A (Value)'], bol_df['Cell Voltage (V)'], color=color, label=f'{title}, BoL', marker=markers_oL[0])
-            ax.scatter(eol_df['current_A (Value)'], eol_df['Cell Voltage (V)'], color=color, label=f'{title}, EoL', marker=markers_oL[1])
+            ax.scatter(bol_df['current_A (Value)'], bol_df['Cell Voltage (V)'], color=color, label=f'{title}, BoL', marker=markers_oL[0], alpha=0.3)
+            ax.scatter(eol_df['current_A (Value)'], eol_df['Cell Voltage (V)'], color=color, label=f'{title}, EoL', marker=markers_oL[1], alpha=0.3)
 
             # Connect corresponding BOL and EOL points and annotate
             for power in highlight_powers:
                 bol_highlight = bol_df[bol_df["Power Constraint (kW)"].between(power - 1e-3, power + 1e-3)]
                 eol_highlight = eol_df[eol_df["Power Constraint (kW)"].between(power - 1e-3, power + 1e-3)]
-                
+                ax.scatter(bol_highlight['current_A (Value)'], bol_highlight['Cell Voltage (V)'], color=color, marker=markers_oL[0], alpha=1)
+                ax.scatter(eol_highlight['current_A (Value)'], eol_highlight['Cell Voltage (V)'], color=color, marker=markers_oL[1], alpha=1)
                 # Ensure both BOL is available for annotation:
                 if not bol_highlight.empty:
                     bol_row = bol_highlight.iloc[0]
@@ -60,7 +61,7 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, sa
                     # Draw connection line
                     ax.plot([bol_row['current_A (Value)'], eol_row['current_A (Value)']],
                             [bol_row['Cell Voltage (V)'], eol_row['Cell Voltage (V)']],
-                            color=color, alpha=0.5, linestyle='--')
+                            color=color, alpha=1, linestyle='--')
                     
     # Highlight power levels
     highlight_powers = [20, 50, 80, 125, 150, 175]
