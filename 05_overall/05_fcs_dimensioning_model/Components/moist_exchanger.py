@@ -1,6 +1,6 @@
 import CoolProp.HumidAirProp as HAP
 import numpy as np
-from parameters import Physical_Parameters  # TODO change to cathode_model_run?
+from cathode_model_run import PhysicalParameters  # TODO change to cathode_model_run?
 
 
 class MoistExchanger:
@@ -27,9 +27,9 @@ class MoistExchanger:
         self.wet_air_pressure_out_Pa = wet_air_pressure_out_Pa
 
         # Use the constants from Physical_Parameters
-        params_physics = Physical_Parameters()
-        self.R_Air = params_physics.R_Air
-        self.R_Vap = params_physics.R_Vap
+        params_physics = PhysicalParameters()
+        self.R_Air = params_physics.R_air
+        self.R_Vap = params_physics.R_water_vapor
         self.P_std = params_physics.P_std
         self.T_std = params_physics.T_std
         self.M_air = params_physics.M_air
