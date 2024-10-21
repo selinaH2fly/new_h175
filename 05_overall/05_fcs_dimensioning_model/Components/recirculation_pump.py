@@ -46,7 +46,7 @@ class Recirculation_Pump:
 
         # Ensure the component is available in masses_FCM_depended; raise error if missing
         if 'Recirculation_Pump' not in mass_estimator.masses_FCM_power_depended:
-            raise ValueError("Component 'Recirculation Pump' not found in mass estimator's dependent masses.")
+            raise ValueError("Component 'Recirculation_Pump' not found in mass estimator's dependent masses.")
 
         # Retrieve mass data from the mass_estimator instance
         self.mass_by_power_kg_kW = mass_estimator.masses_FCM_power_depended['Recirculation_Pump']

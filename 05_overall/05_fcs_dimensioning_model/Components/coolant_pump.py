@@ -44,13 +44,13 @@ class Coolant_Pump:
             - "sd": Pump mass in kg based on the standard deviation of mass_by_power_kg_kW.
 
         """
-        # pump_el_power_W = self.calculate_power()
-        # pump_mass_mean_kg = self.mass_by_power_kg_kW["mean"] * pump_el_power_W / 1000
-        # pump_mass_sd_kg = self.mass_by_power_kg_kW["sd"] * pump_el_power_W / 1000
-        # return {
-        # "mean": pump_mass_mean_kg,
-        # "sd": pump_mass_sd_kg
-        # }
+        pump_el_power_W = self.calculate_power()
+        pump_mass_mean_kg = self.mass_by_power_kg_kW["mean"] * pump_el_power_W / 1000
+        pump_mass_sd_kg = self.mass_by_power_kg_kW["sd"] * pump_el_power_W / 1000
+        return {
+        "mean": pump_mass_mean_kg,
+        "sd": pump_mass_sd_kg
+        }
         pass #TODO do mass calc if needed
 
 # %% Example USsage:

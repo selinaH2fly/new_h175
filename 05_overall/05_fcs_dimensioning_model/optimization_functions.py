@@ -295,16 +295,17 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # %% Compute System Mass
         fixed_mass, _ = sum_fixed_mass(_params_mass.masses_FCM_constants)
-        power_dependent_mass = compressor.calculate_mass()["mean"]
+        power_dependent_mass = [compressor.calculate_mass()["mean"], #Compressor + Turbine
+                                reci_pump.calculate_mass()["mean"], 
+                                coolant_pump_ht.calculate_mass()["mean"]] 
         cellcount_dependent_mass = stack.calculate_mass()
 
-        system_mass_kg = fixed_mass + power_dependent_mass + cellcount_dependent_mass
+        system_mass_kg = fixed_mass + sum(power_dependent_mass) + cellcount_dependent_mass
 
         # %% Return
         
         return optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
             coolant_pump_power_W, hydrogen_supply_rate_g_s, system_mass_kg
-
 
 # %% Optimization
 
