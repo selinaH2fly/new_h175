@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 # %% PLOT: H2 supply over flight level all in one
-def plot_h2_supply_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
+def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, saving=True, mode="eol"):
     """
     Plot of system power vs (system power/hydrogen sonsumption) with polynomial fit.
     
@@ -40,7 +40,7 @@ def plot_h2_supply_vs_FL(df1, markers, fl_max, saving=True, mode="eol"):
         filter_mode = False
         mode_name = "BoL"
     #Filter the DF for currents in range and the filter omde
-    df1 = df1[(df1["current_A (Value)"] <= 700) & (df1["eol (t/f)"] == filter_mode)]
+    df1 = df1[(df1["current_A (Value)"] <= 700) & (df1["eol (t/f)"] == filter_mode) & (df1["weighting ([0,1])"] == weighting)]
     
     # Loop through each cell count and plot the data
     for cell, icon in zip(cells, markers):
