@@ -166,25 +166,26 @@ class HumidifierParameters:
             4000: 45.5,
             5000: 42.0
         }
-class ValveParameters:
 
+class ValveParameters:
     def __init__(self):
         """
         This class contains the empirical data for the bypass valve opening percentages and
         the corresponding mass flow rates in g/s, represented in dictionary format.
         """
-        self.bypass_valve_flow_map = {
-            6.0: 0.0,
-            20.0: 11.8,
-            30.0: 22.30,
-            40.0: 33.18,
-            50.0: 46.0,
-            60.0: 61.50,
-            70.0: 79.60,
-            80.0: 98.18,
-            90.0: 110.0,
-            94.0: 112.0
-        }
+        # Data from the T50 Test Result for Fully Closed to Full Open
+        self.pwm = [6, 20, 30, 40, 50, 60, 70, 80, 90, 94]  # PWM percentages
+        self.mechanical_angle = [0.8, 14, 23.4, 32.8, 42.2, 51.5, 60.9, 70.3, 79.7, 83.5]  # Mechanical angles
+        self.can_control = [10, 166, 278, 389, 501, 611, 722, 834, 945, 990]  # CAN control values
+
+        # Pressure drop data (kPa) for different conditions
+        self.pressure_1kpa = [0.00, 8.70, 16.21, 23.40, 32.90, 43.60, 56.80, 70.70, 78.60, 78.70]
+        self.pressure_2kpa = [0.00, 11.80, 22.30, 33.18, 46.00, 61.50, 79.60, 98.18, 110.00, 112.00]
+        self.pressure_5kpa = [0.00, 19.06, 36.70, 51.50, 73.20, 124.80, np.nan, np.nan, np.nan, np.nan]
+        self.pressure_10kpa = [0.00, 26.28, 52.50, 74.00, 169.70, 186.70, np.nan, np.nan, np.nan, np.nan]
+        self.pressure_20kpa = [0.00, 35.28, 69.60, np.nan, 252.20, np.nan, np.nan, np.nan, np.nan, np.nan]
+        self.pressure_30kpa = [0.00, 40.19, 227.50, 261.00, 282.60, 295.20, 303.30, 305.00, 311.00, 311.80]
+
 ##TODO It should be omitted
 class Mass_Parameters:
     def __init__(self):
