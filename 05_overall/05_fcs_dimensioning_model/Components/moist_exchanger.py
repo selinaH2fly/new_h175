@@ -212,6 +212,33 @@ class MoistExchanger:
 
         return m_dot_water_trans, water_transfer_efficiency
 
+    def calculate_rh_dry_out(self):
+        """
+        Calculate the relative humidity (RH) at the outlet (dry air out) using outlet temperature,
+        outlet pressure, and mass flow rates.
+
+        Returns:
+            float: Relative humidity at the dry air outlet.
+        """
+        # Get the flow data
+        flow_data = self.calculate_mass_flows()
+
+        # Retrieve relevant mass flow rates
+        m_dot_air_dry_out = flow_data["m_dot_air_dry_out"]
+        m_dot_vap_dry_out = flow_data["m_dot_vap_dry_out"]
+
+        # Calculate the outlet saturation pressure using the dry air outlet temperature
+        p_sat_out = self.calculate_saturation_pressure(self.dry_air_temperature_out_K)
+
+        # Calculate the partial pressure of water vapor at the outlet
+        # The partial pressure can be calculated as (mass flow of vapor) / (mass flow of air + mass flow of vapor) * outlet pressure
+        p_vap_dry_out = (m_dot_vap_dry_out / (m_dot_air_dry_out + m_dot_vap_dry_out)) * self.dry_air_pressure_out_Pa
+
+        # Calculate relative humidity (RH)
+        rh_dry_out = p_vap_dry_out / p_sat_out if p_sat_out != 0 else 0
+
+        return rh_dry_out
+
 class Humidifier(MoistExchanger):
     def __init__(self, **kwargs):
         """
@@ -223,32 +250,19 @@ class Humidifier(MoistExchanger):
 # %% Example usage of the code:
 # Create an instance of Humidifier
 humidifier = Humidifier(
-    dry_air_mass_flow_kg_s=0.1665,
-    wet_air_mass_flow_kg_s=0.1553,
-    dry_air_temperature_in_K=353.3,
-    dry_air_pressure_in_Pa=246000,
-    dry_air_rh_in=0.3,
-    dry_air_temperature_out_K=346.9,
-    dry_air_pressure_out_Pa=230000,
-    dry_air_rh_out=0.75,
+    dry_air_mass_flow_kg_s=0.045,
+    wet_air_mass_flow_kg_s=0.045,
+    dry_air_temperature_in_K=339.6,
+    dry_air_pressure_in_Pa=145000,
+    dry_air_rh_in=0.08,
+    dry_air_temperature_out_K=337.3,
+    dry_air_pressure_out_Pa=141000,
     wet_air_temperature_in_K=353.2,
     wet_air_pressure_in_Pa=210000,
     wet_air_rh_in=0.99,
     wet_air_pressure_out_Pa=196000
 )
-# Calculate partial pressures directly using the attributes of the humidifier object
-p_vap_dry_in = humidifier.calculate_partial_pressure(humidifier.dry_air_temperature_in_K, humidifier.dry_air_rh_in)
-p_vap_dry_out = humidifier.calculate_partial_pressure(humidifier.dry_air_temperature_out_K, humidifier.dry_air_rh_out)
-p_vap_wet_in = humidifier.calculate_partial_pressure(humidifier.wet_air_temperature_in_K, humidifier.wet_air_rh_in)
 
-# Calculate volume flow rates directly using the humidifier's attributes
-v_dot_dry = humidifier.dry_air_mass_flow_kg_s / humidifier.calculate_density(
-    humidifier.dry_air_temperature_in_K, humidifier.dry_air_pressure_in_Pa, humidifier.dry_air_rh_in)
-v_dot_wet = humidifier.wet_air_mass_flow_kg_s / humidifier.calculate_density(
-    humidifier.wet_air_temperature_in_K, humidifier.wet_air_pressure_in_Pa, humidifier.wet_air_rh_in)
-
-# Now call the calculate_water_transfer method directly using the object's attributes
-m_dot_water_trans, eta_water_trans = humidifier.calculate_water_transfer()
-mass_flows = humidifier.calculate_mass_flows()
-print(f"Mass flow rate of water transfer: {m_dot_water_trans*1000:.4f} g/s")
-print(f"Efficiency of water transfer: {eta_water_trans*100:.2f}")
+# Calculate RH at dry air outlet
+rh_dry_out = humidifier.calculate_rh_dry_out()
+print(f"Calculated RH dry out: {rh_dry_out * 100:.2f}%")
