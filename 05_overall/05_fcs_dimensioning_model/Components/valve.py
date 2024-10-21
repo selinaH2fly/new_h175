@@ -62,20 +62,20 @@ class Valve:
         mass_flow_main_kg_s = self.total_air_mass_flow_kg_s - bypass_mass_flow_kg_s
         return bypass_mass_flow_kg_s, mass_flow_main_kg_s
 
-# Example usage:
-if __name__ == "__main__":
-    # Example inputs
-    valve = Valve(0.165, valve_position_percent=40)
-
-    print(f"Total air mass flow (kg/s): {valve.total_air_mass_flow_kg_s:.4f}")
-    print(f"Initial valve position: {valve.get_valve_position()}%")
-
-    # Update valve position
-    valve.set_valve_position(94)
-    print(f"Updated valve position: {valve.get_valve_position()}%")
-
-    # Get the mass flow rates through bypass and humidifier using 1kPa pressure drop
-    mass_flow_bypass, mass_flow_humidifier = valve.calculate_bypass_flow('pressure_5kpa')
-
-    print(f"Mass flow through bypass (kg/s): {mass_flow_bypass:.4f}")
-    print(f"Mass flow through humidifier (kg/s): {mass_flow_humidifier:.4f}")
+# # Example usage:
+# if __name__ == "__main__":
+#     # Example inputs
+#     valve = Valve(0.165, valve_position_percent=40)
+#
+#     print(f"Total air mass flow (kg/s): {valve.total_air_mass_flow_kg_s:.4f}")
+#     print(f"Initial valve position: {valve.get_valve_position()}%")
+#
+#     # Update valve position
+#     valve.set_valve_position(94)
+#     print(f"Updated valve position: {valve.get_valve_position()}%")
+#
+#     # Get the mass flow rates through bypass and humidifier using 1kPa pressure drop
+#     mass_flow_bypass, mass_flow_humidifier = valve.calculate_bypass_flow('pressure_5kpa')
+#
+#     print(f"Mass flow through bypass (kg/s): {mass_flow_bypass:.4f}")
+#     print(f"Mass flow through humidifier (kg/s): {mass_flow_humidifier:.4f}")
