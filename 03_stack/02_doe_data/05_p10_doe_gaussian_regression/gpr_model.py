@@ -3,7 +3,7 @@ import gpytorch
 # Define a GP model
 class ExactGPModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood):
-        super(ExactGPModel, self).__init__(train_x, train_y, likelihood=gpytorch.likelihoods.GaussianLikelihood())
+        super(ExactGPModel, self).__init__(train_x, train_y, likelihood=likelihood)
         self.mean_module = gpytorch.means.ConstantMean()
         self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
 
