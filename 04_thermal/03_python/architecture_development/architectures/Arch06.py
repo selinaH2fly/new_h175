@@ -66,7 +66,7 @@ def initialize(input_dict, result_dict, bc_dict):
     circ.add_bc("Qdot_bop2 = 13000")
 
     circ.add_bc("%s = %f" %(bop1.Vdot_in, bc_dict["bop_vdot"]))
-    circ.add_bc("%s = %f" %(bop2.Vdot_in, bc_dict["bop_vdot"]))    
+    circ.add_bc("%s = 0.2" %(bop2.Vdot_in))    
     # boundary conditions, user input:
     circ.add_bc("%s = %f" %(pump1.p_in, bc_dict["pump_p_in"]))
     circ.add_bc("%s = %f" %(stack1.T_in, bc_dict["stack_t_in"]))
@@ -106,9 +106,9 @@ def initialize(input_dict, result_dict, bc_dict):
     if input_dict is not None: 
         for name in input_dict:
             if name == "stack_t_in":
-                input_dict[name][0] = stack1.T_in              #
+                input_dict[name][0] = stack1.T_in             
             elif name == "stack_t_out":
-                input_dict[name][0] = stack1.T_out              #
+                input_dict[name][0] = stack1.T_out              
             elif name == "sys_t_in":
                 input_dict[name][0] = radiator1.T_out            #
             elif name == "bop_q":
@@ -116,7 +116,7 @@ def initialize(input_dict, result_dict, bc_dict):
             elif name == "stack_q":
                 input_dict[name][0] = stack1.Qdot
             elif name == "bop_vdot":
-                input_dict[name][0] = bop1.Vdot_in          #
+                input_dict[name][0] = bop1.Vdot_in         
             elif name == "bop_dp":
                 input_dict[name][0] = bop1.delta_p
 

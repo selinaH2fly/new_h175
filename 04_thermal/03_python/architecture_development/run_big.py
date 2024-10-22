@@ -13,7 +13,7 @@ compare_res = True
 plot_temp_pr_vd = False
 
 # Which Architectures do you want to evaluate? ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"]
-arch_list = ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"]    
+arch_list = ["Arch01", "Arch04", "Arch06"]    
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
@@ -35,7 +35,7 @@ bc_dict = {"pump_p_in" : 1,                     # pressure before pump, lowest p
            "sys_t_in" : 273.15 + 60.0,          # System entry temperature, temperature after external radiatior
            "bop_q" : 13000,                     # bop heat 
            "stack_q" : 200000,                  # stack heat
-           "bop_vdot" : 0.5,                     # flow over bop components (whole block) 30L/min
+           "bop_vdot" : 0.4,                     # flow over bop components (whole block) 30L/min
            "bop_delta_p" : 41                    # choose the bop number: 10, 21,22,23,24,25,26,27,31,32,33,41 or 42
 }
 
@@ -78,6 +78,9 @@ def func_bop_delta_p(bop_arch):
         bop_delta_list = [0.78087, 0.13715] # "y = 7,8087E-01x2 + 1,3715E-01x"
     elif bop_arch == 42: 
         bop_delta_list = [0.79734, 0.13849] # "y = 7,9734E-01x2 + 1,3849E-01x"
+    elif bop_arch == 0:
+        bop_delta_list = [3.8310, 0.27046]  # y = 3,8310E+00x2 + 2,7046E-01x    zwei stänge ohne intercooler
+
     else:
         print("bop_arch %f is not defined. Use default arch41"%bop_arch)
         bop_delta_list = [0.78087, 0.13715] # "y = 7,8087E-01x2 + 1,3715E-01x"
@@ -94,6 +97,18 @@ if input_dict is not None:
             excel_dict[input_dict[name][2]] = input_dict[name][1]
 
 for arch in arch_list:      # each architecture is evaluated
+
+    if arch == "Arch01":        # extra code to have customized bop and big architecture relations
+        bc_dict["bop_delta_p"] = 22
+        bc_dict["bop_vdot"] = 0.368     # entspricht dem Stackdruckverlust bei dT=12K
+    elif arch == "Arch04":
+        bc_dict["bop_delta_p"] = 41
+        bc_dict["bop_vdot"] = 0.48      # intercooler wird mit 0.2l/s durschströmt
+    elif arch == "Arch06":
+        bc_dict["bop_delta_p"] = 0
+        bc_dict["bop_vdot"] = 0.275     # entspricht dem Stackdruckverlust bei dT=12K
+    bc_dict["bop_delta_p"] = func_bop_delta_p(bc_dict["bop_delta_p"])
+
     key_init = "%s.initialize(%s, %s, %s)" %(arch, input_dict, result_dict, bc_dict)
     circ, input_dict, result_dict_new = eval(key_init)
     print("Start to evaluate architecture %s"%arch)
@@ -102,10 +117,10 @@ for arch in arch_list:      # each architecture is evaluated
     if "pump_power" in  result_dict.keys(): #calculates the entire pump power
         if "pump_vdot" in result_dict_new.keys() and "pump_delta_p" in result_dict_new.keys(): 
             for y in range(len(result_dict_new["pump_vdot"][1])):
-                result_dict_new["pump_power"][1].append(result_dict_new["pump_vdot"][1][y] * result_dict_new["pump_delta_p"][1][y] * 100)
+                result_dict_new["pump_power"][1].append(result_dict_new["pump_vdot"][1][y] * result_dict_new["pump_delta_p"][1][y] * 100) / 0.6         # 60% Gesamtwirkungsgrad
             if "pump2_vdot" in result_dict_new.keys() and "pump2_delta_p" in result_dict_new.keys():
                 for y in range(len(result_dict_new["pump2_vdot"][1])):
-                    result_dict_new["pump_power"][1][y] += (result_dict_new["pump2_vdot"][1][y] * result_dict_new["pump2_delta_p"][1][y] * 100)
+                    result_dict_new["pump_power"][1][y] += (result_dict_new["pump2_vdot"][1][y] * result_dict_new["pump2_delta_p"][1][y] * 100) / 0.6   # 60% Gesamtwirkungsgrad
 
     for name in result_dict_new:    # rewrite results in one dictionary
         all_result_dict["%s_%s"%(arch,name)] = [result_dict_new[name][0], result_dict_new[name][1], result_dict_new[name][2]]
