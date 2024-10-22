@@ -300,10 +300,10 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         _evaporator_cp = evaporator.calculate_specific_heat(evaporator.primary_fluid, evaporator.primary_T_in_K, evaporator.primary_T_out_K, evaporator.primary_p_in_Pa, 0.1)
         evaporator_heat_flux_W = evaporator.calculate_heat_flux("primary", _evaporator_cp, _params_physics.evaporation_enthalpy_J_kg)
         radiator_heat_flux_W = stack_heat_flux_W + intercooler_heat_flux_W + evaporator_heat_flux_W
-        
         # %% Radiator Mass calculation
-        radiator.thermal_power_W = radiator_heat_flux_W
-        radiator_mass = radiator.calculate_mass()
+        radiator.thermal_power_W = radiator_heat_flux_W.numpy()
+        stack_outlet_temp_K = stack.temp_coolant_out_K
+        radiator_mass = radiator.calculate_mass(convert(stack_outlet_temp_K,"degC"))
         
         # %% Compute System Mass
         fixed_mass, _ = sum_fixed_mass(_params_mass.masses_FCM_constants)
@@ -326,7 +326,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     def objective_function(x):
 
         # Evaluate the models with the normalized input
-        _, _, _, _, _, _, hydrogen_supply_rate_g_s, system_mass_kg = evaluate_models(x)
+        _, _, _, _, _, _, _, _, _, _, hydrogen_supply_rate_g_s, system_mass_kg = evaluate_models(x)
 
         # Scale the system mass such that 2 g/s hydrogen supply rate is equivalent to 100 kg system mass
         system_mass_equivalent = system_mass_kg / 100 * 2
@@ -338,8 +338,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
    
    # Constraint to ensure that the specified system net power is met
     def nonlinear_constraint_Power(x):
-        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, _, _ = evaluate_models(x)
-
+        optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, _, _, _, _, _, _= evaluate_models(x)
+    
         power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
             - compressor_power_W + turbine_power_W - reci_pump_power_W  - coolant_pump_power_W \
                 - power_constraint_kW * 1000

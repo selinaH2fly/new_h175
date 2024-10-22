@@ -48,13 +48,13 @@ class Radiator:
 
         return pressure_drop_Pa
     
-    def get_mass_by_power(self, T_stack_out):
+    def get_mass_by_power(self, T_stack_out_degC):
             # Use the interpolation function to return the corresponding mass_by_power value
-            mass_by_power_kg_kW = self.interpolation_function(T_stack_out)
+            mass_by_power_kg_kW = self.interpolation_function(T_stack_out_degC)
             self.mass_by_power_kg_kW = mass_by_power_kg_kW
             return mass_by_power_kg_kW
         
-    def calculate_mass(self)->dict:
+    def calculate_mass(self,T_stack_out_degC)->dict:
         """
         Calculate predicted mass of the radiator by utilizing the mass_by_power_kg_kW dict of the class and the thermal_power_W attribute.
         
@@ -64,15 +64,15 @@ class Radiator:
             
 
         """
-        self.get_mass_by_power()
+        self.get_mass_by_power(T_stack_out_degC)
         radiator_mass_kg = self.mass_by_power_kg_kW * self.thermal_power_W / 1000
         return radiator_mass_kg
     
 
 # %% Example Usage:
 
-radiator = Radiator(nominal_pressure_drop_Pa=0.3*1e5, nominal_coolant_flow_m3_s=300/(1000*60))
+# radiator = Radiator(nominal_pressure_drop_Pa=0.3*1e5, nominal_coolant_flow_m3_s=300/(1000*60))
 
-radiator.coolant_flow_m3_s = 100/(1000*60)  # 100 l/min in m3/s
-pressure_drop_Pa = radiator.calculate_pressure_drop()
-radiator_mass_kg = radiator.calculate_mass()
+# radiator.coolant_flow_m3_s = 100/(1000*60)  # 100 l/min in m3/s
+# pressure_drop_Pa = radiator.calculate_pressure_drop()
+# radiator_mass_kg = radiator.calculate_mass()
