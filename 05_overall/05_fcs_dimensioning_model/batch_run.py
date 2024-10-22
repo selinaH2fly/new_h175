@@ -23,7 +23,8 @@ def build_command(parameter):
         "--turbine", str(parameter[3]),
         "--map", str(parameter[4]),
         "--eol", str(parameter[5]),
-        "--constraint", str(parameter[6])
+        "--constraint", str(parameter[6]),
+        "--weighting", str(parameter[7])
     ]
     return command
 
@@ -46,13 +47,13 @@ if __name__ == '__main__':
     # parser.add_argument("-t", "--turbine", type=str, choices=["True"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
     parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
     # parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.8 to account for end of life (default: False).")
-    parser.add_argument("--testing", type=str, choices=["True", "False"], default="False", help="Specifies whether a short test run is initiated.")
+    parser.add_argument("--testing", type=str, choices=["True", "False"], default="True", help="Specifies whether a short test run is initiated.")
     parser.add_argument("--constraint", type=str, choices=["True","False"], default="True", help="Activates the DoE envelope constraint condition for the optimizer. (default: True)")
     
     args = parser.parse_args()
     
     if args.testing == "True":
-        range_power = np.array([20, 100, 175])
+        range_power = np.array([125, 150, 175])
         range_cellcount = np.array([455])
         range_fl = np.array([0])
         # Convert turbine and eol to boolean lists
@@ -63,6 +64,7 @@ if __name__ == '__main__':
         #Handle downstream data and plots
         saving = False
         dir_prefix = "testing__"
+        weighting = [0,1]
 
     elif args.testing == "False":
       
@@ -73,14 +75,14 @@ if __name__ == '__main__':
         range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
         #range_power = np.array([20, 50, 80, 125, 150, 175])
         range_cellcount = [400, 455, 500]#np.arange(args.cellcount[0],args.cellcount[1]+_step_c,_step_c)
-        range_fl = np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
+        range_fl = [120]#np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
         
         # Convert turbine and eol to boolean lists
         range_turbine =[True]
-        range_eol = [False, True]
+        range_eol = [False]
         range_map = [args.map]
         range_DoE_constraint = [args.constraint]
-
+        weighting = [0,1]
         #Handle downstream data and plots
         saving = True
         dir_prefix =""
@@ -89,7 +91,7 @@ if __name__ == '__main__':
         print("User Error: wrong input for --testing, sould be True/False")
 
     # Generate all combinations of parameters
-    parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_map, range_eol, range_DoE_constraint))
+    parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_map, range_eol, range_DoE_constraint, weighting))
     
     # Start parallel execution using ProcessPoolExecutor
     max_workers = min(26, len(parameters))  # Define the number of processes based on available resources

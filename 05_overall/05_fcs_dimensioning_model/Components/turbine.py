@@ -18,11 +18,11 @@ class Turbine:
         self.nominal_air_flow_kg_s = nominal_air_flow_kg_s
 
         # Ensure the component is available in masses_FCM_depended; raise error if missing
-        if 'Turbine' not in mass_estimator.masses_FCM_depended:
+        if 'Turbine' not in mass_estimator.masses_FCM_power_depended:
             raise ValueError("Component 'Turbine' not found in mass estimator's dependent masses.")
 
         # Retrieve mass data from the mass_estimator instance
-        self.mass_by_power_kg_kW = mass_estimator.masses_FCM_depended['Turbine']
+        self.mass_by_power_kg_kW = mass_estimator.masses_FCM_power_depended['Turbine']
 
     def calculate_power(self) -> float:
         """

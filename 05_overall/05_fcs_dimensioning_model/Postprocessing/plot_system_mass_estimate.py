@@ -1,10 +1,19 @@
-# %% Imports:
+# Import libraries
+import sys
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Add the directory containing Components to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# Import custom classes and functions
+from Components.stack import Stack
+from parameters import Mass_Parameters
+
 # %%PLOT a stacked bar chart of each subsystem component mass grouped by power level.         
-def plot_system_mass_estimate(data, titles, colors, components_dict, markers, saving=True, mode="bol"):  
+def plot_system_mass_estimate(data, titles, colors, components_dict, markers, weighting, saving=True, mode="bol"):  
     """
     Plot of system mass vs system power as a stack bar chart for each subsystem.
     
@@ -27,22 +36,10 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, sa
         filter_mode = False
         mode_name = "BoL"
     
-    # Define a nested dictionary including all components whichare constant with net power and cell count.
-    # Note the zero values for stack, turbine, compressor and stack coolant. These will later be written over.
-    """       
-    masses_FCM_constants = {'Stack':{'Stack':0, 'CVM':1.00, 'SMI':3.00, 'Hose clamps': 0.18, 'Screws':0.09, 'HV+LV Cable': 1.20} \
-                                   ,'Cathode':{'Filter': 0.5, 'HFM': 0.5, 'Compressor':0, 'Compressor inverter':6.0, 'Intercooler':3.0, 'Humidifier': 2.0, 'Valves': 2.6, 'Drain valve': 0.30, 'Water separator': 0.3, 'Cathode pressure control valve': 0.0, 'Sensors': 1.2, 'Silicon hoses':1.76, 'Hose clamps': 0.42, 'Connectors': 0.8, 'Screws': 0.18, 'HV+LV Cable': 0.67, 'Turbine':0.0} \
-                                   ,'Anode': {'Shut-Off valve':0.2, 'Pressure control valve':0.2, 'Water separator':0, 'Particle filter':0.2, 'Recirculation pump':4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.80, 'Anode piping':1.01, 'Swagelok connector':0.56, 'Screws':0.09, 'HV+LV Cable': 0.34}\
-                                   ,'Thermal':{'Coolant pump':4.0, 'TCV':1.0, 'Particle filter':0.22, 'Ionic exchangr':1.0, 'Sensors':0.80+0.80, 'Silicone hoses':1.51+2.02, 'Hose clamps':0.36+0.48, 'Connectors':0.80+0.80, 'Screws':0.09+0.09, 'HV+LV Cable':0.34+0.34, 'Expansion tank':1.0,'HDPU':5.0,'Volume flow control valve':0.5, 'Stack coolant':0, 'Other coolant':5.0}\
-                                   ,'Other':{'FCCU':1.5,'Electrical connectors':0.4,'Unnamed':4.0,'Frame':5.0,'Connectors':2.0,'Screws':0.27, 'HV+LV Cable':0.67}}    
-    """
-    # Updated with reduced mass estimates for E_VTOL applications
-    masses_FCM_constants = {'Stack':{'Stack':0, 'CVM':0.5, 'SMI':1.5, 'Hose clamps': 0.18, 'Screws':0.09, 'HV+LV Cable': 1.20} \
-                                   ,'Cathode':{'Filter': 0.2, 'HFM': 0.1, 'Compressor':0, 'Compressor inverter':6.0, 'Intercooler':1.0, 'Humidifier': 1.0, 'Valves': 1.5, 'Drain valve': 0.05, 'Water separator': 0.2, 'Cathode pressure control valve': 0.0, 'Sensors': 0.3, 'Silicon hoses':0.5, 'Hose clamps': 0.12, 'Connectors': 0.8, 'Screws': 0.18, 'HV+LV Cable': 0.67, 'Turbine':0.0} \
-                                   ,'Anode': {'Shut-Off valve':0.2, 'Pressure control valve':0.2, 'Water separator':0, 'Particle filter':0.2, 'Recirculation pump':4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.20, 'Anode piping':0.5, 'Swagelok connector':0.28, 'Screws':0.09, 'HV+LV Cable': 0.34}\
-                                   ,'Thermal':{'Coolant pump':3.0, 'TCV':0.5, 'Particle filter':0.1, 'Ionic exchanger':1.0, 'Sensors':0.2+0.20, 'Silicone hoses':0.5+0.5, 'Hose clamps':0.12+0.12, 'Connectors':0.80+0.80, 'Screws':0.09+0.09, 'HV+LV Cable':0.34, 'Expansion tank':0.20,'Volume flow control valve':0.5, 'Stack coolant':0, 'Other coolant':5.0}\
-                                   ,'Other':{'FCCU':0.5,'Electrical connectors':0.4,'HDPU':5.0,'Frame':2.0,'Connectors':1.0,'Screws':0.27, 'HV+LV Cable':0.0}}    
-        
+    # Get mass constants from parameters.py
+    masses_FCM_constants = Mass_Parameters().masses_FCM_constants
+
+    
     # Define a function to sum the constants of each subsystem, as well as a total mass
     def sum_mass(masses: dict):
         subsystem_totals = {}
@@ -61,13 +58,11 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, sa
     # Define cell numbers we would like to iterate through
     cell_no = np.array([400, 455, 500])
     
-    # Calculate m_stack using the formula
-    m_stack_values = 0.0766 * cell_no + 9.2813  
-    
-    # A mass of 7 kg of coolant was measured for a 455 cell stack. We scale this value linearly to account for changing coolant masses in different stack sizes. 
-    m_coolant_values = cell_no * 7/455
-    
-    #Populating the final data array with lists of zeros. Feels like there should be a quicker way.
+    # Get stack and coolant mass from components -> stack
+    m_stack_values = np.array([Stack(cellcount=cell).calculate_stack_mass() for cell in cell_no])
+    m_coolant_values = np.array([Stack(cellcount=cell).calculate_coolant_mass() for cell in cell_no])
+
+    # Populating the final data array with lists of zeros. Feels like there should be a quicker way.
     subsystem_mass_total = {}
     for power in points:
         subsystem_mass_total[power]={'Stack':np.zeros(len(cell_no)),'Cathode':np.zeros(len(cell_no)),'Anode':np.zeros(len(cell_no)),'Thermal':np.zeros(len(cell_no)), 'Other':np.zeros(len(cell_no))}
@@ -94,7 +89,8 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, sa
     for df, title, color, m_stack_value, marker in zip(data, titles, colors, m_stack_values, markers):
         # Filter the df for eol, bol and flight level
         df = df[(df["eol (t/f)"] == filter_mode) & 
-                (df["Flight Level (100x ft)"] == 120)]
+                (df["Flight Level (100x ft)"] == 120) &
+                (df["weighting ([0,1])"] == weighting)]
         
         # Extract all power points from the filtered DataFrame
         all_points = sorted(df["System Power (kW)"].unique())

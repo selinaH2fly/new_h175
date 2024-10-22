@@ -28,11 +28,11 @@ class Compressor:
             if compressor_map is None else (self.compressor_map['reference_pressure_Pa'], self.compressor_map['reference_temperature_K'])
 
         # Ensure the component is available in masses_FCM_depended; raise error if missing
-        if 'Compressor' not in mass_estimator.masses_FCM_depended:
+        if 'Compressor' not in mass_estimator.masses_FCM_power_depended:
             raise ValueError("Component 'Compressor' not found in mass estimator's dependent masses.")
 
         # Retrieve mass data from the mass_estimator instance
-        self.mass_by_power_kg_kW = mass_estimator.masses_FCM_depended['Compressor']
+        self.mass_by_power_kg_kW = mass_estimator.masses_FCM_power_depended['Compressor']
     
     def calculate_T_out(self) -> float:
         """
@@ -221,6 +221,7 @@ class Compressor:
         compressor_el_power_W = self.calculate_power()
         compressor_mass_mean_kg = self.mass_by_power_kg_kW["mean"] * compressor_el_power_W / 1000
         compressor_mass_sd_kg = self.mass_by_power_kg_kW["sd"] * compressor_el_power_W / 1000
+        
         return {
         "mean": compressor_mass_mean_kg,
         "sd": compressor_mass_sd_kg

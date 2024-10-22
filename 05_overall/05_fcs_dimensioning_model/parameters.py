@@ -185,7 +185,7 @@ class Evaporator_Parameters:
         self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
         self.ALLOWED_FLUIDS = ['H2','INCOMP::MEG-50%']
     
-class Eol_Parameter:
+class Eol_Parameters:
 
     def __init__(self):
 
@@ -195,34 +195,37 @@ class Eol_Parameter:
 class Mass_Parameters:
     def __init__(self):
         # Mass estimates for fixed mass components
+        # Components with 0 will be scaled masses, resembled by the first line of each component.
         self.masses_FCM_constants = {
-            'Stack': {'Stack': 0, 'CVM': 0.5, 'SMI': 1.5, 'Hose clamps': 0.18, 'Screws': 0.09, 'HV+LV Cable': 1.20},
-            'Cathode': {'Filter': 0.2, 'HFM': 0.1, 'Compressor': 0, 'Compressor inverter': 6.0, 'Intercooler': 1.0,
-                        'Humidifier': 1.0,
-                        'Valves': 1.5, 'Drain valve': 0.05, 'Water separator': 0.2,
-                        'Cathode pressure control valve': 0.0,
+            'Stack': {'Stack': 0, 
+                      'CVM': 0.5, 'SMI': 1.5, 'Hose clamps': 0.18, 'Screws': 0.09, 'HV+LV Cable': 1.20},
+            
+            'Cathode': {'Compressor': 0, 'Turbine': 0.0,
+                        'Filter': 0.2, 'HFM': 0.1,  'Compressor inverter': 6.0, 'Intercooler': 1.0,'Humidifier': 1.0,
+                        'Valves': 1.5, 'Drain valve': 0.05, 'Water separator': 0.2,'Cathode pressure control valve': 0.0,
                         'Sensors': 0.3, 'Silicon hoses': 0.5, 'Hose clamps': 0.12, 'Connectors': 0.8,
-                        'Screws': 0.18,
-                        'HV+LV Cable': 0.67, 'Turbine': 0.0},
-            'Anode': {'Shut-Off valve': 0.2, 'Pressure control valve': 0.2, 'Water separator': 0,
-                      'Particle filter': 0.2,
-                      'Recirculation pump': 4.0, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.2,
-                      'Anode piping': 0.5,
-                      'Swagelok connector': 0.28, 'Screws': 0.09, 'HV+LV Cable': 0.34},
-            'Thermal': {'Coolant pump': 3.0, 'TCV': 0.5, 'Particle filter': 0.1, 'Ionic exchanger': 1.0,
-                        'Sensors': 0.2 + 0.20,
+                        'Screws': 0.18, 'HV+LV Cable': 0.67},
+            
+            'Anode': {'Recirculation pump': 0.0, 
+                      'Shut-Off valve': 0.2, 'Pressure control valve': 0.2, 'Water separator': 0,
+                      'Particle filter': 0.2, 'Drain valve': 0.2, 'Purge valve': 0.1, 'Sensors': 0.2,
+                      'Anode piping': 0.5, 'Swagelok connector': 0.28, 'Screws': 0.09, 'HV+LV Cable': 0.34},
+            
+            'Thermal': {'Coolant pump': 0, 'Stack coolant': 0, 
+                        'TCV': 0.5, 'Particle filter': 0.1, 'Ionic exchanger': 1.0,'Sensors': 0.2 + 0.20,
                         'Silicone hoses': 0.5 + 0.5, 'Hose clamps': 0.12 + 0.12, 'Connectors': 0.80 + 0.80,
-                        'Screws': 0.09 + 0.09,
-                        'HV+LV Cable': 0.34, 'Expansion tank': 0.20, 'Volume flow control valve': 0.5,
-                        'Stack coolant': 0,
+                        'Screws': 0.09 + 0.09, 'HV+LV Cable': 0.34, 'Expansion tank': 0.20, 'Volume flow control valve': 0.5,
                         'Other coolant': 5.0},
+            
             'Other': {'FCCU': 0.5, 'Electrical connectors': 0.4, 'HDPU': 5.0, 'Frame': 2.0, 'Connectors': 1.0,
                       'Screws': 0.27,
                       'HV+LV Cable': 0.0}
         }
         # Mass estimates for dependent mass components, change the values as needed
-        self.masses_FCM_depended = {
-            'Compressor': {"mean": 0.0, "sd": 0.0},
-            'Recirculation_Pump': {"mean": 0.0, "sd": 0.0},
-            'Turbine': {"mean": 0.0, "sd": 0.0},
+        self.masses_FCM_power_depended = {
+            'Compressor': {"mean": 0.63, "sd": 0.0},
+            'Turbine': {"mean": 0.63, "sd": 0.0}, #TODO: Turbine weight is already captured by the compressor, still massestimator needs this to initiate the class in optimisation_function.py...  
+            'Recirculation_Pump': {"mean": 7.38, "sd": 4.04},
+            'Coolant pump': {"mean": 1.66, "sd": 0}#,
+            #'Turbine': {"mean": 0.0, "sd": 0.0},
         }

@@ -6,7 +6,7 @@ import matplotlib.cm as cm
 import matplotlib.lines as mlines
 
 # %% PLOT: Polcurve single BoL/EoL
-def plot_polarization_curves(data, titles, fl_set, markers_oL, saving=True):
+def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, saving=True):
     """
     Plots the polarization curves for multiple datasets.
 
@@ -15,9 +15,10 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, saving=True):
     - titles: List of strings, corresponding to the titles for each dataset.
     - saving: Boolean, if True, saves the plots as PNG files.
     """
+
     for df, title in zip(data, titles):
         # Filter data for the specified flight level
-        df = df[df['Flight Level (100x ft)'] == fl_set]
+        df = df[(df['Flight Level (100x ft)'] == fl_set) & (df['weighting ([0,1])'] == weighting)]
         
         # Create the figure and axis
         fig, ax = plt.subplots(figsize=(12, 8))
