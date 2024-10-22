@@ -23,7 +23,7 @@ from plot_h2_supply_vs_systempower import plot_h2_supply_vs_systempower
 from plot_system_efficiency import plot_system_efficiency
 from plot_h2_supply_vs_FL import plot_h2_supply_vs_FL
 from plot_system_mass_estimate import plot_system_mass_estimate
-from evaluate_DoE_envelope_constraint import plot_optimized_parameter_DoE_envelope
+from plot_DoE_envelope_constraint import plot_optimized_parameter_DoE_envelope
 from plot_compressor_map import plot_compressor_map
 from plot_h2_vs_mass import plot_h2_vs_mass
 #%%  
@@ -53,7 +53,7 @@ def filter_converged_points(df, tolerance=4):
 def analyze_data(_file_path1, saving=True):
     
     # Load the CSV file into a DataFrame
-    df1 = pd.read_csv(_file_path1)
+    df0 = pd.read_csv(_file_path1)
 
     # Change the working directory to the directory containing the .csv file
     file_dir = os.path.dirname(_file_path1)
@@ -72,12 +72,15 @@ def analyze_data(_file_path1, saving=True):
     os.chdir("00_Plots")
     
     # Sort and prefilter data by index and current
-    #df1 =df1[df1["converged (t/f)"] == True]
+    df1 = df0[df0["converged (t/f)"] == True]
     df1 = filter_converged_points(df1, tolerance=7)
     df1 = df1.sort_values(by=['idx'])
-    df1 = df1.reset_index(drop=True)
     df1 = df1[(df1["current_A (Value)"] < current_upper_bound)]
-    
+    df1 = df1[df1['Coolant Pump Power (kW)']>= 0]
+    ## always reset index at last
+    df1 = df1.reset_index(drop=True)
+
+    print(df1.shape)
     # Split the data based on 'Specified Cell Count'
     df_400 = df1[(df1['Specified Cell Count'] == 400)]
     df_455 = df1[(df1['Specified Cell Count'] == 455)]
@@ -155,7 +158,6 @@ def analyze_data(_file_path1, saving=True):
     ###########PLOT: optimized parameters in DoE envelope
     os.makedirs("DoE_Envelope_Evaluation", exist_ok=True)
     os.chdir("DoE_Envelope_Evaluation")
-    
     #plot_optimized_parameter_DoE_envelope(df1, Optimized_DoE_data_variables, saving=saving)
     os.chdir("../")
 
@@ -171,9 +173,11 @@ def analyze_data(_file_path1, saving=True):
                       'stoich_cathode (Value)',
                       'pressure_cathode_in_bara (Value)',
                       'temp_coolant_inlet_degC (Value)',
-                      'temp_coolant_outlet_degC (Value)']
+                      'temp_coolant_outlet_degC (Value)',
+                      "stoich_anode (Value)", 	
+                      "pressure_anode_in_bara (Value)"]
     # define ranges of plots
-    yranges = [[0,140],[1,6],[1,3.4],[50,100],[50,100]]
+    yranges = [[0,140],[1,6],[1,3.4],[50,100],[50,100],[1,10],[1,5]]
     
     for i, (opt_parameter, yrange) in enumerate(zip(opt_parameters,yranges)):
         #We will plot current df.iloc[0] with the last column df.iloc[-1], therefore we pass columns 0:n
@@ -191,7 +195,6 @@ def analyze_data(_file_path1, saving=True):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
     parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
-
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
     
