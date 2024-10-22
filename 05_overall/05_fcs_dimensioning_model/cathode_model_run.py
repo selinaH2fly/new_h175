@@ -169,6 +169,8 @@ class HumidifierParameters:
 
 class ValveParameters:
     def __init__(self):
+        self.total_air_mass_flow_kg_s = 0.165
+        self.valve_position_percent = 0
         """
         This class contains the empirical data for the bypass valve opening percentages and
         the corresponding mass flow rates in g/s, represented in dictionary format.
