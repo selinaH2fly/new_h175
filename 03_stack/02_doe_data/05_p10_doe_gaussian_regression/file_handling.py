@@ -3,7 +3,7 @@ import shutil
 
 import torch
 import gpytorch
-from gpr_model import ExactGPModel, GPRModelContainer
+from gpr_model import ExactGPModel_RBF, ExactGPModel_RBF_MultiLenscale, GPRModelContainer
 
 # Create and browse to folder for storing experiment results
 def create_experiment_folder(_params_model=None, _params_training=None, _params_logging=None, _params_optimization=None, data='high_amp'):
@@ -62,10 +62,19 @@ def load_gpr_model(file_path):
     feature_names = save_dict['feature_names']
     train_input_tensor = save_dict['train_input_tensor']
     train_target_tensor = save_dict['train_target_tensor']
+    model_type = save_dict['model_type']
 
-    # Initialize the model and likelihood
+
+    # Initialize the likelihood
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
-    model = ExactGPModel(train_input_tensor, train_target_tensor, likelihood)
+
+    # Initialize the model
+    if model_type == 'rbf_simple':
+        model = ExactGPModel_RBF(train_input_tensor, train_target_tensor, likelihood)
+    elif model_type == 'rbf_multilenscale':
+        model = ExactGPModel_RBF_MultiLenscale(train_input_tensor, train_target_tensor, likelihood)
+    else:
+        raise ValueError('Invalid model type in saved file!')
     
     # Load the state dictionaries into the model and likelihood
     model.load_state_dict(model_state_dict)

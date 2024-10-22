@@ -20,12 +20,12 @@ import argparse
 # Import custom classes and functions
 import parameters
 from file_handling import create_experiment_folder
-from gpr_model import ExactGPModel
+from gpr_model import ExactGPModel_RBF, ExactGPModel_RBF_MultiLenscale
 from data_processing import load_high_amp_doe_data, load_high_temp_doe_data, preprocess_data
 from prediction_performance_evaluation import eval_prediction_performance, plot_prediction_performance, create_prediction_performance_video
 from partial_dependence_analysis import plot_partial_dependence
 
-def train_gpr_model(target='voltage', cutoff_current=0, pretrained_model=None, data='high_amp'):
+def train_gpr_model(target='voltage', cutoff_current=0, pretrained_model=None, data='high_amp', kernel='rbf_multilenscale'):
     # Load parameters
     _params_training = parameters.Training_Parameters()
     _params_logging = parameters.Logging_Parameters()
@@ -53,8 +53,15 @@ def train_gpr_model(target='voltage', cutoff_current=0, pretrained_model=None, d
 
     # Likelihood and model
     likelihood = gpytorch.likelihoods.GaussianLikelihood()
-    model = ExactGPModel(train_input_tensor, train_target_tensor, likelihood)
-
+    if kernel == 'rbf_simple':
+        model = ExactGPModel_RBF(train_input_tensor, train_target_tensor, likelihood)
+        print("Using Simple RBF Kernel...\n")
+    elif kernel == 'rbf_multilenscale':
+        model = ExactGPModel_RBF_MultiLenscale(train_input_tensor, train_target_tensor, likelihood)
+        print("Using Multi Length Scale RBF Kernel. This is a new kernel. Please verify model performance with snapshots!\n")
+    else:
+        raise ValueError('Invalid kernel selection!')
+    
     # Load the pretrained model if provided
     if pretrained_model is not None:
         my_dir = os.getcwd()
@@ -119,7 +126,8 @@ def train_gpr_model(target='voltage', cutoff_current=0, pretrained_model=None, d
         'target_data_std': target_data_std,
         'feature_names': feature_names,
         'train_input_tensor': train_input_tensor,
-        'train_target_tensor': train_target_tensor
+        'train_target_tensor': train_target_tensor,
+        'model_type': kernel                            
     }
 
     torch.save(model_dict, f'gpr_model_{target}.pth')   
@@ -168,8 +176,9 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--cutoff", type=float, help="Datapoints below cutoff current are removed from training data", default=20.0)
     parser.add_argument("-m", "--model", type=str, help="Load a pretrained GPR model", default=None)
     parser.add_argument("--data", type=str, choices=["high_amp","high_temp"], help="Select the DoE dataset (data s.t. std. MEA is default)", default="high_amp")
+    parser.add_argument("-k", "--kernel", type=str, choices=["rbf_simple", "rbf_multilenscale"], help="Select the kernel type", default="rbf_multilenscale")
 
     args = parser.parse_args()
 
     # Call the train_gpr_model function                        
-    train_gpr_model(args.target, args.cutoff, args.model, args.data)
+    train_gpr_model(args.target, args.cutoff, args.model, args.data, args.kernel)
