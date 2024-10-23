@@ -15,7 +15,7 @@ def initialize(input_dict, result_dict, bc_dict):
                     6             7        8            9           10              11
                     .--> LV DCDC --> HPDU --> Inverter --> HV DCDC --> Compressor --.
                     |                                                               |
-    ----> evap --> splitter1                                                       Mixer1 ---->
+    --> evap --> splitter1                                                        Mixer1 ---->
     1          2    |                                                               |     12
                     '------> Throttle1  -----> Intercooler -------------------------'
                     3                      4                            5                 
@@ -47,8 +47,8 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Provide input on boundary conditions
     """
-    circ.add_bc("Vdot_3 = 2 * Vdot_6")
-    # circ.add_bc("%s = - 0.0"%throttle1.delta_p)
+    #circ.add_bc("Vdot_3 = 0.1")
+    circ.add_bc("%s = 2.5 * %s"%(throttle1.delta_p, intercooler.delta_p))
     circ.add_bc("%s = %f" %(mixer1.p_out, bc_dict["p_end"]))    # depends on architecture
 
 

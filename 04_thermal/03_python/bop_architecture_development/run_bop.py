@@ -1,4 +1,4 @@
-from architectures import bop00, bop10, bop21, bop22, bop23, bop24, bop25, bop26, bop27, bop31, bop32, bop33, bop41, bop42
+from architectures import bop00, bop10, bop21, bop22, bop23, bop24, bop25, bop26, bop27, bop31, bop32, bop33, bop34, bop41, bop42
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -12,14 +12,14 @@ compare_res = False
 plot_temp_pr_vd = True
 
 # Which Architectures do you want to evaluate? ["bop10", "bop21","bop22", "bop23", "bop24","bop25", "bop26", "bop27","bop31", "bop33", "bop41","bop42"]
-arch_list = ["bop41"]
+arch_list = ["bop34"]
 
 
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
     #input_dict = {"Vdot_in" : ["Vdot_1", [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60], "BoP Eingangsvolumenstrom l/s"]}
-    input_dict = {"p_in": ["p_1", [1.1, 1.15, 1.25, 1.3], "Input Pressure [bar]"]} #1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6
+    input_dict = {"p_in": ["p_1", [1.08, 1.1, 1.15, 1.2, 1.25, 1.3], "Input Pressure [bar]"]} #1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6
     #input_dict = {"throttle_delta_p" : ["", [0.1, 0.15, 0.2, 0.25, 0.3], "Thottle pressure drop [bar]"]}
 else:
     input_dict = None
@@ -27,7 +27,7 @@ else:
 # input
 critical_operation = True
 if critical_operation is True:
-    bc_dict = {"T_in" : 273.15 + 60.0,
+    bc_dict = {"T_in" : 273.15 + 68.0,
                 #"Vdot_in" : 0.5,   # either vdot or p_in
                 "p_in" : 1.365,
                 "p_end" : 1,
@@ -61,8 +61,8 @@ result_dict = {"Vdot_in" :              ['', [], 'BoP Input flow [l/s]'],
                 "t_in_inverter" :       ["", [], 'Inverter T_in [K]'],
                 "t_in_hpdu" :           ["", [], 'HPDU T_in [K]'],
                 "t_in_compressor" :     ["", [], 'Compressor T_in [K]'],
-                #"t_in_intercooler" :    ["", [], "Intercooler T_in [K]"],
-                #"t_out_intercooler" :   ["", [], "Intercooler T_out [K]"],
+                "t_in_intercooler" :    ["", [], "Intercooler T_in [K]"],
+                "t_out_intercooler" :   ["", [], "Intercooler T_out [K]"],
                 "t_out_Bop" :           ["", [],'BoP T_out [K]'],
                 "p_in" :                ["", [], 'bop pressure drop [bar]']}
 

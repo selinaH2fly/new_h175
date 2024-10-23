@@ -9,49 +9,54 @@ import ThermSim
 def initialize(input_dict, result_dict, bc_dict):
 
     """
-    bop Architecture 24
-                    7                    8                  9                    13                  
-                    .------> Inverter -------> Compressor -----.            .-----------------------.
-                    |                                          |            |                       |
-    ----> evap --> splitter1                                  Mixer1 ----> TCV1  --> Intercooler --> Mixer2 ----->
-    1          2    |                                          |     10         11               12            14
-                    '-----> HPDU ----> LV DCDC - -> HV DCDC ---'
-                    3               4           5           6               
+    bop Architecture 33
+
+                            9                         10               
+                        .-------------> Inverter ----------.                        14
+                        |                                  |           .--------------------------.
+                        |                                  |           |                          |         15
+    ----> evap --> splitter1 ---------> Compressor ----> Mixer1 ----> TCV1 ----> Intercooler ---> Mixer2 ----->
+    1          2        |       7                    8     |      11        12                13
+                        |                                  |       
+                        '--> LV DCDC --> HPDU --> HVDCDC --'
+                        3             4        5          6           
     """
 
     circ = ThermSim.Circuit()
     evap = ThermSim.Heatsink(1, 2, "evap")
     circ.add_comp(evap)
-    splitter1 = ThermSim.ConnectorPassive1to2(2, 7, 3, "splitter1")
+    splitter1 = ThermSim.ConnectorPassive1to3(2, 3, 7, 9, "splitter1")
     circ.add_comp(splitter1)
 
-    hpdu = ThermSim.Heatsource(3, 4, "hpdu")
-    circ.add_comp(hpdu)
-    lvdcdc = ThermSim.Heatsource(4, 5, "lvdcdc")
+    lvdcdc = ThermSim.Heatsource(3, 4, "lvdcdc")
     circ.add_comp(lvdcdc)
+    hpdu = ThermSim.Heatsource(4, 5, "hpdu")
+    circ.add_comp(hpdu)
     hvdcdc = ThermSim.Heatsource(5, 6, "hvdcdc")
     circ.add_comp(hvdcdc)
 
-    inverter = ThermSim.Heatsource(7, 8, "inverter")
-    circ.add_comp(inverter)
-    compressor = ThermSim.Heatsource(8, 9, "compressor")
+    compressor = ThermSim.Heatsource(7, 8, "compressor")
     circ.add_comp(compressor)
 
-    mixer1 = ThermSim.ConnectorPassive2to1(9, 6, 10, "mixer1")
-    circ.add_comp(mixer1)
-    tcv1 = ThermSim.ConnectorActive1to2(10, 11, 13, 'tcv1')
-    circ.add_comp(tcv1)
-    intercooler = ThermSim.Heatsource(11, 12, "intercooler")
-    circ.add_comp(intercooler)
-    mixer2 = ThermSim.ConnectorPassive2to1(12, 13, 14, "mixer2")
-    circ.add_comp(mixer2)
+    inverter = ThermSim.Heatsource(9, 10, "inverter")
+    circ.add_comp(inverter)
 
+    mixer1 = ThermSim.ConnectorPassive3to1(6, 8, 10, 11, "mixer1")
+    circ.add_comp(mixer1)
+
+
+    tcv1 = ThermSim.ConnectorActive1to2(11, 12, 14, 'tcv1')
+    circ.add_comp(tcv1)
+    intercooler = ThermSim.Heatsource(12, 13, "intercooler")
+    circ.add_comp(intercooler)
+    mixer2 = ThermSim.ConnectorPassive2to1(13, 14, 15, "mixer2")
+    circ.add_comp(mixer2)
 
     """
     Provide input on boundary conditions
     """
+    circ.add_bc("%s = - 0.0"%tcv1.delta_p_1)
     circ.add_bc("%s = 0.0" %tcv1.nsplit_2)
-    circ.add_bc("%s = -0.0"%tcv1.delta_p_1)
 
     circ.add_bc("%s = %f" %(mixer2.p_out, bc_dict["p_end"]))    # depends on architecture
 
@@ -109,24 +114,26 @@ def initialize(input_dict, result_dict, bc_dict):
         elif name == "t_out_Bop":
             result_dict[name][0] = mixer2.T_out     # depends on architecture!
         elif name == "p_in":
-            result_dict[name][0] = evap.p_in     
+            result_dict[name][0] = evap.p_in     # depends on architecture!
         elif name == "Vdot_in":
-            result_dict[name][0] = evap.Vdot_in   
+            result_dict[name][0] = evap.Vdot_in     # = "Vdot_1"
 
     if "Vdot_1" in result_dict.keys():
-        result_dict["Vdot_1"][0] = inverter.Vdot_in          # depends on architecture!
-        result_dict["Vdot_1"][2] = "Flow over inverter stream [l/s]"
+        result_dict["Vdot_1"][0] = lvdcdc.Vdot_in          # depends on architecture!
+        result_dict["Vdot_1"][2] = "Flow over Intercooler in [l/s]"
         result_dict["vdot_intercooler"] = result_dict["Vdot_1"]
         del result_dict["Vdot_1"]
     if "Vdot_2" in result_dict.keys():
-        result_dict["Vdot_2"][0] = hpdu.Vdot_in        # depends on architecture!
-        result_dict["Vdot_2"][2] = "Flow over hpdu stream [l/s]"
-        result_dict["vdot_bypass"] = result_dict["Vdot_2"]
+        result_dict["Vdot_2"][0] = compressor.Vdot_in      # depends on architecture!
+        result_dict["Vdot_2"][2] = "Flow over LV DCDC in [l/s]"
+        result_dict["vdot_lvdcdc"] = result_dict["Vdot_2"]
         del result_dict["Vdot_2"]
     if "Vdot_3" in result_dict.keys():      # depends on architecture
+        result_dict["Vdot_3"][0] = inverter.Vdot_in       # depends on architecture!
+        result_dict["Vdot_3"][2] = "Flow over HPDU in [l/s]"
+        result_dict["vdot_hpdu"] = result_dict["Vdot_3"]
         del result_dict["Vdot_3"]
     if "Vdot_4" in result_dict.keys():      # depends on architecture
         del result_dict["Vdot_4"]
-
 
     return circ, input_dict, result_dict

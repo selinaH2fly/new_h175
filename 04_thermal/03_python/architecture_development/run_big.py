@@ -99,11 +99,11 @@ if input_dict is not None:
 for arch in arch_list:      # each architecture is evaluated
 
     if arch == "Arch01":        # extra code to have customized bop and big architecture relations
-        bc_dict["bop_delta_p"] = 22
-        bc_dict["bop_vdot"] = 0.368     # entspricht dem Stackdruckverlust bei dT=12K
+        bc_dict["bop_delta_p"] = 24
+        bc_dict["bop_vdot"] = 0.2     
     elif arch == "Arch04":
         bc_dict["bop_delta_p"] = 41
-        bc_dict["bop_vdot"] = 0.48      # intercooler wird mit 0.2l/s durschströmt
+        bc_dict["bop_vdot"] = 0.25      # intercooler wird mit 0.2l/s durschströmt
     elif arch == "Arch06":
         bc_dict["bop_delta_p"] = 0
         bc_dict["bop_vdot"] = 0.275     # entspricht dem Stackdruckverlust bei dT=12K
@@ -117,10 +117,10 @@ for arch in arch_list:      # each architecture is evaluated
     if "pump_power" in  result_dict.keys(): #calculates the entire pump power
         if "pump_vdot" in result_dict_new.keys() and "pump_delta_p" in result_dict_new.keys(): 
             for y in range(len(result_dict_new["pump_vdot"][1])):
-                result_dict_new["pump_power"][1].append(result_dict_new["pump_vdot"][1][y] * result_dict_new["pump_delta_p"][1][y] * 100) / 0.6         # 60% Gesamtwirkungsgrad
+                result_dict_new["pump_power"][1].append(result_dict_new["pump_vdot"][1][y] * result_dict_new["pump_delta_p"][1][y] * 100 / 0.6)          # 60% Gesamtwirkungsgrad
             if "pump2_vdot" in result_dict_new.keys() and "pump2_delta_p" in result_dict_new.keys():
                 for y in range(len(result_dict_new["pump2_vdot"][1])):
-                    result_dict_new["pump_power"][1][y] += (result_dict_new["pump2_vdot"][1][y] * result_dict_new["pump2_delta_p"][1][y] * 100) / 0.6   # 60% Gesamtwirkungsgrad
+                    result_dict_new["pump_power"][1][y] += (result_dict_new["pump2_vdot"][1][y] * result_dict_new["pump2_delta_p"][1][y] * 100 / 0.6)    # 60% Gesamtwirkungsgrad
 
     for name in result_dict_new:    # rewrite results in one dictionary
         all_result_dict["%s_%s"%(arch,name)] = [result_dict_new[name][0], result_dict_new[name][1], result_dict_new[name][2]]
