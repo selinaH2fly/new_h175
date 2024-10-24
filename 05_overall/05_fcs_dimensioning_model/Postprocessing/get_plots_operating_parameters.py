@@ -97,5 +97,5 @@ def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, y
         
         # Save the plot as a PNG file if saving is True
         if saving:
-            plt.savefig(f'{var}_{title}.png')
+            plt.savefig(f'{var}_{title}_weighting_{weighting}.png')
         plt.show() if show_plot else plt.close()

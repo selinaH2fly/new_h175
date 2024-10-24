@@ -83,6 +83,6 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, we
     ax.set_xlim([0, 800])
     # Save and show plot
     if saving:
-        plt.savefig('bol_eol_polarization_curve.png', bbox_inches='tight')
+        plt.savefig(f'bol_eol_polarization_curve_weighting_{weighting}.png', bbox_inches='tight')
     plt.show() if show_plot else plt.close()
 

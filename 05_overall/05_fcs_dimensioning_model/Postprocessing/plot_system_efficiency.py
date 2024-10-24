@@ -73,5 +73,5 @@ def plot_system_efficiency(data, titles, colors, fl_set, markers_oL, weighting, 
     ax.grid(True)
     
     if saving:
-        plt.savefig('System_Efficiency_vs_Power.png', bbox_inches='tight')
+        plt.savefig(f'System_Efficiency_vs_Power_weighting_{weighting}.png', bbox_inches='tight')
     plt.show() if show_plot else plt.close()

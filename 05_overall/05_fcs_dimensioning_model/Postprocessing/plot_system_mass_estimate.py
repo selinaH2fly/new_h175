@@ -329,6 +329,6 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, we
     
     # Save and show the plot
     if saving:
-        plt.savefig(f"Weight_estimation_vs_power_{mode}.png", bbox_inches='tight')
+        plt.savefig(f"Weight_estimation_vs_power_{mode}_weighting_{weighting}.png", bbox_inches='tight')
 
     plt.show() if show_plot else plt.close()

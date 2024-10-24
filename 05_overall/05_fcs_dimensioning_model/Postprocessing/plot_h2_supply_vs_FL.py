@@ -88,7 +88,7 @@ def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, show_plot, saving=True
         
     # Save and show the plot
     if saving:
-        plt.savefig(f"H2_supply_vs_flightlevel_{mode}.png", bbox_inches='tight')
+        plt.savefig(f"H2_supply_vs_flightlevel_{mode}_weighting_{weighting}.png", bbox_inches='tight')
     plt.show() if show_plot else plt.close()
 
 

@@ -94,5 +94,5 @@ def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weig
     ax.grid(True)
     
     if saving:
-        plt.savefig('H2_Supply.png', bbox_inches='tight')
+        plt.savefig(f'H2_Supply_weighting_{weighting}.png', bbox_inches='tight')
     plt.show() if show_plot else plt.close()

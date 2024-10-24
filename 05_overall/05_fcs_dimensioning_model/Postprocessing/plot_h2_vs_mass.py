@@ -92,7 +92,7 @@ def plot_h2_vs_mass(data, titles, colors, fl_set, show_plot, saving=True):
     plt.tight_layout(pad=2.0)
     
     if saving:
-        plt.savefig(f'H2_Supply_Comparison_FL{fl_set}.png', bbox_inches='tight')
+        plt.savefig(f'H2_Supply_Comparison_FL{fl_set}_weighting_{weighting}.png', bbox_inches='tight')
 
     plt.show() if show_plot else plt.close()
 
