@@ -182,5 +182,4 @@ def plot_power_needs_heatflux(data, titles, fl_set, components, weighting, show_
         # Save and show the plot
         if saving:
             plt.savefig(f"Component_Heat_Flux_{title}.png", bbox_inches='tight')
-
         plt.show() if show_plot else plt.close()

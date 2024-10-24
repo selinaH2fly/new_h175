@@ -183,4 +183,5 @@ def plot_power_needs(data, titles, fl_set, components, weighting, show_plot, sav
         # Save and show the plot
         if saving:
             plt.savefig(f"Component_Powers_{title}.png", bbox_inches='tight')
+ 
         plt.show() if show_plot else plt.close()

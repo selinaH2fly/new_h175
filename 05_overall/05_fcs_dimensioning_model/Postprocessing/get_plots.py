@@ -92,7 +92,7 @@ def analyze_data(_file_path1, saving=True):
     fl_set = 120 #TODO: Pass that as an argument to the function
     fl_max = max(df1["Flight Level (100x ft)"])
     weighting=0
-    show_plot=True
+    show_plot=False
 
  
 
@@ -106,7 +106,7 @@ def analyze_data(_file_path1, saving=True):
     plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
     
     ############PLOT: Polcurves eol vs bol connected
-    plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, weighting,  show_plot=show_plot, saving=saving)
+    plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
     
     ############PLOT: System Power Grid Plot
     #List of pd column names of data for components which will be considered.
@@ -128,9 +128,8 @@ def analyze_data(_file_path1, saving=True):
                   "Intercooler Heat Flux (kW)",	
                   "Evaporator Heat Flux (kW)",	
                   "Radiator Heat Flux (kW)"]
-    
-    plot_power_needs_heatflux(data, titles, fl_set, components, weighting, show_plot=False, saving=saving)    
-        
+    plot_power_needs_heatflux(data, titles, fl_set, components, weighting, show_plot=show_plot, saving=saving)    
+   
     ###########PLOT: H2 supply
     plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
     
@@ -152,8 +151,8 @@ def analyze_data(_file_path1, saving=True):
     plot_system_mass_estimate(data, titles, colors, componentsP_dict, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
     
     ###########PLOT: Compressormap
-    plot_compressor_map(data, titles, colors, markers, weighting, show_plot=show_plot, saving=True, mode="bol")
-    plot_compressor_map(data, titles, colors, markers, weighting, show_plot=show_plot, saving=True, mode="eol")
+    plot_compressor_map(data, titles, colors, markers, weighting, show_plot=show_plot, saving=saving, mode="bol")
+    plot_compressor_map(data, titles, colors, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
         
     ###########PLOT: optimized parameters in DoE envelope
     os.makedirs("DoE_Envelope_Evaluation", exist_ok=True)
@@ -181,7 +180,7 @@ def analyze_data(_file_path1, saving=True):
     for i, (opt_parameter, yrange) in enumerate(zip(opt_parameters,yranges)):
         #We will plot current df.iloc[0] with the last column df.iloc[-1], therefore we pass columns 0:n
         doe_data_column = Optimized_DoE_data_variables.iloc[:,0:i+2] 
-        plot_optimized_parameters(data, doe_data_column, titles, fl_set, markers_oL, opt_parameter, yrange, weighting, show_plot=show_plot, saving=True)
+        plot_optimized_parameters(data, doe_data_column, titles, fl_set, markers_oL, opt_parameter, yrange, weighting, show_plot=show_plot, saving=saving)
 
     # go back to the parent directory
     os.chdir("../")
