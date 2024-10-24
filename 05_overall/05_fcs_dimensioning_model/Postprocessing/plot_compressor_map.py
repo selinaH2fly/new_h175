@@ -15,7 +15,7 @@ def scale_convex_hull(hull_points, center_point, scale_factor):
     return scaled_points
 
 # %% PLOT: Compressormap from data
-def plot_compressor_map(data, titles, colors, markers, weighting, saving=True, mode="bol"):
+def plot_compressor_map(data, titles, colors, markers, weighting, show_plot, saving=True, mode="bol"):
     """
     Plots the compressor map for multiple datasets in one plot.
 
@@ -136,4 +136,4 @@ def plot_compressor_map(data, titles, colors, markers, weighting, saving=True, m
         plt.savefig(f'ideal_compressor_map_{mode_name}.png')
     
     # Show the plot
-    plt.show()
+    plt.show() if show_plot else plt.close()

@@ -6,7 +6,7 @@ from scipy.spatial import ConvexHull
 
 from get_plot_settings import configure_axes
 
-def plot_h2_vs_mass(data, titles, colors, fl_set, saving=True):
+def plot_h2_vs_mass(data, titles, colors, fl_set, show_plot, saving=True):
     """
     Plot of H2 supply vs system power with convex hull envelope around all points,
     connected dashed lines for the same power levels, and colored scatter points
@@ -93,7 +93,8 @@ def plot_h2_vs_mass(data, titles, colors, fl_set, saving=True):
     
     if saving:
         plt.savefig(f'H2_Supply_Comparison_FL{fl_set}.png', bbox_inches='tight')
-    plt.show()
+
+    plt.show() if show_plot else plt.close()
 
 def plot_convex_hull(ax, x, y, color):
     """

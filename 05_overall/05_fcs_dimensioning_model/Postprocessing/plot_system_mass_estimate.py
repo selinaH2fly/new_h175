@@ -13,7 +13,7 @@ from Components.stack import Stack
 from parameters import Mass_Parameters
 
 # %%PLOT a stacked bar chart of each subsystem component mass grouped by power level.         
-def plot_system_mass_estimate(data, titles, colors, components_dict, markers, weighting, saving=True, mode="bol"):  
+def plot_system_mass_estimate(data, titles, colors, components_dict, markers, weighting, show_plot, saving=True, mode="bol"):  
     """
     Plot of system mass vs system power as a stack bar chart for each subsystem.
     
@@ -327,8 +327,8 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, we
     # Adjust layout
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     
-    # Save or show the plot
+    # Save and show the plot
     if saving:
         plt.savefig(f"Weight_estimation_vs_power_{mode}.png", bbox_inches='tight')
-    else:
-        plt.show()
+
+    plt.show() if show_plot else plt.close()

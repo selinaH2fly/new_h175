@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 #%% PLOT: Polcurve bol vs eol connected points
-def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, weighting, saving=True):
+def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, weighting, show_plot, saving=True):
     """
     Plots the polarization curves for multiple datasets into one plot and connects bol and eol operating points.
     aka. Spaghetti Plot.
@@ -84,4 +84,4 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, we
     # Save and show plot
     if saving:
         plt.savefig('bol_eol_polarization_curve.png', bbox_inches='tight')
-    plt.show()
+    plt.show() if show_plot else plt.close()

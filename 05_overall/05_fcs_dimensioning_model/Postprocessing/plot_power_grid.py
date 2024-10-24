@@ -107,7 +107,7 @@ def format_data_for_plot(df, components, fl_set, power_range, weighting, eol_col
 
     return formatted_df
 
-def plot_power_needs(data, titles, fl_set, components, weighting, saving=True, power_range = [20,50,80,125,150,175]):
+def plot_power_needs(data, titles, fl_set, components, weighting, show_plot, saving=True, power_range = [20,50,80,125,150,175]):
     """
     Plot a heatmap-like representation of power needs by components, with specific formatting.
 
@@ -180,8 +180,7 @@ def plot_power_needs(data, titles, fl_set, components, weighting, saving=True, p
         title = f"Power Consumption of Components [kW], {title}, FL {fl_set}"
         ax.set_title(title, pad=30, loc='center')
     
-        # Save or show the plot
+        # Save and show the plot
         if saving:
             plt.savefig(f"Component_Powers_{title}.png", bbox_inches='tight')
-        else:
-            plt.show()
+        plt.show() if show_plot else plt.close()

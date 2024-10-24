@@ -9,7 +9,7 @@ from get_plot_settings import *
 
 
 # %% PLOT: Polcurve single BoL/EoL
-def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, saving=True):
+def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, show_plot, saving=True):
     """
     Plots the polarization curves for multiple datasets.
 
@@ -76,4 +76,4 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, saving
             plt.savefig(f'{title}_polarization_curve.png')
 
         # Show the plot
-        plt.show()
+        plt.show() if show_plot else plt.close()

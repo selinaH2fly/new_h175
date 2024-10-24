@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 # %% PLOT: H2 supply over flight level all in one
-def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, saving=True, mode="eol"):
+def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, show_plot, saving=True, mode="eol"):
     """
     Plot of system power vs (system power/hydrogen sonsumption) with polynomial fit.
     
@@ -86,8 +86,8 @@ def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, saving=True, mode="eol
             ax.add_patch(rect)
             ax.text(box_x + box_width / 2, box_y_start - i * (box_height + box_spacing) - text_spacing, f'{power} kW', va='top', ha='center', transform=ax.transAxes, fontsize=12)
         
-        # Save or show the plot
+        # Save and show the plot
         if saving:
             plt.savefig(f"H2_supply_vs_flightlevel_{mode}.png", bbox_inches='tight')
-        else:
-            plt.show()
+
+        plt.show() if show_plot else plt.close()

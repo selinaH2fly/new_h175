@@ -15,7 +15,7 @@ _params_optimization = Optimization_Parameters()
 
 
 # Plot the optimized cathode inlet rel. humidity for each dataset
-def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, yrange, weighting, saving=True):
+def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, yrange, weighting, show_plot, saving=True):
     """
     Plots the optimized operating paramter for multiple datasets.
 
@@ -98,4 +98,4 @@ def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, y
         # Save the plot as a PNG file if saving is True
         if saving:
             plt.savefig(f'{var}_{title}.png')
-        plt.show()
+        plt.show() if show_plot else plt.close()

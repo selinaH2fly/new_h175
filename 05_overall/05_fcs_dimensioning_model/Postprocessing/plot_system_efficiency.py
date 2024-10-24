@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # %% PLOT: system efficiency (aka Flade plot)
-def plot_system_efficiency(data, titles, colors, fl_set, markers_oL, weighting, saving=True):
+def plot_system_efficiency(data, titles, colors, fl_set, markers_oL, weighting, show_plot, saving=True):
     """
     Plot of system power vs (system power/hydrogen sonsumption) with polynomial fit.
     aka. Flade Plot.
@@ -74,4 +74,4 @@ def plot_system_efficiency(data, titles, colors, fl_set, markers_oL, weighting, 
     
     if saving:
         plt.savefig('System_Efficiency_vs_Power.png', bbox_inches='tight')
-    plt.show()
+    plt.show() if show_plot else plt.close()

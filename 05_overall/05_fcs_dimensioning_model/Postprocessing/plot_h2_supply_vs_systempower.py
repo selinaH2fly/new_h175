@@ -5,7 +5,7 @@ import numpy as np
 
 
 # %% PLOT: h2_supply
-def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weighting, saving=True):
+def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weighting, show_plot, saving=True):
     """
     Plot of H2 supply vs system power with polynomial fit.
     Further it prints an nummerical comparison between 400-500 cells and 500 stack @ bol and eol
@@ -95,4 +95,4 @@ def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weig
     
     if saving:
         plt.savefig('H2_Supply.png', bbox_inches='tight')
-    plt.show()
+    plt.show() if show_plot else plt.close()
