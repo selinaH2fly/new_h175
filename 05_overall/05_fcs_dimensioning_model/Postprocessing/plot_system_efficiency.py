@@ -2,7 +2,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-
+from get_plot_settings import *
 # %% PLOT: system efficiency (aka Flade plot)
 def plot_system_efficiency(data, titles, colors, fl_set, markers_oL, weighting, show_plot, saving=True):
     """
@@ -73,5 +73,6 @@ def plot_system_efficiency(data, titles, colors, fl_set, markers_oL, weighting, 
     ax.grid(True)
     
     if saving:
-        plt.savefig(f'System_Efficiency_vs_Power_weighting_{weighting}.png', bbox_inches='tight')
+        file_path = create_plot_save_directory(f'System_Efficiency_vs_Power_weighting_{weighting}.png', weighting)
+        plt.savefig(file_path, bbox_inches='tight')      
     plt.show() if show_plot else plt.close()

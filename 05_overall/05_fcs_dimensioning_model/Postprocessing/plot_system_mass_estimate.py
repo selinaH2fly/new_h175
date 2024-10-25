@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+from get_plot_settings import *
+
 # Add the directory containing Components to the Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -329,6 +331,7 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, we
     
     # Save and show the plot
     if saving:
-        plt.savefig(f"Weight_estimation_vs_power_{mode}_weighting_{weighting}.png", bbox_inches='tight')
+        file_path = create_plot_save_directory(f'Weight_estimation_vs_power_{mode}_weighting_{weighting}.png', weighting)
+        plt.savefig(file_path, bbox_inches='tight')
 
     plt.show() if show_plot else plt.close()

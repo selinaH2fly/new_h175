@@ -49,7 +49,7 @@ def filter_converged_points(df, tolerance=4):
     filtered_df = filtered_df.drop(columns=['Difference'])
     
     return filtered_df
- 
+
 def analyze_data(_file_path1, saving=True):
     
     # Load the CSV file into a DataFrame
@@ -96,11 +96,8 @@ def analyze_data(_file_path1, saving=True):
 
  
 
-    ########Plot test:
-        
+    ########Plot test:  
     plot_h2_vs_mass(data, titles, colors, fl_set, show_plot=show_plot)
-    #plot_h2_vs_mass(data, titles, colors, fl_set, 0.5)
-    #plot_h2_vs_mass(data, titles, colors, fl_set, 1)
     
     ###########PLOT: Polcurves
     plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
@@ -164,8 +161,8 @@ def analyze_data(_file_path1, saving=True):
     ##########PLOT: Optimized Operating Parameters
 
     # create a directory for the plots
-    os.makedirs("Optimized_Operating_Parameters", exist_ok=True)
-    os.chdir("Optimized_Operating_Parameters")
+    #os.makedirs("Optimized_Operating_Parameters", exist_ok=True)
+    #os.chdir("Optimized_Operating_Parameters")
 
     # define opt parametersfor plotting
     # sequence is important here!

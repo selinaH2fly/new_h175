@@ -1,7 +1,7 @@
 #%% Imports
 import pandas as pd
 import matplotlib.pyplot as plt
-
+from get_plot_settings import *
 #%% PLOT: Polcurve bol vs eol connected points
 def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, weighting, show_plot, saving=True):
     """
@@ -83,6 +83,7 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, we
     ax.set_xlim([0, 800])
     # Save and show plot
     if saving:
-        plt.savefig(f'bol_eol_polarization_curve_weighting_{weighting}.png', bbox_inches='tight')
+        file_path = create_plot_save_directory((f'bol_eol_polarization_curve_weighting_{weighting}.png'), weighting)
+        plt.savefig(file_path, bbox_inches='tight')
     plt.show() if show_plot else plt.close()
 

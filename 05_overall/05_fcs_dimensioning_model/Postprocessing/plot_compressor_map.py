@@ -7,6 +7,8 @@ import matplotlib.cm as cm
 import numpy as np
 from scipy.spatial import ConvexHull, Delaunay
 
+from get_plot_settings import *
+
 
 # Function to scale convex hull towards a specific point
 def scale_convex_hull(hull_points, center_point, scale_factor):
@@ -133,7 +135,8 @@ def plot_compressor_map(data, titles, colors, markers, weighting, show_plot, sav
 
     # Save the plot as a PNG file if saving is True
     if saving:
-        plt.savefig(f'ideal_compressor_map_{mode_name}.png')
+        file_path = create_plot_save_directory(f'ideal_compressor_map_{mode_name}.png', weighting)
+        plt.savefig(file_path, bbox_inches='tight')
     
     # Show the plot
     plt.show() if show_plot else plt.close()

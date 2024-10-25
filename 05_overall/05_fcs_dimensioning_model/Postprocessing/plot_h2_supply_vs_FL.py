@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-
+from get_plot_settings import *
 # %% PLOT: H2 supply over flight level all in one
 def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, show_plot, saving=True, mode="eol"):
     """
@@ -88,7 +88,8 @@ def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, show_plot, saving=True
         
     # Save and show the plot
     if saving:
-        plt.savefig(f"H2_supply_vs_flightlevel_{mode}_weighting_{weighting}.png", bbox_inches='tight')
+        file_path = create_plot_save_directory(f'H2_supply_vs_flightlevel_{mode}_weighting_{weighting}.png', weighting)
+        plt.savefig(file_path, bbox_inches='tight')
     plt.show() if show_plot else plt.close()
 
 

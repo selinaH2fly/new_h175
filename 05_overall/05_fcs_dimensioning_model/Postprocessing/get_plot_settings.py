@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 import matplotlib.lines as mlines
-
+import os
+import sys
 
 
 def set_plot_settings(data, titles, fl_set, x_label, y_label, fig_size, label, legend, colormap, weighting, saving=True):
@@ -21,7 +22,16 @@ def filter_data_by_flight_level(df, fl_set, weighting):
 
 
 
-
+def create_plot_save_directory(filename, weighting, directory=""):
+    if directory != "": 
+        folder_name = f'{directory}/weighting_{weighting}'
+    else: 
+        folder_name = f'weighting_{weighting}'
+    folder_path = os.path.join(os.getcwd(), folder_name)
+    file_path = os.path.join(folder_path, filename)
+    os.makedirs(folder_path, exist_ok=True)
+    return file_path
+ 
 
 def configure_axes(ax, title="", xlabel="", xlim=None, ylabel="", ylim=None):
         ax.set_title(title)

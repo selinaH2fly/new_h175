@@ -5,6 +5,7 @@ import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 
+from get_plot_settings import *
 # %% PLOT: Power Grid, fancy
 def annotate_boxes(ax, df, cell_width=1, cell_height=2):
     """
@@ -181,5 +182,6 @@ def plot_power_needs_heatflux(data, titles, fl_set, components, weighting, show_
     
         # Save and show the plot
         if saving:
-            plt.savefig(f"Component_Heat_Flux_{title}_weighting_{weighting}.png", bbox_inches='tight')
+            file_path = create_plot_save_directory(f'Component_Heat_Flux_{title}_weighting_{weighting}.png', weighting)
+            plt.savefig(file_path, bbox_inches='tight')
         plt.show() if show_plot else plt.close()

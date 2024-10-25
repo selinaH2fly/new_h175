@@ -2,7 +2,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-
+from get_plot_settings import *
 
 # %% PLOT: h2_supply
 def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weighting, show_plot, saving=True):
@@ -94,5 +94,6 @@ def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weig
     ax.grid(True)
     
     if saving:
-        plt.savefig(f'H2_Supply_weighting_{weighting}.png', bbox_inches='tight')
+        file_path = create_plot_save_directory(f'H2_Supply_weighting_{weighting}.png', weighting)
+        plt.savefig(file_path, bbox_inches='tight')        
     plt.show() if show_plot else plt.close()

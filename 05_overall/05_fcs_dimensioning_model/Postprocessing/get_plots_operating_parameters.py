@@ -97,5 +97,8 @@ def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, y
         
         # Save the plot as a PNG file if saving is True
         if saving:
-            plt.savefig(f'{var}_{title}_weighting_{weighting}.png')
+            directory = 'Optimized_Operating_Parameters'
+            file_path = create_plot_save_directory(f'{var}_{title}_weighting_{weighting}.png', weighting, directory)
+            plt.savefig(file_path, bbox_inches='tight')
+            
         plt.show() if show_plot else plt.close()
