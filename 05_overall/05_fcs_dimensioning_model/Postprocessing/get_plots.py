@@ -92,7 +92,7 @@ def analyze_data(_file_path1, saving=True):
     fl_set = 120 #TODO: Pass that as an argument to the function
     fl_max = max(df1["Flight Level (100x ft)"])
     weighting=0
-    show_plot=False
+    show_plot=True
 
  
 
