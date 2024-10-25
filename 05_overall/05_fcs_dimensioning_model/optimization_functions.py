@@ -142,10 +142,10 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             'turbine_power_W',
             'reci_pump_power_W',
             'coolant_pump_power_W',
-            #'stack_heat_flux_W',
-            #'intercooler_heat_flux_W',
-            #'evaporator_heat_flux_W',
-            #'radiator_heat_flux_W',
+            'stack_heat_flux_W',
+            'intercooler_heat_flux_W',
+            'evaporator_heat_flux_W',
+            'radiator_heat_flux_W',
             'hydrogen_supply_rate_g_s',
             'system_mass_kg'
         ])
@@ -324,7 +324,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         return ResultModels(optimized_input, optimized_cell_voltage_V, compressor_power_W, 
                                 turbine_power_W, reci_pump_power_W, coolant_pump_power_W,
-                                #stack_heat_flux_W, intercooler_heat_flux_W, evaporator_heat_flux_W, radiator_heat_flux_W, 
+                                stack_heat_flux_W, intercooler_heat_flux_W, evaporator_heat_flux_W, radiator_heat_flux_W, 
                                 hydrogen_supply_rate_g_s, system_mass_kg
                                 )
     #optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
