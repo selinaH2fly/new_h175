@@ -118,13 +118,8 @@ def plot_compressor_map(data, titles, colors, markers, weighting, show_plot, sav
             
             
     # Add colorbar for the gradient
-    cbar = plt.colorbar(cmap, ax=ax)
-    cbar.set_label('System Power [kW]')
+    add_colorbar(cmap, ax)
     
-    # Manually set colorbar ticks from 20 to 175 in 25 steps
-    cbar.set_ticks([20, 50, 75, 100, 125, 150, 175])
-    cbar.ax.set_yticklabels([f'{int(t)} kW' for t in cbar.get_ticks()])
-
     # Add title and a legend for the datasets
     fig.suptitle(f'Compressor Pressure Ratio vs Corrected Air Flow, {mode_name}', fontsize=14)
 

@@ -33,12 +33,12 @@ def create_plot_save_directory(filename, weighting, directory=""):
     return file_path
  
 
-def configure_axes(ax, title="", xlabel="", xlim=None, ylabel="", ylim=None):
-        ax.set_title(title)
-        ax.set_xlabel(xlabel)
-        ax.set_xlim(xlim)
-        ax.set_ylabel(ylabel)
-        ax.set_ylim(ylim)
+def configure_axes(ax, **params):
+        ax.set_title(params.get('title', 'Standard Titel'))
+        ax.set_xlabel(params.get('x_label', 'X-Achse'))
+        ax.set_xlim(params.get('x_lim', None))
+        ax.set_ylabel(params.get('y_label', 'Y-Achse'))
+        ax.set_ylim(params.get('y_lim', None))
         ax.grid(True)
 
 def create_legend(ax, markers_oL):

@@ -7,6 +7,14 @@ from scipy.spatial import ConvexHull
 
 from get_plot_settings import *
 
+
+params = {
+    'title': '', 
+    'x_label': 'System Mass [kg]', 
+    'x_lim': [90, 135], 
+    'y_label': 'Hydrogen Supply Rate [g/s]',
+    'y_lim': None,  
+}
 def plot_h2_vs_mass(data, titles, colors, fl_set, show_plot, saving=True):
     """
     Plot of H2 supply vs system power with convex hull envelope around all points,
@@ -77,17 +85,13 @@ def plot_h2_vs_mass(data, titles, colors, fl_set, show_plot, saving=True):
         connect_power_levels(ax, df_filtered)
 
         # Set title, labels, and legend
-        configure_axes(ax, f'{title} Cells, FL {fl_set}', 'System Mass [kg]', [90, 135], 'Hydrogen Supply Rate [g/s]', None )
+        params.update({'title': f'{title} Cells, FL {fl_set}'})
+        configure_axes(ax, **params)
 
         ax.legend([f"Optimized: {label[0]}", f"Optimized: {label[1]}"], loc='lower right')
 
     # Add colorbar for the gradient
-    cbar = plt.colorbar(cmap, ax=ax)
-    cbar.set_label('System Power [kW]')
-    
-    # Set custom colorbar ticks
-    cbar.set_ticks([20, 50, 75, 100, 125, 150, 175])
-    cbar.ax.set_yticklabels([f'{int(t)} kW' for t in cbar.get_ticks()])
+    add_colorbar(cmap, ax)
     
     # Adjust layout after adding all subplots
     plt.tight_layout(pad=2.0)

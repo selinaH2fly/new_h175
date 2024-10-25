@@ -3,6 +3,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from get_plot_settings import *
+
+params = {
+    'title': '', 
+    'x_label': 'System Power [kW]', 
+    'x_lim': None, 
+    'y_label': 'System Efficiency [-]',
+    'y_lim': None,  
+}
+
 # %% PLOT: system efficiency (aka Flade plot)
 def plot_system_efficiency(data, titles, colors, fl_set, markers_oL, weighting, show_plot, saving=True):
     """
@@ -63,14 +72,14 @@ def plot_system_efficiency(data, titles, colors, fl_set, markers_oL, weighting, 
             handles.append(line)
             labels.append(formula)
 
+    # Set title and axis labels
+    params.update({'title': f'System Efficiency vs System Net Power, FL {fl_set}'})
+    configure_axes(ax, **params)
     # Create the legend
     ax.legend(handles, labels, loc='best')
 
-    # Set title and labels
-    ax.set_title(f'System Efficiency vs System Net Power, FL {fl_set}')
-    ax.set_xlabel('System Power [kW]')
-    ax.set_ylabel('System Efficiency [-]')
-    ax.grid(True)
+
+
     
     if saving:
         file_path = create_plot_save_directory(f'System_Efficiency_vs_Power_weighting_{weighting}.png', weighting)

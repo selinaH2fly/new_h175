@@ -7,6 +7,13 @@ import matplotlib.lines as mlines
 
 from get_plot_settings import *
 
+params = {
+    'title': '', 
+    'x_label': 'Current [A]', 
+    'x_lim': [0, 800], 
+    'y_label': 'Cell Voltage [V]',
+    'y_lim': [0, 1.25],  
+}
 
 # %% PLOT: Polcurve single BoL/EoL
 def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, show_plot, saving=True):
@@ -54,8 +61,9 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, show_p
         ax.axvspan(700, 800, color='red', alpha=0.3)
 
         # Set title and axis labels
-        configure_axes(ax, f'System Polarization Curve, FL {fl_set}, {title}', 'Current [A]', [0, 800], 'Cell Voltage [V]',[0, 1.25])
-        # Create a custom legend (optional)
+        params.update({'title': f'System Polarization Curve, FL {fl_set}, {title}'})
+
+        configure_axes(ax, **params)        # Create a custom legend (optional)
         create_legend(ax, markers_oL)
 
 

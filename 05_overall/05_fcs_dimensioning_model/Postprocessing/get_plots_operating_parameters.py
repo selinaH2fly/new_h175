@@ -8,6 +8,15 @@ import os
 from get_plot_settings import *
 
 
+
+params = {
+    'title': '', 
+    'x_label': 'Current [A]', 
+    'x_lim': [0, 800], 
+    'y_label': '',
+    'y_lim': None,  
+}
+
 # Import parameters.py from the parent directory
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from parameters import Optimization_Parameters
@@ -79,7 +88,11 @@ def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, y
         ax.axvspan(700, 800, color='red', alpha=0.3)
 
         # Set title and labels
-        configure_axes(ax, f'Optimized Operating Parameters: {var}, FL {fl_set}, {title}', 'Current [A]', [0, 800], f'{var}',[yrange[0], yrange[1]])
+        params.update({'title': f'Optimized Operating Parameters: {var}, FL {fl_set}, {title}'})
+        params.update({'y_label': f'{var}'})
+        params.update({'y_lim': [yrange[0], yrange[1]]})
+
+        configure_axes(ax, **params)        
         fig.tight_layout()
         # Create a custom legend (optional)
         create_legend(ax, markers_oL)
