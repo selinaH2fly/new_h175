@@ -9,6 +9,7 @@ from scipy.optimize import differential_evolution, NonlinearConstraint
 from scipy.spatial import ConvexHull, Delaunay
 import CoolProp.CoolProp as CP
 from scipy.constants import physical_constants
+from collections import namedtuple # Used to create a datacontainer for evaluate_models(x) return
 
 # Import custom classes and functions
 import parameters
@@ -114,7 +115,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     intercooler     =   Intercooler(efficiency=_params_intercooler.efficiency, primary_fluid = _params_intercooler.primary_fluid , coolant_fluid=_params_intercooler.primary_fluid , ALLOWED_FLUIDS=_params_intercooler.ALLOWED_FLUIDS)
     
     evaporator      =   Evaporator(efficiency=_params_evaporator.efficiency, primary_fluid = _params_evaporator.primary_fluid , coolant_fluid=_params_evaporator.primary_fluid , ALLOWED_FLUIDS=_params_evaporator.ALLOWED_FLUIDS)
-    
+
+
     def evaluate_models(x): # TODO: refactor this function that became too long and complex
         """
         Helper function to evaluate models and compute necessary values.
@@ -130,8 +132,24 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         - reci_pump_power_W: Computed recirculation pump power.
         - coolant_pump_power_W: Computed coolant pump power.
         - hydrogen_mass_flow_g_s: Computed hydrogen mass flow rate.
+        ...
         """
-
+        # Define a named tuple for the evaluation results
+        ResultModels = namedtuple('ResultModels', [
+            'optimized_input',
+            'optimized_cell_voltage_V',
+            'compressor_power_W',
+            'turbine_power_W',
+            'reci_pump_power_W',
+            'coolant_pump_power_W',
+            #'stack_heat_flux_W',
+            #'intercooler_heat_flux_W',
+            #'evaporator_heat_flux_W',
+            #'radiator_heat_flux_W',
+            'hydrogen_supply_rate_g_s',
+            'system_mass_kg'
+        ])
+        
         # %% Cell Voltage Model
 
         # Evaluate the cell voltage model
@@ -304,8 +322,13 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # %% Return
         
-        return optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
-            coolant_pump_power_W, hydrogen_supply_rate_g_s, system_mass_kg
+        return ResultModels(optimized_input, optimized_cell_voltage_V, compressor_power_W, 
+                                turbine_power_W, reci_pump_power_W, coolant_pump_power_W,
+                                #stack_heat_flux_W, intercooler_heat_flux_W, evaporator_heat_flux_W, radiator_heat_flux_W, 
+                                hydrogen_supply_rate_g_s, system_mass_kg
+                                )
+    #optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
+     #       coolant_pump_power_W, hydrogen_supply_rate_g_s, system_mass_kg
 
 # %% Optimization
 
@@ -313,7 +336,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     def objective_function(x):
 
         # Evaluate the models with the normalized input
-        _, _, _, _, _, _, hydrogen_supply_rate_g_s, system_mass_kg = evaluate_models(x)
+        hydrogen_supply_rate_g_s = evaluate_models(x).hydrogen_supply_rate_g_s  
+        system_mass_kg = evaluate_models(x).system_mass_kg
 
         # Scale the system mass such that 2 g/s hydrogen supply rate is equivalent to 100 kg system mass
         system_mass_equivalent = system_mass_kg / 100 * 2
@@ -326,6 +350,14 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
    # Constraint to ensure that the specified system net power is met
     def nonlinear_constraint_Power(x):
         optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, _, _ = evaluate_models(x)
+        # Access only the required results by name
+        optimal_input = evaluate_models(x).optimized_input
+        cell_voltage = evaluate_models(x).optimized_cell_voltage_V
+        compressor_power_W = evaluate_models(x).compressor_power_W
+        turbine_power_W = evaluate_models(x).turbine_power_W
+        reci_pump_power_W = evaluate_models(x).reci_pump_power_W
+        coolant_pump_power_W = evaluate_models(x).coolant_pump_power_W
+
 
         power_balance_offset = cell_voltage * cellcount * optimal_input[0] \
             - compressor_power_W + turbine_power_W - reci_pump_power_W  - coolant_pump_power_W \
