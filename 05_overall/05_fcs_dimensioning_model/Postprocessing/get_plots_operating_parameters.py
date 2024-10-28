@@ -47,7 +47,7 @@ def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, y
     
     for df, title in zip(data, titles):
 
-        df = filter_data_by_flight_level(df, fl_set, weighting)
+        df = filter_data_by_f1_and_weight(df, fl_set, weighting)
         fig, ax = plt.subplots(figsize=(12, 8))
         
         # Create a colormap and normalize for the color gradient

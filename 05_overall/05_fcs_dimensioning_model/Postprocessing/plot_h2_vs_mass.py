@@ -38,8 +38,7 @@ def plot_h2_vs_mass(data, titles, colors, fl_set, show_plot, saving=True):
     label = ["H2 supply", "system mass"]
 
     for ax, df, title, color in zip(axs, data, titles, colors):
-        df_filtered = df[(df['Flight Level (100x ft)'] == fl_set) &
-                         (df['eol (t/f)'] == eol)]
+        df_filtered = df[(df['Flight Level (100x ft)'] == fl_set) & (df['eol (t/f)'] == eol)]
         
         if df_filtered.empty:
             print(f"No data available for {title} at FL {fl_set}. Skipping subplot.")

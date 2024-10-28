@@ -12,6 +12,26 @@ params = {
     'y_lim': None,  
 }
 
+def print_example_between_points(data): 
+    if len(data) == 3:
+            _H2_400 = data[0][(data[0]["Flight Level (100x ft)"] == 120) & 
+                            (data[0]["Power Constraint (kW)"] == 125) &
+                            (data[0]["eol (t/f)"] == False)]["Hydrogen Supply Rate (g/s)"].iloc[0]
+        
+            _H2_500 = data[2][(data[2]["Flight Level (100x ft)"] == 120) & 
+                            (data[2]["Power Constraint (kW)"] == 125) &
+                            (data[2]["eol (t/f)"] == False)]["Hydrogen Supply Rate (g/s)"].iloc[0]
+            
+            _H2_500_eol = data[2][(data[2]["Flight Level (100x ft)"] == 120) & 
+                                (data[2]["Power Constraint (kW)"] == 125) &
+                                (data[2]["eol (t/f)"] == True)]["Hydrogen Supply Rate (g/s)"].iloc[0]
+            
+            print("H2 Supply Rate, FL 120, 125 kW, BoL, 400 vs 500 cells:")
+            print(f"{100-(_H2_500/_H2_400*100):.2f} % ")
+            
+            print("H2 Supply Rate, FL 120, 125 kW, 500 cells, BoL vs EoL:")
+            print(f"{(_H2_500_eol/_H2_500)*100-100:.2f} % ")
+
 
 # %% PLOT: h2_supply
 def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weighting, show_plot, saving=True):
@@ -28,24 +48,8 @@ def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weig
     
     # Print out nummerical example between points:
     #1: 400 vs 500, BoL, FL 120, 125 kW:
-    if len(data) == 3:
-        _H2_400 = data[0][(data[0]["Flight Level (100x ft)"] == 120) & 
-                          (data[0]["Power Constraint (kW)"] == 125) &
-                          (data[0]["eol (t/f)"] == False)]["Hydrogen Supply Rate (g/s)"].iloc[0]
+    print_example_between_points(data)
     
-        _H2_500 = data[2][(data[2]["Flight Level (100x ft)"] == 120) & 
-                          (data[2]["Power Constraint (kW)"] == 125) &
-                          (data[2]["eol (t/f)"] == False)]["Hydrogen Supply Rate (g/s)"].iloc[0]
-        
-        _H2_500_eol = data[2][(data[2]["Flight Level (100x ft)"] == 120) & 
-                              (data[2]["Power Constraint (kW)"] == 125) &
-                              (data[2]["eol (t/f)"] == True)]["Hydrogen Supply Rate (g/s)"].iloc[0]
-        
-        print("H2 Supply Rate, FL 120, 125 kW, BoL, 400 vs 500 cells:")
-        print(f"{100-(_H2_500/_H2_400*100):.2f} % ")
-           
-        print("H2 Supply Rate, FL 120, 125 kW, 500 cells, BoL vs EoL:")
-        print(f"{(_H2_500_eol/_H2_500)*100-100:.2f} % ")
         
     fig, ax = plt.subplots(figsize=(12, 8))
     fig.tight_layout()
@@ -54,7 +58,7 @@ def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weig
     labels = []
 
     for df, title, color in zip(data, titles, colors):
-        df = df[(df['Flight Level (100x ft)'] == fl_set) & (df["weighting ([0,1])"] == weighting)]
+        df = filter_data_by_f1_and_weight(df, fl_set, weighting)
         for filter_eol, linestyle, marker, label_suffix in [(False, '-', markers_oL[0], 'BoL'), (True, '--', markers_oL[1], 'EoL')]:
             # Apply the filter based on the function argument
             filtered_df = df[(df["eol (t/f)"] == filter_eol) 
@@ -75,14 +79,11 @@ def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weig
             # Perform least squares fitting
             coeffs, _, _, _ = np.linalg.lstsq(A, y, rcond=None)
             
-            # Create the polynomial function
-            def poly(x):
-                return coeffs[0] * x**2 + coeffs[1] * x
+
             
-            # Plot the polynomial fit
-            line_x = np.linspace(x.min(), x.max(), 500)
-            line_y = poly(line_x)
-            line, = ax.plot(line_x, line_y, linestyle=linestyle, color=color, alpha=0.7)
+            #create and Plot the polynomial fit
+            line = create_plot_polynomial_function(ax, x, linestyle, color, coeffs)
+
             
             # Add the polynomial formula to the legend
             formula = f'{title} ({label_suffix}) Fit: {coeffs[0]:.2e}x² + {coeffs[1]:.2e}x'

@@ -32,7 +32,7 @@ def plot_system_efficiency(data, titles, colors, fl_set, markers_oL, weighting, 
     labels = []
 
     for df, title, color in zip(data, titles, colors):
-        df = df[(df['Flight Level (100x ft)'] == fl_set) & (df["weighting ([0,1])"] == weighting)]
+        df = filter_data_by_f1_and_weight(df, fl_set, weighting)
         for filter_eol, linestyle, marker, label_suffix in [(False, '-', markers_oL[0], 'BoL'), (True, '--', markers_oL[1], 'EoL')]:
             # Apply the filter based on the function argument
             filtered_df = df[(df["eol (t/f)"] == filter_eol) 
@@ -53,14 +53,8 @@ def plot_system_efficiency(data, titles, colors, fl_set, markers_oL, weighting, 
             # Perform least squares fitting
             coeffs, _, _, _ = np.linalg.lstsq(A, y, rcond=None)
             
-            # Create the polynomial function
-            def poly(x):
-                return coeffs[0] * x**2 + coeffs[1] * x + coeffs[2]
-            
-            # Plot the polynomial fit
-            line_x = np.linspace(x.min(), x.max(), 500)
-            line_y = poly(line_x)
-            line, = ax.plot(line_x, line_y, linestyle=linestyle, color=color, alpha=0.7)
+            line = create_plot_polynomial_function(ax, x, linestyle, color, coeffs)
+
             
             # Add the polynomial formula to the legend
             formula = f'{title} ({label_suffix}) Fit: {coeffs[0]:.2e}x² + {coeffs[1]:.2e}x + {coeffs[2]:.2e}'
@@ -72,14 +66,11 @@ def plot_system_efficiency(data, titles, colors, fl_set, markers_oL, weighting, 
             handles.append(line)
             labels.append(formula)
 
+    # Create the legend
+    ax.legend(handles, labels, loc='best')
     # Set title and axis labels
     params.update({'title': f'System Efficiency vs System Net Power, FL {fl_set}'})
     configure_axes(ax, **params)
-    # Create the legend
-    ax.legend(handles, labels, loc='best')
-
-
-
     
     if saving:
         file_path = create_plot_save_directory(f'System_Efficiency_vs_Power_weighting_{weighting}.png', weighting)

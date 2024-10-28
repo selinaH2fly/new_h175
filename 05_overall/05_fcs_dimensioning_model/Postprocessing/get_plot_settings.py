@@ -11,7 +11,7 @@ import pandas as pd
 
 
 
-def filter_data_by_flight_level(df, fl_set, weighting):
+def filter_data_by_f1_and_weight(df, fl_set, weighting):
     df = df[(df['Flight Level (100x ft)'] == fl_set) & (df['weighting ([0,1])'] == weighting)]
     return df
 
@@ -85,6 +85,15 @@ def plot_scatter(ax, x, y, color_data=None, label=None, marker='o', edgecolor='k
     return scatter
 
 
+# Create the polynomial function
+def poly(x, coeffs):
+    return coeffs[0] * x**2 + coeffs[1] * x + (coeffs[2] if len(coeffs) > 2 else 0)
+# Create the polynomial function and plot polynomial fit
+def create_plot_polynomial_function(ax, x, linestyle, color, coeffs): 
+    line_x = np.linspace(x.min(), x.max(), 500)
+    line_y = poly(line_x, coeffs)
+    line, = ax.plot(line_x, line_y, linestyle=linestyle, color=color, alpha=0.7)
+    return line
 
 
 
