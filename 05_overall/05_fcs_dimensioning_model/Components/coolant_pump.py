@@ -32,7 +32,7 @@ class Coolant_Pump:
         pump_shaft_power_W = self.head_Pa * self.coolant_flow_m3_s / self.isentropic_efficiency
         pump_electrical_power_W = pump_shaft_power_W / self.electric_efficiency
 
-        return pump_electrical_power_W
+        return float(pump_electrical_power_W)
     
     def calculate_mass(self)->dict:
         """
