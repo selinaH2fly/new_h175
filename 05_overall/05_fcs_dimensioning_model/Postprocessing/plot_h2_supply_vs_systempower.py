@@ -89,10 +89,8 @@ def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weig
             formula = f'{title} ({label_suffix}) Fit: {coeffs[0]:.2e}x² + {coeffs[1]:.2e}x'
             
             # Collect handles and labels for the legend
-            handles.append(scatter)
-            labels.append(f'{title} ({label_suffix}) Data')
-            handles.append(line)
-            labels.append(formula)
+            handles_lables_for_legends(handles, labels, scatter, title, label_suffix, line, formula)
+
 
     # Create the legend
     ax.legend(handles, labels, loc='best')

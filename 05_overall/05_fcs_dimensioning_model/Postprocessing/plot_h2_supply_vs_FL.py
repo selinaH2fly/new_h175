@@ -44,12 +44,8 @@ def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, show_plot, saving=True
     cmap = plt.get_cmap('viridis')
     colors = [cmap(mcolors.Normalize(vmin=125, vmax=175)(power)) for power in highlight_powers]
         
-    if mode == "eol":
-        filter_mode = True
-        mode_name = "EoL"
-    elif mode == "bol":
-        filter_mode = False
-        mode_name = "BoL"
+    filter_mode, mode_name = getMode(mode)
+
     #Filter the DF for currents in range and the filter omde
     df1 = df1[(df1["current_A (Value)"] <= 700) & (df1["eol (t/f)"] == filter_mode) & (df1["weighting ([0,1])"] == weighting)]
     

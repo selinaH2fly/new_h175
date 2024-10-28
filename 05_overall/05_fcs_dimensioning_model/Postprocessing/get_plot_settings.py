@@ -52,10 +52,7 @@ def create_colormap(vmin, vmax, cmap):
         cmap = cm.ScalarMappable(norm=norm, cmap=cmap)
         return norm, cmap
 
-def create_colormap_power_grid(vmin, vmax): 
-        cmap = plt.cm.coolwarm
-        norm = mcolors.LogNorm(vmin=vmin, vmax=vmax)  # Logarithmic normalization
-        return norm, cmap
+
 
 def seperate_bol_eol(df):
         df_bol = df[df["eol (t/f)"] == False]
@@ -74,10 +71,7 @@ def add_colorbar(cmap, ax):
         cbar.ax.set_yticklabels([f'{int(t)} kW' for t in cbar.get_ticks()])
 
 
-
-
 def plot_scatter(ax, x, y, color_data=None, label=None, marker='o', edgecolor='k', cmap='viridis', norm=None, size=100, zorder=None, alpha=1.0):
-
     scatter = ax.scatter(
         x, y, c=color_data, cmap=cmap, norm=norm, edgecolor=edgecolor, 
         s=size, marker=marker, label=label, zorder=zorder, alpha=alpha
@@ -85,6 +79,12 @@ def plot_scatter(ax, x, y, color_data=None, label=None, marker='o', edgecolor='k
     return scatter
 
 
+
+def getMode(mode): 
+    return (True, "EoL") if mode == "eol" else (False, "BoL")
+
+
+#######Systempower and System Effizienz
 # Create the polynomial function
 def poly(x, coeffs):
     return coeffs[0] * x**2 + coeffs[1] * x + (coeffs[2] if len(coeffs) > 2 else 0)
@@ -95,12 +95,21 @@ def create_plot_polynomial_function(ax, x, linestyle, color, coeffs):
     line, = ax.plot(line_x, line_y, linestyle=linestyle, color=color, alpha=0.7)
     return line
 
+def handles_lables_for_legends(handles, labels, scatter, title, label_suffix, line, formula): 
+    handles.append(scatter)
+    labels.append(f'{title} ({label_suffix}) Data')
+    handles.append(line)
+    labels.append(formula)
 
 
 
 
 
 #####Power Grid
+def create_colormap_power_grid(vmin, vmax): 
+        cmap = plt.cm.coolwarm
+        norm = mcolors.LogNorm(vmin=vmin, vmax=vmax)  # Logarithmic normalization
+        return norm, cmap
 
 def add_colorbar_power_grid(fig, norm, cmap, ax): 
         cbar = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax)

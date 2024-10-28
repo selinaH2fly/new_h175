@@ -39,8 +39,8 @@ def plot_compressor_map(data, titles, colors, markers, weighting, show_plot, sav
     # If sizing for eol, Turbine and Compressor power tend to increase, and thus the estimated cathode mass would be higher.
     
     # Determine the filter mode
-    filter_mode = (mode == "eol")
-    mode_name = "EoL" if filter_mode else "BoL"
+    filter_mode, mode_name = getMode(mode)
+
         
     power_set = 160 #kW should be in line with one "Power Constraint" value of the df
     FL_set = 120
@@ -95,7 +95,7 @@ def plot_compressor_map(data, titles, colors, markers, weighting, show_plot, sav
         
         # If no point is found, skip scaling and plotting the hulls
         if center_point.empty:
-            print(f"Compressot map: No center point found for dataset '{title}', skipping scaled hulls.")
+            print(f"Compressor map: No center point found for dataset '{title}', skipping scaled hulls.")
             # Plot the convex hull as a polygon by connecting points
             for simplex in hull.simplices:
                 ax.plot(points[simplex, 0], points[simplex, 1], color=color, linestyle ='--', lw=2, zorder=0, alpha=0.5)  #dashed line for hull edges

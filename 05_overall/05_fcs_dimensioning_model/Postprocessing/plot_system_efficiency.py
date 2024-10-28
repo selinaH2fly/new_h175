@@ -61,10 +61,7 @@ def plot_system_efficiency(data, titles, colors, fl_set, markers_oL, weighting, 
             
             
             # Collect handles and labels for the legend
-            handles.append(scatter)
-            labels.append(f'{title} ({label_suffix}) Data')
-            handles.append(line)
-            labels.append(formula)
+            handles_lables_for_legends(handles, labels, scatter, title, label_suffix, line, formula)
 
     # Create the legend
     ax.legend(handles, labels, loc='best')

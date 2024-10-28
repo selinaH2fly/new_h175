@@ -24,6 +24,27 @@ params = {
 }
 
 
+# Define a function to sum the constants of each subsystem, as well as a total mass
+def sum_mass(masses: dict):
+    subsystem_totals = {}
+    total = 0 
+    for subsystem, subsystem_dict in masses.items():
+        temp = 0
+        for value in subsystem_dict.values():
+            temp += value
+        subsystem_totals[subsystem] = temp
+        total += temp
+    return subsystem_totals, total
+
+
+def find_closest(values, point, tol):
+    converged = True
+    values_array = np.array(values)
+    index = (np.abs(values_array - point)).argmin()
+    # Checking if its the right point. If it different converge the calculated difference will be outside of the tolerance. 
+    if np.abs(values_array[index] - point) > tol:
+        converged = False
+    return values_array[index], converged
 
 # %%PLOT a stacked bar chart of each subsystem component mass grouped by power level.         
 def plot_system_mass_estimate(data, titles, colors, components_dict, markers, weighting, show_plot, saving=True, mode="bol"):  
@@ -41,29 +62,13 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, we
     
     # Filter option for eol or bol plot: 
     # If sizing for eol, Turbine and Compressor power tend to increase, and thus the estimated cathode mass would be higher.
-    
-    if mode == "eol":
-        filter_mode = True
-        mode_name = "EoL"
-    elif mode == "bol":
-        filter_mode = False
-        mode_name = "BoL"
+    filter_mode, mode_name = getMode(mode)
     
     # Get mass constants from parameters.py
     masses_FCM_constants = Mass_Parameters().masses_FCM_constants
 
     
-    # Define a function to sum the constants of each subsystem, as well as a total mass
-    def sum_mass(masses: dict):
-        subsystem_totals = {}
-        total = 0 
-        for subsystem, subsystem_dict in masses.items():
-            temp = 0
-            for value in subsystem_dict.values():
-                temp += value
-            subsystem_totals[subsystem] = temp
-            total += temp
-        return subsystem_totals, total
+
     
     # The x-axis points to be plotted and searched for
     points = [125, 150, 175]
@@ -112,21 +117,14 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, we
         # narrow all_points list down to those close 125,150 and 175. Might be a better way to do this.
         tol = 1
         
-        def find_closest(values, point):
-            converged = True
-            values_array = np.array(values)
-            index = (np.abs(values_array - point)).argmin()
-            # Checking if its the right point. If it different converge the calculated difference will be outside of the tolerance. 
-            if np.abs(values_array[index] - point) > tol:
-                converged = False
-            return values_array[index], converged
+
 
         # Find and print the closest values for each target
         closest_values = []
         
         for point in points:
             current_check = True
-            closest_value, tolerance_bool = find_closest(all_points, point)
+            closest_value, tolerance_bool = find_closest(all_points, point, tol)
             closest_values.append(closest_value)
             within_tolerance.append(tolerance_bool)
             closest_row = df.iloc[(df["System Power (kW)"] - point).abs().argmin()]
