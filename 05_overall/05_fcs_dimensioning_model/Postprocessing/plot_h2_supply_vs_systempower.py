@@ -2,10 +2,19 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+from get_plot_settings import *
+
+params = {
+    'title': '', 
+    'x_label': 'System Power [kW]', 
+    'x_lim': None, 
+    'y_label': 'Hydrogen Supply Rate [g/s]',
+    'y_lim': None,  
+}
 
 
 # %% PLOT: h2_supply
-def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weighting, saving=True):
+def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weighting, show_plot, saving=True):
     """
     Plot of H2 supply vs system power with polynomial fit.
     Further it prints an nummerical comparison between 400-500 cells and 500 stack @ bol and eol
@@ -86,13 +95,12 @@ def plot_h2_supply_vs_systempower(data, titles, colors, fl_set, markers_oL, weig
 
     # Create the legend
     ax.legend(handles, labels, loc='best')
+    # Set title and axis labels
+    params.update({'title': f'Hydrogen Supply Rate vs System Net Power, FL {fl_set}'})
+    configure_axes(ax, **params)
 
-    # Set title and labels
-    ax.set_title(f'Hydrogen Supply Rate vs System Net Power, FL {fl_set}')
-    ax.set_xlabel('System Power [kW]')
-    ax.set_ylabel('Hydrogen Supply Rate [g/s]')
-    ax.grid(True)
     
     if saving:
-        plt.savefig('H2_Supply.png', bbox_inches='tight')
-    plt.show()
+        file_path = create_plot_save_directory(f'H2_Supply_weighting_{weighting}.png', weighting)
+        plt.savefig(file_path, bbox_inches='tight')        
+    plt.show() if show_plot else plt.close()

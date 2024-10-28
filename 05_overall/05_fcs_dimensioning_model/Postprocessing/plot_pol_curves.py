@@ -5,8 +5,18 @@ import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 import matplotlib.lines as mlines
 
+from get_plot_settings import *
+
+params = {
+    'title': '', 
+    'x_label': 'Current [A]', 
+    'x_lim': [0, 800], 
+    'y_label': 'Cell Voltage [V]',
+    'y_lim': [0, 1.25],  
+}
+
 # %% PLOT: Polcurve single BoL/EoL
-def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, saving=True):
+def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, show_plot, saving=True):
     """
     Plots the polarization curves for multiple datasets.
 
@@ -18,18 +28,16 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, saving
 
     for df, title in zip(data, titles):
         # Filter data for the specified flight level
-        df = df[(df['Flight Level (100x ft)'] == fl_set) & (df['weighting ([0,1])'] == weighting)]
+        df = filter_data_by_flight_level(df, fl_set, weighting)
         
         # Create the figure and axis
         fig, ax = plt.subplots(figsize=(12, 8))
         
         # Set up colormap for 'System Power (kW)'
-        norm = mcolors.Normalize(vmin=20, vmax=175)
-        cmap = cm.ScalarMappable(norm=norm, cmap='viridis')
+        norm, cmap = create_colormap(vmin=20, vmax=175, cmap='viridis')
         
         # Separate BoL (Beginning of Life) and EoL (End of Life) points
-        df_bol = df[df["eol (t/f)"] == False]
-        df_eol = df[df["eol (t/f)"] == True]
+        df_bol, df_eol = seperate_bol_eol(df)
 
         # Plot BoL points (use circles by default)
         scatter_bol = ax.scatter(df_bol['current_A (Value)'], 
@@ -46,23 +54,20 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, saving
                                  edgecolor='k', s=100, marker=markers_oL[1], label='EoL')
 
         # Add colorbar for the gradient
-        cbar = plt.colorbar(cmap, ax=ax)
-        cbar.set_label('System Power [kW]')
-        
-        # Set custom colorbar ticks
-        cbar.set_ticks([20, 50, 75, 100, 125, 150, 175])
-        cbar.ax.set_yticklabels([f'{int(t)} kW' for t in cbar.get_ticks()])
+        add_colorbar(cmap, ax)
+
 
         # Add a shaded region to highlight a specific current range
         ax.axvspan(700, 800, color='red', alpha=0.3)
 
         # Set title and axis labels
-        ax.set_title(f'System Polarization Curve, FL {fl_set}, {title}', fontsize=14)
-        ax.set_xlabel('Current [A]')
-        ax.set_ylabel('Cell Voltage [V]')
-        ax.grid(True)
-        ax.set_xlim([0, 800])
-        ax.set_ylim([0, 1.25])
+        params.update({'title': f'System Polarization Curve, FL {fl_set}, {title}'})
+
+        configure_axes(ax, **params)        # Create a custom legend (optional)
+        create_legend(ax, markers_oL)
+
+
+
 
         # # Annotate EoL points with text
         # for i, row in df_eol.iterrows():
@@ -71,20 +76,13 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, saving
         #                 textcoords="offset points", xytext=(2, -20), 
         #                 ha='center', fontsize=11, color='black')
 
-        # Create a custom legend (optional)
-        legend_bol = mlines.Line2D([], [], color='none', marker=markers_oL[0], 
-                                      markerfacecolor='none', markeredgecolor='black', 
-                                      markersize=11, linestyle='None', label='System Power BoL [kW]')
-        legend_eol = mlines.Line2D([], [], color='none', marker=markers_oL[1],
-                                      markerfacecolor='none', markeredgecolor='black', 
-                                      markersize=11, linestyle='None', label='System Power EoL [kW]')
-        
-        ax.legend(handles=[legend_bol,legend_eol], loc='best')
+
 
         # Adjust layout and save the plot if necessary
         fig.tight_layout()
         if saving:
-            plt.savefig(f'{title}_polarization_curve.png')
+            file_path = create_plot_save_directory((f'{title}_polarization_curve_weighting_{weighting}.png'), weighting)
+            plt.savefig(file_path, bbox_inches='tight')
 
         # Show the plot
-        plt.show()
+        plt.show() if show_plot else plt.close()

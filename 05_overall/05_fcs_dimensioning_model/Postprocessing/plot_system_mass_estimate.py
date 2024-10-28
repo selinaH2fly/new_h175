@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+from get_plot_settings import *
+
 # Add the directory containing Components to the Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -12,8 +14,19 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from Components.stack import Stack
 from parameters import Mass_Parameters
 
+
+params = {
+    'title': '', 
+    'x_label': 'Net Power [kW]', 
+    'x_lim': None, 
+    'y_label': 'Mass [kg]',
+    'y_lim': None,  
+}
+
+
+
 # %%PLOT a stacked bar chart of each subsystem component mass grouped by power level.         
-def plot_system_mass_estimate(data, titles, colors, components_dict, markers, weighting, saving=True, mode="bol"):  
+def plot_system_mass_estimate(data, titles, colors, components_dict, markers, weighting, show_plot, saving=True, mode="bol"):  
     """
     Plot of system mass vs system power as a stack bar chart for each subsystem.
     
@@ -298,12 +311,14 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, we
         ax.hlines(target, x[i] - bar_width, x[i] + n_values * (bar_width + bar_spacing) - bar_spacing, colors='grey', linestyles='dashed', label=f'Target: {target_specific_power} kW/kg')
         
     # Adding labels and title
-    ax.set_xlabel('Net Power [kW]')
-    ax.set_ylabel('Mass [kg]')
-    ax.set_title(f'Predicted FCM Mass, {mode_name}')
+    params.update({'title':f'Predicted FCM Mass, {mode_name}'})
+    params.update({'y_lim': [0,max_tracker +125]})
+    configure_axes(ax, **params)
+
+
     ax.set_xticks(x + (n_values - 1) * (bar_width + bar_spacing) / 2)
     ax.set_xticklabels(categories)
-    ax.set_ylim([0,max_tracker +125])
+
     
     # Insert texbox explaining crosses. 
     fig.text(0.07, 0.87, r'$\bf{X}$', fontsize=12, ha='left', va='top', color='red')
@@ -327,8 +342,9 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, we
     # Adjust layout
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     
-    # Save or show the plot
+    # Save and show the plot
     if saving:
-        plt.savefig(f"Weight_estimation_vs_power_{mode}.png", bbox_inches='tight')
-    else:
-        plt.show()
+        file_path = create_plot_save_directory(f'Weight_estimation_vs_power_{mode}_weighting_{weighting}.png', weighting)
+        plt.savefig(file_path, bbox_inches='tight')
+
+    plt.show() if show_plot else plt.close()
