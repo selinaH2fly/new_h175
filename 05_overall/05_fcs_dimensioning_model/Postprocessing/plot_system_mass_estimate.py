@@ -15,14 +15,6 @@ from Components.stack import Stack
 from parameters import Mass_Parameters
 
 
-params = {
-    'title': '', 
-    'x_label': 'Net Power [kW]', 
-    'x_lim': None, 
-    'y_label': 'Mass [kg]',
-    'y_lim': None,  
-}
-
 
 # Define a function to sum the constants of each subsystem, as well as a total mass
 def sum_mass(masses: dict):
@@ -47,7 +39,7 @@ def find_closest(values, point, tol):
     return values_array[index], converged
 
 # %%PLOT a stacked bar chart of each subsystem component mass grouped by power level.         
-def plot_system_mass_estimate(data, titles, colors, components_dict, markers, weighting, show_plot, saving=True, mode="bol"):  
+def plot_system_mass_estimate(plot_params, data, titles, colors, components_dict, markers, weighting, show_plot, saving=True, mode="bol"):  
     """
     Plot of system mass vs system power as a stack bar chart for each subsystem.
     
@@ -309,9 +301,9 @@ def plot_system_mass_estimate(data, titles, colors, components_dict, markers, we
         ax.hlines(target, x[i] - bar_width, x[i] + n_values * (bar_width + bar_spacing) - bar_spacing, colors='grey', linestyles='dashed', label=f'Target: {target_specific_power} kW/kg')
         
     # Adding labels and title
-    params.update({'title':f'Predicted FCM Mass, {mode_name}'})
-    params.update({'y_lim': [0,max_tracker +125]})
-    configure_axes(ax, **params)
+    plot_params.update({'title':f'Predicted FCM Mass, {mode_name}'})
+    plot_params.update({'y_lim': [0,max_tracker +125]})
+    configure_axes(ax, **plot_params)
 
 
     ax.set_xticks(x + (n_values - 1) * (bar_width + bar_spacing) / 2)

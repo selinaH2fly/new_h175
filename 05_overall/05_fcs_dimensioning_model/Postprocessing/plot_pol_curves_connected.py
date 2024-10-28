@@ -2,13 +2,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from get_plot_settings import *
-params = {
-    'title': '', 
-    'x_label': 'Current [A]', 
-    'x_lim': [0, 800], 
-    'y_label': 'Cell Voltage [V]',
-    'y_lim': [0.3, 1],  
-}
+
 
 def filter_data(df, fl_set, weighting, eol, cell_counts,):
     # Filter data for the specified flight level and EOL condition
@@ -60,7 +54,7 @@ def plot_data(ax, bol_data, eol_data, titles, colors, highlight_powers, markers_
                             color=color, alpha=0.5, linestyle='--')
 
 #%% PLOT: Polcurve bol vs eol connected points
-def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, weighting, show_plot, saving=True):
+def plot_polarization_curves_bol_eol(plot_params, df1, titles, colors, fl_set, markers_oL, weighting, show_plot, saving=True):
     """
     Plots the polarization curves for multiple datasets into one plot and connects bol and eol operating points.
     aka. Spaghetti Plot.
@@ -87,8 +81,8 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, we
     # Add red shaded area and labels
     
     # Set title and axis labels
-    params.update({'title': f'System Polarization Curve - EoL vs BoL, FL {fl_set}'})
-    configure_axes(ax, **params)
+    plot_params.update({'title': f'System Polarization Curve - EoL vs BoL, FL {fl_set}'})
+    configure_axes(ax, **plot_params)
 
     ax.axvspan(700, 1000, color='red', alpha=0.2)
     ax.legend(loc='upper right')

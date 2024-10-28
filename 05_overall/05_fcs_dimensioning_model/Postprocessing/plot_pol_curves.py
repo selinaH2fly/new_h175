@@ -7,16 +7,10 @@ import matplotlib.lines as mlines
 
 from get_plot_settings import *
 
-params = {
-    'title': '', 
-    'x_label': 'Current [A]', 
-    'x_lim': [0, 800], 
-    'y_label': 'Cell Voltage [V]',
-    'y_lim': [0, 1.25],  
-}
+
 
 # %% PLOT: Polcurve single BoL/EoL
-def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, show_plot, saving=True):
+def plot_polarization_curves(plot_params, data, titles, fl_set, markers_oL, weighting, show_plot, saving=True):
     """
     Plots the polarization curves for multiple datasets.
 
@@ -34,7 +28,7 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, show_p
         fig, ax = plt.subplots(figsize=(12, 8))
         
         # Set up colormap for 'System Power (kW)'
-        norm, cmap = create_colormap(vmin=20, vmax=175, cmap='viridis')
+        norm, cmap = create_colormap(plot_params['vmin'], plot_params['vmax'], cmap='viridis')
         
         # Separate BoL (Beginning of Life) and EoL (End of Life) points
         df_bol, df_eol = seperate_bol_eol(df)
@@ -44,14 +38,14 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, show_p
                                  df_bol['Cell Voltage (V)'], 
                                  c=df_bol['System Power (kW)'], 
                                  cmap='viridis', norm=norm, 
-                                 edgecolor='k', s=100, marker=markers_oL[0], label='BoL')
+                                 edgecolor='k', s=100, marker=markers_oL[0], label=plot_params['label'][0])
 
         # Plot EoL points (use squares for distinction)
         scatter_eol = ax.scatter(df_eol['current_A (Value)'], 
                                  df_eol['Cell Voltage (V)'], 
                                  c=df_eol['System Power (kW)'], 
                                  cmap='viridis', norm=norm, 
-                                 edgecolor='k', s=100, marker=markers_oL[1], label='EoL')
+                                 edgecolor='k', s=100, marker=markers_oL[1], label=plot_params['label'][1])
 
         # Add colorbar for the gradient
         add_colorbar(cmap, ax)
@@ -61,9 +55,9 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, show_p
         ax.axvspan(700, 800, color='red', alpha=0.3)
 
         # Set title and axis labels
-        params.update({'title': f'System Polarization Curve, FL {fl_set}, {title}'})
+        plot_params.update({'title': f'System Polarization Curve, FL {fl_set}, {title}'})
 
-        configure_axes(ax, **params)        # Create a custom legend (optional)
+        configure_axes(ax, **plot_params)        # Create a custom legend (optional)
         create_legend(ax, markers_oL)
 
 
