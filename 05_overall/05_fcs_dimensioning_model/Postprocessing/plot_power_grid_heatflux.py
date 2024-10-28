@@ -21,7 +21,6 @@ def plot_power_needs_heatflux(data, titles, fl_set, components, weighting, show_
     """
     
     for df1, title in zip(data, titles):
-        
         #Formate the data to the needed formate:
         df = format_data_for_plot(df1, components, fl_set, power_range, weighting, eol_col='eol (t/f)')
         
@@ -29,47 +28,21 @@ def plot_power_needs_heatflux(data, titles, fl_set, components, weighting, show_
         fig, ax = plt.subplots(figsize=(10, 8))
     
         # Define the colormap and normalization
-        cmap = plt.cm.coolwarm
-        norm = mcolors.LogNorm(vmin=0.1, vmax=225)  # Logarithmic normalization
+        norm, cmap = create_colormap_power_grid(0.1, 225)
+
         
         # Adjust y-ticks to be centered on the colored boxes
         # Y-Axis should always have 6 entries, regarding of the data (20-175 kW)
-        y_tick_positions = np.arange(1, 6 * 2, 2) - 0.5  # Center y-ticks by shifting them down
-        ax.set_yticks(y_tick_positions)
-        #power_range = [20,50,80,125,150,175]
-        ax.set_yticklabels([f'{power_range[i]} kW' for i in range(len(power_range))])
-        ax.set_ylim(-0.5, len(y_tick_positions) * 2 - 0.5)
+        set_y_axis_power_grid(ax, power_range)
         
         # Plot each cell with a gap between every second column
-        for i in range(len(df)):
-            for j in range(df.shape[1] - 1):
-                col_pos = j + (j // 2)  # Calculate position with gaps after every second column
-                cell_value = df.iloc[i, j + 1]
-                if not pd.isna(cell_value):  # Check if the cell value is NaN
-                    y_pos = i * 2  # This matches the actual index directly without inverting
-                    ax.imshow([[cell_value]], aspect='auto', cmap=cmap, norm=norm,
-                              extent=[col_pos, col_pos + 1, y_pos, y_pos + 1])
+        create_cells_power_grid(df, ax, cmap, norm)
+
         
         annotate_boxes(ax, df, cell_width=1, cell_height=2)
         
-        # Adjust xlim to ensure the first cell is fully inside the plot
-        total_columns = df.shape[1] - 1 + (df.shape[1] - 2) // 2  # Adjusted number of columns with gaps
-        ax.set_xlim(-0.5, total_columns + 0.5)
-    
-        # Calculate adjusted x-tick positions (centered)
-        col_positions = [i + (i // 2) + 0.5 for i in range(df.shape[1] - 1)]
-        ax.set_xticks(col_positions)
-    
-        # Set x-tick labels to alternate between 'BoL' and 'EoL'
-        ax.set_xticklabels(['BoL' if i % 2 == 0 else 'EoL' for i in range(df.shape[1] - 1)])
-    
-        # Add secondary x-axis on top, with centered labels above each pair of boxes
-        ax2 = ax.twiny()
-        ax2.set_xlim(ax.get_xlim())  # Ensure the limits are the same
-    
-        # Determine the tick positions for the secondary x-axis
-        positions = [1 + 3 * i for i in range((df.shape[1] - 2) // 2 + 1)]  # Positions for labels, adjust to the center
-        ax2.set_xticks(positions)
+        set_x_axis_power_grid(ax, df)
+        ax2 = create_second_x_axis_power_grid(ax, df)
     
         # Adjust labels for the secondary x-axis
         names = ["Stack (+)", "Intercooler (+)", "Evaporator (-)", "Radiator (+)"]
@@ -78,8 +51,8 @@ def plot_power_needs_heatflux(data, titles, fl_set, components, weighting, show_
         #ax2.set_xlabel('Components', labelpad=10)
     
         # Add colorbar
-        cbar = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax)
-        cbar.set_label('Power (kW)')
+        add_colorbar_power_grid(fig, norm, cmap, ax)
+
     
         # Set the title centered between the colored boxes
         title = f"Heat Flux of Components [kW], {title}, FL {fl_set}"

@@ -9,13 +9,6 @@ import numpy as np
 import pandas as pd
 
 
-def set_plot_settings(data, titles, fl_set, x_label, y_label, fig_size, label, legend, colormap, weighting, saving=True):
-    fig, ax = get_figure(fig_size)
-    df = filter_data_by_flight_level(data, fl_set, weighting)
-
-def get_figure(fig_size):
-    fig, ax = plt.subplots(figsize=fig_size)
-    return fig, ax
 
 
 def filter_data_by_flight_level(df, fl_set, weighting):
@@ -59,6 +52,10 @@ def create_colormap(vmin, vmax, cmap):
         cmap = cm.ScalarMappable(norm=norm, cmap=cmap)
         return norm, cmap
 
+def create_colormap_power_grid(vmin, vmax): 
+        cmap = plt.cm.coolwarm
+        norm = mcolors.LogNorm(vmin=vmin, vmax=vmax)  # Logarithmic normalization
+        return norm, cmap
 
 def seperate_bol_eol(df):
         df_bol = df[df["eol (t/f)"] == False]
@@ -89,6 +86,57 @@ def plot_scatter(ax, x, y, color_data=None, label=None, marker='o', edgecolor='k
 
 
 
+
+
+
+
+
+#####Power Grid
+
+def add_colorbar_power_grid(fig, norm, cmap, ax): 
+        cbar = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax)
+        cbar.set_label('Power (kW)')
+        return cbar
+
+def set_y_axis_power_grid(ax, power_range): 
+    y_tick_positions = np.arange(1, 6 * 2, 2) - 0.5  # Center y-ticks by shifting them down
+    ax.set_yticks(y_tick_positions)
+    #power_range = [20,50,80,125,150,175]
+    ax.set_yticklabels([f'{power_range[i]} kW' for i in range(len(power_range))])
+    ax.set_ylim(-0.5, len(y_tick_positions) * 2 - 0.5)
+
+
+def set_x_axis_power_grid(ax, df): 
+    total_columns = df.shape[1] - 1 + (df.shape[1] - 2) // 2  # Adjusted number of columns with gaps
+    ax.set_xlim(-0.5, total_columns + 0.5)
+
+    # Calculate adjusted x-tick positions (centered)
+    col_positions = [i + (i // 2) + 0.5 for i in range(df.shape[1] - 1)]
+    ax.set_xticks(col_positions)
+
+    # Set x-tick labels to alternate between 'BoL' and 'EoL'
+    ax.set_xticklabels(['BoL' if i % 2 == 0 else 'EoL' for i in range(df.shape[1] - 1)])
+
+def create_second_x_axis_power_grid(ax, df):
+    # Add secondary x-axis on top, with centered labels above each pair of boxes
+    ax2 = ax.twiny()
+    ax2.set_xlim(ax.get_xlim())  # Ensure the limits are the same
+
+    # Determine the tick positions for the secondary x-axis
+    positions = [1 + 3 * i for i in range((df.shape[1] - 2) // 2 + 1)]  # Positions for labels, adjust to the center
+    ax2.set_xticks(positions)
+    return ax2
+
+
+def create_cells_power_grid(df, ax, cmap, norm): 
+    for i in range(len(df)):
+        for j in range(df.shape[1] - 1):
+            col_pos = j + (j // 2)  # Calculate position with gaps after every second column
+            cell_value = df.iloc[i, j + 1]
+            if not pd.isna(cell_value):  # Check if the cell value is NaN
+                y_pos = i * 2  # This matches the actual index directly without inverting
+                ax.imshow([[cell_value]], aspect='auto', cmap=cmap, norm=norm,
+                            extent=[col_pos, col_pos + 1, y_pos, y_pos + 1])
 
 
 
