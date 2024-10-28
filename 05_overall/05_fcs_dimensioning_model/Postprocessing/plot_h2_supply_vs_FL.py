@@ -3,9 +3,20 @@ import pandas as pd
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from get_plot_settings import *
+
+params = {
+    'title': '', 
+    'x_label': 'Flight Level [100x ft]', 
+    'x_lim': None, 
+    'y_label': 'Hydrogen Supply Rate [g/s]',
+    'y_lim': None,  
+}
+
+
 
 # %% PLOT: H2 supply over flight level all in one
-def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, saving=True, mode="eol"):
+def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, show_plot, saving=True, mode="eol"):
     """
     Plot of system power vs (system power/hydrogen sonsumption) with polynomial fit.
     
@@ -58,20 +69,22 @@ def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, saving=True, mode="eol
         handles = [plt.Line2D([0], [0], marker=marker, color='w', markerfacecolor='k', markersize=10, linestyle='') for marker in markers]
         labels = [f'{cell} Cells' for cell in cells]
         
+
+        # Set title and axis labels
+        params.update({'title': f'System Hydrogen Supply Rate vs FL for Different Cell Counts ({mode_name})'})
+        params.update({'x_lim':[-1, fl_max + 1]})
+        params.update({'y_lim': [1, 5]})
+        configure_axes(ax, **params)
+
+
         # Add legend
         ax.legend(handles, labels, loc='upper left')
         
-        # Set title and labels
-        ax.set_title(f'System Hydrogen Supply Rate vs FL for Different Cell Counts ({mode_name})', fontsize=14, pad=20)
-        ax.set_xlabel('Flight Level [100x ft]')
         # Set x-range from 0 to 140 in steps of 30, and include 150
         x_ticks = list(range(0, fl_max + 1, 30))
-        ax.set_xlim([0, fl_max])
         ax.set_xticks(x_ticks)
-        ax.set_xlim([-1, fl_max + 1])
-        ax.set_ylabel('Hydrogen Supply Rate [g/s]')
-        ax.set_ylim([1,5])
-        ax.grid(True)
+
+
         
         # Position the boxes vertically in the middle with spacing and labels below
         box_x = 1.02  # Position on the right side, outside the plot
@@ -86,8 +99,13 @@ def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, saving=True, mode="eol
             ax.add_patch(rect)
             ax.text(box_x + box_width / 2, box_y_start - i * (box_height + box_spacing) - text_spacing, f'{power} kW', va='top', ha='center', transform=ax.transAxes, fontsize=12)
         
-        # Save or show the plot
-        if saving:
-            plt.savefig(f"H2_supply_vs_flightlevel_{mode}.png", bbox_inches='tight')
-        else:
-            plt.show()
+    # Save and show the plot
+    if saving:
+        file_path = create_plot_save_directory(f'H2_supply_vs_flightlevel_{mode}_weighting_{weighting}.png', weighting)
+        plt.savefig(file_path, bbox_inches='tight')
+    plt.show() if show_plot else plt.close()
+
+
+
+
+

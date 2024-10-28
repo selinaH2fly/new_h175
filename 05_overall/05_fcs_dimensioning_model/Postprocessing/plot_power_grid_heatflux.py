@@ -5,6 +5,7 @@ import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 
+from get_plot_settings import *
 # %% PLOT: Power Grid, fancy
 def annotate_boxes(ax, df, cell_width=1, cell_height=2):
     """
@@ -104,7 +105,7 @@ def format_data_for_plot(df, components, fl_set, power_range, weighting, eol_col
 
     return formatted_df.abs()
 
-def plot_power_needs_heatflux(data, titles, fl_set, components, weighting, power_range = [20,50,80,125,150,175], saving=True):
+def plot_power_needs_heatflux(data, titles, fl_set, components, weighting, show_plot, power_range = [20,50,80,125,150,175], saving=True):
     """
     Plot a heatmap-like representation of power needs by components, with specific formatting.
 
@@ -179,8 +180,8 @@ def plot_power_needs_heatflux(data, titles, fl_set, components, weighting, power
         title = f"Heat Flux of Components [kW], {title}, FL {fl_set}"
         ax.set_title(title, pad=30, loc='center')
     
-        # Save or show the plot
+        # Save and show the plot
         if saving:
-            plt.savefig(f"Component_Heat_Flux_{title}.png", bbox_inches='tight')
-        else:
-            plt.show()
+            file_path = create_plot_save_directory(f'Component_Heat_Flux_{title}_weighting_{weighting}.png', weighting)
+            plt.savefig(file_path, bbox_inches='tight')
+        plt.show() if show_plot else plt.close()

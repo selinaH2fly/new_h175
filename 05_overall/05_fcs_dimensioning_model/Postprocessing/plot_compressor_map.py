@@ -7,6 +7,15 @@ import matplotlib.cm as cm
 import numpy as np
 from scipy.spatial import ConvexHull, Delaunay
 
+from get_plot_settings import *
+
+params = {
+    'title': '', 
+    'x_label': 'Corrected Air Flow [g/s]', 
+    'x_lim': [0, 300], 
+    'y_label': 'Compressor Pressure Ratio [-]',
+    'y_lim': [1, 6],  
+}
 
 # Function to scale convex hull towards a specific point
 def scale_convex_hull(hull_points, center_point, scale_factor):
@@ -15,7 +24,7 @@ def scale_convex_hull(hull_points, center_point, scale_factor):
     return scaled_points
 
 # %% PLOT: Compressormap from data
-def plot_compressor_map(data, titles, colors, markers, weighting, saving=True, mode="bol"):
+def plot_compressor_map(data, titles, colors, markers, weighting, show_plot, saving=True, mode="bol"):
     """
     Plots the compressor map for multiple datasets in one plot.
 
@@ -43,8 +52,8 @@ def plot_compressor_map(data, titles, colors, markers, weighting, saving=True, m
     axs = axs.flatten()  # Flatten the 2D array of axes to easily iterate through
     
     # Create a colormap and normalize for the color gradient
-    norm = mcolors.Normalize(vmin=20, vmax=175)
-    cmap = cm.ScalarMappable(norm=norm, cmap='viridis')
+    norm, cmap = create_colormap(vmin=20, vmax=175, cmap='viridis')
+
     
     # empty list for plot legend icons
     legend_handles  = []
@@ -53,15 +62,11 @@ def plot_compressor_map(data, titles, colors, markers, weighting, saving=True, m
     for i, (df, title, color, marker) in enumerate(zip(data, titles, colors, markers)):
         ax = axs[i]  # Select the appropriate subplot
         
-        # Set labels and grid
-        ax.set_xlabel('Corrected Air Flow [g/s]')
-        ax.set_ylabel('Compressor Pressure Ratio [-]')
-        ax.grid(True)
-        ax.set_ylim([1, 6])
-        ax.set_xlim([0,300])
-        
-        # Set the subfigure title
-        ax.set_title(titles[i])  # Add subfigure title for each subplot
+        # Set title and axis labels
+        params.update({'title': titles[i]}) # Add subfigure title for each subplot
+
+        configure_axes(ax, **params)   
+
         
         df = df[(df["eol (t/f)"] == filter_mode) & 
                 (df['current_A (Value)'] <= 700) &
@@ -116,13 +121,8 @@ def plot_compressor_map(data, titles, colors, markers, weighting, saving=True, m
             
             
     # Add colorbar for the gradient
-    cbar = plt.colorbar(cmap, ax=ax)
-    cbar.set_label('System Power [kW]')
+    add_colorbar(cmap, ax)
     
-    # Manually set colorbar ticks from 20 to 175 in 25 steps
-    cbar.set_ticks([20, 50, 75, 100, 125, 150, 175])
-    cbar.ax.set_yticklabels([f'{int(t)} kW' for t in cbar.get_ticks()])
-
     # Add title and a legend for the datasets
     fig.suptitle(f'Compressor Pressure Ratio vs Corrected Air Flow, {mode_name}', fontsize=14)
 
@@ -133,7 +133,8 @@ def plot_compressor_map(data, titles, colors, markers, weighting, saving=True, m
 
     # Save the plot as a PNG file if saving is True
     if saving:
-        plt.savefig(f'ideal_compressor_map_{mode_name}.png')
+        file_path = create_plot_save_directory(f'ideal_compressor_map_{mode_name}.png', weighting)
+        plt.savefig(file_path, bbox_inches='tight')
     
     # Show the plot
-    plt.show()
+    plt.show() if show_plot else plt.close()

@@ -1,9 +1,17 @@
 #%% Imports
 import pandas as pd
 import matplotlib.pyplot as plt
+from get_plot_settings import *
+params = {
+    'title': '', 
+    'x_label': 'Current [A]', 
+    'x_lim': [0, 800], 
+    'y_label': 'Cell Voltage [V]',
+    'y_lim': [0.3, 1],  
+}
 
 #%% PLOT: Polcurve bol vs eol connected points
-def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, weighting, saving=True):
+def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, weighting, show_plot, saving=True):
     """
     Plots the polarization curves for multiple datasets into one plot and connects bol and eol operating points.
     aka. Spaghetti Plot.
@@ -76,12 +84,17 @@ def plot_polarization_curves_bol_eol(df1, titles, colors, fl_set, markers_oL, we
     plot_data(ax, bol_data, eol_data, titles, colors, highlight_powers)
 
     # Add red shaded area and labels
+    
+    # Set title and axis labels
+    params.update({'title': f'System Polarization Curve - EoL vs BoL, FL {fl_set}'})
+    configure_axes(ax, **params)
+
     ax.axvspan(700, 1000, color='red', alpha=0.2)
-    ax.set(title=f"System Polarization Curve - EoL vs BoL, FL {fl_set}", xlabel='Current [A]', xlim=[0, 1000], ylabel='Cell Voltage [V]', ylim=[0.3, 1])
-    ax.grid(True)
     ax.legend(loc='upper right')
-    ax.set_xlim([0, 800])
+
     # Save and show plot
     if saving:
-        plt.savefig('bol_eol_polarization_curve.png', bbox_inches='tight')
-    plt.show()
+        file_path = create_plot_save_directory((f'bol_eol_polarization_curve_weighting_{weighting}.png'), weighting)
+        plt.savefig(file_path, bbox_inches='tight')
+    plt.show() if show_plot else plt.close()
+

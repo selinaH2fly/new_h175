@@ -1,10 +1,21 @@
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 from scipy.spatial import ConvexHull
 
-def plot_h2_vs_mass(data, titles, colors, fl_set, saving=True):
+from get_plot_settings import *
+
+
+params = {
+    'title': '', 
+    'x_label': 'System Mass [kg]', 
+    'x_lim': [90, 135], 
+    'y_label': 'Hydrogen Supply Rate [g/s]',
+    'y_lim': None,  
+}
+def plot_h2_vs_mass(data, titles, colors, fl_set, show_plot, saving=True):
     """
     Plot of H2 supply vs system power with convex hull envelope around all points,
     connected dashed lines for the same power levels, and colored scatter points
@@ -39,8 +50,8 @@ def plot_h2_vs_mass(data, titles, colors, fl_set, saving=True):
         all_power = []  # Collect 'System Power (kW)' for coloring
 
         # Set up colormap for 'System Power (kW)'
-        norm = mcolors.Normalize(vmin=20, vmax=175)
-        cmap = cm.ScalarMappable(norm=norm, cmap='viridis')
+        norm, cmap = create_colormap(vmin=20, vmax=175, cmap='viridis')
+       
         
         for weighting, marker in zip(weightings, markers):
             df_weighted = df_filtered[df_filtered["weighting ([0,1])"] == weighting]
@@ -74,27 +85,22 @@ def plot_h2_vs_mass(data, titles, colors, fl_set, saving=True):
         connect_power_levels(ax, df_filtered)
 
         # Set title, labels, and legend
-        ax.set_title(f'{title} Cells, FL {fl_set}')
-        ax.set_xlabel('System Mass [kg]')
-        ax.set_xlim([90, 135])
-        ax.set_ylabel('Hydrogen Supply Rate [g/s]')
-        ax.grid(True)
+        params.update({'title': f'{title} Cells, FL {fl_set}'})
+        configure_axes(ax, **params)
+
         ax.legend([f"Optimized: {label[0]}", f"Optimized: {label[1]}"], loc='lower right')
 
     # Add colorbar for the gradient
-    cbar = plt.colorbar(cmap, ax=ax)
-    cbar.set_label('System Power [kW]')
-    
-    # Set custom colorbar ticks
-    cbar.set_ticks([20, 50, 75, 100, 125, 150, 175])
-    cbar.ax.set_yticklabels([f'{int(t)} kW' for t in cbar.get_ticks()])
+    add_colorbar(cmap, ax)
     
     # Adjust layout after adding all subplots
     plt.tight_layout(pad=2.0)
     
     if saving:
-        plt.savefig(f'H2_Supply_Comparison_FL{fl_set}.png', bbox_inches='tight')
-    plt.show()
+        file_path = create_plot_save_directory(f'H2_Supply_Comparison_FL{fl_set}_weighting_{weighting}.png', weighting)
+        plt.savefig(file_path, bbox_inches='tight')
+        
+    plt.show() if show_plot else plt.close()
 
 def plot_convex_hull(ax, x, y, color):
     """
