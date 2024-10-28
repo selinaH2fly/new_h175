@@ -1,5 +1,5 @@
 #import numpy as np
-from scipy.interpolate import interp1d
+from scipy.interpolate import UnivariateSpline
 from parameters import Radiator_Parameters
 
 class Radiator:
@@ -7,7 +7,7 @@ class Radiator:
     A class to model a liquid/air radiator
     """
 
-    def __init__(self, coolant_flow_m3_s=0.0, nominal_pressure_drop_Pa=500*100, nominal_coolant_flow_m3_s=0.0, mass_by_power_kg_kW="Herve_Radiator_Model", thermal_power_W=1000):
+    def __init__(self, coolant_flow_m3_s=0.0, nominal_pressure_drop_Pa=500*100, nominal_coolant_flow_m3_s=0.0, mass_by_power_kg_kW="Herve_Radiator_Model", thermal_power_W=1e-3):
         """
         Initialize the radiator with a given pressure drop and coolant flow rate.
 
@@ -28,11 +28,11 @@ class Radiator:
         self.thermal_power_W = thermal_power_W
         
         # Create an interpolation function using scipy's interp1d
-        self.interpolation_function = interp1d(
+        self.interpolation_function = UnivariateSpline(
             self.mass_by_power_kg_kW["Herve_Radiator_Model"]["T_stack_out"],
             self.mass_by_power_kg_kW["Herve_Radiator_Model"]["mass_by_power"],
-            kind='linear',  # You can choose 'linear', 'quadratic', 'cubic' depending on your needs
-            fill_value="extrapolate"  # Allows extrapolation if the value is outside the range
+            s=0,  # Smooth factor; adjust to prevent overfitting
+            ext=0  # Set external values to 0 for extrapolated values
             )
         
     def calculate_pressure_drop(self)->float:
@@ -52,6 +52,7 @@ class Radiator:
             # Use the interpolation function to return the corresponding mass_by_power value
             mass_by_power_kg_kW = self.interpolation_function(T_stack_out_degC)
             self.mass_by_power_kg_kW = mass_by_power_kg_kW
+            
             return mass_by_power_kg_kW
         
     def calculate_mass(self,T_stack_out_degC)->dict:
@@ -64,8 +65,9 @@ class Radiator:
             
 
         """
-        self.get_mass_by_power(T_stack_out_degC)
-        radiator_mass_kg = self.mass_by_power_kg_kW * self.thermal_power_W / 1000
+        self.mass_by_power_kg_kW = self.get_mass_by_power(T_stack_out_degC)
+        #print(self.thermal_power_W)
+        radiator_mass_kg = self.mass_by_power_kg_kW * (self.thermal_power_W / 1000)
         return radiator_mass_kg
     
 

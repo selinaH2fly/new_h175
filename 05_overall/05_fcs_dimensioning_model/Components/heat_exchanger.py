@@ -107,7 +107,7 @@ class Evaporator(HeatExchanger):
         super().__init__(**kwargs)
     
     #OVERWRITE: due to mean cp value we need to overwrite this function
-    def calculate_specific_heat(self, fluid: str, T1: float = None, T2: float = None, P: float = None, step: float = 0.1) -> float:
+    def calculate_specific_heat(self, fluid: str, T1: float = None, T2: float = None, P: float = None, step: float = 1) -> float:
         """
         Calculates the mean specific heat capacity (Cp) of a fluid over a temperature range 
         using Euler's forward integration.
@@ -139,9 +139,9 @@ class Evaporator(HeatExchanger):
         total_cp = 0.0
         temp = T1
         count = 0
-        
         # Perform Euler's forward integration over the temperature range
         while temp + step < T2:
+            
             # Calculate Cp at the current temperature and pressure using CoolProp
             cp = CP.PropsSI('C', 'T', temp, 'P', P, fluid)
             
@@ -151,7 +151,6 @@ class Evaporator(HeatExchanger):
             # Increment the temperature by the step size
             temp += step
             count += 1
-        
         # Final step: ensure we reach exactly T2
         # Calculate Cp at T2
         cp = CP.PropsSI('C', 'T', T2, 'P', P, fluid)
