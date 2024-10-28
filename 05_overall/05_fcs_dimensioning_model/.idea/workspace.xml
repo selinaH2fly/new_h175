@@ -6,8 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="af6c87ee-8b68-4876-8504-102cabba419a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Architectures/Hum_Valve_arch01.py" beforeDir="false" afterPath="$PROJECT_DIR$/Architectures/Hum_Valve_arch01.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Components/moist_exchanger.py" beforeDir="false" afterPath="$PROJECT_DIR$/Components/moist_exchanger.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Components/valve.py" beforeDir="false" afterPath="$PROJECT_DIR$/Components/valve.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

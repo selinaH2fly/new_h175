@@ -247,22 +247,22 @@ class Humidifier(MoistExchanger):
         super().__init__(**kwargs)
 
 
-# %% Example usage of the code:
-# Create an instance of Humidifier
-humidifier = Humidifier(
-    dry_air_mass_flow_kg_s=0.045,
-    wet_air_mass_flow_kg_s=0.045,
-    dry_air_temperature_in_K=339.6,
-    dry_air_pressure_in_Pa=145000,
-    dry_air_rh_in=0.08,
-    dry_air_temperature_out_K=337.3,
-    dry_air_pressure_out_Pa=141000,
-    wet_air_temperature_in_K=353.2,
-    wet_air_pressure_in_Pa=210000,
-    wet_air_rh_in=0.99,
-    wet_air_pressure_out_Pa=196000
-)
-
-# Calculate RH at dry air outlet
-rh_dry_out = humidifier.calculate_rh_dry_out()
-print(f"Calculated RH dry out: {rh_dry_out * 100:.2f}%")
+# # %% Example usage of the code:
+# # Create an instance of Humidifier
+# humidifier = Humidifier(
+#     dry_air_mass_flow_kg_s=0.045,
+#     wet_air_mass_flow_kg_s=0.045,
+#     dry_air_temperature_in_K=339.6,
+#     dry_air_pressure_in_Pa=145000,
+#     dry_air_rh_in=0.08,
+#     dry_air_temperature_out_K=337.3,
+#     dry_air_pressure_out_Pa=141000,
+#     wet_air_temperature_in_K=353.2,
+#     wet_air_pressure_in_Pa=210000,
+#     wet_air_rh_in=0.99,
+#     wet_air_pressure_out_Pa=196000
+# )
+#
+# # Calculate RH at dry air outlet
+# rh_dry_out = humidifier.calculate_rh_dry_out()
+# print(f"Calculated RH dry out: {rh_dry_out * 100:.2f}%")
