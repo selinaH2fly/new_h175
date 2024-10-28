@@ -51,9 +51,9 @@ def create_legend(ax, markers_oL):
         
         ax.legend(handles=[legend_bol,legend_eol], loc='best')
 
-def create_colormap(): 
-        norm = mcolors.Normalize(vmin=20, vmax=175)
-        cmap = cm.ScalarMappable(norm=norm, cmap='viridis')
+def create_colormap(vmin, vmax, cmap): 
+        norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+        cmap = cm.ScalarMappable(norm=norm, cmap=cmap)
         return norm, cmap
 
 

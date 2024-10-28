@@ -9,6 +9,13 @@ from scipy.spatial import ConvexHull, Delaunay
 
 from get_plot_settings import *
 
+params = {
+    'title': '', 
+    'x_label': 'Corrected Air Flow [g/s]', 
+    'x_lim': [0, 300], 
+    'y_label': 'Compressor Pressure Ratio [-]',
+    'y_lim': [1, 6],  
+}
 
 # Function to scale convex hull towards a specific point
 def scale_convex_hull(hull_points, center_point, scale_factor):
@@ -45,8 +52,8 @@ def plot_compressor_map(data, titles, colors, markers, weighting, show_plot, sav
     axs = axs.flatten()  # Flatten the 2D array of axes to easily iterate through
     
     # Create a colormap and normalize for the color gradient
-    norm = mcolors.Normalize(vmin=20, vmax=175)
-    cmap = cm.ScalarMappable(norm=norm, cmap='viridis')
+    norm, cmap = create_colormap(vmin=20, vmax=175, cmap='viridis')
+
     
     # empty list for plot legend icons
     legend_handles  = []
@@ -55,15 +62,11 @@ def plot_compressor_map(data, titles, colors, markers, weighting, show_plot, sav
     for i, (df, title, color, marker) in enumerate(zip(data, titles, colors, markers)):
         ax = axs[i]  # Select the appropriate subplot
         
-        # Set labels and grid
-        ax.set_xlabel('Corrected Air Flow [g/s]')
-        ax.set_ylabel('Compressor Pressure Ratio [-]')
-        ax.grid(True)
-        ax.set_ylim([1, 6])
-        ax.set_xlim([0,300])
-        
-        # Set the subfigure title
-        ax.set_title(titles[i])  # Add subfigure title for each subplot
+        # Set title and axis labels
+        params.update({'title': titles[i]}) # Add subfigure title for each subplot
+
+        configure_axes(ax, **params)   
+
         
         df = df[(df["eol (t/f)"] == filter_mode) & 
                 (df['current_A (Value)'] <= 700) &

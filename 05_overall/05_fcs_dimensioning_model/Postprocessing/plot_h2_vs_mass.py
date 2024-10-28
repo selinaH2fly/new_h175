@@ -50,8 +50,8 @@ def plot_h2_vs_mass(data, titles, colors, fl_set, show_plot, saving=True):
         all_power = []  # Collect 'System Power (kW)' for coloring
 
         # Set up colormap for 'System Power (kW)'
-        norm = mcolors.Normalize(vmin=20, vmax=175)
-        cmap = cm.ScalarMappable(norm=norm, cmap='viridis')
+        norm, cmap = create_colormap(vmin=20, vmax=175, cmap='viridis')
+       
         
         for weighting, marker in zip(weightings, markers):
             df_weighted = df_filtered[df_filtered["weighting ([0,1])"] == weighting]

@@ -34,7 +34,7 @@ def plot_polarization_curves(data, titles, fl_set, markers_oL, weighting, show_p
         fig, ax = plt.subplots(figsize=(12, 8))
         
         # Set up colormap for 'System Power (kW)'
-        norm, cmap = create_colormap()
+        norm, cmap = create_colormap(vmin=20, vmax=175, cmap='viridis')
         
         # Separate BoL (Beginning of Life) and EoL (End of Life) points
         df_bol, df_eol = seperate_bol_eol(df)

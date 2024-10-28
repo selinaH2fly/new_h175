@@ -51,7 +51,7 @@ def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, y
         fig, ax = plt.subplots(figsize=(12, 8))
         
         # Create a colormap and normalize for the color gradient
-        norm, cmap = create_colormap()
+        norm, cmap = create_colormap(vmin=20, vmax=175, cmap='viridis')
 
         
         # Separate BoL (Beginning of Life) and EoL (End of Life) points
