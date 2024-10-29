@@ -8,14 +8,8 @@ from scipy.spatial import ConvexHull
 from get_plot_settings import *
 
 
-params = {
-    'title': '', 
-    'x_label': 'System Mass [kg]', 
-    'x_lim': [90, 135], 
-    'y_label': 'Hydrogen Supply Rate [g/s]',
-    'y_lim': None,  
-}
-def plot_h2_vs_mass(data, titles, colors, fl_set, show_plot, saving=True):
+
+def plot_h2_vs_mass(plot_params, data, titles, colors, fl_set, show_plot, saving=True):
     """
     Plot of H2 supply vs system power with convex hull envelope around all points,
     connected dashed lines for the same power levels, and colored scatter points
@@ -28,18 +22,17 @@ def plot_h2_vs_mass(data, titles, colors, fl_set, show_plot, saving=True):
     - fl_set: Int [0, 150] kft, specific Flight Level at which the plot will be generated.
     - saving: Boolean, if True, saves the plots as PNG files.
     """
-    
+
+
     weightings = [0, 1]  # Only plot weightings 0 and 1
     markers = ['o', 'D']  # Circle for weighting 0, Diamond for weighting 1
     
     fig, axs = plt.subplots(1, 3, figsize=(18, 6))
     
     eol = False  # Assuming eol remains constant in all cases
-    label = ["H2 supply", "system mass"]
 
     for ax, df, title, color in zip(axs, data, titles, colors):
-        df_filtered = df[(df['Flight Level (100x ft)'] == fl_set) &
-                         (df['eol (t/f)'] == eol)]
+        df_filtered = df[(df['Flight Level (100x ft)'] == fl_set) & (df['eol (t/f)'] == eol)]
         
         if df_filtered.empty:
             print(f"No data available for {title} at FL {fl_set}. Skipping subplot.")
@@ -50,7 +43,7 @@ def plot_h2_vs_mass(data, titles, colors, fl_set, show_plot, saving=True):
         all_power = []  # Collect 'System Power (kW)' for coloring
 
         # Set up colormap for 'System Power (kW)'
-        norm, cmap = create_colormap(vmin=20, vmax=175, cmap='viridis')
+        norm, cmap = create_colormap(plot_params['vmin'], plot_params['vmax'], cmap='viridis')
        
         
         for weighting, marker in zip(weightings, markers):
@@ -85,10 +78,10 @@ def plot_h2_vs_mass(data, titles, colors, fl_set, show_plot, saving=True):
         connect_power_levels(ax, df_filtered)
 
         # Set title, labels, and legend
-        params.update({'title': f'{title} Cells, FL {fl_set}'})
-        configure_axes(ax, **params)
+        plot_params.update({'title': f'{title} Cells, FL {fl_set}'})
+        configure_axes(ax, **plot_params)
 
-        ax.legend([f"Optimized: {label[0]}", f"Optimized: {label[1]}"], loc='lower right')
+        ax.legend([f"Optimized: {plot_params['label'][0]}", f"Optimized: {plot_params['label'][1]}"], loc='lower right')
 
     # Add colorbar for the gradient
     add_colorbar(cmap, ax)

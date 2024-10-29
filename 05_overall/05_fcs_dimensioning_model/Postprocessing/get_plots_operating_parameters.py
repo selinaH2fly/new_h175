@@ -9,13 +9,7 @@ from get_plot_settings import *
 
 
 
-params = {
-    'title': '', 
-    'x_label': 'Current [A]', 
-    'x_lim': [0, 800], 
-    'y_label': '',
-    'y_lim': None,  
-}
+
 
 # Import parameters.py from the parent directory
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -24,7 +18,7 @@ _params_optimization = Optimization_Parameters()
 
 
 # Plot the optimized cathode inlet rel. humidity for each dataset
-def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, yrange, weighting, show_plot, saving=True):
+def plot_optimized_parameters(plot_params, data, data_doe, titles, fl_set, markers_oL, weighting, show_plot, saving=True):
     """
     Plots the optimized operating paramter for multiple datasets.
 
@@ -42,16 +36,18 @@ def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, y
                       'pressure_cathode_in_bara (Value)',
                       'temp_coolant_inlet_degC (Value)',
                       'temp_coolant_outlet_degC (Value)']
+    var = plot_params['opt_parameters']
+    y_range = plot_params['yranges']
     #For plotting the dashed lines we need to know which plot we are doing
     num_columns = data_doe.shape[1]
     
     for df, title in zip(data, titles):
 
-        df = filter_data_by_flight_level(df, fl_set, weighting)
+        df = filter_data_by_f1_and_weight(df, fl_set, weighting)
         fig, ax = plt.subplots(figsize=(12, 8))
         
         # Create a colormap and normalize for the color gradient
-        norm, cmap = create_colormap(vmin=20, vmax=175, cmap='viridis')
+        norm, cmap = create_colormap(plot_params['vmin'], plot_params['vmax'], cmap='viridis')
 
         
         # Separate BoL (Beginning of Life) and EoL (End of Life) points
@@ -64,14 +60,14 @@ def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, y
         
         # Scatter plot with color based on 'System Power (kW)'
         scatter_bol = ax.scatter(df_bol['current_A (Value)'], 
-                                 df_bol[var], 
+                                 df_bol[plot_params['opt_parameters']], 
                                  c=df_bol['System Power (kW)'], 
                                  cmap='viridis', norm=norm, 
                                  edgecolor='k', s=100, marker=markers_oL[0], label='BoL', zorder=1)
 
         # Plot EoL points (use squares for distinction)
         scatter_eol = ax.scatter(df_eol['current_A (Value)'], 
-                                 df_eol[var], 
+                                 df_eol[plot_params['opt_parameters']], 
                                  c=df_eol['System Power (kW)'], 
                                  cmap='viridis', norm=norm, 
                                  edgecolor='k', s=100, marker=markers_oL[1], label='EoL', zorder=1)
@@ -88,11 +84,11 @@ def plot_optimized_parameters(data, data_doe, titles, fl_set, markers_oL, var, y
         ax.axvspan(700, 800, color='red', alpha=0.3)
 
         # Set title and labels
-        params.update({'title': f'Optimized Operating Parameters: {var}, FL {fl_set}, {title}'})
-        params.update({'y_label': f'{var}'})
-        params.update({'y_lim': [yrange[0], yrange[1]]})
+        plot_params.update({'title': f'Optimized Operating Parameters: {var}, FL {fl_set}, {title}'})
+        plot_params.update({'y_label': f'{var}'})
+        plot_params.update({'y_lim': [y_range[0], y_range[1]]})
 
-        configure_axes(ax, **params)        
+        configure_axes(ax, **plot_params)        
         fig.tight_layout()
         # Create a custom legend (optional)
         create_legend(ax, markers_oL)

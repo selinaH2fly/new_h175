@@ -5,18 +5,11 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from get_plot_settings import *
 
-params = {
-    'title': '', 
-    'x_label': 'Flight Level [100x ft]', 
-    'x_lim': None, 
-    'y_label': 'Hydrogen Supply Rate [g/s]',
-    'y_lim': None,  
-}
 
 
 
 # %% PLOT: H2 supply over flight level all in one
-def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, show_plot, saving=True, mode="eol"):
+def plot_h2_supply_vs_FL(plot_params, df1, markers, fl_max, weighting, show_plot, saving=True, mode="eol"):
     """
     Plot of system power vs (system power/hydrogen sonsumption) with polynomial fit.
     
@@ -38,18 +31,14 @@ def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, show_plot, saving=True
     fig.tight_layout()
     
     # Create a colormap and normalize for the color gradient
-    norm = mcolors.Normalize(vmin=125, vmax=175)
+    norm = mcolors.Normalize(plot_params['vmin'], plot_params['vmax'])
     # cmap = cm.ScalarMappable(norm=norm, cmap='plasma')
     # Plasma colormap for the three specific levels
     cmap = plt.get_cmap('viridis')
-    colors = [cmap(mcolors.Normalize(vmin=125, vmax=175)(power)) for power in highlight_powers]
+    colors = [cmap(mcolors.Normalize(plot_params['vmin'], plot_params['vmax'])(power)) for power in highlight_powers]
         
-    if mode == "eol":
-        filter_mode = True
-        mode_name = "EoL"
-    elif mode == "bol":
-        filter_mode = False
-        mode_name = "BoL"
+    filter_mode, mode_name = getMode(mode)
+
     #Filter the DF for currents in range and the filter omde
     df1 = df1[(df1["current_A (Value)"] <= 700) & (df1["eol (t/f)"] == filter_mode) & (df1["weighting ([0,1])"] == weighting)]
     
@@ -71,10 +60,10 @@ def plot_h2_supply_vs_FL(df1, markers, fl_max, weighting, show_plot, saving=True
         
 
         # Set title and axis labels
-        params.update({'title': f'System Hydrogen Supply Rate vs FL for Different Cell Counts ({mode_name})'})
-        params.update({'x_lim':[-1, fl_max + 1]})
-        params.update({'y_lim': [1, 5]})
-        configure_axes(ax, **params)
+        plot_params.update({'title': f'System Hydrogen Supply Rate vs FL for Different Cell Counts ({mode_name})'})
+        plot_params.update({'x_lim':[-1, fl_max + 1]})
+        plot_params.update({'y_lim': [1, 5]})
+        configure_axes(ax, **plot_params)
 
 
         # Add legend

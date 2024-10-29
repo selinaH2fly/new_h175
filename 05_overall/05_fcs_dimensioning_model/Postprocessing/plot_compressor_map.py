@@ -9,14 +9,6 @@ from scipy.spatial import ConvexHull, Delaunay
 
 from get_plot_settings import *
 
-params = {
-    'title': '', 
-    'x_label': 'Corrected Air Flow [g/s]', 
-    'x_lim': [0, 300], 
-    'y_label': 'Compressor Pressure Ratio [-]',
-    'y_lim': [1, 6],  
-}
-
 # Function to scale convex hull towards a specific point
 def scale_convex_hull(hull_points, center_point, scale_factor):
     # Move points towards the center by scale factor
@@ -24,7 +16,7 @@ def scale_convex_hull(hull_points, center_point, scale_factor):
     return scaled_points
 
 # %% PLOT: Compressormap from data
-def plot_compressor_map(data, titles, colors, markers, weighting, show_plot, saving=True, mode="bol"):
+def plot_compressor_map(plot_params, data, titles, colors, markers, weighting, show_plot, saving=True, mode="bol"):
     """
     Plots the compressor map for multiple datasets in one plot.
 
@@ -39,8 +31,8 @@ def plot_compressor_map(data, titles, colors, markers, weighting, show_plot, sav
     # If sizing for eol, Turbine and Compressor power tend to increase, and thus the estimated cathode mass would be higher.
     
     # Determine the filter mode
-    filter_mode = (mode == "eol")
-    mode_name = "EoL" if filter_mode else "BoL"
+    filter_mode, mode_name = getMode(mode)
+
         
     power_set = 160 #kW should be in line with one "Power Constraint" value of the df
     FL_set = 120
@@ -52,7 +44,7 @@ def plot_compressor_map(data, titles, colors, markers, weighting, show_plot, sav
     axs = axs.flatten()  # Flatten the 2D array of axes to easily iterate through
     
     # Create a colormap and normalize for the color gradient
-    norm, cmap = create_colormap(vmin=20, vmax=175, cmap='viridis')
+    norm, cmap = create_colormap(plot_params['vmin'], plot_params['vmax'], cmap='viridis')
 
     
     # empty list for plot legend icons
@@ -63,9 +55,9 @@ def plot_compressor_map(data, titles, colors, markers, weighting, show_plot, sav
         ax = axs[i]  # Select the appropriate subplot
         
         # Set title and axis labels
-        params.update({'title': titles[i]}) # Add subfigure title for each subplot
+        plot_params.update({'title': titles[i]}) # Add subfigure title for each subplot
 
-        configure_axes(ax, **params)   
+        configure_axes(ax, **plot_params)   
 
         
         df = df[(df["eol (t/f)"] == filter_mode) & 
@@ -95,7 +87,7 @@ def plot_compressor_map(data, titles, colors, markers, weighting, show_plot, sav
         
         # If no point is found, skip scaling and plotting the hulls
         if center_point.empty:
-            print(f"Compressot map: No center point found for dataset '{title}', skipping scaled hulls.")
+            print(f"Compressor map: No center point found for dataset '{title}', skipping scaled hulls.")
             # Plot the convex hull as a polygon by connecting points
             for simplex in hull.simplices:
                 ax.plot(points[simplex, 0], points[simplex, 1], color=color, linestyle ='--', lw=2, zorder=0, alpha=0.5)  #dashed line for hull edges
