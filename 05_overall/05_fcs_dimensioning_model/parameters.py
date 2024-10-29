@@ -227,7 +227,7 @@ class Mass_Parameters:
         self.masses_FCM_power_depended = {
             'Compressor': {"mean": 0.63, "sd": 0.0},
             'Turbine': {"mean": 0.63, "sd": 0.0}, #TODO: Turbine weight is already captured by the compressor, still massestimator needs this to initiate the class in optimisation_function.py...  
-            'Recirculation_Pump': {"mean": 7.38, "sd": 4.04},
+            'Recirculation_Pump': {"mean": 4.0, "sd": 0}, # Chris Burger suggested 28.10.24
             'Coolant pump': {"mean": 1.66, "sd": 0}#,
             #'Turbine': {"mean": 0.0, "sd": 0.0},
         }
