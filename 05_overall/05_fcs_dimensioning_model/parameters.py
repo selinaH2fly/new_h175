@@ -150,7 +150,12 @@ class Radiator_Parameters:
         # Assumption: ~0.4 bar pressure drop at 250 l/min coolant in HT cooling circuit (including hoses and valves)
         self.nominal_pressure_drop_Pa = 0.4*1e5
         self.nominal_coolant_flow_m3_s = 250/(1000*60)
-
+        self.mass_by_power_kg_kW = {"Herve_Radiator_Model": {"T_stack_out": [60.0,65.0,70.0,75.0,80.0,85.0,90.0,95.0,100.0],
+                                                             "mass_by_power": [0.1483,0.0854,0.0625,0.0501,0.0420,0.0358,0.0316,0.0279,0.0253]},
+                                    #"mean": 1.0, 
+                                    #"sd": 0.1
+                                    }
+        
 class Stack_Parameters:
 
      def __init__(self):
@@ -222,7 +227,7 @@ class Mass_Parameters:
         self.masses_FCM_power_depended = {
             'Compressor': {"mean": 0.63, "sd": 0.0},
             'Turbine': {"mean": 0.63, "sd": 0.0}, #TODO: Turbine weight is already captured by the compressor, still massestimator needs this to initiate the class in optimisation_function.py...  
-            'Recirculation_Pump': {"mean": 7.38, "sd": 4.04},
+            'Recirculation_Pump': {"mean": 4.0, "sd": 0}, # Chris Burger suggested 28.10.24
             'Coolant pump': {"mean": 1.66, "sd": 0}#,
             #'Turbine': {"mean": 0.0, "sd": 0.0},
         }

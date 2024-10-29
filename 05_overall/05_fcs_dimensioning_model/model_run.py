@@ -87,9 +87,9 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
 if __name__ == '__main__':
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Optimize input variables using a trained Gaussian process regression model")
-    parser.add_argument("-p", "--power", type=float, default=150.0, help="Power constraint for input variable optimization")
+    parser.add_argument("-p", "--power", type=float, default=125.0, help="Power constraint for input variable optimization")
     parser.add_argument("-n", "--cellcount", type=int, default=455, help="Stack cell number for optimizing subject to power constraint")
-    parser.add_argument("-f", "--flightlevel", type=int, default=120, help="Flight level in 100x feets")
+    parser.add_argument("-f", "--flightlevel", type=int, default=100, help="Flight level in 100x feets")
     parser.add_argument("-t", "--turbine", type=str, choices=["True", "False"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
     parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
     parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.85 to account for end of life (default: False).")
