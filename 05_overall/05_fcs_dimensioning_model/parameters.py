@@ -182,7 +182,7 @@ class Evaporator_Parameters:
         self.primary_fluid = "H2"
         self.primary_T_in_K = 20.0
         self.primary_T_out_K = 300.0
-        self.primary_p_in_Pa = 5*1e5
+        self.primary_p_in_Pa = 5*1e5 # TODO: this is equal to the tank pressure, use it directly
         
         self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
         self.ALLOWED_FLUIDS = ['H2','INCOMP::MEG-50%']
@@ -194,6 +194,14 @@ class Eol_Parameters:
         self.reference_derating_factor = 0.85
         self.reference_current_density_A_m2 = 2.0 * (100 * 100)             # 2.0 A/cm2 at 300 cm2 cell area results in 600 A
 
+class Tank_Parameters:
+
+     def __init__(self):
+             
+        self.massfraction = 0.5
+
+        self.pressure_bar = 5*1e5
+        
 class Mass_Parameters:
     def __init__(self):
         # Mass estimates for fixed mass components
