@@ -539,7 +539,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=None,
                                     maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
                                     seed=_params_optimization.seed, recombination=_params_optimization.recombination, strategy=_params_optimization.strategy, 
-                                    tol=_params_optimization.tol, polish=False, init=pop_init(), disp=True)#, workers=20
+                                    tol=_params_optimization.tol, polish=False, init=pop_init(), disp=False)#, workers=20
     optimization_converged = result.success
     print(f'{result.message}')
 
