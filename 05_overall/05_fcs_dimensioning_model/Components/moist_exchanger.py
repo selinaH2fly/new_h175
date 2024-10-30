@@ -1,6 +1,7 @@
 import CoolProp.HumidAirProp as HAP
 import numpy as np
-from cathode_model_run import PhysicalParameters  # TODO change to cathode_model_run?
+from scipy.interpolate import interp1d
+from cathode_model_run import PhysicalParameters, HumidifierParameters
 
 
 class MoistExchanger:
@@ -14,7 +15,6 @@ class MoistExchanger:
         self.dry_air_temperature_in_K = dry_air_temperature_in_K
         self.dry_air_pressure_in_Pa = dry_air_pressure_in_Pa
         self.dry_air_rh_in = dry_air_rh_in
-
         self.dry_air_temperature_out_K = dry_air_temperature_out_K
         self.dry_air_pressure_out_Pa = dry_air_pressure_out_Pa
         self.dry_air_rh_out = dry_air_rh_out
@@ -26,7 +26,7 @@ class MoistExchanger:
         self.wet_air_rh_in = wet_air_rh_in
         self.wet_air_pressure_out_Pa = wet_air_pressure_out_Pa
 
-        # Use the constants from Physical_Parameters
+        # Use the constants from PhysicalParameters
         params_physics = PhysicalParameters()
         self.R_Air = params_physics.R_air
         self.R_Vap = params_physics.R_water_vapor
@@ -35,23 +35,17 @@ class MoistExchanger:
         self.M_air = params_physics.M_air
         self.R = params_physics.R
 
-        # Set the humidifier map option
-        self.humidifier_efficiency_map = humidifier_map
+        # Retrieve the humidifier maps from HumidifierParameters
+        humidifier_params = HumidifierParameters()
+        self.humidifier_efficiency_map = humidifier_params.humidifier_efficiency_map
+        self.pressure_drop_map = humidifier_params.pressure_drop_map
 
-
-
-
-    def convert_slpm_to_kg_s(self, slpm):
+    def convert_kg_s_to_slpm(self, kg_s):
         """
-        Convert SLPM to kg/s using the standard conditions.
-	 """
-        P_std = 101325  # Pa (Standard Pressure)
-        T_std = 273.15  # K (Standard Temperature)
-        M_air = 0.0289647  # kg/mol (Molar mass of air)
-        R = 8.314  # J/(mol·K) (Gas constant)
-
-        # Conversion formula: (SLPM to kg/s)
-        return slpm / 60 * (P_std * M_air) / (R * T_std)
+        Convert kg/s to SLPM using the density-based method.
+        """
+        density_std = 1.225  # kg/m³, standard density of air at 0°C and 101325 Pa
+        return (kg_s * 1000 / density_std) * 60  # Convert kg/s to SLPM
 
     def calculate_specific_heat(self, t, p, rh) -> float:
         return HAP.HAPropsSI('C', 'T', t, 'P', p, 'R', rh)
@@ -63,6 +57,30 @@ class MoistExchanger:
     def calculate_dewpoint(self, t, p, rh):
         dew_point_temp = HAP.HAPropsSI('D', 'T', t, 'P', p, 'R', rh)
         return dew_point_temp
+
+    def interpolate_dry_pressure_drop(self):
+        # Convert dry mass flow rate from kg/s to SLPM
+        mass_flow_slpm = self.convert_kg_s_to_slpm(self.dry_air_mass_flow_kg_s)
+
+        # Extract flow rates and corresponding dry pressure drops
+        flow_rates = list(self.pressure_drop_map.keys())
+        dry_pressure_drops = [self.pressure_drop_map[flow]["dry_side"] for flow in flow_rates]
+
+        # Interpolate the dry pressure drop
+        interpolator = interp1d(flow_rates, dry_pressure_drops, kind='linear', fill_value="extrapolate")
+        return interpolator(mass_flow_slpm)
+
+    def interpolate_wet_pressure_drop(self):
+        # Convert wet mass flow rate from kg/s to SLPM
+        mass_flow_slpm = self.convert_kg_s_to_slpm(self.wet_air_mass_flow_kg_s)
+
+        # Extract flow rates and corresponding wet pressure drops
+        flow_rates = list(self.pressure_drop_map.keys())
+        wet_pressure_drops = [self.pressure_drop_map[flow]["wet_side"] for flow in flow_rates]
+
+        # Interpolate the wet pressure drop
+        interpolator = interp1d(flow_rates, wet_pressure_drops, kind='linear', fill_value="extrapolate")
+        return interpolator(mass_flow_slpm)
 
     def calculate_saturation_pressure(self, t):
         """
@@ -161,56 +179,30 @@ class MoistExchanger:
             "m_dot_wet_out": m_dot_wet_out
         }
 
-
     def calculate_efficiency(self):
         """
         Calculate the efficiency of water transfer. Use the humidifier efficiency map if provided.
-
-        Returns:
-            Efficiency of water transfer.
         """
         # Get mass flows from calculate_mass_flows
         flow_data = self.calculate_mass_flows()
-
-        # Retrieve relevant mass flow rates from the flow_data dictionary
         m_vap_dry_out = flow_data["m_dot_vap_dry_out"]
         m_vap_wet_in = flow_data["m_dot_vap_wet_in"]
 
         if self.humidifier_efficiency_map is not None:
-            # Convert SLPM values in the map to kg/s for interpolation
-            slpm_values = self.humidifier_efficiency_map['mass_flow']
-            mass_flow_kg_s_values = [self.convert_slpm_to_kg_s(slpm) for slpm in slpm_values]
+            # Convert dry mass flow rate from kg/s to SLPM
+            mass_flow_slpm = self.convert_kg_s_to_slpm(self.dry_air_mass_flow_kg_s)
 
-            # Interpolate efficiency using the dry air mass flow and the converted kg/s values
-            efficiency = np.interp(self.dry_air_mass_flow_kg_s, mass_flow_kg_s_values,
-                                   self.humidifier_efficiency_map['efficiency'])
+            # Extract SLPM values and efficiency percentages from the efficiency map
+            slpm_values = list(self.humidifier_efficiency_map.keys())
+            efficiency_values = [eff / 100 for eff in self.humidifier_efficiency_map.values()]  # Convert to fractions
+
+            # Interpolate efficiency based on SLPM mass flow
+            efficiency = np.interp(mass_flow_slpm, slpm_values, efficiency_values)
         else:
             # Calculate efficiency as in the original approach
             efficiency = m_vap_dry_out / m_vap_wet_in if m_vap_wet_in != 0 else 0
 
         return efficiency
-
-    def calculate_water_transfer(self):
-        """
-        Calculate the mass flow rate of water vapor transfer and efficiency using internal attributes.
-
-        Returns:
-            mass flow rate of water vapor (kg/s), efficiency
-        """
-        # Calculate efficiency
-        water_transfer_efficiency = self.calculate_efficiency()
-
-        # Get mass flows from calculate_mass_flows
-        flow_data = self.calculate_mass_flows()
-
-        # Retrieve relevant mass flow rates from the flow_data dictionary
-        m_vap_dry_in = flow_data["m_dot_vap_dry_in"]
-        m_vap_wet_in = flow_data["m_dot_vap_wet_in"]
-
-        # Calculate the mass flow rate of water vapor transfer
-        m_dot_water_trans = water_transfer_efficiency * m_vap_wet_in - m_vap_dry_in
-
-        return m_dot_water_trans, water_transfer_efficiency
 
 class Humidifier(MoistExchanger):
     def __init__(self, **kwargs):
@@ -219,36 +211,32 @@ class Humidifier(MoistExchanger):
         """
         super().__init__(**kwargs)
 
+#  Example usage of the code:
 
-# %% Example usage of the code:
-# Create an instance of Humidifier
+# Create an instance of MoistExchanger with some sample parameters
 humidifier = Humidifier(
-    dry_air_mass_flow_kg_s=0.1665,
-    wet_air_mass_flow_kg_s=0.1553,
-    dry_air_temperature_in_K=353.3,
-    dry_air_pressure_in_Pa=246000,
-    dry_air_rh_in=0.3,
-    dry_air_temperature_out_K=346.9,
-    dry_air_pressure_out_Pa=230000,
-    dry_air_rh_out=0.75,
+    dry_air_mass_flow_kg_s=0.045,
+    wet_air_mass_flow_kg_s=0.030,
+    dry_air_temperature_in_K=339.6,
+    dry_air_pressure_in_Pa=145000,
+    dry_air_rh_in=0.08,
+    dry_air_temperature_out_K=337.3,
+    dry_air_pressure_out_Pa=141000,
     wet_air_temperature_in_K=353.2,
     wet_air_pressure_in_Pa=210000,
     wet_air_rh_in=0.99,
-    wet_air_pressure_out_Pa=196000
+    wet_air_pressure_out_Pa=196000,
+    humidifier_map=True
 )
-# Calculate partial pressures directly using the attributes of the humidifier object
-p_vap_dry_in = humidifier.calculate_partial_pressure(humidifier.dry_air_temperature_in_K, humidifier.dry_air_rh_in)
-p_vap_dry_out = humidifier.calculate_partial_pressure(humidifier.dry_air_temperature_out_K, humidifier.dry_air_rh_out)
-p_vap_wet_in = humidifier.calculate_partial_pressure(humidifier.wet_air_temperature_in_K, humidifier.wet_air_rh_in)
 
-# Calculate volume flow rates directly using the humidifier's attributes
-v_dot_dry = humidifier.dry_air_mass_flow_kg_s / humidifier.calculate_density(
-    humidifier.dry_air_temperature_in_K, humidifier.dry_air_pressure_in_Pa, humidifier.dry_air_rh_in)
-v_dot_wet = humidifier.wet_air_mass_flow_kg_s / humidifier.calculate_density(
-    humidifier.wet_air_temperature_in_K, humidifier.wet_air_pressure_in_Pa, humidifier.wet_air_rh_in)
+# Interpolate dry and wet pressure drops
+dry_pressure_drop = humidifier.interpolate_dry_pressure_drop()
+wet_pressure_drop = humidifier.interpolate_wet_pressure_drop()
 
-# Now call the calculate_water_transfer method directly using the object's attributes
-m_dot_water_trans, eta_water_trans = humidifier.calculate_water_transfer()
-mass_flows = humidifier.calculate_mass_flows()
-print(f"Mass flow rate of water transfer: {m_dot_water_trans*1000:.4f} g/s")
-print(f"Efficiency of water transfer: {eta_water_trans*100:.2f}")
+# Calculate efficiency
+efficiency = humidifier.calculate_efficiency()
+
+# Print the results
+print(f"Interpolated Dry Pressure Drop: {dry_pressure_drop:.2f} kPa")
+print(f"Interpolated Wet Pressure Drop: {wet_pressure_drop:.2f} kPa")
+print(f"Calculated Humidifier Efficiency: {efficiency * 100:.2f}%")
