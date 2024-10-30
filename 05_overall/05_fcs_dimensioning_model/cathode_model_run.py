@@ -144,7 +144,7 @@ class TurbineParameters:
                 [1.20, 1.40, 1.60, 1.79, 1.99, 2.20],
                 [1.20, 1.41, 1.60, 1.80, 2.00, 2.20]
             ]),
-            "corrected_massflow_g_s": np.array([
+            "corrected_mass_flow_g_s": np.array([
                 [69.10, 84.72, 93.78, 98.53, 101.84, 103.53],
                 [69.94, 86.42, 95.59, 99.76, 103.04, 104.77],
                 [67.46, 87.19, 95.91, 101.28, 103.68, 104.69],
@@ -159,7 +159,9 @@ class TurbineParameters:
                 [-0.19, 0.53, 0.62, 0.63, 0.64, 0.64],
                 [-0.70, 0.30, 0.60, 0.66, 0.67, 0.68],
                 [-0.74, 0.29, 0.58, 0.64, 0.65, 0.66]
-            ])
+            ]),
+            "reference_pressure_Pa": 1.01325 * 1e5,
+            "reference_temperature_K": 25 + 273.15
         }
 class IntercoolerParameters:
     def __init__(self):
@@ -175,7 +177,7 @@ class HumidifierParameters:
         self.wet_air_mass_flow_kg_s = 0.155
         self.dry_air_temperature_in_K = 353.3
         self.dry_air_pressure_in_Pa = 246000
-        self.dry_air_rh_in= 0.3
+        self.dry_air_rh_in = 0.3
         self.dry_air_temperature_out_K = 346.9
         self.dry_air_pressure_out_Pa = 230000
         self.dry_air_rh_out = 0.75
@@ -184,13 +186,27 @@ class HumidifierParameters:
         self.wet_air_rh_in = 0.99
         self.wet_air_pressure_out_Pa = 196000
 
-        # Flow rate to efficiency map Fumatech (in SLPM: Standard Liters per Minute, Efficiency in %)
+        # Updated flow rate to efficiency map in standard liters per minute (sLPM)
         self.humidifier_efficiency_map = {
-            2000: 61.0,
-            3000: 50.0,
-            4000: 45.5,
-            5000: 42.0
+            1000: 65.0,
+            2000: 55.0,
+            3000: 45.0,
+            4000: 42.1,
+            5000: 42.1
         }
+
+        # Pressure drop map (in kPa) for dry and wet sides based on dry air flow rate (sLPM)
+        self.pressure_drop_map = {
+            1000: {"dry_side": 2.0, "wet_side": 1.8},
+            2000: {"dry_side": 4.0, "wet_side": 3.9},
+            3000: {"dry_side": 6.0, "wet_side": 5.9},
+            4000: {"dry_side": 7.7, "wet_side": 7.5},
+            5000: {"dry_side": 7.7, "wet_side": 7.5}
+        }
+
+        # Approach dew temperature (°C) for highest dry air flow rate
+        self.approach_dew_temperature = 15.6
+
 
 class ValveParameters:
     def __init__(self):
