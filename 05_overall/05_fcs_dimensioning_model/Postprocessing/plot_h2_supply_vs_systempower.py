@@ -42,7 +42,7 @@ def plot_h2_supply_vs_systempower(plot_params, data, titles, colors, fl_set, mar
     
     # Print out nummerical example between points:
     #1: 400 vs 500, BoL, FL 120, 125 kW:
-    print_example_between_points(data)
+    #print_example_between_points(data)
     
         
     fig, ax = plt.subplots(figsize=(12, 8))

@@ -20,6 +20,7 @@ from Components.recirculation_pump import Recirculation_Pump
 from Components.coolant_pump import Coolant_Pump
 from Components.radiator import Radiator
 from Components.stack import Stack
+from Components.tank import Tank
 from Components.heat_exchanger import Intercooler, Evaporator
 from basic_physics import compute_air_mass_flow, icao_atmosphere, convert
 from mass_estimation import sum_fixed_mass, sum_power_dependent_mass, sum_cellcount_dependent_mass
@@ -59,7 +60,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_physics = parameters.Physical_Parameters()
     _params_intercooler = parameters.Intercooler_Parameters()
     _params_evaporator = parameters.Evaporator_Parameters()
+    _params_tank = parameters.Tank_Parameters()
     _params_mass = parameters.Mass_Parameters()
+    _params_assumptions = parameters.Assumptions()
     
     # Load DoE-Data 
     DoE_data, _ = data_processing.load_high_amp_doe_data()
@@ -116,7 +119,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     evaporator      =   Evaporator(efficiency=_params_evaporator.efficiency, primary_p_in_Pa = _params_evaporator.primary_p_in_Pa,  primary_fluid = _params_evaporator.primary_fluid , coolant_fluid=_params_evaporator.primary_fluid , ALLOWED_FLUIDS=_params_evaporator.ALLOWED_FLUIDS)
 
-
+    tank            =   Tank(massfraction=_params_tank.massfraction , H2_mass_kg=0 , fixed_mass_kg=_params_tank.fixed_mass_kg , pressure_bar=_params_tank.pressure_bar )
+    
     def evaluate_models(x): # TODO: refactor this function that became too long and complex
         """
         Helper function to evaluate models and compute necessary values.
@@ -147,7 +151,15 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
             'evaporator_heat_flux_W',
             'radiator_heat_flux_W',
             'hydrogen_supply_rate_g_s',
-            'system_mass_kg'
+            'system_mass_kg',
+            'fixed_mass',
+            'power_dependent_mass',
+            'compressor_mass_kg',
+            'rezi_pump_mass_kg',
+            'coolant_pump_mass_kg',
+            'radiator_mass_kg',
+            'cellcount_dependent_mass',
+            'H2_dependend_mass'
         ])
         
         # %% Cell Voltage Model
@@ -327,25 +339,40 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         
         # %% Tank:
-            #....
+        flightduration_h = _params_assumptions.flightduration_h #X h Flight time, e.g. 4 h
+        tank.H2_mass_kg = tank.calculate_H2_mass(flightduration_h, hydrogen_supply_rate_g_s) 
+        _, tank_mass_wet_kg = tank.calculate_mass() # We only need wet mass atm
             
         # %% Compute System Mass
+        # fixed or constant masses:
         fixed_mass, _ = sum_fixed_mass(_params_mass.masses_FCM_constants)
-        power_dependent_mass = [compressor.calculate_mass()["mean"], #Compressor + Turbine
-                                reci_pump.calculate_mass()["mean"], 
-                                coolant_pump_ht.calculate_mass()["mean"],
-                                radiator_mass_kg] 
+        #masses which depend on Power:
+        compressor_mass_kg = compressor.calculate_mass()["mean"]
+        rezi_pump_mass_kg = reci_pump.calculate_mass()["mean"]
+        coolant_pump_mass_kg = coolant_pump_ht.calculate_mass()["mean"]
+        
+        power_dependent_mass = sum([compressor_mass_kg, #Compressor + Turbine
+                                rezi_pump_mass_kg, 
+                                coolant_pump_mass_kg,
+                                radiator_mass_kg #if only "Module" masses are wanted: set to 0
+                                ])
+        
+        #Other dependend masses:
         cellcount_dependent_mass = stack.calculate_mass()
-
-        system_mass_kg = fixed_mass + sum(power_dependent_mass) + cellcount_dependent_mass
+        H2_dependend_mass = tank_mass_wet_kg #if only "Module" masses are wanted: set to 0
+        
+        system_mass_kg = fixed_mass + power_dependent_mass + cellcount_dependent_mass + H2_dependend_mass
         
         # %% Return
         
         return ResultModels(optimized_input, optimized_cell_voltage_V, compressor_power_W, 
                                 turbine_power_W, reci_pump_power_W, coolant_pump_power_W,
                                 stack_heat_flux_W, intercooler_heat_flux_W, evaporator_heat_flux_W, radiator_heat_flux_W, 
-                                hydrogen_supply_rate_g_s, system_mass_kg
+                                hydrogen_supply_rate_g_s, system_mass_kg, fixed_mass, power_dependent_mass,
+                                compressor_mass_kg, rezi_pump_mass_kg, coolant_pump_mass_kg, radiator_mass_kg,
+                                cellcount_dependent_mass, H2_dependend_mass
                                 )
+
     #optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
      #       coolant_pump_power_W, hydrogen_supply_rate_g_s, system_mass_kg
 
@@ -561,7 +588,19 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     evaporator_heat_flux_W = result.evaporator_heat_flux_W
     radiator_heat_flux_W = result.radiator_heat_flux_W
     
-    #optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s, system_mass_kg = evaluate_models(result.x)
+    #Todo, move all of the prints to Model run...
+    print("----------------------")
+    print(f"fixed dep mass: {result.fixed_mass:.2f} kg")
+    print(f"power dep mass: {result.power_dependent_mass:.2f} kg")
+    print(f"power dep mass: Compressor: {result.compressor_mass_kg:.2f} kg")
+    print(f"power dep mass: Rezi pump: {result.rezi_pump_mass_kg:.2f} kg")
+    print(f"power dep mass: Coolant pump: {result.coolant_pump_mass_kg:.2f} kg")
+    print(f"power dep mass: Radiator: {result.radiator_mass_kg:.2f} kg")
+    print(f"cell dep mass: {result.cellcount_dependent_mass:.2f} kg")
+    print(f"H2 dep mass: {result.H2_dependend_mass:.2f} kg")
+    print("-------------------------------------------------------")
+    print(f"system mass: {result.system_mass_kg:2f} kg")
+    print("-------------------------------------------------------")
     
     # Compute stack power 
     stack_power_kW = stack.current_A * stack.cell_voltage_V * stack.cellcount / 1000

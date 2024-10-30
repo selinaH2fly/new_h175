@@ -117,7 +117,7 @@ def add_colorbar_power_grid(fig, norm, cmap, ax):
         return cbar
 
 def set_y_axis_power_grid(ax, power_range): 
-    y_tick_positions = np.arange(1, 6 * 2, 2) - 0.5  # Center y-ticks by shifting them down
+    y_tick_positions = np.arange(1, len(power_range) * 2, 2) - 0.5  # Center y-ticks by shifting them down
     ax.set_yticks(y_tick_positions)
     #power_range = [20,50,80,125,150,175]
     ax.set_yticklabels([f'{power_range[i]} kW' for i in range(len(power_range))])
