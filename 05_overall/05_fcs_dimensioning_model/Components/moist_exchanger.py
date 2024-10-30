@@ -122,59 +122,99 @@ class MoistExchanger:
 
         return p_vap
 
-    def calculate_mass_flows(self):
+    def calculate_dry_inlet_mass_flows(self):
         """
-        Calculate the mass flows of air and vapor for both dry and wet air at inlet and outlet.
+        Calculate the mass flows of air and vapor for the dry air at the inlet.
 
         Returns:
-            Dictionary of mass flow rates.
+            Dictionary of dry inlet air and vapor mass flow rates.
         """
-
-        # Calculate dry inlet vapor and air mass flows
+        # Calculate humidity ratio for dry inlet
         x_dry_in = (self.R_Air / self.R_Vap) * self.calculate_partial_pressure(
             self.dry_air_temperature_in_K, self.dry_air_rh_in) / (
                            self.dry_air_pressure_in_Pa - self.calculate_partial_pressure(
                        self.dry_air_temperature_in_K, self.dry_air_rh_in)
                    )
 
+        # Calculate dry inlet air and vapor mass flows
         m_dot_air_dry_in = self.dry_air_mass_flow_kg_s / (1 + x_dry_in)
         m_dot_vap_dry_in = self.dry_air_mass_flow_kg_s - m_dot_air_dry_in
 
-        # Calculate dry outlet vapor and air mass flows
+        return {
+            "m_dot_air_dry_in": m_dot_air_dry_in,
+            "m_dot_vap_dry_in": m_dot_vap_dry_in
+        }
+
+    def calculate_dry_outlet_mass_flows(self):
+        """
+        Calculate the mass flows of air and vapor for the dry air at the outlet.
+
+        Returns:
+            Dictionary of dry outlet air and vapor mass flow rates.
+        """
+        # Calculate humidity ratio for dry outlet
         x_dry_out = (self.R_Air / self.R_Vap) * self.calculate_partial_pressure(
             self.dry_air_temperature_out_K, self.dry_air_rh_out) / (
                             self.dry_air_pressure_out_Pa - self.calculate_partial_pressure(
                         self.dry_air_temperature_out_K, self.dry_air_rh_out)
                     )
 
-        m_dot_air_dry_out = m_dot_air_dry_in  # Air mass flow remains the same
+        # Calculate dry outlet air and vapor mass flows
+        m_dot_air_dry_out = self.dry_air_mass_flow_kg_s / (1 + x_dry_out)
         m_dot_vap_dry_out = x_dry_out * m_dot_air_dry_out
         m_dot_dry_out = m_dot_vap_dry_out + m_dot_air_dry_out
 
-        # Calculate wet inlet vapor and air mass flows
+        return {
+            "m_dot_air_dry_out": m_dot_air_dry_out,
+            "m_dot_vap_dry_out": m_dot_vap_dry_out,
+            "m_dot_dry_out": m_dot_dry_out
+        }
+
+    def calculate_wet_inlet_mass_flows(self):
+        """
+        Calculate the mass flows of air and vapor for the wet air at the inlet.
+
+        Returns:
+            Dictionary of wet inlet air and vapor mass flow rates.
+        """
+        # Calculate humidity ratio for wet inlet
         x_wet_in = (self.R_Air / self.R_Vap) * self.calculate_partial_pressure(
             self.wet_air_temperature_in_K, self.wet_air_rh_in) / (
                            self.wet_air_pressure_in_Pa - self.calculate_partial_pressure(
                        self.wet_air_temperature_in_K, self.wet_air_rh_in)
                    )
 
+        # Calculate wet inlet air and vapor mass flows
         m_dot_air_wet_in = self.wet_air_mass_flow_kg_s / (1 + x_wet_in)
         m_dot_vap_wet_in = self.wet_air_mass_flow_kg_s - m_dot_air_wet_in
 
-        # Calculate wet outlet vapor and air mass flows
+        return {
+            "m_dot_air_wet_in": m_dot_air_wet_in,
+            "m_dot_vap_wet_in": m_dot_vap_wet_in
+        }
+
+    def calculate_wet_outlet_mass_flows(self):
+        """
+        Calculate the mass flows of air and vapor for the wet air at the outlet.
+
+        Returns:
+            Dictionary of wet outlet air and vapor mass flow rates.
+        """
+        # Get wet inlet mass flows first
+        wet_inlet_flows = self.calculate_wet_inlet_mass_flows()
+        m_dot_air_wet_in = wet_inlet_flows["m_dot_air_wet_in"]
+        m_dot_vap_wet_in = wet_inlet_flows["m_dot_vap_wet_in"]
+
+        # Calculate dry inlet vapor flow for wet outlet calculation
+        dry_inlet_flows = self.calculate_dry_inlet_mass_flows()
+        m_dot_vap_dry_in = dry_inlet_flows["m_dot_vap_dry_in"]
+
+        # Wet outlet air mass flow remains the same
         m_dot_air_wet_out = m_dot_air_wet_in
         m_dot_vap_wet_out = m_dot_vap_wet_in - m_dot_vap_dry_in
         m_dot_wet_out = m_dot_air_wet_out + m_dot_vap_wet_out
 
-        # Return calculated mass flows as a dictionary
         return {
-            "m_dot_air_dry_in": m_dot_air_dry_in,
-            "m_dot_vap_dry_in": m_dot_vap_dry_in,
-            "m_dot_air_dry_out": m_dot_air_dry_out,
-            "m_dot_vap_dry_out": m_dot_vap_dry_out,
-            "m_dot_dry_out": m_dot_dry_out,
-            "m_dot_air_wet_in": m_dot_air_wet_in,
-            "m_dot_vap_wet_in": m_dot_vap_wet_in,
             "m_dot_air_wet_out": m_dot_air_wet_out,
             "m_dot_vap_wet_out": m_dot_vap_wet_out,
             "m_dot_wet_out": m_dot_wet_out
@@ -184,10 +224,11 @@ class MoistExchanger:
         """
         Calculate the efficiency of water transfer. Use the humidifier efficiency map if provided.
         """
-        # Get mass flows from calculate_mass_flows
-        flow_data = self.calculate_mass_flows()
-        m_vap_dry_out = flow_data["m_dot_vap_dry_out"]
-        m_vap_wet_in = flow_data["m_dot_vap_wet_in"]
+        # Get mass flows from the separate methods
+        dry_outlet_flows = self.calculate_dry_outlet_mass_flows()
+        wet_inlet_flows = self.calculate_wet_inlet_mass_flows()
+        m_vap_dry_out = dry_outlet_flows["m_dot_vap_dry_out"]
+        m_vap_wet_in = wet_inlet_flows["m_dot_vap_wet_in"]
 
         if self.humidifier_efficiency_map is not None:
             # Convert dry mass flow rate from kg/s to SLPM
@@ -198,29 +239,30 @@ class MoistExchanger:
             efficiency_values = [eff / 100 for eff in self.humidifier_efficiency_map.values()]  # Convert to fractions
 
             # Interpolate efficiency based on SLPM mass flow
-            efficiency = np.interp(mass_flow_slpm, slpm_values, efficiency_values)
+            water_transfer_efficiency = np.interp(mass_flow_slpm, slpm_values, efficiency_values)
         else:
             # Calculate efficiency as in the original approach
-            efficiency = m_vap_dry_out / m_vap_wet_in if m_vap_wet_in != 0 else 0
+            water_transfer_efficiency = m_vap_dry_out / m_vap_wet_in if m_vap_wet_in != 0 else 0
 
-        return efficiency
+        return water_transfer_efficiency
 
     def calculate_water_transfer(self):
         """
-        Calculate the mass flow rate of water vapor transfer and efficiency using internal attributes.
+        Calculate the mass flow rate of water vapor transfer and efficiency.
 
         Returns:
-            mass flow rate of water vapor (kg/s), efficiency
+            tuple: mass flow rate of water vapor transfer (kg/s), water transfer efficiency
         """
         # Calculate efficiency
         water_transfer_efficiency = self.calculate_efficiency()
 
-        # Get mass flows from calculate_mass_flows
-        flow_data = self.calculate_mass_flows()
+        # Get mass flows using the individual methods
+        dry_inlet_flows = self.calculate_dry_inlet_mass_flows()
+        wet_inlet_flows = self.calculate_wet_inlet_mass_flows()
 
-        # Retrieve relevant mass flow rates from the flow_data dictionary
-        m_vap_dry_in = flow_data["m_dot_vap_dry_in"]
-        m_vap_wet_in = flow_data["m_dot_vap_wet_in"]
+        # Retrieve relevant mass flow rates
+        m_vap_dry_in = dry_inlet_flows["m_dot_vap_dry_in"]
+        m_vap_wet_in = wet_inlet_flows["m_dot_vap_wet_in"]
 
         # Calculate the mass flow rate of water vapor transfer
         m_dot_water_trans = water_transfer_efficiency * m_vap_wet_in - m_vap_dry_in
@@ -235,18 +277,15 @@ class MoistExchanger:
         Returns:
             float: Relative humidity at the dry air outlet.
         """
-        # Get the flow data
-        flow_data = self.calculate_mass_flows()
-
-        # Retrieve relevant mass flow rates
-        m_dot_air_dry_out = flow_data["m_dot_air_dry_out"]
-        m_dot_vap_dry_out = flow_data["m_dot_vap_dry_out"]
+        # Get dry outlet mass flows
+        dry_outlet_flows = self.calculate_dry_outlet_mass_flows()
+        m_dot_air_dry_out = dry_outlet_flows["m_dot_air_dry_out"]
+        m_dot_vap_dry_out = dry_outlet_flows["m_dot_vap_dry_out"]
 
         # Calculate the outlet saturation pressure using the dry air outlet temperature
         p_sat_out = self.calculate_saturation_pressure(self.dry_air_temperature_out_K)
 
         # Calculate the partial pressure of water vapor at the outlet
-        # The partial pressure can be calculated as (mass flow of vapor) / (mass flow of air + mass flow of vapor) * outlet pressure
         p_vap_dry_out = (m_dot_vap_dry_out / (m_dot_air_dry_out + m_dot_vap_dry_out)) * self.dry_air_pressure_out_Pa
 
         # Calculate relative humidity (RH)
@@ -263,30 +302,50 @@ class Humidifier(MoistExchanger):
         super().__init__(**kwargs)
 
 
-# Create an instance of MoistExchanger with some sample parameters
+
+# Create an instance of the Humidifier (MoistExchanger subclass) with the given input parameters
 humidifier = Humidifier(
-    dry_air_mass_flow_kg_s=0.0817,
+    dry_air_mass_flow_kg_s=0.045,
     wet_air_mass_flow_kg_s=0.030,
     dry_air_temperature_in_K=339.6,
     dry_air_pressure_in_Pa=145000,
-    dry_air_rh_in=0.08,
+    dry_air_rh_in=0.1,
     dry_air_temperature_out_K=337.3,
     dry_air_pressure_out_Pa=141000,
     wet_air_temperature_in_K=353.2,
     wet_air_pressure_in_Pa=210000,
     wet_air_rh_in=0.99,
     wet_air_pressure_out_Pa=196000,
-    humidifier_map=True  # Assume we are using the humidifier map
+    humidifier_map=True  # Assume humidifier efficiency map is provided
 )
 
-# Interpolate dry and wet pressure drops
-dry_pressure_drop = humidifier.interpolate_dry_pressure_drop()
-wet_pressure_drop = humidifier.interpolate_wet_pressure_drop()
+# Step 1: Calculate water transfer efficiency
+water_transfer_efficiency = humidifier.calculate_efficiency()
+print(f"Water Transfer Efficiency: {water_transfer_efficiency * 100:.2f}%")
 
-# Calculate efficiency
-efficiency = humidifier.calculate_efficiency()
+# Step 2: Calculate wet inlet mass flows and pressures (saturation and partial)
+wet_inlet_flows = humidifier.calculate_wet_inlet_mass_flows()
+m_vap_wet_in = wet_inlet_flows["m_dot_vap_wet_in"]
+m_air_wet_in = wet_inlet_flows["m_dot_air_wet_in"]
 
-# Print the results
-print(f"Interpolated Dry Pressure Drop: {dry_pressure_drop:.2f} kPa")
-print(f"Interpolated Wet Pressure Drop: {wet_pressure_drop:.2f} kPa")
-print(f"Calculated Humidifier Efficiency: {efficiency * 100:.2f}%")
+# Calculate saturation and partial pressures for wet inlet
+p_sat_wet_in = humidifier.calculate_saturation_pressure(humidifier.wet_air_temperature_in_K)
+p_vap_wet_in = humidifier.calculate_partial_pressure(humidifier.wet_air_temperature_in_K, humidifier.wet_air_rh_in)
+
+print(f"Mass Flow of Air (Wet In): {m_air_wet_in:.4f} kg/s")
+print(f"Mass Flow of Water Vapor (Wet In): {m_vap_wet_in:.4f} kg/s")
+print(f"Saturation Pressure (Wet In): {p_sat_wet_in:.2f} Pa")
+print(f"Partial Pressure (Wet In): {p_vap_wet_in:.2f} Pa")
+
+# Step 3: Calculate dry outlet water vapor mass flow rate using water transfer efficiency
+dry_inlet_flows = humidifier.calculate_dry_inlet_mass_flows()
+m_vap_dry_in = dry_inlet_flows["m_dot_vap_dry_in"]
+
+# m_vap_dry_out calculation
+m_vap_dry_out = water_transfer_efficiency * m_vap_wet_in - m_vap_dry_in
+print(f"Mass Flow of Water Vapor (Dry Out): {m_vap_dry_out:.4f} kg/s")
+
+# Step 4: Calculate RH at dry air outlet
+rh_dry_out = humidifier.calculate_rh_dry_out()
+print(f"Relative Humidity (RH) at Dry Air Outlet: {rh_dry_out * 100:.2f}%")
+
