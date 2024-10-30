@@ -49,6 +49,7 @@ class Assumptions:
     def __init__(self):
 
         self.hydrogen_loss_factor = 0.05    # fraction of hydrogen lost by purging; note: for \lambda_A > 1, it's inevitable to lose some hydrogen!
+        self.flightduration_h = 4 # X hours of flightduration (needed for Tank mass calculation)
 
 # TODO: move component parameters to component class definitions!?!
 class Compressor_Parameters:

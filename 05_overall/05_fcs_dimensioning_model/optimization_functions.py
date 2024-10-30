@@ -62,6 +62,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_evaporator = parameters.Evaporator_Parameters()
     _params_tank = parameters.Tank_Parameters()
     _params_mass = parameters.Mass_Parameters()
+    _params_assumptions = parameters.Assumptions()
     
     # Load DoE-Data 
     DoE_data, _ = data_processing.load_high_amp_doe_data()
@@ -338,9 +339,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         
         # %% Tank:
-            
-        tank.H2_mass_kg = tank.calculate_H2_mass(4, hydrogen_supply_rate_g_s) #X h Flight time, e.g. 4 h
-        _, tank_mass_wet_kg = tank.calculate_mass()
+        flightduration_h = _params_assumptions.flightduration_h #X h Flight time, e.g. 4 h
+        tank.H2_mass_kg = tank.calculate_H2_mass(flightduration_h, hydrogen_supply_rate_g_s) 
+        _, tank_mass_wet_kg = tank.calculate_mass() # We only need wet mass atm
             
         # %% Compute System Mass
         # fixed or constant masses:
@@ -586,6 +587,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     evaporator_heat_flux_W = result.evaporator_heat_flux_W
     radiator_heat_flux_W = result.radiator_heat_flux_W
     
+    #Todo, move all of the prints to Model run...
     print("----------------------")
     print(f"fixed dep mass: {result.fixed_mass:.2f} kg")
     print(f"power dep mass: {result.power_dependent_mass:.2f} kg")
@@ -598,8 +600,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     print("-------------------------------------------------------")
     print(f"system mass: {result.system_mass_kg:2f} kg")
     print("-------------------------------------------------------")
-        
-    #optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s, system_mass_kg = evaluate_models(result.x)
     
     # Compute stack power 
     stack_power_kW = stack.current_A * stack.cell_voltage_V * stack.cellcount / 1000
