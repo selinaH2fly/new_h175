@@ -599,7 +599,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     print(f"cell dep mass: {result.cellcount_dependent_mass:.2f} kg")
     print(f"H2 dep mass: {result.H2_dependend_mass:.2f} kg")
     print("-------------------------------------------------------")
-    print(f"system mass: {result.system_mass_kg:2f} kg")
+    print(f"system mass: {result.system_mass_kg:.2f} kg")
     print("-------------------------------------------------------")
     
     # Compute stack power 
