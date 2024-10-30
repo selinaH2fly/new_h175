@@ -74,6 +74,16 @@ class MoistExchanger:
 
         return interpolated_pressure_drop
 
+    def interpolate_wet_pressure_drop(self, mass_flow_sLPM):
+        # Extract flow rates and corresponding wet pressure drops
+        flow_rates = list(self.pressure_drop_map.keys())
+        wet_pressure_drops = [self.pressure_drop_map[flow]["wet_side"] for flow in flow_rates]
+
+        # Create an interpolation function for wet pressure drop
+        interpolator = interp1d(flow_rates, wet_pressure_drops, kind='linear', fill_value="extrapolate")
+        interpolated_pressure_drop = interpolator(mass_flow_sLPM)
+
+        return interpolated_pressure_drop
 
     def calculate_saturation_pressure(self, t):
         """
