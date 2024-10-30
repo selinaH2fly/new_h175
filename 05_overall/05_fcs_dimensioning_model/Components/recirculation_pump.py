@@ -109,7 +109,7 @@ class Recirculation_Pump:
         hydrogen_recirculated_mol_s = (self.stoich_anode - self.stoich_0)*hydrogen_consumption_mol_s    # recirculated hydrogen; mol/s
 
         # Nitrogen diffusion flow in stack; TODO: check the formula as it gives very low values
-        nitrogen_diffusion_mol_s = (1.2578 + math.log(self.current_A) - 2.6091)* \
+        nitrogen_diffusion_mol_s = (1.2578 * math.log(self.current_A) - 2.6091)* \
             self.cell_area_m2*1e4*self.n_cell*(10**(-9))                                                # Stephan Voss' magic formulat for diffusion flow of nitrogen in stack; mol/s
 
         stack_flow_ratio = nitrogen_diffusion_mol_s/hydrogen_consumption_mol_s                          # ratio of stack flows (helper variable)
