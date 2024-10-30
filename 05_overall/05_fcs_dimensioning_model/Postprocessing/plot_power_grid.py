@@ -32,7 +32,7 @@ def plot_power_needs(plot_params, data, titles, fl_set, weighting, show_plot, sa
 
         
         # Adjust y-ticks to be centered on the colored boxes
-        # Y-Axis should always have 6 entries, regarding of the data (20-175 kW)
+        # Y-Axis should have as many entries as len(power_range)
         set_y_axis_power_grid(ax, plot_params['power_range'])
 
         

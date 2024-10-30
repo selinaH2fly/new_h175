@@ -144,7 +144,7 @@ def analyze_data(_file_path1, saving=True):
     'title': '', 
     'vmin' : 0.1, 
     'vmax' : 225, 
-    'power_range' : [20,50,80,125,150,175], 
+    'power_range' : [130,135,140,145,150], 
     # Adjust labels for the secondary x-axis
     'names': ["Compressor (+)", "Turbine (-)", "Reci. Pump (+)", "Coolant Pump (+)", "Stack (-)"],   
     # List of pd column names of data for components which will be considered.
@@ -164,7 +164,7 @@ def analyze_data(_file_path1, saving=True):
     'title': '', 
     'vmin' : 0.1, 
     'vmax' : 225, 
-    'power_range' : [20,50,80,125,150,175], 
+    'power_range' : [130,135,140,145,150], 
     'names': ["Stack (+)", "Intercooler (+)", "Evaporator (-)", "Radiator (+)"],   
     'components' :  ["Power Constraint (kW)",
                   "current_A (Value)",
@@ -287,7 +287,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"F:\GIT\H175\05_overall\05_fcs_dimensioning_model\consolidated_130-150kW_455-455_120-120ft__1\optimized_parameters_130-150kW_455-455_120-120ft.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
