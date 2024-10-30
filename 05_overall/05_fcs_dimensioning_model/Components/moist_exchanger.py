@@ -225,10 +225,10 @@ class MoistExchanger:
         Calculate the efficiency of water transfer. Use the humidifier efficiency map if provided.
         """
         # Get mass flows from the separate methods
-        dry_outlet_flows = self.calculate_dry_outlet_mass_flows()
-        wet_inlet_flows = self.calculate_wet_inlet_mass_flows()
-        m_vap_dry_out = dry_outlet_flows["m_dot_vap_dry_out"]
-        m_vap_wet_in = wet_inlet_flows["m_dot_vap_wet_in"]
+        dry_outlet_mass_flows = self.calculate_dry_outlet_mass_flows()
+        wet_inlet_mass_flows = self.calculate_wet_inlet_mass_flows()
+        m_vap_dry_out = dry_outlet_mass_flows["m_dot_vap_dry_out"]
+        m_vap_wet_in = wet_inlet_mass_flows["m_dot_vap_wet_in"]
 
         if self.humidifier_efficiency_map is not None:
             # Convert dry mass flow rate from kg/s to SLPM
@@ -239,35 +239,35 @@ class MoistExchanger:
             efficiency_values = [eff / 100 for eff in self.humidifier_efficiency_map.values()]  # Convert to fractions
 
             # Interpolate efficiency based on SLPM mass flow
-            water_transfer_efficiency = np.interp(mass_flow_slpm, slpm_values, efficiency_values)
+            calculated_efficiency = np.interp(mass_flow_slpm, slpm_values, efficiency_values)
         else:
             # Calculate efficiency as in the original approach
-            water_transfer_efficiency = m_vap_dry_out / m_vap_wet_in if m_vap_wet_in != 0 else 0
+            calculated_efficiency = m_vap_dry_out / m_vap_wet_in if m_vap_wet_in != 0 else 0
 
-        return water_transfer_efficiency
+        return calculated_efficiency
 
     def calculate_water_transfer(self):
         """
         Calculate the mass flow rate of water vapor transfer and efficiency.
 
         Returns:
-            tuple: mass flow rate of water vapor transfer (kg/s), water transfer efficiency
+            tuple: mass flow rate of water vapor transfer (kg/s), calculated water transfer efficiency
         """
         # Calculate efficiency
-        water_transfer_efficiency = self.calculate_efficiency()
+        transfer_efficiency = self.calculate_efficiency()
 
         # Get mass flows using the individual methods
-        dry_inlet_flows = self.calculate_dry_inlet_mass_flows()
-        wet_inlet_flows = self.calculate_wet_inlet_mass_flows()
+        dry_inlet_mass_flows = self.calculate_dry_inlet_mass_flows()
+        wet_inlet_mass_flows = self.calculate_wet_inlet_mass_flows()
 
         # Retrieve relevant mass flow rates
-        m_vap_dry_in = dry_inlet_flows["m_dot_vap_dry_in"]
-        m_vap_wet_in = wet_inlet_flows["m_dot_vap_wet_in"]
+        m_vap_dry_in = dry_inlet_mass_flows["m_dot_vap_dry_in"]
+        m_vap_wet_in = wet_inlet_mass_flows["m_dot_vap_wet_in"]
 
         # Calculate the mass flow rate of water vapor transfer
-        m_dot_water_trans = water_transfer_efficiency * m_vap_wet_in - m_vap_dry_in
+        m_dot_water_trans = transfer_efficiency * m_vap_wet_in - m_vap_dry_in
 
-        return m_dot_water_trans, water_transfer_efficiency
+        return m_dot_water_trans, transfer_efficiency
 
     def calculate_rh_dry_out(self):
         """
