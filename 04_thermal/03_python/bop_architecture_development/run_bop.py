@@ -12,14 +12,14 @@ compare_res = False
 plot_temp_pr_vd = True
 
 # Which Architectures do you want to evaluate? ["bop10", "bop21","bop22", "bop23", "bop24","bop25", "bop26", "bop27","bop31", "bop33", "bop41","bop42"]
-arch_list = ["bop34"]
+arch_list = ["bop31"]
 
 
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
-    #input_dict = {"Vdot_in" : ["Vdot_1", [10/60, 12/60, 15/60, 17/60, 20/60, 22/60, 25/60, 27/60, 30/60], "BoP Eingangsvolumenstrom l/s"]}
-    input_dict = {"p_in": ["p_1", [1.08, 1.1, 1.15, 1.2, 1.25, 1.3], "Input Pressure [bar]"]} #1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6
+    #input_dict = {"Vdot_in" : ["Vdot_1", [6/60, 8/60, 10/60], "BoP Eingangsvolumenstrom l/s"]}
+    input_dict = {"p_in": ["p_1", [1.12, 1.15, 1.17, 1.2], "Input Pressure [bar]"]} #1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6
     #input_dict = {"throttle_delta_p" : ["", [0.1, 0.15, 0.2, 0.25, 0.3], "Thottle pressure drop [bar]"]}
 else:
     input_dict = None
@@ -27,9 +27,9 @@ else:
 # input
 critical_operation = True
 if critical_operation is True:
-    bc_dict = {"T_in" : 273.15 + 68.0,
+    bc_dict = {"T_in" : 273.15 + 60.0,
                 #"Vdot_in" : 0.5,   # either vdot or p_in
-                "p_in" : 1.365,
+                "p_in" : 1.3,
                 "p_end" : 1,
                 "Qdot_hpdu" : 1000,
                 "Qdot_lvdcdc" : 300,

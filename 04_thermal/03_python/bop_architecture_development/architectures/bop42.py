@@ -55,6 +55,7 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Provide input on boundary conditions
     """
+    #circ.add_bc("%s = 0.15"%intercooler.Vdot_in)
     circ.add_bc("%s = -0.0"%tcv1.delta_p_1)
     circ.add_bc("%s = -0.0"%tcv1.delta_p_2)
 

@@ -253,19 +253,19 @@ class Circuit:
         or: runs architecture just ones
         Results are returned to be compared between the variables                              
         """
-        if input_dict is not None:
-            for name in input_dict:
+        if input_dict is not None:      # runs architecture multiple times and changes one boundary condition
+            for name in input_dict:     # finds boundary condition to be varied in eq_unsorted list
                 for i in range(len(self.eq_unsorted)):
                     if '%s = ' %(input_dict[name][0]) in self.eq_unsorted[i][0]:
-                        k = i
+                        k = i           # postion of boundary condition in list
 
             for name in input_dict:
                 for y in input_dict[name][1]:
                     print("Execute architecture with Variable: %s = %f"%(name, y))
-                    self.eq_unsorted[k] = ['%s = %f' %(input_dict[name][0], y)]
+                    self.eq_unsorted[k] = ['%s = %f' %(input_dict[name][0], y)] # changes boundary condition
                     self.evaluate()
 
-                    for j in range(len(self.var_name)):
+                    for j in range(len(self.var_name)):     # saves results in result_dict
                         for result_name in result_dict:
                             if self.var_name[j] == result_dict[result_name][0]:
                                 result_dict[result_name][1].append(self.var_res[j])

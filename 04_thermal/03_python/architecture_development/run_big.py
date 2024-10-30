@@ -7,13 +7,13 @@ vary_bc = True
 
 # How do you want to plot?
 # Do you want to compare results of different architectures in one plot (only has effect if vary_bc is set True)
-compare_res = True
+compare_res = False
 
 # if you don't want to compare architectures in one plot: Do you want to compare all temperatures, all pressures and all flows in each one plot?
 plot_temp_pr_vd = False
 
 # Which Architectures do you want to evaluate? ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"]
-arch_list = ["Arch01", "Arch04", "Arch06"]    
+arch_list = ["Arch01"]    #, "Arch04", "Arch06"
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
@@ -22,7 +22,7 @@ if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary cond
     input_dict = {"sys_t_in" : ["", [273.15 + 50, 273.15 + 55, 273.15 + 60, 273.15 + 65], 'Systemeingangstemperatur [K]']}
     #input_dict = {"bop_q" : ["",[5000, 7000, 9000, 11000, 13000], 'Wärmeeintrag BoP Komponenten [W]']}
     # input_dict = {"stack_q" : ["", [180000, 190000, 200000, 210000, 220000], 'Wärmeeintrag Stack [W]']}    # circ.add_bc("Qdot_stack1 = %.1f"%(np.interp(600, [20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600], [2.6, 9.7, 20.8, 33.1, 46.7, 60.5, 75.0, 90.2, 106.4, 123.6, 142.5, 162.0, 178.5], left=np.nan, right=np.nan) * 1000.0))
-    #input_dict = {"bop_vdot" : ["", [20/60, 30/60, 40/60, 50/60, 60/60], 'Volumenstrom über BoP Komponenten [l/s]']}
+    #input_dict = {"bop_vdot" : ["", [0.2], 'Volumenstrom über BoP Komponenten [l/s]']}
     ###M#input_dict = {"bop_dp" : ["", [0.1, 0.2, 0.3, 0.4, 0.5], 'Druckverlust über die BoP Komponenten [bar]']}
 else: 
     input_dict = None
@@ -32,7 +32,7 @@ else:
 bc_dict = {"pump_p_in" : 1,                     # pressure before pump, lowest pressure level
            "stack_t_in" : 273.15 + 68.0,        # temperature at stack inlet
            "stack_t_out" : 273.15 + 80.0,       # temperature at stack outlet
-           "sys_t_in" : 273.15 + 60.0,          # System entry temperature, temperature after external radiatior
+           "sys_t_in" : 273.15 + 60.0,          # System entry temperature, temperature after external radiatior # 60
            "bop_q" : 13000,                     # bop heat 
            "stack_q" : 200000,                  # stack heat
            "bop_vdot" : 0.4,                     # flow over bop components (whole block) 30L/min
@@ -100,13 +100,13 @@ for arch in arch_list:      # each architecture is evaluated
 
     if arch == "Arch01":        # extra code to have customized bop and big architecture relations
         bc_dict["bop_delta_p"] = 24
-        bc_dict["bop_vdot"] = 0.2     
+        bc_dict["bop_vdot"] = 0.1     
     elif arch == "Arch04":
-        bc_dict["bop_delta_p"] = 41
-        bc_dict["bop_vdot"] = 0.25      # intercooler wird mit 0.2l/s durschströmt
+        bc_dict["bop_delta_p"] = 31
+        bc_dict["bop_vdot"] = 0.34      # intercooler wird mit 0.2l/s durschströmt
     elif arch == "Arch06":
-        bc_dict["bop_delta_p"] = 0
-        bc_dict["bop_vdot"] = 0.275     # entspricht dem Stackdruckverlust bei dT=12K
+        bc_dict["bop_delta_p"] = 24
+        bc_dict["bop_vdot"] = 0.2     # entspricht dem Stackdruckverlust bei dT=12K
     bc_dict["bop_delta_p"] = func_bop_delta_p(bc_dict["bop_delta_p"])
 
     key_init = "%s.initialize(%s, %s, %s)" %(arch, input_dict, result_dict, bc_dict)

@@ -61,12 +61,14 @@ def initialize(input_dict, result_dict, bc_dict):
     # pressure drop bop2 is equal to intercooler pressure drop, already adapted
     circ.add_bc("%s = - (%f * %s ** 2 + %f * %s)"%(bop1.delta_p, bc_dict["bop_delta_p"][0], bop1.Vdot_in, bc_dict["bop_delta_p"][1], bop1.Vdot_in)) 
     circ.add_bc("delta_p_bop2 = - (4.4760 * 10 ** (-4) * %s ** 2 * 60 ** 2 + 2.2828 * 10 ** (-3) * %s * 60)"%(bop2.Vdot_in, bop2.Vdot_in)) # intercooler
-
+    #circ.add_bc("delta_p_bop2 = -0.085")
     circ.add_bc("Qdot_bop1 = -2000")
     circ.add_bc("Qdot_bop2 = 15000")
 
     circ.add_bc("%s = %f" %(bop1.Vdot_in, bc_dict["bop_vdot"]))
-    circ.add_bc("%s = 0.1" %(bop2.Vdot_in))    
+    #circ.add_bc("%s = -0.0"%(throttle1.delta_p))
+    #circ.add_bc("%s = 0.0" %(splitter2.nsplit_2))
+    circ.add_bc("%s = 0.2" %(bop2.Vdot_in))    # problem with architecture
     # boundary conditions, user input:
     circ.add_bc("%s = %f" %(pump1.p_in, bc_dict["pump_p_in"]))
     circ.add_bc("%s = %f" %(stack1.T_in, bc_dict["stack_t_in"]))
