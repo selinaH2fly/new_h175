@@ -20,6 +20,7 @@ from Components.recirculation_pump import Recirculation_Pump
 from Components.coolant_pump import Coolant_Pump
 from Components.radiator import Radiator
 from Components.stack import Stack
+from Components.tank import Tank
 from Components.heat_exchanger import Intercooler, Evaporator
 from basic_physics import compute_air_mass_flow, icao_atmosphere, convert
 from mass_estimation import sum_fixed_mass, sum_power_dependent_mass, sum_cellcount_dependent_mass
@@ -59,6 +60,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     _params_physics = parameters.Physical_Parameters()
     _params_intercooler = parameters.Intercooler_Parameters()
     _params_evaporator = parameters.Evaporator_Parameters()
+    _params_tank = parameters.Tank_Parameters()
     _params_mass = parameters.Mass_Parameters()
     
     # Load DoE-Data 
@@ -116,7 +118,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     evaporator      =   Evaporator(efficiency=_params_evaporator.efficiency, primary_p_in_Pa = _params_evaporator.primary_p_in_Pa,  primary_fluid = _params_evaporator.primary_fluid , coolant_fluid=_params_evaporator.primary_fluid , ALLOWED_FLUIDS=_params_evaporator.ALLOWED_FLUIDS)
 
-
+    tank            =   Tank(massfraction=_params_tank.massfraction , H2_mass_kg=0 , fixed_mass_kg=_params_tank.fixed_mass_kg , pressure_bar=_params_tank.pressure_bar )
+    
     def evaluate_models(x): # TODO: refactor this function that became too long and complex
         """
         Helper function to evaluate models and compute necessary values.
@@ -327,7 +330,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         
         # %% Tank:
-            #....
+            
+        tank.H2_mass_kg = tank.calculate_H2_mass(4, hydrogen_supply_rate_g_s) #X h Flight time, e.g. 4 h
+        _, tank_mass_wet_kg = tank.calculate_mass()
             
         # %% Compute System Mass
         fixed_mass, _ = sum_fixed_mass(_params_mass.masses_FCM_constants)
@@ -336,8 +341,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                                 coolant_pump_ht.calculate_mass()["mean"],
                                 radiator_mass_kg] 
         cellcount_dependent_mass = stack.calculate_mass()
-
-        system_mass_kg = fixed_mass + sum(power_dependent_mass) + cellcount_dependent_mass
+        H2_dependend_mass = tank_mass_wet_kg
+        
+        system_mass_kg = fixed_mass + sum(power_dependent_mass) + cellcount_dependent_mass + H2_dependend_mass
         
         # %% Return
         

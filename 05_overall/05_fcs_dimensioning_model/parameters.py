@@ -198,8 +198,8 @@ class Tank_Parameters:
 
      def __init__(self):
              
-        self.massfraction = 0.5
-
+        self.massfraction = 1
+        self.fixed_mass_kg = 10 #TODO: move this to the massestimator later, Number provided by Chris B.
         self.pressure_bar = 5*1e5
         
 class Mass_Parameters:
