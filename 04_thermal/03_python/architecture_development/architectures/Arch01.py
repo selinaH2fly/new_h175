@@ -85,6 +85,17 @@ def initialize(input_dict, result_dict, bc_dict):
             result_dict[name][0] = radiator1.T_in
         elif name == "stack_delta_p":
             result_dict[name][0] = stack1.delta_p
+        elif name == "radiator_q":
+            result_dict[name][0] = radiator1.Qdot
+        elif name == "radiator_cp_in":
+            result_dict[name][0] = radiator1.c_p_in
+        elif name == "radiator_cp_out":
+            result_dict[name][0] = radiator1.c_p_out
+        elif name == "radiator_t_in":
+            result_dict[name][0] = radiator1.T_in
+        elif name == "radiator_t_out":
+            result_dict[name][0] = radiator1.T_out
+
     if "pump2_vdot" in result_dict.keys():
         del result_dict["pump2_vdot"]
     if "pump2_delta_p" in result_dict.keys():
