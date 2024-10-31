@@ -27,11 +27,28 @@ def plot_h2_vs_mass(plot_params, data, titles, colors, fl_set, show_plot, saving
     weightings = [0, 1]  # Only plot weightings 0 and 1
     markers = ['o', 'D']  # Circle for weighting 0, Diamond for weighting 1
     
-    fig, axs = plt.subplots(1, 3, figsize=(18, 6))
-    
+    # Filter out empty DataFrames
+    non_empty_data = [df for df in data if not df.empty]
+    non_empty_titles = [title for df, title in zip(data, titles) if not df.empty]
+    non_empty_colors = [color for df, color in zip(data, colors) if not df.empty]
+
+    num_plots = len(non_empty_data)  # Determine the number of required subplots
+
+    # Handle case where all DataFrames are empty
+    if num_plots == 0:
+        print("No non-empty datasets available for plotting.")
+        return
+
+    fig, axs = plt.subplots(1, num_plots, figsize=(6 * num_plots, 6))  # Dynamically adjust figure size
+
+    # Ensure axs is always iterable
+    if num_plots == 1:
+        axs = [axs]  # Convert to list if only one subplot is present
+
     eol = False  # Assuming eol remains constant in all cases
 
-    for ax, df, title, color in zip(axs, data, titles, colors):
+
+    for ax, df, title, color in zip(axs, non_empty_data, non_empty_titles, non_empty_colors):
         df_filtered = df[(df['Flight Level (100x ft)'] == fl_set) & (df['eol (t/f)'] == eol)]
         
         if df_filtered.empty:
@@ -91,7 +108,7 @@ def plot_h2_vs_mass(plot_params, data, titles, colors, fl_set, show_plot, saving
     
     if saving:
         file_path = create_plot_save_directory(f'H2_Supply_Comparison_FL{fl_set}_weighting_{weighting}.png', weighting)
-        plt.savefig(file_path, bbox_inches='tight')
+        plt.savefig(file_path, bbox_inches='tight', dpi=300)
         
     plt.show() if show_plot else plt.close()
 

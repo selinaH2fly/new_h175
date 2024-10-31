@@ -67,8 +67,8 @@ def add_colorbar(cmap, ax):
         cbar.set_label('System Power [kW]')
         
         # Set custom colorbar ticks
-        cbar.set_ticks([20, 50, 75, 100, 125, 150, 175])
-        cbar.ax.set_yticklabels([f'{int(t)} kW' for t in cbar.get_ticks()])
+        #cbar.set_ticks([20, 50, 75, 100, 125, 150, 175])
+        #cbar.ax.set_yticklabels([f'{int(t)} kW' for t in cbar.get_ticks()])
 
 
 def plot_scatter(ax, x, y, color_data=None, label=None, marker='o', edgecolor='k', cmap='viridis', norm=None, size=100, zorder=None, alpha=1.0):

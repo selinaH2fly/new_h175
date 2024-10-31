@@ -106,12 +106,12 @@ def analyze_data(_file_path1, saving=True):
     plot_params_h2_vs_mass = {
     'title': '', 
     'x_label': 'System Mass [kg]', 
-    'x_lim': [90, 135], 
+    'x_lim': [180, 230], 
     'y_label': 'Hydrogen Supply Rate [g/s]',
     'y_lim': None,  
     'label' : ["H2 supply", "system mass"], 
-    'vmin' : 20, 
-    'vmax' : 175
+    'vmin' : 125, 
+    'vmax' : 150
     }
     plot_h2_vs_mass(plot_params_h2_vs_mass, data, titles, colors, fl_set, show_plot=show_plot)
     
@@ -287,7 +287,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"F:\GIT\H175\05_overall\05_fcs_dimensioning_model\consolidated_130-150kW_455-455_120-120ft__1\optimized_parameters_130-150kW_455-455_120-120ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\consolidated_125-150kW_455-455_120-120ft__1\optimized_parameters_125-150kW_455-455_120-120ft.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()

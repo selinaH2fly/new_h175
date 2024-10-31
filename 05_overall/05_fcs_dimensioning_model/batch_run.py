@@ -41,7 +41,7 @@ if __name__ == '__main__':
     #import argparse
 
     parser = argparse.ArgumentParser(description="Main script to call optimize_input_variables.py")
-    parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[130,150])
+    parser.add_argument("-p", "--power", type=float, nargs='+', help="Power constraint for input variable optimization", default=[125,150])
     parser.add_argument("-n", "--cellcount", type=float, nargs='+', help="Stack cell number for optimizing subject to power constraint", default=[455])
     parser.add_argument("-f", "--flightlevel", type=float,  nargs='+', help="Flight level in 100x feets", default=[120])
     # parser.add_argument("-t", "--turbine", type=str, choices=["True"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")

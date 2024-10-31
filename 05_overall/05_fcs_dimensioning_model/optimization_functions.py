@@ -337,7 +337,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         radiator_heat_flux_W = radiator.thermal_power_W
         radiator_mass_kg = radiator.calculate_mass(stack.temp_coolant_out_K - 273.15)
         
-        
         # %% Tank:
         flightduration_h = _params_assumptions.flightduration_h #X h Flight time, e.g. 4 h
         tank.H2_mass_kg = tank.calculate_H2_mass(flightduration_h, hydrogen_supply_rate_g_s) 
