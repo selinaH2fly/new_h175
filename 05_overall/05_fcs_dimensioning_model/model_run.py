@@ -82,25 +82,31 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     print("-" * (label_width + value_width + 7))
     print(f"  {'System (Net) Power (s.t. Optimization):':<{label_width}} ={results.system_power_W/1000:>{value_width}.2f} kW")
     print("-" * (label_width + value_width + 7))
-    print(f"{'Fixed Dependent Mass:':<{label_width}} {results.fixed_mass:>{value_width}.2f} kg")
-    print(f"{'Power Dependent Mass:':<{label_width}} {results.power_dependent_mass:>{value_width}.2f} kg")
+    print(f"{'Fixed Dependent Mass:':<{label_width}} {results.fixed_mass:>{value_width+3}.2f} kg")
     print(f"{'Power Dependent Mass - Compressor:':<{label_width}} {results.compressor_mass_kg:>{value_width}.2f} kg")
     print(f"{'Power Dependent Mass - Rezi Pump:':<{label_width}} {results.rezi_pump_mass_kg:>{value_width}.2f} kg")
     print(f"{'Power Dependent Mass - Coolant Pump:':<{label_width}} {results.coolant_pump_mass_kg:>{value_width}.2f} kg")
     print(f"{'Power Dependent Mass - Radiator:':<{label_width}} {results.radiator_mass_kg:>{value_width}.2f} kg")
-    print(f"{'Cell  Dependent Mass:':<{label_width}} {results.cellcount_dependent_mass:>{value_width}.2f} kg")
-    print(f"{'H2    Dependent Mass:':<{label_width}} {results.H2_dependend_mass:>{value_width}.2f} kg")
-    print("-" * (label_width + value_width + 1))
-    print(f"{'System Mass:':<{label_width}} {results.system_mass_kg:>{value_width}.2f} kg")
+    print(f"{'Power Dependent Mass:':<{label_width}} {results.power_dependent_mass:>{value_width+3}.2f} kg")
+    print(f"{'Cell  Dependent Mass:':<{label_width}} {results.cellcount_dependent_mass:>{value_width+3}.2f} kg")
+    print(f"{'H2    Dependent Mass:':<{label_width}} {results.H2_dependend_mass:>{value_width+3}.2f} kg")
     print("-" * (label_width + value_width + 7))
-    results_final = results._asdict()
+    print(f"{'System Mass:':<{label_width}} {results.system_mass_kg:>{value_width+3}.2f} kg")
+    print("-" * (label_width + value_width + 7))
+    #results_final = results._asdict()
+    
     # Save results to a .csv file 
-    # export_to_csv(feature_names=gpr_model_cell_voltage.feature_names, optimal_input=optimal_input, hydrogen_supply_rate_g_s=hydrogen_supply_rate_g_s, cell_voltage=cell_voltage,
-    #               system_power_kW=system_power_kW, compressor_power_kW=compressor_power_kW, turbine_power_kW=turbine_power_kW, reci_pump_power_kW=reci_pump_power_kW,
-    #               coolant_pump_power_kW=coolant_pump_power_kW, stack_power_kW=stack_power_kW, power_constraint_kW=power_constraint_kW, specified_cell_count=specified_cell_count,
-    #               flight_level_100ft=flight_level_100ft, compressor_corrected_air_flow_g_s=compressor_corrected_air_flow_g_s, compressor_pressure_ratio=compressor_pressure_ratio, 
-    #               stack_heat_flux_kW = stack_heat_flux_kW, intercooler_heat_flux_kW = intercooler_heat_flux_kW, evaporator_heat_flux_kW = evaporator_heat_flux_kW, radiator_heat_flux_kW = radiator_heat_flux_kW,
-    #               system_mass_kg=system_mass_kg, consider_turbine=consider_turbine, end_of_life=end_of_life, multiobjective_weighting=multiobjective_weighting, converged=converged, filename='optimized_input_data.csv')
+    export_to_csv(
+        results=results,  # Pass the fully populated named tuple
+        feature_names=gpr_model_cell_voltage.feature_names, 
+        power_constraint_kW=power_constraint_kW, 
+        specified_cell_count=specified_cell_count, 
+        flight_level_100ft=flight_level_100ft, 
+        consider_turbine=consider_turbine, 
+        end_of_life=end_of_life, 
+        multiobjective_weighting=multiobjective_weighting, 
+        filename='optimized_input_data.csv'
+    )
     
 # Entry point of the script
 if __name__ == '__main__':
@@ -113,7 +119,7 @@ if __name__ == '__main__':
     parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
     parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.85 to account for end of life (default: False).")
     parser.add_argument("--constraint", type=str, choices=["True","False"], default="True", help="Activates the DoE envelope constraint condition for the optimizer. (default: True)")
-    parser.add_argument("-w", "--weighting", type=float, default=1.0, help="Weighting factor for multiobjective-optimization; 0 -> optimization for efficiency (default), 1 -> optimization for (power-specific) mass.")
+    parser.add_argument("-w", "--weighting", type=float, default=0.0, help="Weighting factor for multiobjective-optimization; 0 -> optimization for efficiency (default), 1 -> optimization for (power-specific) mass.")
     args = parser.parse_args()
 
     # Convert string inputs

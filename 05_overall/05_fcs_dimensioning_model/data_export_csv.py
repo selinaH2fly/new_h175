@@ -8,11 +8,23 @@ Created on Fri Jul 26 12:47:08 2024
 import csv
 import os
 
-def export_to_csv(feature_names, optimal_input, hydrogen_supply_rate_g_s, cell_voltage, 
-                  system_power_kW, compressor_power_kW, turbine_power_kW, reci_pump_power_kW, coolant_pump_power_kW, stack_power_kW,
-                  power_constraint_kW, specified_cell_count, flight_level_100ft, compressor_corrected_air_flow_g_s, compressor_pressure_ratio, 
-                  stack_heat_flux_kW, intercooler_heat_flux_kW, evaporator_heat_flux_kW, radiator_heat_flux_kW,
-                  system_mass_kg, consider_turbine, end_of_life, multiobjective_weighting, converged, filename='optimized_input_data.csv'):
+def export_to_csv(results, feature_names, power_constraint_kW, specified_cell_count, 
+                  flight_level_100ft, consider_turbine, end_of_life, 
+                  multiobjective_weighting, filename='optimized_input_data.csv'):
+    """
+    Export optimization results to a CSV file.
+    
+    Parameters:
+    - results: Instance of ResultModels containing optimization results.
+    - feature_names: List of feature names for the optimized input variables.
+    - power_constraint_kW: Power constraint in kW.
+    - specified_cell_count: Specified cell count.
+    - flight_level_100ft: Flight level in 100 ft units.
+    - consider_turbine: Boolean indicating if the turbine is considered.
+    - end_of_life: Boolean indicating end-of-life condition.
+    - multiobjective_weighting: Weighting value for multi-objective optimization.
+    - filename: CSV file name for saving the data.
+    """
     
     # Get the current directory
     current_dir = os.getcwd()
@@ -37,16 +49,22 @@ def export_to_csv(feature_names, optimal_input, hydrogen_supply_rate_g_s, cell_v
                            "Stack Heat Flux (kW)", "Intercooler Heat Flux (kW)","Evaporator Heat Flux (kW)","Radiator Heat Flux (kW)", "System Mass (kg)",
                            "turbine (t/f)","eol (t/f)", "weighting ([0,1])", "converged (t/f)"])
             writer.writerow(header)
+            
+        # Prepare data for export, converting relevant fields to the desired units
+        data = [idx, power_constraint_kW, specified_cell_count, flight_level_100ft]
+        data.extend([f'{value:.4f}' for value in results.optimized_input])  # Optimized input values
+        data.extend([
+            f'{results.hydrogen_supply_rate_g_s:.4f}', f'{results.cell_voltage_V:.4f}', 
+            f'{results.system_power_W / 1000:.2f}', f'{results.compressor_power_W / 1000:.2f}', 
+            f'{results.turbine_power_W / 1000:.2f}', f'{results.reci_pump_power_W / 1000:.2f}',
+            f'{results.coolant_pump_power_W / 1000:.2f}', f'{results.stack_power_W / 1000:.2f}',
+            f'{results.compressor_cor_mass_flow_g_s:.2f}', f'{results.compressor_pressure_ratio:.2f}',
+            f'{results.stack_heat_flux_W / 1000:.2f}', f'{results.intercooler_heat_flux_W / 1000:.2f}',
+            f'{results.evaporator_heat_flux_W / 1000:.2f}', f'{results.radiator_heat_flux_W / 1000:.2f}', 
+            f'{results.system_mass_kg:.2f}', f'{consider_turbine}', f'{end_of_life}', 
+            f'{multiobjective_weighting}', f'{results.optimization_converged}'
+        ])
         
-        # Write the data
-        data = [idx,power_constraint_kW, specified_cell_count, flight_level_100ft]
-        data.extend([f'{value:.4f}' for value in optimal_input])
-        data.extend([f'{hydrogen_supply_rate_g_s:.4f}', f'{cell_voltage:.4f}', 
-                     f'{system_power_kW:.2f}', f'{compressor_power_kW:.2f}', 
-                     f'{turbine_power_kW:.2f}', f'{reci_pump_power_kW:.2f}',
-                     f'{coolant_pump_power_kW:.2f}', f'{stack_power_kW:.2f}',
-                     f'{compressor_corrected_air_flow_g_s:.2f}', f'{compressor_pressure_ratio:.2f}',
-                     f'{stack_heat_flux_kW:.2f}', f'{intercooler_heat_flux_kW:.2f}',
-                     f'{evaporator_heat_flux_kW:.2f}', f'{radiator_heat_flux_kW:.2f}', f'{system_mass_kg:.2f}',
-                     f'{consider_turbine}', f'{end_of_life}', f'{multiobjective_weighting}', f'{converged}'])
+        # Write the data row to the CSV
         writer.writerow(data)
+        print("data written to csv.")
