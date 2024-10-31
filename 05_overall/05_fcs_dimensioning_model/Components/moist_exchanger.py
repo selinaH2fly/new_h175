@@ -250,28 +250,44 @@ class MoistExchanger:
             "m_dot_vap_dry_out": m_dot_vap_dry_out,
             "m_dot_dry_out": m_dot_dry_out
         }
-
-    def calculate_wet_inlet_mass_flows(self):
+    def calculate_wet_inlet_mass_flow(self, o2_mass_flow_rate):
         """
-        Calculate the mass flows of air and vapor for the wet air at the inlet.
+        Calculate the wet inlet mass flow based on the dry outlet mass flow,
+        the reacted O2 mass flow, and the relative humidity at the wet inlet.
+
+        Parameters:
+            o2_mass_flow_rate (float): The mass flow rate of reacted O2 (kg/s).
 
         Returns:
-            Dictionary of wet inlet air and vapor mass flow rates.
+            dict: Dictionary containing the wet inlet air and vapor mass flow rates.
         """
-        # Calculate humidity ratio for wet inlet
-        x_wet_in = (self.R_Air / self.R_Vap) * self.calculate_partial_pressure_rh(
-            self.wet_air_temperature_in_K, self.wet_air_rh_in) / (
-                           self.wet_air_pressure_in_Pa - self.calculate_partial_pressure_rh(
-                       self.wet_air_temperature_in_K, self.wet_air_rh_in)
-                   )
+        # Calculate the dry air mass flow at the outlet
+        dry_outlet_flows = self.calculate_dry_outlet_mass_flows()
+        m_dot_air_dry_out = dry_outlet_flows["m_dot_air_dry_out"]
+        m_dot_vap_dry_out = dry_outlet_flows["m_dot_vap_dry_out"]
 
-        # Calculate wet inlet air and vapor mass flows
-        m_dot_air_wet_in = self.wet_air_mass_flow_kg_s / (1 + x_wet_in)
-        m_dot_vap_wet_in = self.wet_air_mass_flow_kg_s - m_dot_air_wet_in
+        # Adjust for reacted O2 at the wet inlet
+        m_dot_air_wet_in = m_dot_air_dry_out - o2_mass_flow_rate  # Subtract reacted O2 for the initial dry air flow
+
+        # Calculate humidity ratio at the wet inlet
+        x_wet_in = (self.R_Air / self.R_Vap) * self.calculate_partial_pressure_rh(
+            self.wet_air_temperature_in_K, self.wet_air_rh_in
+        ) / (
+            self.wet_air_pressure_in_Pa - self.calculate_partial_pressure_rh(
+                self.wet_air_temperature_in_K, self.wet_air_rh_in
+            )
+        )
+
+        # Calculate wet inlet vapor mass flow
+        m_dot_vap_wet_in = x_wet_in * m_dot_air_wet_in  # Vapor flow based on humidity ratio
+
+        # Total wet inlet mass flow
+        m_dot_wet_in = m_dot_air_wet_in + m_dot_vap_wet_in
 
         return {
             "m_dot_air_wet_in": m_dot_air_wet_in,
-            "m_dot_vap_wet_in": m_dot_vap_wet_in
+            "m_dot_vap_wet_in": m_dot_vap_wet_in,
+            "m_dot_wet_in": m_dot_wet_in
         }
 
     def calculate_wet_outlet_mass_flows(self):
