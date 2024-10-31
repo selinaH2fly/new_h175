@@ -222,25 +222,28 @@ class MoistExchanger:
             "m_dot_air_dry_in": m_dot_air_dry_in,
             "m_dot_vap_dry_in": m_dot_vap_dry_in
         }
-
     def calculate_dry_outlet_mass_flows(self):
         """
-        Calculate the mass flows of air and vapor for the dry air at the outlet.
+        Calculate the mass flows of air and vapor for the dry air at the outlet, considering
+        the water transfer rate.
 
         Returns:
             Dictionary of dry outlet air and vapor mass flow rates.
         """
-        # Calculate humidity ratio for dry outlet
-        x_dry_out = (self.R_Air / self.R_Vap) * self.calculate_partial_pressure_rh(
-            self.dry_air_temperature_out_K, self.dry_air_rh_out) / (
-                            self.dry_air_pressure_out_Pa - self.calculate_partial_pressure_rh(
-                        self.dry_air_temperature_out_K, self.dry_air_rh_out)
-                    )
 
-        # Calculate dry outlet air and vapor mass flows
-        m_dot_air_dry_out = self.dry_air_mass_flow_kg_s / (1 + x_dry_out)
-        m_dot_vap_dry_out = x_dry_out * m_dot_air_dry_out
-        m_dot_dry_out = m_dot_vap_dry_out + m_dot_air_dry_out
+        # Get dry inlet mass flows
+        dry_inlet_flows = self.calculate_dry_inlet_mass_flows()
+        m_dot_air_dry_out = dry_inlet_flows["m_dot_air_dry_in"]  # m_dot_air_dry_out = m_dot_air_dry_in
+        m_dot_vap_dry_in = dry_inlet_flows["m_dot_vap_dry_in"]
+
+        # Calculate the total water transfer rate
+        m_dot_water_trans, _ = self.calculate_water_transfer()  # water_transfer_efficiency not used directly here
+
+        # Calculate vapor mass flow at the dry air outlet
+        m_dot_vap_dry_out = m_dot_vap_dry_in + m_dot_water_trans
+
+        # Total mass flow at the dry outlet
+        m_dot_dry_out = m_dot_air_dry_out + m_dot_vap_dry_out
 
         return {
             "m_dot_air_dry_out": m_dot_air_dry_out,
