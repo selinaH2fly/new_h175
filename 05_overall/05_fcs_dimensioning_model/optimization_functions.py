@@ -13,6 +13,7 @@ from scipy.constants import physical_constants
 
 # Import custom classes and functions
 import parameters
+from parameters import VariableContainer
 import data_processing 
 from Components.compressor import Compressor
 from Components.turbine import Turbine
@@ -139,10 +140,10 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         ...
         """
         
-        from parameter import VariableContainer
+        from parameters import VariableContainer
 
         # Directly use the namedtuple to create instances
-        ResultModels = VariableContainer.ResultModels()
+        ResultModels = VariableContainer()
         
         # %% Cell Voltage Model
 
@@ -155,7 +156,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Denormalize
         optimized_input = x * np.array(cell_voltage_model.input_data_std) + np.array(cell_voltage_model.input_data_mean)
-        optimized_cell_voltage_V = cell_voltage * cell_voltage_model.target_data_std + cell_voltage_model.target_data_mean
+        optimized_cell_voltage_V = (cell_voltage * cell_voltage_model.target_data_std + cell_voltage_model.target_data_mean).numpy()
 
         # Assign the optimal input values to the corresponding variables for better readability
         optimized_current_A = optimized_input[0]
@@ -315,7 +316,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         # %% Radiator
         
-        radiator.thermal_power_W = (stack_heat_flux_W + intercooler_heat_flux_W + evaporator_heat_flux_W).numpy()
+        radiator.thermal_power_W = (stack_heat_flux_W + intercooler_heat_flux_W + evaporator_heat_flux_W)
         radiator_heat_flux_W = radiator.thermal_power_W
         radiator_mass_kg = radiator.calculate_mass(stack.temp_coolant_out_K - 273.15)
         
@@ -345,14 +346,39 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         system_mass_kg = fixed_mass + power_dependent_mass + cellcount_dependent_mass + H2_dependend_mass
         
         # %% Return
-        
-        return ResultModels(optimized_input, optimized_cell_voltage_V, compressor_power_W, 
-                                turbine_power_W, reci_pump_power_W, coolant_pump_power_W,
-                                stack_heat_flux_W, intercooler_heat_flux_W, evaporator_heat_flux_W, radiator_heat_flux_W, 
-                                hydrogen_supply_rate_g_s, system_mass_kg, fixed_mass, power_dependent_mass,
-                                compressor_mass_kg, rezi_pump_mass_kg, coolant_pump_mass_kg, radiator_mass_kg,
-                                cellcount_dependent_mass, H2_dependend_mass
-                                )
+        ResultModels.update(optimized_input=optimized_input,
+                            optimized_cell_voltage_V=optimized_cell_voltage_V,
+                            compressor_power_W=compressor_power_W,
+                            turbine_power_W=turbine_power_W,
+                            reci_pump_power_W=reci_pump_power_W,
+                            coolant_pump_power_W=coolant_pump_power_W,
+                            
+                            stack_heat_flux_W=stack_heat_flux_W,
+                            intercooler_heat_flux_W=intercooler_heat_flux_W,
+                            evaporator_heat_flux_W=evaporator_heat_flux_W,
+                            radiator_heat_flux_W=radiator_heat_flux_W,
+                            
+                            hydrogen_supply_rate_g_s=hydrogen_supply_rate_g_s,
+                            system_mass_kg=system_mass_kg,
+                            fixed_mass=fixed_mass, 
+                            power_dependent_mass=power_dependent_mass,
+                            compressor_mass_kg=compressor_mass_kg, 
+                            rezi_pump_mass_kg=rezi_pump_mass_kg, 
+                            coolant_pump_mass_kg=coolant_pump_mass_kg, 
+                            radiator_mass_kg=radiator_mass_kg,
+                            cellcount_dependent_mass=cellcount_dependent_mass, 
+                            H2_dependend_mass=H2_dependend_mass,
+                            cell_voltage_V=stack.cell_voltage_V
+                            )
+                            
+        # ResultModels(optimized_input, optimized_cell_voltage_V, compressor_power_W, 
+        #                         turbine_power_W, reci_pump_power_W, coolant_pump_power_W,
+        #                         stack_heat_flux_W, intercooler_heat_flux_W, evaporator_heat_flux_W, radiator_heat_flux_W, 
+        #                         hydrogen_supply_rate_g_s, system_mass_kg, fixed_mass, power_dependent_mass,
+        #                         compressor_mass_kg, rezi_pump_mass_kg, coolant_pump_mass_kg, radiator_mass_kg,
+        #                         cellcount_dependent_mass, H2_dependend_mass
+        #                         )
+        return ResultModels.result 
 
     #optimized_input, optimized_cell_voltage_V, compressor_power_W, turbine_power_W, reci_pump_power_W, \
      #       coolant_pump_power_W, hydrogen_supply_rate_g_s, system_mass_kg
@@ -554,43 +580,41 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
     # Evaluate the models with the optimal input
     # Call evaluate_models and store the result in a variable
-    result = evaluate_models(result.x)
+    results = evaluate_models(result.x)
     
     # Access only the required fields by name
-    optimal_input = result.optimized_input
-    cell_voltage = result.optimized_cell_voltage_V
-    compressor_power_W = result.compressor_power_W
-    turbine_power_W = result.turbine_power_W
-    reci_pump_power_W = result.reci_pump_power_W
-    coolant_pump_power_W = result.coolant_pump_power_W
-    hydrogen_supply_rate_g_s = result.hydrogen_supply_rate_g_s
-    system_mass_kg = result.system_mass_kg
-    stack_heat_flux_W = result.stack_heat_flux_W
-    intercooler_heat_flux_W = result.intercooler_heat_flux_W
-    evaporator_heat_flux_W = result.evaporator_heat_flux_W
-    radiator_heat_flux_W = result.radiator_heat_flux_W
-    
-    #Todo, move all of the prints to Model run...
-    print("----------------------")
-    print(f"fixed dep mass: {result.fixed_mass:.2f} kg")
-    print(f"power dep mass: {result.power_dependent_mass:.2f} kg")
-    print(f"power dep mass: Compressor: {result.compressor_mass_kg:.2f} kg")
-    print(f"power dep mass: Rezi pump: {result.rezi_pump_mass_kg:.2f} kg")
-    print(f"power dep mass: Coolant pump: {result.coolant_pump_mass_kg:.2f} kg")
-    print(f"power dep mass: Radiator: {result.radiator_mass_kg:.2f} kg")
-    print(f"cell dep mass: {result.cellcount_dependent_mass:.2f} kg")
-    print(f"H2 dep mass: {result.H2_dependend_mass:.2f} kg")
-    print("-------------------------------------------------------")
-    print(f"system mass: {result.system_mass_kg:.2f} kg")
-    print("-------------------------------------------------------")
+    #optimal_input = result.optimized_input
+    #cell_voltage = result.optimized_cell_voltage_V
+    #compressor_power_W = result.compressor_power_W
+    #turbine_power_W = result.turbine_power_W
+    #reci_pump_power_W = result.reci_pump_power_W
+    #coolant_pump_power_W = result.coolant_pump_power_W
+    #hydrogen_supply_rate_g_s = result.hydrogen_supply_rate_g_s
+    #system_mass_kg = result.system_mass_kg
+    #stack_heat_flux_W = result.stack_heat_flux_W
+    #intercooler_heat_flux_W = result.intercooler_heat_flux_W
+    #evaporator_heat_flux_W = result.evaporator_heat_flux_W
+    #radiator_heat_flux_W = result.radiator_heat_flux_W
     
     # Compute stack power 
-    stack_power_kW = stack.current_A * stack.cell_voltage_V * stack.cellcount / 1000
+    stack_power_W = stack.current_A * stack.cell_voltage_V * stack.cellcount
+    
+    results = results._replace(
+        stack_power_W = stack_power_W,
+        compressor_cor_mass_flow_g_s = compressor.calculate_corrected_mass_flow(),
+        compressor_pressure_ratio =  compressor.pressure_out_Pa/compressor.pressure_in_Pa
+        )
     
     # Plot the compressor map with the optimized operating point highlighted
     if compressor_map is not None:
         compressor.plot_compressor_map()
         
-    return optimal_input, cell_voltage, hydrogen_supply_rate_g_s , stack_power_kW, compressor_power_W/1000, turbine_power_W/1000, \
-        reci_pump_power_W/1000, coolant_pump_power_W/1000, compressor.calculate_corrected_mass_flow()*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, \
-            stack_heat_flux_W/1000, intercooler_heat_flux_W/1000, evaporator_heat_flux_W/1000, radiator_heat_flux_W/1000, system_mass_kg, optimization_converged
+    return results
+
+#optimal_input, cell_voltage, hydrogen_supply_rate_g_s, 
+            #stack_power_kW, 
+            #compressor_power_W/1000, turbine_power_W/1000, \
+        #reci_pump_power_W/1000, coolant_pump_power_W/1000, 
+        #compressor.calculate_corrected_mass_flow()*1000, compressor.pressure_out_Pa/compressor.pressure_in_Pa, \
+            #stack_heat_flux_W/1000, intercooler_heat_flux_W/1000, evaporator_heat_flux_W/1000, radiator_heat_flux_W/1000, system_mass_kg, 
+            #optimization_converged
