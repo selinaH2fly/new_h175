@@ -54,6 +54,29 @@ class MoistExchanger:
         dew_point_temp = HAP.HAPropsSI('D', 'T', t, 'P', p, 'R', rh)
         return dew_point_temp
 
+    def calculate_reacted_o2_mass_flow(self,current_A, cellcount):
+        """
+        Calculate the reacted O2 mass flow rate in a fuel cell stack.
+
+        Parameters:
+        current_A, cellcount=275: Current per cell in amperes (A).
+        cellcount: Number of cells in the stack.
+
+        Returns:
+        float: Reacted O2 mass flow rate in kg/s.
+        """
+        #TODO transfer to basic physics?
+        #TODO grab constants from coolprop
+
+        M_O2 = 0.032  # Molar mass of O2 in kg/mol
+        F = 96485  # Faraday's constant in C/mol
+        efficiency_factor = 0.23  # Efficiency factor
+
+        # Calculate reacted O2 mass flow rate
+        o2_mass_flow_rate = (current_A * cellcount * M_O2) / (4 * F * efficiency_factor)
+
+        return o2_mass_flow_rate
+
     def convert_kg_s_to_slpm(self, kg_s):
         """
         Convert kg/s to SLPM using the density-based method.
@@ -303,26 +326,26 @@ class MoistExchanger:
 
     def calculate_water_transfer(self):
         """
-        Calculate the mass flow rate of water vapor transfer and efficiency.
+        Calculate the mass flow rate of water vapor transfer using humidity ratios.
 
         Returns:
-            tuple: mass flow rate of water vapor transfer (kg/s), calculated water transfer efficiency
+            tuple: mass flow rate of water vapor transfer (kg/s), water transfer efficiency
         """
-        # Calculate efficiency
-        transfer_efficiency = self.calculate_efficiency()
+        # Calculate humidity ratios at the wet air inlet and dry air inlet/outlet
+        humidity_ratio_wet_in = self.calculate_humidity_ratio(
+            self.wet_air_temperature_in_K, self.wet_air_pressure_in_Pa, self.wet_air_rh_in
+        )
+        humidity_ratio_dry_in = self.calculate_humidity_ratio(
+            self.dry_air_temperature_in_K, self.dry_air_pressure_in_Pa, self.dry_air_rh_in
+        )
 
-        # Get mass flows using the individual methods
-        dry_inlet_mass_flows = self.calculate_dry_inlet_mass_flows()
-        wet_inlet_mass_flows = self.calculate_wet_inlet_mass_flows()
+        # Determine water vapor transfer based on the difference in humidity ratios and dry air mass flow
+        m_dot_water_trans = self.dry_air_mass_flow_kg_s * (humidity_ratio_wet_in - humidity_ratio_dry_in)
 
-        # Retrieve relevant mass flow rates
-        m_vap_dry_in = dry_inlet_mass_flows["m_dot_vap_dry_in"]
-        m_vap_wet_in = wet_inlet_mass_flows["m_dot_vap_wet_in"]
+        # Calculate water transfer efficiency if using the humidifier efficiency map
+        water_transfer_efficiency = self.calculate_efficiency()
 
-        # Calculate the mass flow rate of water vapor transfer
-        m_dot_water_trans = transfer_efficiency * m_vap_wet_in - m_vap_dry_in
-
-        return m_dot_water_trans, transfer_efficiency
+        return m_dot_water_trans, water_transfer_efficiency
 
 class Humidifier(MoistExchanger):
     def __init__(self, **kwargs):
@@ -359,5 +382,13 @@ humidity_ratio_wet_in = humidifier.calculate_humidity_ratio(
 )
 print(f"Humidity Ratio at Wet Air Inlet: {humidity_ratio_wet_in:.4f}")
 
+o2_mass_flow = humidifier.calculate_reacted_o2_mass_flow(600, 455)
+print(f"Reacted O2 mass flow rate: {o2_mass_flow:.6f} kg/s")
+# calculate water transfer
+m_dot_water_trans, water_transfer_efficiency = humidifier.calculate_water_transfer()
+print(f"Mass Flow of Water transfer: {m_dot_water_trans:.2f} kg/s")
 
+# Example parameters
+current_A = 600  # Current per cell in A
+cellcount = 455  # Number of cells in the stack
 
