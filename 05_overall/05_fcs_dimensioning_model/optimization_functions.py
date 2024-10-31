@@ -9,7 +9,7 @@ from scipy.optimize import differential_evolution, NonlinearConstraint
 from scipy.spatial import ConvexHull, Delaunay
 import CoolProp.CoolProp as CP
 from scipy.constants import physical_constants
-
+import alphashape
 # Import custom classes and functions
 import parameters
 import data_processing 
@@ -21,6 +21,7 @@ from Components.radiator import Radiator
 from Components.stack import Stack
 from Components.heat_exchanger import Intercooler, Evaporator
 from basic_physics import compute_air_mass_flow, icao_atmosphere, convert
+from shapely.geometry import Point
 
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, anode_pressure_drop_model, flight_level_100ft, cellcount=275,
                                  power_constraint_kW=None, consider_turbine=True, compressor_map=None, end_of_life=False, constraint=True):
@@ -63,13 +64,81 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # reduce DoE-Data to optimized parameters
     Optimized_DoE_data_variables = data_processing.voltage_input_data_dict(DoE_data,_params_physics)
     Optimized_DoE_data_variables = pd.DataFrame(Optimized_DoE_data_variables)
+    columns_list = Optimized_DoE_data_variables.columns.tolist()
+    # cut DoE data at upper bounds
+    for i in range((len(_params_optimization.bounds))):
+        if i != 0:
+            Optimized_DoE_data_variables.loc[Optimized_DoE_data_variables[columns_list[i]]>_params_optimization.bounds[i][1], columns_list[i]] = _params_optimization.bounds[i][1]
 
-    ## export DoE Convex Hull
+
+    # define alpha shape function
+    def alphashape_function(DoE_data, alpha):
+        points = np.array(DoE_data, dtype=float)
+        alpha_shape = alphashape.alphashape(points, alpha)
+        
+        
+        #is_inside = alpha_shape.contains(optimized_point)
+        # Separate points that are inside the alpha shape
+        inside_points = [point for point in points if alpha_shape.contains(Point(point))]  # Unpack each point
+        outside_points = [point for point in points if not alpha_shape.contains(Point(point))]  # Unpack each point
+        # Separate points that are inside or outside the alpha shape
+
+
+        # Convert lists to numpy arrays for easy plotting
+        inside_points = np.array(inside_points)
+        outside_points = np.array(outside_points)
+        # Plot the alpha shape boundary and points
+
+        # Plot points inside the alpha shape in blue
+        plt.scatter(inside_points[:, 0], inside_points[:, 1], color='blue', label='Inside Points')
+
+        # Plot points outside the alpha shape in red
+        plt.scatter(outside_points[:, 0], outside_points[:, 1], color='red', label='Outside Points')
+
+        # Plot the alpha shape boundary
+        if alpha_shape.geom_type == 'Polygon':
+            x, y = alpha_shape.exterior.xy
+            plt.plot(x, y, color='green', linewidth=2, label='Alpha Shape Boundary')
+            #plt.plot(random_point[0],random_point[1], "ko")
+        elif alpha_shape.geom_type == 'MultiPolygon':
+            for polygon in alpha_shape:
+                x, y = polygon.exterior.xy
+                plt.plot(x, y, color='green', linewidth=2)
+        plt.xlim(0, 750)
+        plt.ylim(0,max(outside_points[:, 1]))
+        plt.xlabel("X-coordinate")
+        plt.ylabel("Y-coordinate")
+
+        plt.title("Alpha Shape with Inside and Outside Points")
+        plt.legend()
+        plt.grid(True)
+        #plt.show()
+        
+        return alpha_shape
+
+        ## Alpha Value Info
+    # cathode_rh = 0.01
+    # stoich cathode = 0.001
+    # cathode pressure =0.001
+    # coolant in = 0.005
+    # coolant out = 0.005
+    # stoich anode = 0.001
+    # pressure anode = 0
+
+    alphashape_cathode_rh = alphashape_function(Optimized_DoE_data_variables[["current_A","cathode_rh_in_perc"]], 0.01)
+    alphashape_stoich_cathode = alphashape_function(Optimized_DoE_data_variables[["current_A","stoich_cathode"]], 0.001)
+    alphashape_pressure_cathode = alphashape_function(Optimized_DoE_data_variables[["current_A","pressure_cathode_in_bara"]], 0.001)
+    alphashape_temp_coolant_in = alphashape_function(Optimized_DoE_data_variables[["current_A","temp_coolant_inlet_degC"]], 0.005)
+    alphashape_temp_coolant_out = alphashape_function(Optimized_DoE_data_variables[["current_A","temp_coolant_outlet_degC"]], 0.005)
+    alphashape_stoich_anode = alphashape_function(Optimized_DoE_data_variables[["current_A","stoich_anode"]], 0.001)
+    alphashape_pressure_anode = alphashape_function(Optimized_DoE_data_variables[["current_A","pressure_anode_in_bara"]],0)
+
     # build convex hull of DoE parameters
-    DoE_envelope = ConvexHull(Optimized_DoE_data_variables.values)
+    # cut data for pop_init
 
-    DoE_envelope_Delaunay = Delaunay(Optimized_DoE_data_variables.values[DoE_envelope.vertices])
-
+    Optimized_DoE_data_variables_cut = Optimized_DoE_data_variables[::5]
+    DoE_envelope = ConvexHull(Optimized_DoE_data_variables_cut.values)
+    DoE_envelope_Delaunay = Delaunay(Optimized_DoE_data_variables_cut.values[DoE_envelope.vertices])
     # Evaluate ambient conditions
     temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level_100ft)
 
@@ -322,24 +391,61 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     def nonlinear_constraint_Anode_Pressure(x):
 
-        return (x[3]*np.array(cell_voltage_model.input_data_std[3]) + np.array(cell_voltage_model.input_data_mean[3])) \
-            - (x[7]*np.array(cell_voltage_model.input_data_std[7]) + np.array(cell_voltage_model.input_data_mean[7]))
+        return (x[7]*np.array(cell_voltage_model.input_data_std[7]) + np.array(cell_voltage_model.input_data_mean[7])) \
+            - (x[3]*np.array(cell_voltage_model.input_data_std[3]) + np.array(cell_voltage_model.input_data_mean[3]))
 
     # Constraint to ensure that the optimized input is within the DoE envelope
-    def nonlinear_constraint_DoE(x):
+    # def nonlinear_constraint_DoE(x):
 
+    #     x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
+    #     x_scaled = x_scaled.reshape(1,len(x))
+
+    #     return DoE_envelope_Delaunay.find_simplex(x_scaled)
+    def nlc_DoE_cathode_rh(x):
         x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
-        x_scaled = x_scaled.reshape(1,len(x))
+        is_inside = alphashape_cathode_rh.contains(Point(x_scaled[[0,1]]))
 
-        return DoE_envelope_Delaunay.find_simplex(x_scaled)
+        return 1 if is_inside else -1
+
+    def nlc_DoE_cathode_stoich(x):
+        x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
+        is_inside = alphashape_stoich_cathode.contains(Point(x_scaled[[0,2]]))
+
+        return 1 if is_inside else -1
+
+    def nlc_DoE_pressure_stack(x):
+        x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
+        is_inside_cathode = alphashape_pressure_cathode.contains(Point(x_scaled[[0,3]]))
+        is_inside_anode = alphashape_pressure_anode.contains(Point(x_scaled[[0,7]]))
+        pressure_delta = (x[7]*np.array(cell_voltage_model.input_data_std[7]) + np.array(cell_voltage_model.input_data_mean[7])) \
+        - (x[3]*np.array(cell_voltage_model.input_data_std[3]) + np.array(cell_voltage_model.input_data_mean[3]))
+        return 1 if is_inside_cathode and is_inside_anode and pressure_delta > 0.05 else -1
+    
+    def nlc_DoE_coolant(x):
+        x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
+        is_inside_coolant_in = alphashape_temp_coolant_in.contains(Point(x_scaled[[0,4]]))
+        is_inside_coolant_out = alphashape_temp_coolant_out.contains(Point(x_scaled[[0,5]]))
+        coolant_delta = (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
+            - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4]))
+        return 1 if is_inside_coolant_in and is_inside_coolant_out and coolant_delta > 0 else -1
+    
+    def nlc_DoE_anode_stoich(x):
+        x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
+        is_inside = alphashape_stoich_anode.contains(Point(x_scaled[[0,7]]))
+
+        return 1 if is_inside else -1
 
     # Check for DoE constraint setting and define the nonlinear constraints
     nlc_power = NonlinearConstraint(nonlinear_constraint_Power, 0, 1000)
     nlc_temp = NonlinearConstraint(nonlinear_constraint_Temp, 1e-3, np.inf)
     nlc_anode = NonlinearConstraint(nonlinear_constraint_Anode_Pressure,0,np.inf)
-    nlc_DoE = NonlinearConstraint(nonlinear_constraint_DoE,0,np.inf)
+    nlc_DoE_rh = NonlinearConstraint(nlc_DoE_cathode_rh,0, np.inf)
+    nlc_DoE_cath_stoich = NonlinearConstraint(nlc_DoE_cathode_stoich,0, np.inf)
+    nlc_DoE_stack_pressure = NonlinearConstraint(nlc_DoE_pressure_stack,0, np.inf)
+    nlc_DoE_coolantPump = NonlinearConstraint(nlc_DoE_coolant,0, np.inf)
+    nlc_DoE_an_stoich = NonlinearConstraint(nlc_DoE_anode_stoich,0, np.inf)
     if constraint:            
-        nlc = [nlc_power, nlc_DoE]
+        nlc = [nlc_power, nlc_DoE_rh, nlc_DoE_cath_stoich, nlc_DoE_stack_pressure, nlc_DoE_coolantPump, nlc_DoE_an_stoich]
     else:
         nlc = [nlc_power, nlc_temp, nlc_anode]
 
@@ -410,7 +516,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         #all_points, outside_points = evaluate_pop_in_DoE(adjusted_pop_init, DoE_envelope_Delaunay)
         return adjusted_pop_init
 
-    '''
+    
     class ConvergenceTracker:
         """
         Class to get detailed optimization informations and set manual convergence criteria
@@ -425,14 +531,20 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         def __call__(self, xk, convergence):
             # Store the best objective value
+            xk_rh = xk[:2]
             current_best_value = objective_function(xk)
             self.best_objective_values.append(current_best_value)
             nlc_Temp_xk = nonlinear_constraint_Temp(xk)
             nlc_Power_xk = nonlinear_constraint_Power(xk)
-            nlc_DoE_xk = nonlinear_constraint_DoE(xk)
+            nlc_DoE_cathode_rh_xk = nlc_DoE_cathode_rh(xk)
+            nlc_DoE_cathode_stoich_xk = nlc_DoE_cathode_stoich(xk)
+            nlc_DoE_stack_pressure_xk = nlc_DoE_pressure_stack(xk)
+            nlc_DoE_coolantPump_xk = nlc_DoE_coolant(xk)
+            nlc_DoE_an_stoich_xk = nlc_DoE_anode_stoich(xk)
+            DoE_constraint_xk = np.array([nlc_DoE_cathode_rh(xk), nlc_DoE_cathode_stoich(xk),nlc_DoE_pressure_stack(xk),nlc_DoE_coolant(xk),nlc_DoE_anode_stoich(xk)])
 
             if len(self.best_objective_values)<self.window_size:
-                print(f"Iteration {len(self.best_objective_values)}: Best Objective = {current_best_value:.6f}, nlc_CP = {nlc_Temp_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
+                print(f"Iteration {len(self.best_objective_values)}: Best Objective = {current_best_value:.6f}, nlc_CP = {nlc_Temp_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE_rh = {nlc_DoE_cathode_rh_xk:.6f}, nlc_DoE_cath_stoich = {nlc_DoE_cathode_stoich_xk:.6f}, nlc_DoE_stack_pressure = {nlc_DoE_stack_pressure_xk:.6f}, nlc_DoE_coolantPump = {nlc_DoE_coolantPump_xk:.6f}, nlc_DoE_an_stoich = {nlc_DoE_an_stoich_xk:.6f}")
                 return False
 
             else:
@@ -449,20 +561,20 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                 #print(f"Iteration {len(self.best_objective_values)}: Current Objective = {current_best_value:.6f}, Avg of Last {self.window_size:.6f} = {average_recent_values:.6f}, Difference to avg = {difference_to_avg:.6f}, Difference to last ={difference_to_last:.6f} , nlc_CP = {nlc_CP_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
 
                 # Check if the difference is less than the tolerance (i.e., convergence criterion)
-                if difference_to_avg < self.tolerance and difference_to_last < self.tolerance and 0 <= nlc_Power_xk < 1000 and nlc_Temp_xk>0 and nlc_DoE_xk>0:
-                    print(f"Iteration {len(self.best_objective_values)}: Best Objective = {current_best_value:.6f}, nlc_Temp = {nlc_Temp_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
+                if difference_to_avg < self.tolerance and difference_to_last < self.tolerance and 0 <= nlc_Power_xk < 1000 and nlc_Temp_xk>0 and all(x > 0 for x in DoE_constraint_xk):
+                    print(f"Iteration {len(self.best_objective_values)}: Best Objective = {current_best_value:.6f}, nlc_Temp = {nlc_Temp_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE_rh = {nlc_DoE_cathode_rh_xk:.6f}, nlc_DoE_cath_stoich = {nlc_DoE_cathode_stoich_xk:.6f}, nlc_DoE_stack_pressure = {nlc_DoE_stack_pressure_xk:.6f}, nlc_DoE_coolantPump = {nlc_DoE_coolantPump_xk:.6f}, nlc_DoE_an_stoich = {nlc_DoE_an_stoich_xk:.6f}")
                     print("Convergence criterion met! Stopping optimization.")
                     return True  # Return True to stop the optimization early
 
                 else:
-                    print(f"Iteration {len(self.best_objective_values)}: Best Objective = {current_best_value:.6f}, nlc_Temp = {nlc_Temp_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE = {nlc_DoE_xk.item():.6f}")
+                    print(f"Iteration {len(self.best_objective_values)}: Best Objective = {current_best_value:.6f}, nlc_CP = {nlc_Temp_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE_rh = {nlc_DoE_cathode_rh_xk:.6f}, nlc_DoE_cath_stoich = {nlc_DoE_cathode_stoich_xk:.6f}, nlc_DoE_stack_pressure = {nlc_DoE_stack_pressure_xk:.6f}, nlc_DoE_coolantPump = {nlc_DoE_coolantPump_xk:.6f}, nlc_DoE_an_stoich = {nlc_DoE_an_stoich_xk:.6f}")
                     return False               
     
-    '''
+    
 
     # Perform the optimization using differential evolution
-    #callback = ConvergenceTracker(tolerance=1e-5, window_size=40) #activate if you need some convergence information
-    result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=None,
+    callback = ConvergenceTracker(tolerance=1e-5, window_size=40) #activate if you need some convergence information
+    result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=callback,
                                     maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
                                     seed=_params_optimization.seed, recombination=_params_optimization.recombination, strategy=_params_optimization.strategy, 
                                     tol=_params_optimization.tol, init=pop_init(), polish=False, disp=False)
@@ -472,11 +584,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     # Evaluate the models with the optimal input
     optimal_input, cell_voltage, compressor_power_W, turbine_power_W, reci_pump_power_W, coolant_pump_power_W, hydrogen_supply_rate_g_s = evaluate_models(result.x)
     
+    DoE_constraint = np.array([nlc_DoE_cathode_rh(result.x), nlc_DoE_cathode_stoich(result.x),nlc_DoE_pressure_stack(result.x),nlc_DoE_coolant(result.x),nlc_DoE_anode_stoich(result.x)])
     #check convergence criteria 
     if optimization_converged:
-        if constraint and nonlinear_constraint_DoE(result.x)>0 and 0<=nonlinear_constraint_Power(result.x)<=1000:
+        if constraint and all(x > 0 for x in DoE_constraint) and 0<=nonlinear_constraint_Power(result.x)<=1000:
             optimization_converged="True"
-        elif constraint and (nonlinear_constraint_Power(result.x)<0 or nonlinear_constraint_Power(result.x)>1000 or nonlinear_constraint_DoE(result.x)<0):
+        elif constraint and (nonlinear_constraint_Power(result.x)<0 or nonlinear_constraint_Power(result.x)>1000 or any(x < 0 for x in DoE_constraint)):
             optimization_converged= "False"
         elif nonlinear_constraint_Power(result.x)<0 or nonlinear_constraint_Power(result.x)>1000 or nonlinear_constraint_Anode_Pressure(result.x)<0.05 or nonlinear_constraint_Temp(result.x)<0:
             optimization_converged= "False"
