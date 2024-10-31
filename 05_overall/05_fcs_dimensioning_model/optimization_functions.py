@@ -9,7 +9,7 @@ from scipy.optimize import differential_evolution, NonlinearConstraint
 from scipy.spatial import ConvexHull, Delaunay
 import CoolProp.CoolProp as CP
 from scipy.constants import physical_constants
-from collections import namedtuple # Used to create a datacontainer for evaluate_models(x) return
+
 
 # Import custom classes and functions
 import parameters
@@ -138,29 +138,11 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         - hydrogen_mass_flow_g_s: Computed hydrogen mass flow rate.
         ...
         """
-        # Define a named tuple for the evaluation results
-        ResultModels = namedtuple('ResultModels', [
-            'optimized_input',
-            'optimized_cell_voltage_V',
-            'compressor_power_W',
-            'turbine_power_W',
-            'reci_pump_power_W',
-            'coolant_pump_power_W',
-            'stack_heat_flux_W',
-            'intercooler_heat_flux_W',
-            'evaporator_heat_flux_W',
-            'radiator_heat_flux_W',
-            'hydrogen_supply_rate_g_s',
-            'system_mass_kg',
-            'fixed_mass',
-            'power_dependent_mass',
-            'compressor_mass_kg',
-            'rezi_pump_mass_kg',
-            'coolant_pump_mass_kg',
-            'radiator_mass_kg',
-            'cellcount_dependent_mass',
-            'H2_dependend_mass'
-        ])
+        
+        from parameter import VariableContainer
+
+        # Directly use the namedtuple to create instances
+        ResultModels = VariableContainer.ResultModels()
         
         # %% Cell Voltage Model
 
@@ -566,6 +548,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                                     maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
                                     seed=_params_optimization.seed, recombination=_params_optimization.recombination, strategy=_params_optimization.strategy, 
                                     tol=_params_optimization.tol, polish=False, init=pop_init(), disp=False)#, workers=20
+    
     optimization_converged = result.success
     print(f'{result.message}')
 
