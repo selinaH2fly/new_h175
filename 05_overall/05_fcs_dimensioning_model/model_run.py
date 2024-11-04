@@ -37,51 +37,76 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     create_experiment_folder(_params_optimization=_params_optimization, type='optimization')
     
     # Optimize the input variables
-    optimal_input, cell_voltage, hydrogen_supply_rate_g_s, \
-        stack_power_kW, compressor_power_kW, turbine_power_kW, \
-            reci_pump_power_kW, coolant_pump_power_kW, compressor_corrected_air_flow_g_s, \
-                compressor_pressure_ratio, stack_heat_flux_kW, intercooler_heat_flux_kW, \
-                    evaporator_heat_flux_kW, radiator_heat_flux_kW, system_mass_kg, converged = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
-                                                                                                                             flight_level_100ft, cellcount=specified_cell_count,
-                                                                                                                             power_constraint_kW=power_constraint_kW,
-                                                                                                                             consider_turbine=consider_turbine, compressor_map=compressor_map,
-                                                                                                                             end_of_life=end_of_life, multiobjective_weighting=multiobjective_weighting,
-                                                                                                                             constraint=constraint)
+    # optimal_input, cell_voltage, hydrogen_supply_rate_g_s, \
+    #     stack_power_kW, compressor_power_kW, turbine_power_kW, \
+    #         reci_pump_power_kW, coolant_pump_power_kW, compressor_corrected_air_flow_g_s, \
+    #             compressor_pressure_ratio, stack_heat_flux_kW, intercooler_heat_flux_kW, \
+    #                 evaporator_heat_flux_kW, radiator_heat_flux_kW, system_mass_kg, converged 
+    results = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
+                                            flight_level_100ft, cellcount=specified_cell_count,
+                                            power_constraint_kW=power_constraint_kW,
+                                            consider_turbine=consider_turbine, compressor_map=compressor_map,
+                                            end_of_life=end_of_life, multiobjective_weighting=multiobjective_weighting,
+                                            constraint=constraint)
+
+    system_power_W = results.stack_power_W          \
+                        - results.compressor_power_W \
+                        + results.turbine_power_W     \
+                        - results.reci_pump_power_W    \
+                        - results.coolant_pump_power_W
     
-    system_power_kW = stack_power_kW - compressor_power_kW + turbine_power_kW - reci_pump_power_kW - coolant_pump_power_kW
+    results = results._replace(system_power_W = system_power_W)
 
     # Print the optimal input, target variables, and bounds including feature names and target variable
     print("\nOptimized Input Variables:")
-    for name, value, bound in zip(gpr_model_cell_voltage.feature_names, optimal_input, _params_optimization.bounds):
+    for name, value, bound in zip(gpr_model_cell_voltage.feature_names, results.optimized_input, _params_optimization.bounds):
         lower_bound_formatted = f"{bound[0]}" if abs(bound[0]) < 1e3 else f"{bound[0]:.1e}"
         upper_bound_formatted = f"{bound[1]}" if abs(bound[1]) < 1e3 else f"{bound[1]:.1e}"
         print(f"  {name}: {value:.4f} (Bounds: [{lower_bound_formatted}, {upper_bound_formatted}])")
 
     print(f"\nOptimized Targets (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):")
-    print(f"  Hydrogen Supply Rate: {hydrogen_supply_rate_g_s:.4f} g/s (Weighting: {1 - multiobjective_weighting})")
-    print(f"  Specific Power: {system_power_kW/system_mass_kg:.4f} kW/kg (Weighting: {multiobjective_weighting})")
+    print(f"  Hydrogen Supply Rate: {results.hydrogen_supply_rate_g_s:.4f} g/s (Weighting: {1 - multiobjective_weighting})")
+    print(f"  Specific Power: {system_power_W/1000/results.system_mass_kg:.4f} kW/kg (Weighting: {multiobjective_weighting})")
 
-    print(f"\nCell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {cell_voltage:.4f} V\n")
+    print(f"\nCell Voltage (s.t. Optimized Input Variables, System Power Constraint, Flighlevel & Cell Count):\n  {results.cell_voltage_V:.4f} V\n")
 
     # Print the resultant power numbers
     label_width = 45
     value_width = 10
     print("Resultant Power Numbers:")
-    print(f"  {'Stack (Gross) Power Estimate:':<{label_width}}  {stack_power_kW:>{value_width}.2f} kW")
-    print(f"  {'Compressor Power Estimate (at FL ' + str(flight_level_100ft) + '):':<{label_width}} -{compressor_power_kW:>{value_width}.2f} kW")
-    print(f"  {'Turbine Power Estimate (at FL ' + str(flight_level_100ft) + '):':<{label_width}} +{turbine_power_kW:>{value_width}.2f} kW")
-    print(f"  {'Recirculation Pump Power Estimate:':<{label_width}} -{reci_pump_power_kW:>{value_width}.2f} kW")
-    print(f"  {'Coolant Pump Power Estimate:':<{label_width}} -{coolant_pump_power_kW:>{value_width}.2f} kW")
+    print(f"  {'Stack (Gross) Power Estimate:':<{label_width}}  {results.stack_power_W/1000:>{value_width}.2f} kW")
+    print(f"  {'Compressor Power Estimate (at FL ' + str(flight_level_100ft) + '):':<{label_width}} -{results.compressor_power_W/1000:>{value_width}.2f} kW")
+    print(f"  {'Turbine Power Estimate (at FL ' + str(flight_level_100ft) + '):':<{label_width}} +{results.turbine_power_W/1000:>{value_width}.2f} kW")
+    print(f"  {'Recirculation Pump Power Estimate:':<{label_width}} -{results.reci_pump_power_W/1000:>{value_width}.2f} kW")
+    print(f"  {'Coolant Pump Power Estimate:':<{label_width}} -{results.coolant_pump_power_W/1000:>{value_width}.2f} kW")
     print("-" * (label_width + value_width + 7))
-    print(f"  {'System (Net) Power (s.t. Optimization):':<{label_width}} ={system_power_kW:>{value_width}.2f} kW")
+    print(f"  {'System (Net) Power (s.t. Optimization):':<{label_width}} ={results.system_power_W/1000:>{value_width}.2f} kW")
+    print("-" * (label_width + value_width + 7))
+    print(f"{'Fixed Dependent Mass:':<{label_width}} {results.fixed_mass:>{value_width+3}.2f} kg")
+    print(f"{'Power Dependent Mass - Compressor:':<{label_width}} {results.compressor_mass_kg:>{value_width}.2f} kg")
+    print(f"{'Power Dependent Mass - Rezi Pump:':<{label_width}} {results.rezi_pump_mass_kg:>{value_width}.2f} kg")
+    print(f"{'Power Dependent Mass - Coolant Pump:':<{label_width}} {results.coolant_pump_mass_kg:>{value_width}.2f} kg")
+    print(f"{'Power Dependent Mass - Radiator:':<{label_width}} {results.radiator_mass_kg:>{value_width}.2f} kg")
+    print(f"{'Power Dependent Mass:':<{label_width}} {results.power_dependent_mass:>{value_width+3}.2f} kg")
+    print(f"{'Cell  Dependent Mass:':<{label_width}} {results.cellcount_dependent_mass:>{value_width+3}.2f} kg")
+    print(f"{'H2    Dependent Mass:':<{label_width}} {results.H2_dependend_mass:>{value_width+3}.2f} kg")
+    print("-" * (label_width + value_width + 7))
+    print(f"{'System Mass:':<{label_width}} {results.system_mass_kg:>{value_width+3}.2f} kg")
+    print("-" * (label_width + value_width + 7))
+    #results_final = results._asdict()
     
     # Save results to a .csv file 
-    export_to_csv(feature_names=gpr_model_cell_voltage.feature_names, optimal_input=optimal_input, hydrogen_supply_rate_g_s=hydrogen_supply_rate_g_s, cell_voltage=cell_voltage,
-                  system_power_kW=system_power_kW, compressor_power_kW=compressor_power_kW, turbine_power_kW=turbine_power_kW, reci_pump_power_kW=reci_pump_power_kW,
-                  coolant_pump_power_kW=coolant_pump_power_kW, stack_power_kW=stack_power_kW, power_constraint_kW=power_constraint_kW, specified_cell_count=specified_cell_count,
-                  flight_level_100ft=flight_level_100ft, compressor_corrected_air_flow_g_s=compressor_corrected_air_flow_g_s, compressor_pressure_ratio=compressor_pressure_ratio, 
-                  stack_heat_flux_kW = stack_heat_flux_kW, intercooler_heat_flux_kW = intercooler_heat_flux_kW, evaporator_heat_flux_kW = evaporator_heat_flux_kW, radiator_heat_flux_kW = radiator_heat_flux_kW,
-                  system_mass_kg=system_mass_kg, consider_turbine=consider_turbine, end_of_life=end_of_life, multiobjective_weighting=multiobjective_weighting, converged=converged, filename='optimized_input_data.csv')
+    export_to_csv(
+        results=results,  # Pass the fully populated named tuple
+        feature_names=gpr_model_cell_voltage.feature_names, 
+        power_constraint_kW=power_constraint_kW, 
+        specified_cell_count=specified_cell_count, 
+        flight_level_100ft=flight_level_100ft, 
+        consider_turbine=consider_turbine, 
+        end_of_life=end_of_life, 
+        multiobjective_weighting=multiobjective_weighting, 
+        filename='optimized_input_data.csv'
+    )
     
 # Entry point of the script
 if __name__ == '__main__':

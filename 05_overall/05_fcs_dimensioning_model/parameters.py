@@ -1,6 +1,49 @@
 ''' This file contains the parameter definitions for the input variable optimization.'''
 
 import numpy as np
+from collections import namedtuple # Used to create a datacontainer for evaluate_models(x) return
+
+class VariableContainer:
+    # Define the named tuple as a class attribute
+    ResultModels = namedtuple('ResultModels', [
+        'optimized_input', 
+        'optimized_cell_voltage_V', 
+        'compressor_power_W', 
+        'turbine_power_W', 
+        'reci_pump_power_W', 
+        'coolant_pump_power_W',
+        'stack_heat_flux_W', 
+        'intercooler_heat_flux_W', 
+        'evaporator_heat_flux_W', 
+        'radiator_heat_flux_W', 
+        'hydrogen_supply_rate_g_s', 
+        'system_mass_kg', 
+        'fixed_mass', 
+        'power_dependent_mass', 
+        'compressor_mass_kg', 
+        'rezi_pump_mass_kg', 
+        'coolant_pump_mass_kg', 
+        'radiator_mass_kg', 
+        'cellcount_dependent_mass', 
+        'H2_dependend_mass', 
+        'stack_power_W', 
+        'corrected_mass_flow', 
+        'pressure_ratio', 
+        'optimization_converged',
+        'compressor_cor_mass_flow_g_s',
+        'compressor_pressure_ratio',
+        'system_power_W',
+        "cell_voltage_V"
+    ])
+
+    def __init__(self):
+        "Initialize with all fields set to None"
+        self.result = self.ResultModels(**{field: None for field in self.ResultModels._fields})
+
+    def update(self, **kwargs):
+        "Update the result named tuple with provided keyword arguments."
+        self.result = self.result._replace(**kwargs)
+
 class Optimization_Parameters:
     
     def __init__(self):
