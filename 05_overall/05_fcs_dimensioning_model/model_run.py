@@ -37,11 +37,6 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     create_experiment_folder(_params_optimization=_params_optimization, type='optimization')
     
     # Optimize the input variables
-    # optimal_input, cell_voltage, hydrogen_supply_rate_g_s, \
-    #     stack_power_kW, compressor_power_kW, turbine_power_kW, \
-    #         reci_pump_power_kW, coolant_pump_power_kW, compressor_corrected_air_flow_g_s, \
-    #             compressor_pressure_ratio, stack_heat_flux_kW, intercooler_heat_flux_kW, \
-    #                 evaporator_heat_flux_kW, radiator_heat_flux_kW, system_mass_kg, converged 
     results = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
                                             flight_level_100ft, cellcount=specified_cell_count,
                                             power_constraint_kW=power_constraint_kW,
