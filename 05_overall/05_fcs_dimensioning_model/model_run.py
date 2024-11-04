@@ -33,11 +33,14 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
     # Load the trained cathode pressure drop model from the "Trained_Models" folder
     gpr_model_cathode_pressure_drop = load_gpr_model(os.path.join(os.getcwd(), "Trained_Models", "gpr_model_cathode_pressure_drop.pth"))
 
+    # Load the trained anode pressure drop model from the "Trained_Models" folder
+    gpr_model_anode_pressure_drop = load_gpr_model(os.path.join(os.getcwd(), "Trained_Models", "gpr_model_anode_pressure_drop.pth"))
+
     # Create a folder to store the training results
     create_experiment_folder(_params_optimization=_params_optimization, type='optimization')
     
     # Optimize the input variables
-    results = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop,
+    results = optimize_inputs_evolutionary(gpr_model_cell_voltage, gpr_model_cathode_pressure_drop, gpr_model_anode_pressure_drop,
                                             flight_level_100ft, cellcount=specified_cell_count,
                                             power_constraint_kW=power_constraint_kW,
                                             consider_turbine=consider_turbine, compressor_map=compressor_map,
@@ -107,7 +110,7 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
 if __name__ == '__main__':
     # Create an ArgumentParser object
     parser = argparse.ArgumentParser(description="Optimize input variables using a trained Gaussian process regression model")
-    parser.add_argument("-p", "--power", type=float, default=140.0, help="Power constraint for input variable optimization")
+    parser.add_argument("-p", "--power", type=float, default=150.0, help="Power constraint for input variable optimization")
     parser.add_argument("-n", "--cellcount", type=int, default=455, help="Stack cell number for optimizing subject to power constraint")
     parser.add_argument("-f", "--flightlevel", type=int, default=120, help="Flight level in 100x feets")
     parser.add_argument("-t", "--turbine", type=str, choices=["True", "False"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")

@@ -1,5 +1,7 @@
 import CoolProp.CoolProp as CP
-from parameters import Physical_Parameters
+from parameters import Physical_Parameters, Stack_Parameters
+import torch
+import gpytorch
 
 class Stack:
     """
@@ -26,15 +28,40 @@ class Stack:
         self.temp_coolant_in_K = temp_coolant_in_K
         self.temp_coolant_out_K = temp_coolant_out_K
 
-    def calculate_pressure_drop_anode(self)->float:
+    def calculate_pressure_drop_anode(self, anode_pressure_drop_model, optimized_current_A, optimized_stoich_anode, optimized_pressure_anode_in_bara, optimized_temp_coolant_inlet_degC)->float:
         """
         Calculate the pressure drop across the anode for a given current.
         The "model" is a simple quadratic relationship between pressure drop and current.
         """
 
-        pressure_drop_Pa = (self.anode_pressure_drop_coefficients[0]*self.current_A**2 + 
-                            self.anode_pressure_drop_coefficients[1]*self.current_A + 
-                            self.anode_pressure_drop_coefficients[2])*100
+        params_physics = Stack_Parameters()
+    # Normalize current, stoichiometry, pressure, temperature and H2 concentration for evaluating the anode pressure drop model
+        current_for_dp_normalized_anode = (optimized_current_A - anode_pressure_drop_model.input_data_mean[0]) / \
+            anode_pressure_drop_model.input_data_std[0]
+        stoichiometry_for_dp_normalized_anode = (optimized_stoich_anode - anode_pressure_drop_model.input_data_mean[1]) / \
+            anode_pressure_drop_model.input_data_std[1]
+        pressure_for_dp_normalized_anode = (optimized_pressure_anode_in_bara - anode_pressure_drop_model.input_data_mean[2]) / \
+            anode_pressure_drop_model.input_data_std[2]
+        temperature_for_dp_normalized_anode = (optimized_temp_coolant_inlet_degC - anode_pressure_drop_model.input_data_mean[3]) / \
+            anode_pressure_drop_model.input_data_std[3]
+        H2_concentration_for_dp_normalized_anode = (params_physics.H2_concentration_fix - anode_pressure_drop_model.input_data_mean[4]) / \
+            anode_pressure_drop_model.input_data_std[4]
+
+        anode_pressure_drop_model_input = torch.tensor([current_for_dp_normalized_anode, stoichiometry_for_dp_normalized_anode, pressure_for_dp_normalized_anode,
+                                                      temperature_for_dp_normalized_anode, H2_concentration_for_dp_normalized_anode], dtype=torch.float).unsqueeze(0)
+        # Evaluate the anode pressure drop model
+        anode_pressure_drop_model.model.eval()
+        with torch.no_grad(), gpytorch.settings.fast_pred_var():
+            anode_pressure_drop = anode_pressure_drop_model.model(anode_pressure_drop_model_input).mean.item()
+        # Denormalize
+        anode_pressure_drop_bar = anode_pressure_drop * anode_pressure_drop_model.target_data_std \
+            + anode_pressure_drop_model.target_data_mean
+            
+        # Limit the anode pressure drop to be non-negative
+        anode_pressure_drop_bar = max(anode_pressure_drop_bar.item(), 1e-9)
+        pressure_drop_Pa = anode_pressure_drop_bar*100000     #(self.anode_pressure_drop_coefficients[0]*self.current_A**2 + 
+                                 #   self.anode_pressure_drop_coefficients[1]*self.current_A + 
+                                  #  self.anode_pressure_drop_coefficients[2])*100
 
         return pressure_drop_Pa
     
