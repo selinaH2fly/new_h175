@@ -47,6 +47,7 @@ def export_to_csv(results, feature_names, power_constraint_kW, specified_cell_co
                            'System Power (kW)', 'Compressor Power (kW)', "Turbine Power (kW)", "Recirculation Pump Power (kW)",
                            'Coolant Pump Power (kW)', "Stack Power (kW)", "Compressor Corrected Air Flow (g/s)", "Compressor Pressure Ratio (-)",
                            "Stack Heat Flux (kW)", "Intercooler Heat Flux (kW)","Evaporator Heat Flux (kW)","Radiator Heat Flux (kW)", "System Mass (kg)",
+                           "fixed Mass (kg)","power dependent Mass (kg)", "Cell dependent Mass (kg)","H2 dependent Mass (kg)",  
                            "turbine (t/f)","eol (t/f)", "weighting ([0,1])", "converged (t/f)"])
             writer.writerow(header)
             
@@ -61,10 +62,12 @@ def export_to_csv(results, feature_names, power_constraint_kW, specified_cell_co
             f'{results.compressor_cor_mass_flow_g_s:.2f}', f'{results.compressor_pressure_ratio:.2f}',
             f'{results.stack_heat_flux_W / 1000:.2f}', f'{results.intercooler_heat_flux_W / 1000:.2f}',
             f'{results.evaporator_heat_flux_W / 1000:.2f}', f'{results.radiator_heat_flux_W / 1000:.2f}', 
-            f'{results.system_mass_kg:.2f}', f'{consider_turbine}', f'{end_of_life}', 
+            f'{results.system_mass_kg:.2f}', f'{results.fixed_mass:.2f}', f'{results.power_dependent_mass:.2f}',
+            f'{results.cellcount_dependent_mass:.2f}',f'{results.H2_dependend_mass:.2f}',
+            f'{consider_turbine}', f'{end_of_life}', 
             f'{multiobjective_weighting}', f'{results.optimization_converged}'
         ])
         
         # Write the data row to the CSV
         writer.writerow(data)
-        print("data written to csv.")
+        #print("data written to csv.")

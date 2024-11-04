@@ -119,7 +119,7 @@ if __name__ == '__main__':
     parser.add_argument("--map", type=str, choices=["None", "VSEC15"], default="None", help="Specifies the compressor map to be used (default: None).")
     parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.85 to account for end of life (default: False).")
     parser.add_argument("--constraint", type=str, choices=["True","False"], default="True", help="Activates the DoE envelope constraint condition for the optimizer. (default: True)")
-    parser.add_argument("-w", "--weighting", type=float, default=0.0, help="Weighting factor for multiobjective-optimization; 0 -> optimization for efficiency (default), 1 -> optimization for (power-specific) mass.")
+    parser.add_argument("-w", "--weighting", type=float, default=1.0, help="Weighting factor for multiobjective-optimization; 0 -> optimization for efficiency (default), 1 -> optimization for (power-specific) mass.")
     args = parser.parse_args()
 
     # Convert string inputs

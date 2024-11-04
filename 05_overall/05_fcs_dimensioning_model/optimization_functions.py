@@ -335,15 +335,15 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         power_dependent_mass = sum([compressor_mass_kg, #Compressor + Turbine
                                 rezi_pump_mass_kg, 
-                                coolant_pump_mass_kg,
-                                radiator_mass_kg #if only "Module" masses are wanted: set to 0
+                                coolant_pump_mass_kg#,
+                                #radiator_mass_kg #if only "Module" masses are wanted: set to 0
                                 ])
         
         #Other dependend masses:
         cellcount_dependent_mass = stack.calculate_mass()
         H2_dependend_mass = tank_mass_wet_kg #if only "Module" masses are wanted: set to 0
         
-        system_mass_kg = fixed_mass + power_dependent_mass + cellcount_dependent_mass + H2_dependend_mass
+        system_mass_kg = fixed_mass + power_dependent_mass + cellcount_dependent_mass #+ H2_dependend_mass
         
         # %% Return
         ResultModels.update(optimized_input=optimized_input,
