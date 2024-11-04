@@ -275,7 +275,7 @@ class Mass_Parameters:
                       'Screws': 0.27,
                       'HV+LV Cable': 0.0,
                       'HV DCDC': 12.5,
-                      "LV DCDC": 0.0}
+                      "LV DCDC": 0.6}
         }
         # Mass estimates for dependent mass components, change the values as needed
         self.masses_FCM_power_depended = {
