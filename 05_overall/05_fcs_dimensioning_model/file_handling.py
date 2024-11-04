@@ -37,7 +37,7 @@ def create_experiment_folder(_params_model=None, _params_training=None, _params_
         
     shutil.copytree(os.getcwd(), os.path.join(dirName, "Sources_unzipped"),
                     ignore=shutil.ignore_patterns('*experiment*', '*consolidated*', 'archive', '.git*', 
-                                                  '*model*', '../.idea', '__pycache__', 'README*'))
+                                                  '*model*', '../.idea', '__pycache__', 'README*','test_data'))
 
     os.chdir(dirName)
     shutil.make_archive("Sources", 'zip', "Sources_unzipped")
