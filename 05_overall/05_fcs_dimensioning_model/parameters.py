@@ -7,7 +7,7 @@ class Optimization_Parameters:
 
         # Bounds for the optimization problem TODO: make these a dictionary
         self.bounds = [(20, 2e3),       # current_A
-                        (30, 100),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
+                        (30, 120),      # cathode_rh_in_perc (rH_min = 30% according to P10 manual)
                         (1.6, 5.0),     # stoich_cathode (lambda_min = 1.6 according to P10 manual)
                         (1.1, 3.3),     # pressure_cathode_in_bara (p_max = 2.3 barg according to P10 manual)
                         (60, 90),       # temp_coolant_inlet_degC
@@ -24,7 +24,6 @@ class Optimization_Parameters:
         self.seed = None                # set random seed for reproducibility
         self.init_cell_voltage = 0.7    # cell voltage for init population
         self.brutto_deviation = 1.3     # estimated deviation brutto/netto power
-
         
 class Physical_Parameters:
      

@@ -112,7 +112,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         plt.title("Alpha Shape with Inside and Outside Points")
         plt.legend()
         plt.grid(True)
-        #plt.show()
+        plt.show()
         
         return alpha_shape
 
@@ -419,7 +419,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         is_inside_anode = alphashape_pressure_anode.contains(Point(x_scaled[[0,7]]))
         pressure_delta = (x[7]*np.array(cell_voltage_model.input_data_std[7]) + np.array(cell_voltage_model.input_data_mean[7])) \
         - (x[3]*np.array(cell_voltage_model.input_data_std[3]) + np.array(cell_voltage_model.input_data_mean[3]))
-        return 1 if is_inside_cathode and is_inside_anode and pressure_delta > 0.05 else -1
+        return 1 if is_inside_cathode and is_inside_anode and 0.55 >= pressure_delta >= 0.05 else -1
     
     def nlc_DoE_coolant(x):
         x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
@@ -431,7 +431,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     def nlc_DoE_anode_stoich(x):
         x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
-        is_inside = alphashape_stoich_anode.contains(Point(x_scaled[[0,7]]))
+        is_inside = alphashape_stoich_anode.contains(Point(x_scaled[[0,6]]))
 
         return 1 if is_inside else -1
 
