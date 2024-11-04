@@ -14,7 +14,7 @@ class Tank:
         self.massfraction =  massfraction
         self.H2_mass_kg = H2_mass_kg
         self.pressure_bar = pressure_bar
-        self.fixed_mass_kg = fixed_mass_kg
+        self.fixed_mass_kg = fixed_mass_kg # Evap included here
         self.tank_wet_mass_kg = None
         self.tank_dry_mass_kg = None
         

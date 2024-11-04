@@ -226,7 +226,7 @@ class Evaporator_Parameters:
         self.primary_fluid = "H2"
         self.primary_T_in_K = 20.0
         self.primary_T_out_K = 300.0
-        self.primary_p_in_Pa = 5*1e5 # TODO: this is equal to the tank pressure, use it directly
+        self.primary_p_in_Pa = 3.5*1e5 #5->3.5 TODO: this is equal to the tank pressure, use it directly
         
         self.coolant_fluid = "INCOMP::MEG-50%"# 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
         self.ALLOWED_FLUIDS = ['H2','INCOMP::MEG-50%']
@@ -242,9 +242,9 @@ class Tank_Parameters:
 
      def __init__(self):
              
-        self.massfraction = 1
+        self.massfraction = 1   #eigentlich 0.5 dry to wet aber 1:1 einfacher
         self.fixed_mass_kg = 10 #TODO: move this to the massestimator later, Number provided by Chris B.
-        self.pressure_bar = 5*1e5
+        self.pressure_bar = 3.5*1e5
         
 class Mass_Parameters:
     def __init__(self):
@@ -255,7 +255,7 @@ class Mass_Parameters:
                       'CVM': 0.5, 'SMI': 1.5, 'Hose clamps': 0.18, 'Screws': 0.09, 'HV+LV Cable': 1.20},
             
             'Cathode': {'Compressor': 0, 'Turbine': 0.0,
-                        'Filter': 0.2, 'HFM': 0.1,  'Compressor inverter': 6.0, 'Intercooler': 1.0,'Humidifier': 1.0,
+                        'Filter': 0.2, 'HFM': 0.1,  'Compressor inverter': 4.4, 'Intercooler': 1.0,'Humidifier': 1.0,
                         'Valves': 1.5, 'Drain valve': 0.05, 'Water separator': 0.2,'Cathode pressure control valve': 0.0,
                         'Sensors': 0.3, 'Silicon hoses': 0.5, 'Hose clamps': 0.12, 'Connectors': 0.8,
                         'Screws': 0.18, 'HV+LV Cable': 0.67},
@@ -268,12 +268,14 @@ class Mass_Parameters:
             'Thermal': {'Coolant pump': 0, 'Stack coolant': 0, 
                         'TCV': 0.5, 'Particle filter': 0.1, 'Ionic exchanger': 1.0,'Sensors': 0.2 + 0.20,
                         'Silicone hoses': 0.5 + 0.5, 'Hose clamps': 0.12 + 0.12, 'Connectors': 0.80 + 0.80,
-                        'Screws': 0.09 + 0.09, 'HV+LV Cable': 0.34, 'Expansion tank': 0.20, 'Volume flow control valve': 0.5,
-                        'Other coolant': 5.0},
+                        'Screws': 0.09 + 0.09, 'HV+LV Cable': 0.34 + 0, 'Expansion tank': 0.20, 'Volume flow control valve': 0.5,
+                        'Other coolant': 5.0},#other coolant = Coolantother than in stack
             
             'Other': {'FCCU': 0.5, 'Electrical connectors': 0.4, 'HDPU': 5.0, 'Frame': 2.0, 'Connectors': 1.0,
                       'Screws': 0.27,
-                      'HV+LV Cable': 0.0}
+                      'HV+LV Cable': 0.0,
+                      'HV DCDC': 12.5,
+                      "LV DCDC": 0.0}
         }
         # Mass estimates for dependent mass components, change the values as needed
         self.masses_FCM_power_depended = {
