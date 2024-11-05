@@ -38,6 +38,28 @@ def compute_air_mass_flow(stoichiometry, current_A, cellcount=275):
 
     return air_flow_kg_s
 
+def compute_reacted_o2_mass_flow(current_A, cellcount):
+    """
+    Calculate the reacted O2 mass flow rate in a fuel cell stack.
+
+    Parameters:
+    current_A, cellcount=275: Current per cell in amperes (A).
+    cellcount: Number of cells in the stack.
+
+    Returns:
+    float: Reacted O2 mass flow rate in kg/s.
+    """
+    #TODO transfer to basic physics?
+    #TODO grab constants from coolprop
+
+    M_O2 = 0.032  # Molar mass of O2 in kg/mol
+    F = 96485  # Faraday's constant in C/mol
+    efficiency_factor = 0.23  # Efficiency factor
+
+    # Calculate reacted O2 mass flow rate
+    o2_mass_flow_rate = (current_A * cellcount * M_O2) / (4 * F * efficiency_factor)
+
+    return o2_mass_flow_rate
 
 # %% Unit conversion function:
 
