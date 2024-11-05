@@ -16,24 +16,40 @@ class Input:
     def __init__(self):
         # Pressure initialization in bar (bara)
         self.pressures_bara = {
-            "PTC001": 0.7,  # Ambient pressure for FL100
-            "PTC211": 2.6,  # Pressure after compressor
-            "PTC301": 2.5,  # Pressure after intercooler, air-air, warm side
-            "PTC311": 2.4,  # Pressure after intercooler, air-liq
-            "PTC401": 2.3,  # Pressure after humidifier
-            "PTC501": 2.1,  # Pressure after stack
-            "PTC601": 1.8,  # Pressure after water separator
-            "p_8": 1.7      # Pressure at intercooler, air-air, cold side
+            "PTC1": 0.63,  # Ambient pressure for FL120
+            "PTC2": 2.6,  # Pressure after compressor
+            "PTC3": 2.5,  # Pressure after intercooler, air-air, warm side
+            "PTC4": 2.4,  # Pressure after intercooler, air-liq
+            "PTC5": 2.4,  # Pressure after air filter
+            "PTC6": 2.3,  # Pressure before valve
+            "PTC7": 2.3,  # Pressure after humidifier, dry
+            "PTC8": 2.1,  # Pressure before stack
+            "PTC9": 2.1,  # Pressure after stack
+            "PTC10": 2.1, # Pressure after humidifier,wet
+            "PTC11": 1.8, # Pressure before intercooler, air-air, cold side
+            "PTC13": 1.8, # Pressure after water separator
+            "PTC12": 1.7, # Pressure after intercooler, air-air, cold side
+            "PTC14": 1.7  # Pressure after turbine
+
         }
 
         # Temperature initialization in degrees Celsius
         self.temperatures_degC = {
-            "TTC001": -5,   # Ambient temperature
-            "TTC311": 80,   # Temperature after intercooler, air-liq
-            "TTC401": 80,   # Temperature after humidifier, to be calculated
-            "TTC501": 80,   # Temperature after stack
-            "TTC601": 80,   # Temperature after water separator
-            "T_cool": 50    # Temperature of coolant input to IC air-liq
+            "TTC1": 6.3,     # Ambient temperature
+            "TTC2": 2.6,    # Temperature after compressor
+            "TTC3": 80,     # Temperature after intercooler, air-air
+            "TTC4": 80,     # Temperature after intercooler, air-liq
+            "TTC7": 80,   # Temperature after humidifier, to be calculated
+            "TTC5": 80,  # Temperature before humidifier, to be calculated
+            "TTC6": 80,  # Temperature before valve, to be calculated
+            "TTC8": 78,  # Temperature before stack
+            "TTC9": 82,   # Temperature after stack
+            "TTC10": 2.1,  # Temperature after humidifier,wet
+            "TTC11": 1.8,  # Temperature before intercooler, air-air, cold side
+            "TTC13": 1.8,  # Temperature after water separator
+            "TTC12": 1.7,  # Temperature after intercooler, air-air, cold side
+            "TTC14": 1.7,  # Temperature after turbine
+            "T_cool": 60    # Temperature of coolant input to IC air-liq
         }
 
         # Convert pressures and temperatures
@@ -84,6 +100,14 @@ class CompressorParameters:
 
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
+
+        # Assumption: ~0.3 bar BoP pressure drop downstream the compressor at 130 g/s air flow rate
+        self.nominal_BoP_pressure_drop_Pa = 0.3*1e5
+        self.nominal_air_flow_kg_s = 0.130
+
+        # Reference variables for airflow correction
+        self.reference_pressure_Pa = 1.01325 * 1e5
+        self.reference_temperature_K = 25 + 273.15
 
         # Compressor map parameters
         self.compressor_map_VSEC15 = {
@@ -169,6 +193,7 @@ class IntercoolerParameters:
         self.primary_fluid = "Air"
         self.coolant_fluid = "INCOMP::MEG-50%"  # 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
         self.ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2','INCOMP::MEG-50%']
+        self.coolant_mdot_in_kg_s = 0.2
 
 class HumidifierParameters:
 
