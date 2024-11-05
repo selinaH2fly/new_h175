@@ -96,9 +96,8 @@ class Turbine:
             np.array([map_mass_flow_g_s, map_pressure_ratio]).T,
             map_efficiency,
             (corrected_mass_flow_g_s, pressure_ratio),
-            method='linear',
-            rescale=True,
-            fill_value=1e-3  # Small default value when out of bounds
+            method='nearest',
+            rescale=True
         )
 
         return efficiency.item(), [pressure_ratio, corrected_mass_flow_g_s]
@@ -147,12 +146,13 @@ mass_estimator = Mass_Parameters()
 turbine_instance = Turbine(
     mass_estimator=mass_estimator,
     isentropic_efficiency=turbine_params.isentropic_efficiency,
-    air_mass_flow_kg_s=0.162,                      # Example input mass flow rate in kg/s
+    air_mass_flow_kg_s=0.085,                      # Example input mass flow rate in kg/s
     temperature_in_K=350.15,                     # Example inlet temperature in Kelvin
-    pressure_in_Pa=1.7e5,                          # Example inlet pressure in Pa
+    pressure_in_Pa=1.53e5,                          # Example inlet pressure in Pa
     pressure_out_Pa=0.77e5,                         # Example outlet pressure in Pa
     turbine_map=turbine_params.turbine_map       # Provide the turbine map from TurbineParameters
 )
+
 
 # Calculate the power output of the turbine
 turbine_power = turbine_instance.calculate_power()
