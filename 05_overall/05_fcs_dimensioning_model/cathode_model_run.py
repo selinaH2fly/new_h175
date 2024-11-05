@@ -213,19 +213,17 @@ class HumidifierParameters:
 
         # Updated flow rate to efficiency map in standard liters per minute (sLPM)
         self.humidifier_efficiency_map = {
-            1000: 65.0,
-            2000: 55.0,
-            3000: 45.0,
-            4000: 42.1,
-            5000: 42.1
+            2000: 61.0,
+            3000: 50.0,
+            4000: 45.0,
+            5000: 42.0
         }
 
         # Pressure drop map (in kPa) for dry and wet sides based on dry air flow rate (sLPM)
         self.pressure_drop_map = {
-            1000: {"dry_side": 2.0, "wet_side": 1.8},
-            2000: {"dry_side": 4.0, "wet_side": 3.9},
-            3000: {"dry_side": 6.0, "wet_side": 5.9},
-            4000: {"dry_side": 7.7, "wet_side": 7.5},
+            2000: {"dry_side": 2.2, "wet_side": 1.8},
+            3000: {"dry_side": 3.6, "wet_side": 3.0},
+            4000: {"dry_side": 5.6, "wet_side": 5.1},
             5000: {"dry_side": 7.7, "wet_side": 7.5}
         }
 
