@@ -11,7 +11,8 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--power", "150", "--cellcount", "455", "--flightlevel", "120", "--turbine", "True", "--map", "None", "--eol", "True"],    
+            "args": ["--power", "150", "--cellcount", "455", "--flightlevel", "120", "--turbine", "True", "--map", "None", "--eol", "True"], 
+            "cwd": "${fileDirname}"
         }
 
         {
@@ -20,7 +21,8 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--power", "150", "--cellcount", "455", "--flightlevel", "120", "--turbine", "True", "--map", "VSEC15", "--eol", "False"],    
+            "args": ["--power", "150", "--cellcount", "455", "--flightlevel", "120", "--turbine", "True", "--map", "VSEC15", "--eol", "False"],  
+            "cwd": "${fileDirname}"  
         }
     ]
 }
