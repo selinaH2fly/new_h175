@@ -99,29 +99,29 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Plot the alpha shape boundary and points
 
         # Plot points inside the alpha shape in blue
-        plt.scatter(inside_points[:, 0], inside_points[:, 1], color='blue', label='Inside Points')
+        # plt.scatter(inside_points[:, 0], inside_points[:, 1], color='blue', label='Inside Points')
 
-        # Plot points outside the alpha shape in red
-        plt.scatter(outside_points[:, 0], outside_points[:, 1], color='red', label='Outside Points')
+        # # Plot points outside the alpha shape in red
+        # plt.scatter(outside_points[:, 0], outside_points[:, 1], color='red', label='Outside Points')
 
-        # Plot the alpha shape boundary
-        if alpha_shape.geom_type == 'Polygon':
-            x, y = alpha_shape.exterior.xy
-            plt.plot(x, y, color='green', linewidth=2, label='Alpha Shape Boundary')
-            #plt.plot(random_point[0],random_point[1], "ko")
-        elif alpha_shape.geom_type == 'MultiPolygon':
-            for polygon in alpha_shape:
-                x, y = polygon.exterior.xy
-                plt.plot(x, y, color='green', linewidth=2)
-        plt.xlim(0, 750)
-        plt.ylim(0,max(outside_points[:, 1]))
-        plt.xlabel("X-coordinate")
-        plt.ylabel("Y-coordinate")
+        # # Plot the alpha shape boundary
+        # if alpha_shape.geom_type == 'Polygon':
+        #     x, y = alpha_shape.exterior.xy
+        #     plt.plot(x, y, color='green', linewidth=2, label='Alpha Shape Boundary')
+        #     #plt.plot(random_point[0],random_point[1], "ko")
+        # elif alpha_shape.geom_type == 'MultiPolygon':
+        #     for polygon in alpha_shape:
+        #         x, y = polygon.exterior.xy
+        #         plt.plot(x, y, color='green', linewidth=2)
+        # plt.xlim(0, 750)
+        # plt.ylim(0,max(outside_points[:, 1]))
+        # plt.xlabel("X-coordinate")
+        # plt.ylabel("Y-coordinate")
 
-        plt.title("Alpha Shape with Inside and Outside Points")
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+        # plt.title("Alpha Shape with Inside and Outside Points")
+        # plt.legend()
+        # plt.grid(True)
+        # plt.show()
         
         return alpha_shape
 
@@ -612,7 +612,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         #all_points, outside_points = evaluate_pop_in_DoE(adjusted_pop_init, DoE_envelope_Delaunay)
         return adjusted_pop_init
 
-    
+    '''
     class ConvergenceTracker:
         """
         Class to get detailed optimization informations and set manual convergence criteria
@@ -665,12 +665,12 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                 else:
                     print(f"Iteration {len(self.best_objective_values)}: Best Objective = {current_best_value:.6f}, nlc_CP = {nlc_Temp_xk.item():.6f}, nlc_Power = {nlc_Power_xk.item():.6f}, nlc_DoE_rh = {nlc_DoE_cathode_rh_xk:.6f}, nlc_DoE_cath_stoich = {nlc_DoE_cathode_stoich_xk:.6f}, nlc_DoE_stack_pressure = {nlc_DoE_stack_pressure_xk:.6f}, nlc_DoE_coolantPump = {nlc_DoE_coolantPump_xk:.6f}, nlc_DoE_an_stoich = {nlc_DoE_an_stoich_xk:.6f}")
                     return False               
-
+'''
     
 
     # Perform the optimization using differential evolution
-    callback = ConvergenceTracker(tolerance=1e-5, window_size=40) #activate if you need some convergence information
-    result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=callback,
+    #callback = ConvergenceTracker(tolerance=1e-5, window_size=40) #activate if you need some convergence information
+    result = differential_evolution(objective_function, normalized_bounds, constraints=nlc, callback=None,
                                     maxiter=_params_optimization.maxiter, popsize=_params_optimization.popsize,
                                     seed=_params_optimization.seed, recombination=_params_optimization.recombination, strategy=_params_optimization.strategy, 
                                     tol=_params_optimization.tol, polish=False, init=pop_init(), disp=False)#, workers=20
