@@ -63,7 +63,7 @@ def plot_system_mass_estimate(plot_params, data, titles, colors, components_dict
 
     
     # The x-axis points to be plotted and searched for
-    points = [125, 150, 175]
+    points = [125, 140, 150]
     
     # Define cell numbers we would like to iterate through
     cell_no = np.array([400, 455, 500])
@@ -99,7 +99,7 @@ def plot_system_mass_estimate(plot_params, data, titles, colors, components_dict
     for df, title, color, m_stack_value, marker in zip(data, titles, colors, m_stack_values, markers):
         # Filter the df for eol, bol and flight level
         df = df[(df["eol (t/f)"] == filter_mode) & 
-                (df["Flight Level (100x ft)"] == 120) &
+                (df["Flight Level (100x ft)"] == 100) &
                 (df["weighting ([0,1])"] == weighting)]
         
         # Extract all power points from the filtered DataFrame
