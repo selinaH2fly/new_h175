@@ -1,5 +1,6 @@
 import CoolProp.HumidAirProp as HAP
 import numpy as np
+from CoolProp.CoolProp import HAPropsSI
 from scipy.interpolate import interp1d
 from cathode_model_run import PhysicalParameters, HumidifierParameters
 
@@ -53,11 +54,23 @@ class MoistExchanger:
 
     def convert_kg_s_to_slpm(self, kg_s):
         """
-        Convert kg/s to SLPM using the density-based method.
+        Convert mass flow rate from kg/s to SLPM (standard liters per minute) using density.
+
+        Parameters:
+        - mass_flow_kg_s: float, mass flow rate in kg/s
+
+        Returns:
+        - flow_rate_slpm: float, volume flow rate in SLPM
         """
         density_std = 1.225  # kg/m³, standard density of air at 0°C and 101325 Pa
-        return (kg_s * 1000 / density_std) * 60
 
+        # Calculate the volume flow rate at standard conditions in m³/s
+        volume_flow_m3_s = kg_s / density_std
+
+        # Convert m³/s to SLPM
+        flow_rate_slpm = volume_flow_m3_s * 1000 * 60
+
+        return flow_rate_slpm
 
     def interpolate_dry_pressure_drop(self):
         # Convert dry mass flow rate from kg/s to SLPM
@@ -69,7 +82,8 @@ class MoistExchanger:
 
         # Interpolate the dry pressure drop
         interpolator = interp1d(flow_rates, dry_pressure_drops, kind='linear', fill_value="extrapolate")
-        return interpolator(mass_flow_slpm)
+        dry_pressure_drop = interpolator(mass_flow_slpm) * 1000  # Convert from kPa to Pa
+        return dry_pressure_drop
 
     def interpolate_wet_pressure_drop(self):
         # Convert wet mass flow rate from kg/s to SLPM
@@ -81,7 +95,8 @@ class MoistExchanger:
 
         # Interpolate the wet pressure drop
         interpolator = interp1d(flow_rates, wet_pressure_drops, kind='linear', fill_value="extrapolate")
-        return interpolator(mass_flow_slpm)
+        wet_pressure_drop = interpolator(mass_flow_slpm) * 1000  # Convert from kPa to Pa
+        return wet_pressure_drop
 
     def calculate_saturation_pressure(self, t):
         """
@@ -184,6 +199,26 @@ class MoistExchanger:
             "m_dot_vap_dry_out": m_dot_vap_dry_out,
             "total_mass_flow_dry_out": total_mass_flow_dry_out
         }
+
+    def calculate_vapor_mass_flow(self,t,p,rh, air_mass_flow):
+        """
+        Calculate the mass flow rate of water vapor in a humid air mixture.
+
+        Parameters:
+        - temperature (float): Temperature in Kelvin
+        - pressure (float): Pressure in Pascal
+        - relative_humidity (float): Relative humidity as a fraction (0.0 - 1.0)
+        - dry_air_mass_flow (float): Mass flow rate of dry air in kg/s
+
+        Returns:
+        - vapor_mass_flow (float): Mass flow rate of water vapor in kg/s
+        """
+        # Calculate specific humidity (omega) using CoolProp
+        specific_humidity = HAPropsSI('HumRat', 'T', temperature, 'P', pressure, 'RH', relative_humidity)
+
+        # Calculate the mass flow rate of water vapor
+        vapor_mass_flow = specific_humidity * air_mass_flow
+        return vapor_mass_flow
 
     def calculate_wet_inlet_mass_flows(self):
         """
