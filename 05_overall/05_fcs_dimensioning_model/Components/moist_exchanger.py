@@ -182,13 +182,12 @@ class MoistExchanger:
         """
         dry_inlet_flows = self.calculate_dry_inlet_mass_flows()
         m_dot_air_dry_in = dry_inlet_flows["m_dot_air_dry_in"]
-        wet_inlet_flows = self.calculate_wet_inlet_mass_flows()
-        m_dot_vap_wet_in = wet_inlet_flows["m_dot_vap_wet_in"]
-        efficiency = self.calculate_efficiency() / 100
+        m_dot_air_vap_in = dry_inlet_flows["m_dot_vap_dry_in"]
 
+        m_dot_water_trans = self.calculate_water_transfer_rate()
 
         m_dot_air_dry_out = m_dot_air_dry_in
-        m_dot_vap_dry_out = efficiency * m_dot_vap_wet_in
+        m_dot_vap_dry_out = m_dot_air_vap_in + m_dot_water_trans
         total_mass_flow_dry_out = m_dot_vap_dry_out + m_dot_air_dry_out
 
         return {
@@ -313,31 +312,32 @@ class MoistExchanger:
 
         return water_transfer_rate
 
-    def calculate_rh_dry_out(self):
+
+    def calculate_relative_humidity_outlet(self):
         """
-        Calculate the relative humidity at the dry outlet.
+        Calculate the relative humidity at the dry outlet of a humidifier.
 
         Returns:
-            float: Relative humidity at the dry outlet as a percentage.
+        - RH_dry_out: Relative humidity at the dry outlet (as a decimal, e.g., 0.636 for 63.6%)
         """
         # Calculate dry outlet mass flows
         dry_outlet_flows = self.calculate_dry_outlet_mass_flows()
         m_dot_air_dry_out = dry_outlet_flows["m_dot_air_dry_out"]
         m_dot_vap_dry_out = dry_outlet_flows["m_dot_vap_dry_out"]
-        total_mass_flow_dry_out = dry_outlet_flows["total_mass_flow_dry_out"]
 
-        # Calculate partial pressure of water vapor at the dry outlet using mass flows and total pressure
-        partial_pressure_vap_dry_out = self.calculate_partial_pressure_with_mass_flows(
-            total_mass_flow_dry_out, m_dot_vap_dry_out, self.dry_air_pressure_out_Pa
-        )
+        # Calculate specific humidity at the dry outlet
+        Y_dry_out = m_dot_vap_dry_out/ m_dot_air_dry_out
 
-        # Calculate the saturation pressure at the dry outlet temperature
-        saturation_pressure_dry_out = self.calculate_saturation_pressure(self.dry_air_temperature_out_K)
+        # Calculate the partial pressure of water vapor at the dry outlet
+        p_vapor_dry_out = Y_dry_out * self.dry_air_pressure_out_Pa / (0.622 + Y_dry_out)
+
+        # Calculate the saturation vapor pressure at the dry outlet temperature
+        p_sat_dry_out = self.calculate_saturation_pressure(self.dry_air_temperature_out_K)
 
         # Calculate relative humidity at the dry outlet
-        rh_dry_out = (partial_pressure_vap_dry_out / saturation_pressure_dry_out) * 100  # in percentage
+        RH_dry_out = p_vapor_dry_out / p_sat_dry_out
 
-        return rh_dry_out
+        return RH_dry_out
 
 
 class Humidifier(MoistExchanger):
