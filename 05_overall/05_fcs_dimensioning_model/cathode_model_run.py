@@ -36,7 +36,7 @@ class Input:
         # Temperature initialization in degrees Celsius
         self.temperatures_degC = {
             "TTC1": 6.3,     # Ambient temperature
-            "TTC2": 2.6,    # Temperature after compressor
+            "TTC2": 80,    # Temperature after compressor
             "TTC3": 80,     # Temperature after intercooler, air-air
             "TTC4": 80,     # Temperature after intercooler, air-liq
             "TTC7": 80,   # Temperature after humidifier, to be calculated
@@ -44,11 +44,11 @@ class Input:
             "TTC6": 80,  # Temperature before valve, to be calculated
             "TTC8": 78,  # Temperature before stack
             "TTC9": 82,   # Temperature after stack
-            "TTC10": 2.1,  # Temperature after humidifier,wet
-            "TTC11": 1.8,  # Temperature before intercooler, air-air, cold side
-            "TTC13": 1.8,  # Temperature after water separator
-            "TTC12": 1.7,  # Temperature after intercooler, air-air, cold side
-            "TTC14": 1.7,  # Temperature after turbine
+            "TTC10": 82,  # Temperature after humidifier,wet
+            "TTC11": 82,  # Temperature before intercooler, air-air, cold side
+            "TTC13": 77,  # Temperature after water separator
+            "TTC12": 82,  # Temperature after intercooler, air-air, cold side
+            "TTC14": 77,  # Temperature after turbine
             "T_cool": 60    # Temperature of coolant input to IC air-liq
         }
 
@@ -82,6 +82,9 @@ class PhysicalParameters:
 
         # Retrieve molar mass of air (kg/mol) from CoolProp
         self.M_air = CP.PropsSI("M", "Air")  # Molar mass of air in kg/mol
+
+        # Retrieve molar mass of air (kg/mol) from CoolProp
+        self.M_H2O = CP.PropsSI("M", "Water")    # Molar mass of H2O in kg/mol
 
         # Universal gas constant R (J/(mol·K)) from CoolProp
         self.R = CP.PropsSI("gas_constant","T",300,"P", 101325,"Air");
