@@ -52,8 +52,8 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     inputs = cathode_model_run.Input()  # Using the new Input class
 
     # Evaluate ambient conditions
-    temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level)
-    print(f"Ambient temperature: {temperature_ambient_K:.2f} K, pressure: {pressure_ambient_Pa:.2f} Pa")
+    #temperature_ambient_K, pressure_ambient_Pa = icao_atmosphere(flight_level)
+    print(f"Ambient temperature: {inputs.temperatures_degC['TTC1']:.2f} degC, pressure: {inputs.pressures_bara['PTC1']:.2f} bara")
 
     # Compute dry air mass flow based on input parameters
     dry_air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=stoich_cathode, current_A=current_A, cellcount=cellcount)
@@ -67,15 +67,15 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         isentropic_efficiency=_params_compressor.isentropic_efficiency,
         electric_efficiency=_params_compressor.electric_efficiency,
         air_mass_flow_kg_s = dry_air_mass_flow_kg_s,
-        temperature_in_K=temperature_ambient_K,
-        pressure_in_Pa=pressure_ambient_Pa,
-        pressure_out_Pa=inputs.pressures_Pa["PTC211"],
+        temperature_in_K=inputs.temperatures_K["TTC1"],
+        pressure_in_Pa=inputs.pressures_Pa["PTC1"],
         compressor_map=compressor_map,
 
     )
 
-    # Calculate outlet temperature and power
+    # Calculate outlet temperature, pressure and power
     compressor.temperature_out_K = compressor.calculate_T_out()
+    compressor.pressure_out_Pa = inputs.pressures_Pa["PTC8"] + compressor.calculate_BoP_pressure_drop()  # compressor_out == cathode_in + BoP_pressure_drop (compressor out -> cathode in)
     compressor.power_W = compressor.calculate_power()
 
     # Add a header for the compressor results
@@ -84,48 +84,25 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     print("-" * 20)  # Creates another line of equal signs for emphasis
 
     # Print compressor results
-    print(f"Compressor outlet temperature: {compressor.temperature_out_K:.2f} K")
+    print(f"Compressor outlet temperature: {compressor.temperature_out_K-273:.2f} degC")
+    print(f"Compressor outlet pressure: {compressor.pressure_out_Pa/1e5:.2f} bara")
     print(f"Compressor power : {compressor.power_W / 1000:.2f} kW")  # Convert W to kW
-    #print(f"Air mass flow rate: {compressor.air_mass_flow_kg_s:.4f} kg/s")
+    print(f"Air mass flow rate: {compressor.air_mass_flow_kg_s:.4f} kg/s")
 
-    # Instantiate the intercooler_air_air using compressor outputs
-    intercooler_air_air = Intercooler(
-        efficiency=0.41, primary_fluid="Air", coolant_fluid="Air",
-        primary_p_in_Pa=compressor.pressure_out_Pa,
-        primary_T_in_K=compressor.temperature_out_K,
-        primary_mdot_in_kg_s=compressor.air_mass_flow_kg_s,
-        coolant_mdot_in_kg_s=compressor.air_mass_flow_kg_s,
-        coolant_T_in_K=inputs.temperatures_K["TTC601"]
-    )
-    # Calculate outlet temperature and heat flux
-    intercooler_air_air.primary_temperature_out_K = intercooler_air_air.calculate_primary_T_out()
-    intercooler_air_air.coolant_temperature_out_K = intercooler_air_air.calculate_coolant_T_out()
-    intercooler_air_air.pressure_out_Pa = inputs.pressures_Pa["PTC301"]
-    intercooler_air_air.heat_flux_W = intercooler_air_air.calculate_heat_flux("primary")
-
-    # Add a header for the compressor results
-    print("-" * 20)  # Creates a line of equal signs for emphasis
-    print("Intercooler Air-Air Results:")
-    print("-" * 20)  # Creates another line of equal signs for emphasis
-
-    # Print intercooler_air_air results
-    print(f"Intercooler air-air primary outlet temperature: {intercooler_air_air.primary_temperature_out_K:.2f} K")
-    print(f"Intercooler air-air coolant outlet temperature: {intercooler_air_air.coolant_temperature_out_K:.2f} K")
-    print(f"Intercooler air-air outlet pressure: {intercooler_air_air.pressure_out_Pa :.2f} Pa")
-    print(f"Intercooler air-air heat flux: {intercooler_air_air.heat_flux_W / 1000:.4f} kW")
 
     # Instantiate the intercooler_air_liquid
     intercooler_air_liquid = Intercooler(
         efficiency=0.61, primary_fluid="Air", coolant_fluid="Water",
-        primary_p_in_Pa=intercooler_air_air.pressure_out_Pa,
-        primary_T_in_K=intercooler_air_air.primary_temperature_out_K,
+        primary_p_in_Pa=compressor.pressure_out_Pa,
+        primary_T_in_K=compressor.temperature_out_K,
         primary_mdot_in_kg_s=compressor.air_mass_flow_kg_s,
-        coolant_mdot_in_kg_s=0.5, coolant_T_in_K=323
+        coolant_mdot_in_kg_s=_params_intercooler.coolant_mdot_in_kg_s,
+        coolant_T_in_K=inputs.temperatures_K["T_cool"]
     )
+
     # Calculate outlet temperature and heat flux
     intercooler_air_liquid.primary_temperature_out_K = intercooler_air_liquid.calculate_primary_T_out()
     intercooler_air_liquid.coolant_temperature_out_K = intercooler_air_liquid.calculate_coolant_T_out()
-    intercooler_air_liquid.pressure_out_Pa = inputs.pressures_Pa["PTC311"]
     intercooler_air_liquid.heat_flux_W = intercooler_air_liquid.calculate_heat_flux("primary")
 
     print("-" * 20)  # Creates a line of equal signs for emphasis
@@ -135,23 +112,22 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     # Print intercooler_air_liquid results
     print(f"Intercooler air_liquid primary outlet temperature: {intercooler_air_liquid.primary_temperature_out_K:.2f} K")
     print(f"Intercooler air_liquid coolant outlet temperature: {intercooler_air_liquid.coolant_temperature_out_K:.2f} K")
-    print(f"Intercooler air_liquid heat flux: {intercooler_air_air.heat_flux_W / 1000:.4f} kW")
+    print(f"Intercooler air_liquid heat flux: {intercooler_air_liquid.heat_flux_W / 1000:.4f} kW")
 
     # Instantiate the humidifier with intercooler_air_liquid output as input for dry air inlet
     humidifier = Humidifier(
         dry_air_mass_flow_kg_s=intercooler_air_liquid.primary_mdot_in_kg_s,
         dry_air_temperature_in_K=intercooler_air_liquid.primary_temperature_out_K,
-        dry_air_pressure_in_Pa=intercooler_air_liquid.primary_p_in_Pa,
         dry_air_rh_in=_params_humidifier.dry_air_rh_in,
         dry_air_temperature_out_K=_params_humidifier.dry_air_temperature_out_K,
         dry_air_pressure_out_Pa=_params_humidifier.dry_air_pressure_out_Pa,
-        dry_air_rh_out=_params_humidifier.dry_air_rh_out,
-        wet_air_mass_flow_kg_s=_params_humidifier.wet_air_mass_flow_kg_s,
         wet_air_temperature_in_K=_params_humidifier.wet_air_temperature_in_K,
         wet_air_pressure_in_Pa=_params_humidifier.wet_air_pressure_in_Pa,
         wet_air_rh_in=_params_humidifier.wet_air_rh_in,
-        wet_air_pressure_out_Pa =_params_humidifier.wet_air_pressure_out_Pa
     )
+    # Calculate output pressures after pressure drops
+    wet_air_pressure_out_Pa = humidifier.wet_air_pressure_in_Pa - humidifier.interpolate_wet_pressure_drop()
+    dry_air_pressure_in_Pa = humidifier.dry_air_pressure_out_Pa + humidifier.interpolate_dry_pressure_drop()
 
     # Calculate dew point temperature
     dry_air_DPT_in_K = humidifier.calculate_dewpoint(humidifier.dry_air_temperature_in_K,humidifier.dry_air_pressure_in_Pa,humidifier.dry_air_rh_in)
@@ -174,27 +150,27 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     print(f"m_dot_water_trans: {m_dot_water_trans :.2f} g/s")
 
 
-    # Instantiate the turbine using humidifier output and Pressure from cathode_model_run
-    turbine = Turbine(
-        mass_estimator=_mass_estimator,
-        temperature_in_K=intercooler_air_air.coolant_temperature_out_K,
-        pressure_in_Pa=inputs.pressures_Pa["p_8"],
-        pressure_out_Pa=pressure_ambient_Pa,
-        air_mass_flow_kg_s=humidifier.wet_air_mass_flow_kg_s,
-        turbine_map = _params_turbine.turbine_map
-    )
-
-    # Calculate turbine outlet temperature and power
-    turbine.temperature_out_K = turbine.calculate_T_out()
-    turbine.power_W =  turbine.calculate_power()
-
-    print("-" * 20)  # Creates a line of equal signs for emphasis
-    print("Turbine Results:")
-    print("-" * 20)  # Creates another line of equal signs for emphasis
-
-    # Print turbine results
-    print(f"Turbine outlet temperature: {turbine.temperature_out_K:.2f} K")
-    print(f"Turbine power: {turbine.power_W / 1000:.2f} kW")  # Convert W to kW
+    # # Instantiate the turbine using humidifier output and Pressure from cathode_model_run
+    # turbine = Turbine(
+    #     mass_estimator=_mass_estimator,
+    #     temperature_in_K=intercooler_air_air.coolant_temperature_out_K,
+    #     pressure_in_Pa=inputs.pressures_Pa["p_8"],
+    #     pressure_out_Pa=pressure_ambient_Pa,
+    #     air_mass_flow_kg_s=humidifier.wet_air_mass_flow_kg_s,
+    #     turbine_map = _params_turbine.turbine_map
+    # )
+    #
+    # # Calculate turbine outlet temperature and power
+    # turbine.temperature_out_K = turbine.calculate_T_out()
+    # turbine.power_W =  turbine.calculate_power()
+    #
+    # print("-" * 20)  # Creates a line of equal signs for emphasis
+    # print("Turbine Results:")
+    # print("-" * 20)  # Creates another line of equal signs for emphasis
+    #
+    # # Print turbine results
+    # print(f"Turbine outlet temperature: {turbine.temperature_out_K:.2f} K")
+    # print(f"Turbine power: {turbine.power_W / 1000:.2f} kW")  # Convert W to kW
 
 # Uncomment the following to run the simulation when the script is executed
 if __name__ == "__main__":
