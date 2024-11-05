@@ -142,21 +142,15 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         wet_air_pressure_out_Pa =_params_humidifier.wet_air_pressure_out_Pa
     )
 
-    # Calculate partial pressures
-    p_vap_dry_in = humidifier.calculate_partial_pressure(humidifier.dry_air_temperature_in_K, humidifier.dry_air_rh_in)
-    p_vap_dry_out = humidifier.calculate_partial_pressure(humidifier.dry_air_temperature_out_K,
-                                                          humidifier.dry_air_rh_out)
-    p_vap_wet_in = humidifier.calculate_partial_pressure(humidifier.wet_air_temperature_in_K, humidifier.wet_air_rh_in)
-
     # Calculate dew point temperature
     dry_air_DPT_in_K = humidifier.calculate_dewpoint(humidifier.dry_air_temperature_in_K,humidifier.dry_air_pressure_in_Pa,humidifier.dry_air_rh_in)
     dry_air_DPT_out_K = humidifier.calculate_dewpoint(humidifier.dry_air_temperature_out_K,humidifier.dry_air_pressure_out_Pa,humidifier.dry_air_rh_out)
     wet_air_DPT_in_K = humidifier.calculate_dewpoint(humidifier.wet_air_temperature_in_K,humidifier.wet_air_pressure_in_Pa,humidifier.wet_air_rh_in)
+    # Calculate efficiency of the humidifier
+    efficiency = humidifier.calculate_efficiency()
 
-    # calculate water transfer
-    m_dot_water_trans, eta_water_trans = humidifier.calculate_water_transfer()
-
-
+    # Calculate water transfer mass flow
+    m_dot_water_trans = humidifier.calculate_water_transfer()
     print("-" * 20)  # Creates a line of equal signs for emphasis
     print("Humidifier Results:")
     print("-" * 20)  # Creates another line of equal signs for emphasis
@@ -165,16 +159,18 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     print(f"Dry in, dew point temperature: {dry_air_DPT_in_K:.2f} K")
     print(f"Dry out, dew point temperature: {dry_air_DPT_out_K:.2f} K")
     print(f"Wet in, dew point temperature: {wet_air_DPT_in_K:.2f} K")
-    print(f"Efficiency of water transfer: {eta_water_trans*100:.2f} %")
+    print(f"Efficiency of water transfer: {efficiency :.2f} %")
+    print(f"m_dot_water_trans: {m_dot_water_trans :.2f} g/s")
+
 
     # Instantiate the turbine using humidifier output and Pressure from cathode_model_run
     turbine = Turbine(
         mass_estimator=_mass_estimator,
-        isentropic_efficiency=_params_turbine.isentropic_efficiency,
         temperature_in_K=intercooler_air_air.coolant_temperature_out_K,
         pressure_in_Pa=inputs.pressures_Pa["p_8"],
         pressure_out_Pa=pressure_ambient_Pa,
-        air_mass_flow_kg_s=humidifier.wet_air_mass_flow_kg_s
+        air_mass_flow_kg_s=humidifier.wet_air_mass_flow_kg_s,
+        turbine_map = _params_turbine.turbine_map
     )
 
     # Calculate turbine outlet temperature and power
