@@ -234,6 +234,14 @@ class HumidifierParameters:
         self.approach_dew_temperature = 15.6
 
 
+class WaterSeparator:
+    def __init__(self):
+
+        # Pressure loss to mass flow map (in kg/s)
+        self.pressure_loss_map_pa = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+        self.mass_flow_map_kg_s = [0.0, 0.0, 0.04, 0.114, 0.20354, 0.3227, 0.4418, 0.6354, 0.816, 0.978, 1.281]
+
+
 class ValveParameters:
     def __init__(self):
         """
