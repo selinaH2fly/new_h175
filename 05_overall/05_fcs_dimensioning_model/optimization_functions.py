@@ -702,10 +702,9 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     
     results = results._replace(
         stack_power_W = stack_power_W,
-        compressor_cor_mass_flow_g_s = compressor.calculate_corrected_mass_flow(),
+        compressor_cor_mass_flow_g_s = 1000*compressor.calculate_corrected_mass_flow(),
         compressor_pressure_ratio =  compressor.pressure_out_Pa/compressor.pressure_in_Pa,
         optimization_converged = optimization_converged
-        
         )
     # Plot the compressor map with the optimized operating point highlighted
     if compressor_map is not None:
