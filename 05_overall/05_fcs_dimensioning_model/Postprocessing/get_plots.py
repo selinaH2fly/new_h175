@@ -23,7 +23,7 @@ from plot_h2_supply_vs_systempower import plot_h2_supply_vs_systempower
 from plot_system_efficiency import plot_system_efficiency
 from plot_h2_supply_vs_FL import plot_h2_supply_vs_FL
 from plot_system_mass_estimate import plot_system_mass_estimate
-from evaluate_DoE_envelope_constraint import plot_optimized_parameter_DoE_envelope
+from plot_DoE_envelope_constraint import plot_optimized_parameter_DoE_envelope
 from plot_compressor_map import plot_compressor_map
 from plot_h2_vs_mass import plot_h2_vs_mass
 #%%  

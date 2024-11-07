@@ -65,7 +65,7 @@ def export_to_csv(results, feature_names, power_constraint_kW, specified_cell_co
             f'{results.system_mass_kg:.2f}', f'{results.fixed_mass:.2f}', f'{results.power_dependent_mass:.2f}',
             f'{results.cellcount_dependent_mass:.2f}',f'{results.H2_dependend_mass:.2f}',
             f'{consider_turbine}', f'{end_of_life}', 
-            f'{multiobjective_weighting}', f'{results.optimization_converged}'
+            f'{multiobjective_weighting}', f'{results.optimization_converged}'  
         ])
         
         # Write the data row to the CSV
