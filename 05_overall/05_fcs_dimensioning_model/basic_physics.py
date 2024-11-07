@@ -49,15 +49,14 @@ def compute_reacted_o2_mass_flow(current_A, cellcount):
     Returns:
     float: Reacted O2 mass flow rate in kg/s.
     """
-    #TODO transfer to basic physics?
-    #TODO grab constants from coolprop
+   #TODO grab constants from coolprop
 
     M_O2 = 0.032  # Molar mass of O2 in kg/mol
     F = 96485  # Faraday's constant in C/mol
-    efficiency_factor = 0.23  # Efficiency factor
+    mass_fraction = 0.23
 
     # Calculate reacted O2 mass flow rate
-    o2_mass_flow_rate = (current_A * cellcount * M_O2) / (4 * F * efficiency_factor)
+    o2_mass_flow_rate = (current_A * cellcount * M_O2) / (4 * F * mass_fraction)
 
     return o2_mass_flow_rate
 
