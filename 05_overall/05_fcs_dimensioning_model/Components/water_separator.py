@@ -5,7 +5,7 @@ from cathode_model_run import PhysicalParameters, WaterSeparatorParameters
 
 
 class WaterSeparator:
-    def __init__(self, air_mass_flow_kg_s, temperature_K, pressure_Pa, relative_humidity):
+    def __init__(self, air_mass_flow_kg_s, temperature_in_K, pressure_in_Pa, relative_humidity):
         """
         Initialize the water separator with input air flow conditions.
 
@@ -15,8 +15,8 @@ class WaterSeparator:
         :param relative_humidity: Relative humidity (0 to 1 scale)
         """
         self.air_mass_flow_kg_s = air_mass_flow_kg_s
-        self.temperature_K = temperature_K
-        self.pressure_Pa = pressure_Pa
+        self.temperature_in_K = temperature_in_K
+        self.pressure_in_Pa = pressure_in_Pa
         self.relative_humidity = relative_humidity
         self.parameters = WaterSeparatorParameters()  # Load parameters from cathode_model_run
         # Physical constants
@@ -44,15 +44,15 @@ class WaterSeparator:
 
         # Calculate saturation vapor pressure (using Antoine equation approximation for water vapor)
         A, B, C = 8.07131, 1730.63, 233.426  # Antoine constants for water (temperature in Celsius)
-        temperature_C = self.temperature_K - 273.15  # Convert temperature to Celsius
+        temperature_C = self.temperature_in_K - 273.15  # Convert temperature to Celsius
         P_sat_Pa = 10 ** (A - (B / (temperature_C + C))) * 133.322  # Convert mmHg to Pa
 
         # Partial pressures of dry air and water vapor
         P_v = self.relative_humidity * P_sat_Pa  # Partial pressure of water vapor
-        P_d = self.pressure_Pa - P_v  # Partial pressure of dry air
+        P_d = self.pressure_in_Pa - P_v  # Partial pressure of dry air
 
         # Calculate density of humid air
-        density_humid_air = (P_d / (R_air * self.temperature_K)) + (P_v / (R_vapor * self.temperature_K))
+        density_humid_air = (P_d / (R_air * self.temperature_in_K)) + (P_v / (R_vapor * self.temperature_in_K))
 
         return density_humid_air
 
