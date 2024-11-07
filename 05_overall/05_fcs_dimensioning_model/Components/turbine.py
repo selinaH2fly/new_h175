@@ -142,31 +142,31 @@ turbine_params = TurbineParameters()
 # Instantiate Mass_Parameters to provide mass data
 mass_estimator = Mass_Parameters()
 
-# Create an instance of the Turbine class with the turbine map from TurbineParameters
-turbine_instance = Turbine(
-    mass_estimator=mass_estimator,
-    isentropic_efficiency=turbine_params.isentropic_efficiency,
-    air_mass_flow_kg_s=0.085,                      # Example input mass flow rate in kg/s
-    temperature_in_K=350.15,                     # Example inlet temperature in Kelvin
-    pressure_in_Pa=1.53e5,                          # Example inlet pressure in Pa
-    pressure_out_Pa=0.77e5,                         # Example outlet pressure in Pa
-    turbine_map=turbine_params.turbine_map       # Provide the turbine map from TurbineParameters
-)
-
-
-# Calculate the power output of the turbine
-turbine_power = turbine_instance.calculate_power()
-print(f"Turbine Power Output: {turbine_power:.2f} W")
-
-# Calculate the corrected mass flow rate
-corrected_mass_flow = turbine_instance.calculate_corrected_mass_flow()
-print(f"Corrected Mass Flow Rate: {corrected_mass_flow*1000:.4f} g/s")
-
-# Calculate the efficiency directly using the public method
-efficiency, operating_point = turbine_instance.get_efficiency()
-print(f"Interpolated Efficiency: {efficiency:.2f} at Operating Point - Expansion Ratio: {operating_point[0]:.2f}, Corrected Mass Flow: {operating_point[1]:.2f} g/s")
-
-
-# Calculate the outlet temperature of the turbine
-temperature_out = turbine_instance.calculate_T_out()
-print(f"Turbine Outlet Temperature: {temperature_out:.2f} K")
+# # Create an instance of the Turbine class with the turbine map from TurbineParameters
+# turbine_instance = Turbine(
+#     mass_estimator=mass_estimator,
+#     isentropic_efficiency=turbine_params.isentropic_efficiency,
+#     air_mass_flow_kg_s=0.085,                      # Example input mass flow rate in kg/s
+#     temperature_in_K=350.15,                     # Example inlet temperature in Kelvin
+#     pressure_in_Pa=1.53e5,                          # Example inlet pressure in Pa
+#     pressure_out_Pa=0.77e5,                         # Example outlet pressure in Pa
+#     turbine_map=turbine_params.turbine_map       # Provide the turbine map from TurbineParameters
+# )
+#
+#
+# # Calculate the power output of the turbine
+# turbine_power = turbine_instance.calculate_power()
+# print(f"Turbine Power Output: {turbine_power:.2f} W")
+#
+# # Calculate the corrected mass flow rate
+# corrected_mass_flow = turbine_instance.calculate_corrected_mass_flow()
+# print(f"Corrected Mass Flow Rate: {corrected_mass_flow*1000:.4f} g/s")
+#
+# # Calculate the efficiency directly using the public method
+# efficiency, operating_point = turbine_instance.get_efficiency()
+# print(f"Interpolated Efficiency: {efficiency:.2f} at Operating Point - Expansion Ratio: {operating_point[0]:.2f}, Corrected Mass Flow: {operating_point[1]:.2f} g/s")
+#
+#
+# # Calculate the outlet temperature of the turbine
+# temperature_out = turbine_instance.calculate_T_out()
+# print(f"Turbine Outlet Temperature: {temperature_out:.2f} K")
