@@ -176,8 +176,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         # Set stack attributes:
         stack.current_A = optimized_current_A
         stack.cell_voltage_V = optimized_cell_voltage_V
-        stack.temp_coolant_in_K = convert(optimized_temp_coolant_inlet_degC, "K")
-        stack.temp_coolant_out_K = convert(optimized_temp_coolant_outlet_degC , "K")
+        stack.temp_coolant_in_K = convert(optimized_temp_coolant_inlet_degC, "degC", "K")
+        stack.temp_coolant_out_K = convert(optimized_temp_coolant_outlet_degC, "degC", "K")
         
         # Compute the coolant flow rate
         stack.coolant_flow_m3_s = stack.calculate_coolant_flow(pressure_ambient_Pa)
@@ -192,7 +192,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Set compressor attributes
         compressor.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A, cellcount=cellcount)
-        compressor.pressure_out_Pa = convert(optimized_pressure_cathode_in_bara, "Pa") + compressor.calculate_BoP_pressure_drop() # compressor_out == cathode_in + BoP_pressure_drop (compressor out -> cathode in)
+        compressor.pressure_out_Pa = convert(optimized_pressure_cathode_in_bara, "bara", "Pa") + compressor.calculate_BoP_pressure_drop() # compressor_out == cathode_in + BoP_pressure_drop (compressor out -> cathode in)
         compressor.temperature_out_K = compressor.calculate_T_out()
         # Calculate compressor power
         compressor_power_W = compressor.calculate_power()
@@ -230,8 +230,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
             # Set turbine attributes
             turbine.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=optimized_stoich_cathode, current_A=optimized_current_A, cellcount=cellcount)
-            turbine.pressure_in_Pa     = max(convert(cathode_pressure_out_bar, "Pa") - turbine.calculate_BoP_pressure_drop(), 1e-9) # turbine_in == cathode_out - BoP_pressure_drop (cathode out -> turbine in)
-            turbine.temperature_in_K   = max(convert(optimized_temp_coolant_outlet_degC,"K"), 1e-9) 
+            turbine.pressure_in_Pa     = max(convert(cathode_pressure_out_bar, "bar", "Pa") - turbine.calculate_BoP_pressure_drop(), 1e-9) # turbine_in == cathode_out - BoP_pressure_drop (cathode out -> turbine in)
+            turbine.temperature_in_K   = max(convert(optimized_temp_coolant_outlet_degC, "degC", "K"), 1e-9) 
             
             # Compute the turbine power        
             turbine_power_W = turbine.calculate_power()
@@ -245,8 +245,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         # Set recirculation pump attributes
         reci_pump.current_A = optimized_current_A
-        reci_pump.temperature_in_K = max(convert(optimized_temp_coolant_outlet_degC,"K"), 1e-9)
-        reci_pump.pressure_out_Pa = convert(optimized_pressure_cathode_in_bara, "Pa") + 1e5*0.200    # reci_out == anode_in \approx: cathode_in + 0.2 bar (cf. PowerLayout); TODO: include p_anode_in in cell voltage model
+        reci_pump.temperature_in_K = max(convert(optimized_temp_coolant_outlet_degC,"degC", "K"), 1e-9)
+        reci_pump.pressure_out_Pa = convert(optimized_pressure_cathode_in_bara, "bara", "Pa") + 1e5*0.200    # reci_out == anode_in \approx: cathode_in + 0.2 bar (cf. PowerLayout); TODO: include p_anode_in in cell voltage model
         reci_pump.stoich_anode = 1.5                                                    # TODO: include anode stoichiometry in cell voltage model
 
         # Estimate the anode pressure drop
@@ -284,7 +284,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         #set T, p and m_dots here
 
         intercooler.primary_T_in_K = compressor.temperature_out_K
-        intercooler.primary_T_out_K = convert(optimized_temp_coolant_inlet_degC, "K")
+        intercooler.primary_T_out_K = convert(optimized_temp_coolant_inlet_degC,"degC",  "K")
         intercooler.primary_mdot_in_kg_s = compressor.air_mass_flow_kg_s
         intercooler.primary_p_in_Pa = compressor.pressure_out_Pa
         
