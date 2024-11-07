@@ -1,4 +1,6 @@
 import CoolProp.CoolProp as CP
+from scipy.interpolate import interp1d
+import cathode_model_run as cmr
 
 class HeatExchanger:
     """
@@ -90,13 +92,32 @@ class HeatExchanger:
         coolant_T_out_K = self.coolant_T_in_K + (Q_dot_primary / (c_p_coolant * self.coolant_mdot_in_kg_s))
         
         return coolant_T_out_K
-    
-                   
+
+
 class Intercooler(HeatExchanger):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-    #We know: T_in , T_out, mdot, primary
- 
+        # Load the intercooler pressure drop map from cathode_model_run
+        intercooler_params = cmr.IntercoolerParameters()
+        self.pressure_drop_map = intercooler_params.pressure_drop_map
+
+    def get_interpolated_pressure_drop(self,):
+        """
+        Interpolate the pressure drop based on primary mass flow rate using the pressure drop map.
+        """
+        # Extract keys and values for mass flow rates and corresponding pressure drops
+        mass_flows = list(self.pressure_drop_map.keys())
+        pressure_drops = list(self.pressure_drop_map.values())
+
+        # Create an interpolation function
+        interpolator = interp1d(mass_flows, pressure_drops, fill_value="extrapolate")
+
+        # Calculate the interpolated pressure drop based on current primary mass flow rate
+        pressure_drop = interpolator(self.primary_mdot_in_kg_s)
+
+        return pressure_drop
+
+
 class Radiatior(HeatExchanger):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -188,31 +209,21 @@ class Evaporator(HeatExchanger):
         return Qdot_W
     #We know: T_Tank, T_out, massflow , primary
     
-# %% Example usage of the code:
 
-# Create an instance of Intercooler
+# Create an instance of Intercooler with a specific primary mass flow rate
 intercooler = Intercooler(
-    efficiency=0.41,
+    efficiency=0.49,
     primary_fluid="Air",
-    coolant_fluid="Air",
-    primary_mdot_in_kg_s=0.165,
-    primary_T_in_K=434.0,
-    primary_p_in_Pa=260000,
-    coolant_mdot_in_kg_s=0.5,
-    coolant_T_in_K=323
+    coolant_fluid="Water",
+    primary_mdot_in_kg_s=0.094842,  # Example mass flow rate for primary fluid in kg/s
+    primary_T_in_K=300.0,      # Example primary fluid inlet temperature in K
+    primary_p_in_Pa=101325,    # Example primary fluid inlet pressure in Pa
+    coolant_mdot_in_kg_s=0.2,  # Example mass flow rate for coolant in kg/s
+    coolant_T_in_K=293.15      # Example coolant inlet temperature in K
 )
 
-# # Calculate specific heat
-# specific_heat = intercooler.calculate_specific_heat(intercooler.primary_T_in_K,intercooler.primary_p_in_Pa,intercooler.primary_fluid)
-# print(f"Specific Heat Capacity: {specific_heat:.2f} J/kg.K")
-#
-# intercooler.primary_T_out_K = intercooler.calculate_primary_T_out()
-# print(intercooler.primary_T_out_K)
-#
-# # Calculate heatflux
-# Q_dot = intercooler.calculate_heat_flux("primary")
-# print(f"Heat Transfer Rate (Qdot): {Q_dot/1000:.2f} kW")
-#
-#
-# #%%
-    
+# Calculate the interpolated pressure drop based on the current primary mass flow
+pressure_drop = intercooler.get_interpolated_pressure_drop()
+
+# Print the result
+print(f"Interpolated Pressure Drop: {pressure_drop:.2f} Pa")
