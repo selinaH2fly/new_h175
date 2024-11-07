@@ -11,7 +11,7 @@ class MoistExchanger:
                  dry_air_temperature_in_K=346.1, dry_air_pressure_in_Pa=21700, dry_air_rh_in=0.30,
                  dry_air_temperature_out_K=337.8, dry_air_pressure_out_Pa=230000, dry_air_rh_out=0.88,
                  wet_air_temperature_in_K=359.5, wet_air_pressure_in_Pa=210000, wet_air_rh_in=0.99,
-                 wet_air_pressure_out_Pa=190000, humidifier_map=None, o2_mass_flow_rate=0.0025):
+                 wet_air_pressure_out_Pa=190000, wet_air_temperature_out_K=355,humidifier_map=None, o2_mass_flow_rate=0.0025):
 
         # Initialize all given parameters
         self.o2_mass_flow_rate = o2_mass_flow_rate
@@ -26,6 +26,7 @@ class MoistExchanger:
         self.wet_air_temperature_in_K = wet_air_temperature_in_K
         self.wet_air_pressure_in_Pa = wet_air_pressure_in_Pa
         self.wet_air_rh_in = wet_air_rh_in
+        self.wet_air_temperature_out_K = wet_air_temperature_out_K
         self.wet_air_pressure_out_Pa = wet_air_pressure_out_Pa
 
         # Physical constants
@@ -63,7 +64,7 @@ class MoistExchanger:
         Returns:
         - flow_rate_slpm: float, volume flow rate in SLPM
         """
-        density_std = 1.225  # kg/m³, standard density of air at 0°C and 101325 Pa
+        density_std = 1.185  # kg/m³, standard density of air at 20°C and 101325 Pa
 
         # Calculate the volume flow rate at standard conditions in m³/s
         volume_flow_m3_s = kg_s / density_std
@@ -313,7 +314,7 @@ class MoistExchanger:
         return water_transfer_rate
 
 
-    def calculate_relative_humidity_outlet(self):
+    def calculate_relative_humidity_outlet_dry(self):
         """
         Calculate the relative humidity at the dry outlet of a humidifier.
 
@@ -339,6 +340,32 @@ class MoistExchanger:
 
         return RH_dry_out
 
+    def calculate_relative_humidity_outlet_wet(self):
+        """
+        Calculate the relative humidity at the wet outlet of a humidifier.
+
+        Returns:
+        - RH_wet_out: Relative humidity at the wet outlet (as a decimal, e.g., 0.636 for 63.6%)
+        """
+        # Calculate wet outlet mass flows
+        wet_outlet_flows = self.calculate_wet_outlet_mass_flows()
+        m_dot_air_wet_out = wet_outlet_flows["m_dot_air_wet_out"]
+        m_dot_vap_wet_out = wet_outlet_flows["m_dot_vap_wet_out"]
+
+        # Calculate specific humidity at the wet outlet
+        Y_wet_out = m_dot_vap_wet_out / m_dot_air_wet_out
+
+        # Calculate the partial pressure of water vapor at the wet outlet
+        p_vapor_wet_out = Y_wet_out * self.wet_air_pressure_out_Pa / (0.622 + Y_wet_out)
+
+        # Calculate the saturation vapor pressure at the wet outlet temperature
+        p_sat_wet_out = self.calculate_saturation_pressure(self.wet_air_temperature_out_K)
+
+        # Calculate relative humidity at the wet outlet
+        RH_wet_out = p_vapor_wet_out / p_sat_wet_out
+
+        return RH_wet_out
+
 
 class Humidifier(MoistExchanger):
     def __init__(self, **kwargs):
@@ -346,6 +373,5 @@ class Humidifier(MoistExchanger):
         Initialize the Humidifier class and pass any relevant arguments to the parent class.
         """
         super().__init__(**kwargs)
-
 
 
