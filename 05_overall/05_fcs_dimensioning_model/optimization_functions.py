@@ -523,7 +523,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         is_inside_coolant_out = alphashape_temp_coolant_out.contains(Point(x_scaled[[0,5]]))
         coolant_delta = (x[5]*np.array(cell_voltage_model.input_data_std[5]) + np.array(cell_voltage_model.input_data_mean[5])) \
             - (x[4]*np.array(cell_voltage_model.input_data_std[4]) + np.array(cell_voltage_model.input_data_mean[4]))
-        return 1 if is_inside_coolant_in and is_inside_coolant_out and coolant_delta > 0 else -1
+        return 1 if is_inside_coolant_in and is_inside_coolant_out and coolant_delta > 1e-3 else -1
     
     def nlc_DoE_anode_stoich(x):
         x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
@@ -693,7 +693,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         optimization_converged="False"   
 
 
-
     # Evaluate the models with the optimal input
     # Call evaluate_models and store the result in a variable
     results = evaluate_models(result.x)
@@ -704,9 +703,10 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     results = results._replace(
         stack_power_W = stack_power_W,
         compressor_cor_mass_flow_g_s = compressor.calculate_corrected_mass_flow(),
-        compressor_pressure_ratio =  compressor.pressure_out_Pa/compressor.pressure_in_Pa
+        compressor_pressure_ratio =  compressor.pressure_out_Pa/compressor.pressure_in_Pa,
+        optimization_converged = optimization_converged
+        
         )
-    
     # Plot the compressor map with the optimized operating point highlighted
     if compressor_map is not None:
         compressor.plot_compressor_map()
