@@ -199,7 +199,7 @@ class IntercoolerParameters:
         self.coolant_fluid = "INCOMP::MEG-50%"  # 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
         self.ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2','INCOMP::MEG-50%']
         self.coolant_mdot_in_kg_s = 0.2
-        # Pressure drop map (in kPa) for dry and wet sides based on dry air flow rate (sLPM)
+        # Pressure drop map (in Pa) for dry and wet sides based on dry air flow rate (Kg/s)
         self.pressure_drop_map = {
             0.04447: 500.0,
             0.094842: 4100.0,
@@ -249,16 +249,10 @@ class WaterSeparatorParameters:
     def __init__(self):
 
         # Pressure loss to mass flow map (in kg/s)
-        self.pressure_loss_map_pa = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
-        self.mass_flow_map_kg_s = [0.0, 0.0, 0.04, 0.114, 0.20354, 0.3227, 0.4418, 0.6354, 0.816, 0.978, 1.281]
+        self.pressure_loss_map_hpa = [0.0, 0.0, 2.04, 5.0, 9.6, 15, 22.6, 31.078, 40, 51, 64.8]
+        self.mass_flow_map_m3_min = [0,1,2,3,4,5,6,7,8,9,10]
 
 
-        # Create an interpolation function for mass flow to pressure drop
-        self.mass_flow_to_pressure_drop = interp1d(self.mass_flow_map_kg_s, self.pressure_loss_map_pa, fill_value="extrapolate")
-
-    def get_pressure_drop(self, mass_flow_kg_s):
-        # Interpolate to find the pressure drop for a given mass flow
-        return self.mass_flow_to_pressure_drop(mass_flow_kg_s)
 
 class ValveParameters:
     def __init__(self):
