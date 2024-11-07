@@ -46,10 +46,10 @@ class Input:
             "TTC6": 80,  # Temperature before valve, to be calculated
             "TTC8": 78,  # Temperature before stack
             "TTC9": 82,   # Temperature after stack
-            "TTC10": 82,  # Temperature after humidifier,wet
-            "TTC11": 82,  # Temperature before intercooler, air-air, cold side
+            "TTC10": 77,  # Temperature after humidifier,wet
+            "TTC11": 77,  # Temperature before intercooler, air-air, cold side
             "TTC13": 77,  # Temperature after water separator
-            "TTC12": 82,  # Temperature after intercooler, air-air, cold side
+            "TTC12": 77,  # Temperature after intercooler, air-air, cold side
             "TTC14": 77,  # Temperature after turbine
             "T_cool": 60    # Temperature of coolant input to IC air-liq
         }
