@@ -209,21 +209,21 @@ class Evaporator(HeatExchanger):
         return Qdot_W
     #We know: T_Tank, T_out, massflow , primary
     
-
-# Create an instance of Intercooler with a specific primary mass flow rate
-intercooler = Intercooler(
-    efficiency=0.49,
-    primary_fluid="Air",
-    coolant_fluid="Water",
-    primary_mdot_in_kg_s=0.094842,  # Example mass flow rate for primary fluid in kg/s
-    primary_T_in_K=300.0,      # Example primary fluid inlet temperature in K
-    primary_p_in_Pa=101325,    # Example primary fluid inlet pressure in Pa
-    coolant_mdot_in_kg_s=0.2,  # Example mass flow rate for coolant in kg/s
-    coolant_T_in_K=293.15      # Example coolant inlet temperature in K
-)
-
-# Calculate the interpolated pressure drop based on the current primary mass flow
-pressure_drop = intercooler.get_interpolated_pressure_drop()
-
-# Print the result
-print(f"Interpolated Pressure Drop: {pressure_drop:.2f} Pa")
+#
+# # Create an instance of Intercooler with a specific primary mass flow rate
+# intercooler = Intercooler(
+#     efficiency=0.49,
+#     primary_fluid="Air",
+#     coolant_fluid="Water",
+#     primary_mdot_in_kg_s=0.094842,  # Example mass flow rate for primary fluid in kg/s
+#     primary_T_in_K=300.0,      # Example primary fluid inlet temperature in K
+#     primary_p_in_Pa=101325,    # Example primary fluid inlet pressure in Pa
+#     coolant_mdot_in_kg_s=0.2,  # Example mass flow rate for coolant in kg/s
+#     coolant_T_in_K=293.15      # Example coolant inlet temperature in K
+# )
+#
+# # Calculate the interpolated pressure drop based on the current primary mass flow
+# pressure_drop = intercooler.get_interpolated_pressure_drop()
+#
+# # Print the result
+# print(f"Interpolated Pressure Drop: {pressure_drop:.2f} Pa")
