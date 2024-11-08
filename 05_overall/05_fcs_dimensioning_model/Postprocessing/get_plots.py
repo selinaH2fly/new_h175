@@ -97,7 +97,7 @@ def analyze_data(_file_path1, saving=True):
     markers= ["o", "v", "s"]
     markers_oL = ["o","P"]
     
-    fl_set = 100 #TODO: Pass that as an argument to the function
+    fl_set = 120 #TODO: Pass that as an argument to the function
     fl_max = max(df1["Flight Level (100x ft)"])
     weighting=0
     show_plot=True
@@ -287,7 +287,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"F:\GIT\H175\05_overall\05_fcs_dimensioning_model\consolidated_100-150kW_400-500_100-100ft__1\optimized_parameters_100-150kW_400-500_100-100ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
