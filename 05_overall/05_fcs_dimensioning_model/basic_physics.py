@@ -1,16 +1,17 @@
 ''' This script contains the basic physics functions used in the optimization problem. '''
 
+
 from parameters import Physical_Parameters
 import CoolProp.CoolProp as CP
 import CoolProp.HumidAirProp as HAP
 from scipy.constants import physical_constants
-import inspect # for unit conversion
 import psychro.lib as lib
 
 
 
 molar_mass = CP.PropsSI('M', 'Air')
 
+#default density
 density=1
 
 # %% Unit conversion function:
@@ -27,18 +28,10 @@ CONVERSION_FACTORS = {
         ('bar', 'Pa'):  lambda b: b * 1e5,      # Bar to Pascals   
     },
     'flow': {
-        ('kg_s', 'm3_min'):   lambda kg: (kg / density )* 60,
-        #('kg_s', 'mol_s'):  lambda kg: kg / molar_mass,
-        ('kg_s', 'l_min'):    lambda kg: kg / density * 1000 *60, 
-        ('m3_min', 'kg_s'):   lambda m3: (m3 * density)/60 ,
-        #('m3_s', 'mol_s'):  lambda m3: m3 / 0.0224,
-        #('m3_s', 'l_s'):    lambda m3: m3 * 1000,
-        #('mol_s', 'kg_s'):  lambda mol: mol * molar_mass,
-        #('mol_s', 'm3_s'):  lambda mol: mol * 0.0224,
-        #('mol_s', 'l_s'):   lambda mol: mol * 22.4,
-        ('l_min', 'kg_s'):    lambda l: l * density / (1000 *60 ),
-        #('l_s', 'm3_s'):    lambda l: l / 1000,
-        #('l_s', 'mol_s'):   lambda l: l / 22.4,
+        ('kg_s', 'm3_min'): lambda kg: (kg / density) * 60,
+        ('kg_s', 'l_min'):  lambda kg: kg / density * 1000 * 60, 
+        ('m3_min', 'kg_s'): lambda m3: (m3 * density) / 60 ,
+        ('l_min', 'kg_s'):  lambda l: l * density / (1000 *60),
     }
 }
 
@@ -46,9 +39,9 @@ CONVERSION_FACTORS = {
 
 
 def getDensity(temperature, pressure, fluid, humidity): 
-    density = lib.humidDensity(lib.Temperature(temperature,'K'), relHumidity = 90,pressure=lib.Pressure(pressure,'pa'))
-
-    return density
+    density = lib.humidDensity(lib.Temperature(temperature,'K'), relHumidity = humidity,pressure=lib.Pressure(pressure,'pa'))
+    if not density: raise ValueError("Density is 0 or None.")
+    return density if not density else density[0]
 
 
 def icao_atmosphere(flight_level_100ft):
@@ -98,12 +91,12 @@ def get_variable_type(input_unit):
     - A tuple of (variable_type, unit), where variable_type is either 'temperature' or 'pressure',
       and unit is the detected unit (e.g., 'degC', 'K', 'Pa', 'bar').
     """
-
+    # Get conversion pairs per variable type
     temperature_units = list(set([unit for pair in list(CONVERSION_FACTORS['temperature'].keys()) for unit in pair]))
     pressure_units = list(set([unit for pair in list(CONVERSION_FACTORS['pressure'].keys()) for unit in pair]))
     flow_units = list(set([unit for pair in list(CONVERSION_FACTORS['flow'].keys()) for unit in pair]))
 
-        
+    # Check Input unit
     if all(input_unit not in units for units in [temperature_units, pressure_units, flow_units]):
         raise ValueError(f"Invalid unit: {input_unit}")
 
@@ -118,6 +111,9 @@ def get_variable_type(input_unit):
         raise ValueError(f"Unrecognized unit in variable: {input_unit}")
 
 
+def checkHumidity(relative_humidity):
+    return relative_humidity * 100 if 0 <= relative_humidity <= 1 else relative_humidity
+
 
 def convert(value, input_unit , target_unit, fluid="Air", temperature=20, pressure=1, relative_humidity=0.3):
     """
@@ -130,16 +126,22 @@ def convert(value, input_unit , target_unit, fluid="Air", temperature=20, pressu
     Returns:
     - Converted value in the target unit.
     """
-
-    global density  
-    density = getDensity(temperature, pressure, fluid, relative_humidity)[0]
-
     if not isinstance(value, (int, float)):
         raise ValueError("Value must be a numerical type, not a string.")
-
-    # Get the variable type and the current unit
-    variable_type = get_variable_type(input_unit)
     
+    # multiply humidity by 100 if it is between 0 and 1
+    relative_humidity= checkHumidity(relative_humidity)
+
+    # Get the variable type
+    variable_type = get_variable_type(input_unit)
+
+    # calc density for flows
+    if variable_type == 'flow': 
+        global density  
+        density = getDensity(temperature, pressure, fluid, relative_humidity)
+        
+
+
     # Check if there is a direct conversion between the unit and target unit
     conversion_key = (input_unit, target_unit)
     
@@ -160,7 +162,3 @@ def convert(value, input_unit , target_unit, fluid="Air", temperature=20, pressu
 # Pressure conversion: bar to Pascals
 #Inlet_Pressure_bar = 1.01325  # Inlet pressure in bar
 #outlet_Pressure_Pa = convert(Inlet_Pressure_bar, "Pa")
-
-
-
-convert(2, 'degC' , 'K', fluid="Air", temperature=348, pressure=196000 ,relative_humidity=0.9 )
