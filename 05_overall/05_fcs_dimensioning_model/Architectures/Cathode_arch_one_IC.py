@@ -272,16 +272,14 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     print("-" * 20)
     print(f"Dry Air Inlet Pressure: {humidifier.dry_air_pressure_in_Pa:.2f} Pa")
     print(f"Wet Air Outlet Pressure: {humidifier.wet_air_pressure_out_Pa:.2f} Pa")
-    print(f"Target Vapor Transfer at Point 8: {target_vapor_transfer_kg_s:.6f} kg/s")
-    print(f"Converged Humidifier Mass Flow (through humidifier): {humidifier_mass_flow_kg_s:.4f} kg/s")
-    print(f"Bypass Mass Flow (through valve HBV-C-320): {bypass_mass_flow_kg_s:.4f} kg/s")
+    print(f"Target Vapor Transfer at Point 8 to maintain RH of 50% at cathode inlet: {target_vapor_transfer_kg_s:.6f} kg/s")
+    # print(f"Converged Humidifier Mass Flow (through humidifier): {humidifier_mass_flow_kg_s:.4f} kg/s")
+    #print(f"Bypass Mass Flow (through valve HBV-C-320): {bypass_mass_flow_kg_s:.4f} kg/s")
     print(f"Interpolated Efficiency: {efficiency:.2f}%")
-
-    #print(f"Water Transfer Rate: {humidifier.m_dot_water_trans:.4f} kg/s")
     print(
         f"Total Wet Outlet Mass Flow: {humidifier.wetmassout['total_mass_flow_wet_out'] * 1000:.2f} g/s")  # Converted to g/s for clarity
-    #print(f"Relative Humidity at Dry Outlet: {humidifier.RH_dry_out:.2f} %")
-    print(f"Relative Humidity at Wet Outlet: {humidifier.RH_wet_out:.2f} %")
+    # print(f"Relative Humidity at Dry Outlet: {humidifier.RH_dry_out:.2f} %")
+    # print(f"Relative Humidity at Wet Outlet: {humidifier.RH_wet_out:.2f} %")
 
     print("\nBypass Valve 320 Results:")
     print("-" * 20)
@@ -300,6 +298,8 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     print(f"Outlet Temperature: {turbine.temperature_out_K:.2f} K ({turbine.temperature_out_K-273:.2f} °C)")
     print(f"Efficiency: {100*turbine.isentropic_efficiency:.2f} %")
     print(f"Power: {turbine.power_W / 1000:.2f} kW")
+
+    print(f"Net Power: {(compressor.power_W - turbine.power_W) / 1000:.2f} kW")
 
     # Define the file path where you want to save the output
     output_file_path = "simulation_results.txt"
@@ -334,11 +334,10 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         file.write("-" * 20 + "\n")
         file.write(f"Dry Air Inlet Pressure: {humidifier.dry_air_pressure_in_Pa:.2f} Pa\n")
         file.write(f"Wet Air Outlet Pressure: {humidifier.wet_air_pressure_out_Pa:.2f} Pa\n")
-        file.write(f"Target Vapor Transfer at Point 8: {target_vapor_transfer_kg_s:.6f} kg/s\n")
+        # file.write(f"Target Vapor Transfer at Point 8: {target_vapor_transfer_kg_s:.6f} kg/s\n")
         file.write(f"Converged Humidifier Mass Flow (through humidifier): {humidifier_mass_flow_kg_s:.4f} kg/s\n")
         file.write(f"Interpolated Efficiency: {efficiency:.2f}%\n")
         file.write(f"Total Wet Outlet Mass Flow: {humidifier.wetmassout['total_mass_flow_wet_out'] * 1000:.2f} g/s\n")
-        file.write(f"Relative Humidity at Wet Outlet: {humidifier.RH_wet_out:.2f} %\n\n")
 
         file.write("Bypass Valve 320 Results:\n")
         file.write("-" * 20 + "\n")
@@ -357,6 +356,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         file.write("-" * 20 + "\n")
         file.write(f"Efficiency: {100 * turbine.isentropic_efficiency:.2f} %\n")
         file.write(f"Power: {turbine.power_W / 1000:.2f} kW\n")
+        file.write(f"Net Power: {(compressor.power_W - turbine.power_W) / 1000:.2f} kW\n")
 
     print(f"Simulation results have been saved to {output_file_path}")
 
