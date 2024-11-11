@@ -64,4 +64,4 @@ def plot_power_needs(plot_params, data, titles, fl_set, weighting, show_plot, sa
             file_path = create_plot_save_directory((f'Component_Powers_{title}_weighting_{weighting}.png'), weighting)
             plt.savefig(file_path, bbox_inches='tight')
  
-        plt.show() if show_plot else plt.close()
+        plt.show() if show_plot and ax.lines else plt.close()

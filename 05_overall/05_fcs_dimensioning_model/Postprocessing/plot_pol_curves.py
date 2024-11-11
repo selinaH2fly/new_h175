@@ -24,6 +24,10 @@ def plot_polarization_curves(plot_params, data, titles, fl_set, markers_oL, weig
         # Filter data for the specified flight level
         df = filter_data_by_f1_and_weight(df, fl_set, weighting)
         
+        if df.empty:
+            print(f"No data available for {title} at FL {fl_set} or for weighting {weighting}. Skipping plot.")
+            continue  # Skip plotting if no data exists
+
         # Create the figure and axis
         fig, ax = plt.subplots(figsize=(12, 8))
         
@@ -79,4 +83,4 @@ def plot_polarization_curves(plot_params, data, titles, fl_set, markers_oL, weig
             plt.savefig(file_path, bbox_inches='tight')
 
         # Show the plot
-        plt.show() if show_plot else plt.close()
+        plt.show() if show_plot and ax.lines else plt.close()

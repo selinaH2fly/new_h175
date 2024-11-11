@@ -58,6 +58,7 @@ def plot_system_efficiency(plot_params, data, titles, colors, fl_set, markers_oL
 
     # Create the legend
     ax.legend(handles, labels, loc='best')
+
     # Set title and axis labels
     plot_params.update({'title': f'System Efficiency vs System Net Power, FL {fl_set}'})
     configure_axes(ax, **plot_params)
@@ -65,4 +66,4 @@ def plot_system_efficiency(plot_params, data, titles, colors, fl_set, markers_oL
     if saving:
         file_path = create_plot_save_directory(f'System_Efficiency_vs_Power_weighting_{weighting}.png', weighting)
         plt.savefig(file_path, bbox_inches='tight')      
-    plt.show() if show_plot else plt.close()
+    plt.show() if show_plot  else plt.close()

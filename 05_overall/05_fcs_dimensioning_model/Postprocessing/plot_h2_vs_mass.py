@@ -50,6 +50,8 @@ def plot_h2_vs_mass(plot_params, data, titles, colors, fl_set, weighting, show_p
 
     for ax, df, title, color in zip(axs, non_empty_data, non_empty_titles, non_empty_colors):
         df_filtered = df[(df['Flight Level (100x ft)'] == fl_set) & (df['eol (t/f)'] == eol)]
+        
+        # Set up colormap for 'System Power (kW)'
         norm, cmap = create_colormap(plot_params['vmin'], plot_params['vmax'], cmap='viridis')
 
         if df_filtered.empty:
@@ -60,7 +62,6 @@ def plot_h2_vs_mass(plot_params, data, titles, colors, fl_set, weighting, show_p
         all_points_y = []
         all_power = []  # Collect 'System Power (kW)' for coloring
 
-        # Set up colormap for 'System Power (kW)'
        
         
         for weighting, marker in zip(weightings, markers):
@@ -110,7 +111,7 @@ def plot_h2_vs_mass(plot_params, data, titles, colors, fl_set, weighting, show_p
         file_path = create_plot_save_directory(f'H2_Supply_Comparison_FL{fl_set}_weighting_{weighting}.png', weighting)
         plt.savefig(file_path, bbox_inches='tight', dpi=300)
         
-    plt.show() if show_plot else plt.close()
+    plt.show() if show_plot and ax.lines else plt.close()
 
 def plot_convex_hull(ax, x, y, color):
     """
