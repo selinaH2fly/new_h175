@@ -55,7 +55,7 @@ def plot_h2_vs_mass(plot_params, data, titles, colors, fl_set, weighting, show_p
         norm, cmap = create_colormap(plot_params['vmin'], plot_params['vmax'], cmap='viridis')
 
         if df_filtered.empty:
-            print(f"No data available for {title} at FL {fl_set}. Skipping subplot.")
+            print(f"No data available for H2_Supply_Comparison {title} at FL {fl_set}. Skipping subplot.")
             continue  # Skip plotting if no data exists
 
         all_points_x = []
@@ -111,7 +111,7 @@ def plot_h2_vs_mass(plot_params, data, titles, colors, fl_set, weighting, show_p
         file_path = create_plot_save_directory(f'H2_Supply_Comparison_FL{fl_set}_weighting_{weighting}.png', weighting)
         plt.savefig(file_path, bbox_inches='tight', dpi=300)
         
-    plt.show() if show_plot and ax.lines else plt.close()
+    plt.show() if show_plot and ax.collections else plt.close()
 
 def plot_convex_hull(ax, x, y, color):
     """

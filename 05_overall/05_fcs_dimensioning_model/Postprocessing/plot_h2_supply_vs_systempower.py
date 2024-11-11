@@ -54,7 +54,7 @@ def plot_h2_supply_vs_systempower(plot_params, data, titles, colors, fl_set, mar
     for df, title, color in zip(data, titles, colors):
         df = filter_data_by_f1_and_weight(df, fl_set, weighting)
         if df.empty:
-            print(f"No data available for Hydrogen Supply Rate vs System Net Power {title} at FL {fl_set} or for weighting {weighting}. Skipping plot.")
+            print(f"No data available for H2 Supply {title} at FL {fl_set} or for weighting {weighting}. Skipping plot.")
             continue  # Skip plotting if no data exists   
         for filter_eol, linestyle, marker, label_suffix in [(False, '-', markers_oL[0], 'BoL'), (True, '--', markers_oL[1], 'EoL')]:
             # Apply the filter based on the function argument
@@ -99,4 +99,4 @@ def plot_h2_supply_vs_systempower(plot_params, data, titles, colors, fl_set, mar
     if saving:
         file_path = create_plot_save_directory(f'H2_Supply_weighting_{weighting}.png', weighting)
         plt.savefig(file_path, bbox_inches='tight')        
-    plt.show() if show_plot and ax.lines else plt.close()
+    plt.show() if show_plot and ax.collections else plt.close()

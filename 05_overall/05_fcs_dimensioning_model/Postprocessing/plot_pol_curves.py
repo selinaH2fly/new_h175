@@ -83,4 +83,4 @@ def plot_polarization_curves(plot_params, data, titles, fl_set, markers_oL, weig
             plt.savefig(file_path, bbox_inches='tight')
 
         # Show the plot
-        plt.show() if show_plot and ax.lines else plt.close()
+        plt.show() if show_plot and ax.collections else plt.close()

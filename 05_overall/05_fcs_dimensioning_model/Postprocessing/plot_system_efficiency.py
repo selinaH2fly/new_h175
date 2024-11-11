@@ -69,4 +69,4 @@ def plot_system_efficiency(plot_params, data, titles, colors, fl_set, markers_oL
     if saving:
         file_path = create_plot_save_directory(f'System_Efficiency_vs_Power_weighting_{weighting}.png', weighting)
         plt.savefig(file_path, bbox_inches='tight')      
-    plt.show() if show_plot and ax.lines else plt.close()
+    plt.show() if show_plot and ax.collections else plt.close()

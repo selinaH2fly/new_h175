@@ -62,7 +62,9 @@ def plot_compressor_map(plot_params, data, titles, colors, markers, fl_set, weig
         df = df[(df["eol (t/f)"] == filter_mode) & 
                 (df['current_A (Value)'] <= 700) &
                 (df['weighting ([0,1])'] == weighting)] # filter out eol points, FL and points above 700 A 
-        
+        if df.empty:
+            print(f"No data available for ideal Compressor Map {title} for current_A <= 700 or weighting {weighting}. Skipping plot.")
+            continue  # Skip plotting if no data exists
         # Scatter plot with color based on 'System Power (kW)'
         scatter = ax.scatter(df["Compressor Corrected Air Flow (g/s)"]
                              , df["Compressor Pressure Ratio (-)"], 
@@ -128,4 +130,4 @@ def plot_compressor_map(plot_params, data, titles, colors, markers, fl_set, weig
         plt.savefig(file_path, bbox_inches='tight')
     
     # Show the plot
-    plt.show() if show_plot and ax.lines else plt.close()
+    plt.show() if show_plot and ax.collections else plt.close()
