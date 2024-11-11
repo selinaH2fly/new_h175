@@ -11,7 +11,7 @@ class HeatExchanger:
     def __init__(self, efficiency = 1.0, 
                  primary_fluid = "Air", primary_mdot_in_kg_s = 0, primary_T_in_K = 293.15, primary_T_out_K = 293.15, primary_p_in_Pa = 101325,
                  coolant_fluid = "Water", coolant_mdot_in_kg_s = 0, coolant_T_in_K = 0, coolant_T_out_K = 0, coolant_p_in_Pa = 101325,
-                 ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2']):
+                 ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2','INCOMP::MEG-50%']):
         
         self.efficiency = efficiency #TODO use it or kill it 
         # primary fluid or working fluid
