@@ -9,7 +9,7 @@ from get_plot_settings import *
 
 
 
-def plot_h2_vs_mass(plot_params, data, titles, colors, fl_set, show_plot, saving=True):
+def plot_h2_vs_mass(plot_params, data, titles, colors, fl_set, show_plot, weighting, saving=True):
     """
     Plot of H2 supply vs system power with convex hull envelope around all points,
     connected dashed lines for the same power levels, and colored scatter points
