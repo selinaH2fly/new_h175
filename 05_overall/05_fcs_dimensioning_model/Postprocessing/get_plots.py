@@ -23,7 +23,7 @@ from plot_h2_supply_vs_systempower import plot_h2_supply_vs_systempower
 from plot_system_efficiency import plot_system_efficiency
 from plot_h2_supply_vs_FL import plot_h2_supply_vs_FL
 from plot_system_mass_estimate import plot_system_mass_estimate
-from evaluate_DoE_envelope_constraint import plot_optimized_parameter_DoE_envelope
+from plot_DoE_envelope_constraint import plot_optimized_parameter_DoE_envelope
 from plot_compressor_map import plot_compressor_map
 from plot_h2_vs_mass import plot_h2_vs_mass
 #%%  
@@ -106,14 +106,14 @@ def analyze_data(_file_path1, saving=True):
     plot_params_h2_vs_mass = {
     'title': '', 
     'x_label': 'System Mass [kg]', 
-    'x_lim': [170,240], 
+    'x_lim': [100,130], 
     'y_label': 'Hydrogen Supply Rate [g/s]',
     'y_lim': None,  
     'label' : ["H2 supply", "system mass"], 
-    'vmin' : 125, 
+    'vmin' : 100, 
     'vmax' : 150
     }
-    plot_h2_vs_mass(plot_params_h2_vs_mass, data, titles, colors, fl_set, show_plot=show_plot)
+    plot_h2_vs_mass(plot_params_h2_vs_mass, data, titles, colors, fl_set, show_plot, weighting)
     
     ###########PLOT: Polcurves
     plot_params_polarization_curves = {
@@ -225,7 +225,7 @@ def analyze_data(_file_path1, saving=True):
     
     # New grouped, stacked bar chart function
     plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, markers, weighting, show_plot=show_plot, saving=saving, mode="bol")
-    plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
+    #plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
     
     ###########PLOT: Compressormap
     plot_params_compressor_map = {
@@ -239,7 +239,7 @@ def analyze_data(_file_path1, saving=True):
 
     }
     plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, weighting, show_plot=show_plot, saving=saving, mode="bol")
-    plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
+    #plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
         
     ###########PLOT: optimized parameters in DoE envelope
     os.makedirs("DoE_Envelope_Evaluation", exist_ok=True)
@@ -287,7 +287,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"\GIT\H175\05_overall\05_fcs_dimensioning_model\consolidated_125-150kW_400-500_120-120ft__3\optimized_parameters_125-150kW_400-500_120-120ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()

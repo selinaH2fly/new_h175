@@ -127,7 +127,10 @@ def assign_input_and_target_data(dataframe, target, params_pyhsics, data):
             input_data_dict = voltage_input_data_dict(df_dict, params_pyhsics)
         elif target == 'cathode_pressure_drop':
             target_data = [pressure_in - pressure_out for pressure_in, pressure_out in zip(df_dict['pressure_cathode_inlet'], df_dict['pressure_cathode_outlet'])]
-            input_data_dict = cathode_dp_input_data_dict(df_dict, params_pyhsics)
+            input_data_dict = cathode_dp_input_data_dict(df_dict, params_pyhsics)        
+        elif target == 'anode_pressure_drop':
+            target_data = [pressure_in - pressure_out for pressure_in, pressure_out in zip(df_dict['pressure_anode_inlet'], df_dict['pressure_anode_outlet'])]
+            input_data_dict = anode_dp_input_data_dict(df_dict, params_pyhsics)        
         else:
             raise ValueError(f'Target variable {target} not found in the dataframe!')
 
@@ -171,12 +174,8 @@ def voltage_input_data_dict(df_dict, params_pyhsics):
     input_data_dict['pressure_cathode_in_bara'] = [pressure_barg + params_pyhsics.sea_level_ambient_pressure_bar for pressure_barg in df_dict['pressure_cathode_inlet']]
     input_data_dict['temp_coolant_inlet_degC'] = df_dict['temp_coolant_inlet']
     input_data_dict['temp_coolant_outlet_degC'] = df_dict['temp_coolant_outlet']
-
-    '''TODO: Include anode stoichiometry and anode inlet pressure in a future version when we want to optimize for those variables.
-    As a quick fix as of Aug.08, 2024, we assume constant values for these variables. If we want to optimize for them, we need minimize the H2 flow fed to the system (instead of minimizing the H2 flow consumed by the system)!
-    '''
-    # input_data_dict['stoich_anode'] = df_dict['anode_stoich']
-    # input_data_dict['pressure_anode_in_bara'] = [pressure_barg + params_pyhsics.sea_level_ambient_pressure_bar for pressure_barg in df_dict['pressure_anode_inlet']]
+    input_data_dict['stoich_anode'] = df_dict['anode_stoich']
+    input_data_dict['pressure_anode_in_bara'] = [pressure_barg + params_pyhsics.sea_level_ambient_pressure_bar for pressure_barg in df_dict['pressure_anode_inlet']]
 
     return input_data_dict
 
@@ -210,3 +209,15 @@ def calculate_relative_humidity(dewpoint_degC, air_temp_degC):
     rh_perc = 100 * (10 ** exponent)
     
     return rh_perc
+
+def anode_dp_input_data_dict(df_dict, params_physics):
+
+    input_data_dict = {}
+
+    # Variables believed to affect flow velocity and, therefore, pressure drop in the anode
+    input_data_dict['current_A'] = df_dict['current']
+    input_data_dict['stoich_anode'] = df_dict['anode_stoich']
+    input_data_dict['pressure_anode_in_bara'] = [pressure_barg + params_physics.sea_level_ambient_pressure_bar for pressure_barg in df_dict['pressure_anode_inlet']]
+    input_data_dict['temp_coolant_inlet_degC'] = df_dict['temp_coolant_inlet'] # assumption: gas temperature \approx "stack" temperature, right after gas enters stack (cf. Powercell assumption for dewpoint computations)
+    input_data_dict['H2_concentration'] = df_dict['Anode_H2_Concentration'] 
+    return input_data_dict
