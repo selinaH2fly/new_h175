@@ -1,5 +1,7 @@
 import CoolProp.CoolProp as CP
 from scipy.interpolate import griddata
+from scipy.interpolate import RegularGridInterpolator
+
 import numpy as np
 from parameters import Mass_Parameters
 
@@ -46,10 +48,12 @@ class Turbine:
 
         # Determine the operating efficiency if a turbine map is provided
         if self.turbine_map is not None:
-            efficiency, _ = self._interpolate_efficiency()
-            turbine_shaft_power_W = turbine_isentropic_power_W * efficiency
+            efficiency = self._interpolate_efficiency()  # Direct assignment without unpacking
         else:
-            turbine_shaft_power_W = turbine_isentropic_power_W * self.isentropic_efficiency
+            efficiency = self.isentropic_efficiency
+
+        # Calculate the turbine shaft power using the efficiency
+        turbine_shaft_power_W = turbine_isentropic_power_W * efficiency
 
         return turbine_shaft_power_W
 
@@ -71,36 +75,54 @@ class Turbine:
 
         Returns:
         - efficiency: The interpolated efficiency at the current operating point.
-        - operating_point: A list containing [expansion_ratio, corrected_mass_flow_g_s]
         """
-        efficiency, operating_point = self._interpolate_efficiency()
-        return efficiency, operating_point
+        efficiency = self._interpolate_efficiency()  # Only retrieves the efficiency
+        return efficiency
 
     def _interpolate_efficiency(self) -> float:
         """
-        Interpolates the efficiency from the turbine map based on the current operating point.
+        Interpolates the efficiency from the turbine map based on the current operating point,
+        with boundary adjustments for out-of-range values.
 
         Returns:
-        - Efficiency at the given operating point.
+        - Efficiency at the given operating point as a float.
         """
+        # Calculate the pressure ratio and corrected mass flow in g/s
         pressure_ratio = self.pressure_in_Pa / self.pressure_out_Pa
         corrected_mass_flow_g_s = self.calculate_corrected_mass_flow() * 1000  # Convert to g/s
 
-        # Assign the turbine map arrays and flatten to 1D
-        map_pressure_ratio = self.turbine_map['expansion_ratio'].flatten()
-        map_mass_flow_g_s = self.turbine_map['corrected_mass_flow_g_s'].flatten()
-        map_efficiency = self.turbine_map['isentropic_efficiency'].flatten()
+        # Get unsorted 1D arrays defining the grid for pressure ratios and mass flows
+        expansion_ratio_unsorted = self.turbine_map['expansion_ratio'][0, :]
+        corrected_mass_flow_unsorted = self.turbine_map['corrected_mass_flow_g_s'][:, 0]
 
-        # Interpolate the efficiency with a default small fill value for out-of-bound points
-        efficiency = griddata(
-            np.array([map_mass_flow_g_s, map_pressure_ratio]).T,
-            map_efficiency,
-            (corrected_mass_flow_g_s, pressure_ratio),
-            method='nearest',
-            rescale=True
+        # Sort each axis and reorder the efficiency data accordingly
+        expansion_ratio_sorted_indices = np.argsort(expansion_ratio_unsorted)
+        corrected_mass_flow_sorted_indices = np.argsort(corrected_mass_flow_unsorted)
+
+        expansion_ratio_axis = expansion_ratio_unsorted[expansion_ratio_sorted_indices]
+        corrected_mass_flow_axis = corrected_mass_flow_unsorted[corrected_mass_flow_sorted_indices]
+
+        # Reorder the efficiency data to match sorted axes
+        isentropic_efficiency_sorted = self.turbine_map['isentropic_efficiency'][corrected_mass_flow_sorted_indices, :]
+        isentropic_efficiency_sorted = isentropic_efficiency_sorted[:, expansion_ratio_sorted_indices]
+
+        # Clip values to the map bounds to avoid extrapolation
+        pressure_ratio_clipped = np.clip(pressure_ratio, expansion_ratio_axis.min(), expansion_ratio_axis.max())
+        corrected_mass_flow_clipped = np.clip(corrected_mass_flow_g_s, corrected_mass_flow_axis.min(),
+                                              corrected_mass_flow_axis.max())
+
+        # Create the interpolator with sorted data
+        interpolator = RegularGridInterpolator(
+            (corrected_mass_flow_axis, expansion_ratio_axis),
+            isentropic_efficiency_sorted,
+            bounds_error=False,
+            fill_value=None  # Allows extrapolation if needed
         )
 
-        return efficiency.item(), [pressure_ratio, corrected_mass_flow_g_s]
+        # Interpolate the efficiency
+        efficiency = interpolator((corrected_mass_flow_clipped, pressure_ratio_clipped))
+
+        return efficiency.item() if efficiency.size else efficiency
 
     def calculate_T_out(self) -> float:
         """
@@ -113,7 +135,13 @@ class Turbine:
         specific_heat_ratio = CP.PropsSI('C', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Air') / \
                               CP.PropsSI('O', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Air')
 
-        temperature_out_K = self.temperature_in_K * (((self.pressure_out_Pa / self.pressure_in_Pa) ** ((specific_heat_ratio - 1) / specific_heat_ratio) - 1) * self.isentropic_efficiency + 1)
+        efficiency = self._interpolate_efficiency()
+
+        # Calculate outlet temperature using efficiency
+        temperature_out_K = self.temperature_in_K * (
+                ((self.pressure_out_Pa / self.pressure_in_Pa) ** (
+                            (specific_heat_ratio - 1) / specific_heat_ratio) - 1) * efficiency + 1
+        )
 
         return temperature_out_K
 
@@ -133,22 +161,22 @@ class Turbine:
             "mean": turbine_mass_mean_kg,
             "sd": turbine_mass_sd_kg
         }
-
-from cathode_model_run import Mass_Parameters, TurbineParameters
-
-# Instantiate TurbineParameters to access turbine map
-turbine_params = TurbineParameters()
-
-# Instantiate Mass_Parameters to provide mass data
-mass_estimator = Mass_Parameters()
-
+#
+# from cathode_model_run import Mass_Parameters, TurbineParameters
+# #
+# # Instantiate TurbineParameters to access turbine map
+# turbine_params = TurbineParameters()
+#
+# # Instantiate Mass_Parameters to provide mass data
+# mass_estimator = Mass_Parameters()
+#
 # # Create an instance of the Turbine class with the turbine map from TurbineParameters
 # turbine_instance = Turbine(
 #     mass_estimator=mass_estimator,
 #     isentropic_efficiency=turbine_params.isentropic_efficiency,
-#     air_mass_flow_kg_s=0.085,                      # Example input mass flow rate in kg/s
+#     air_mass_flow_kg_s = 0.176,                      # Example input mass flow rate in kg/s
 #     temperature_in_K=350.15,                     # Example inlet temperature in Kelvin
-#     pressure_in_Pa=1.53e5,                          # Example inlet pressure in Pa
+#     pressure_in_Pa=2e5,                          # Example inlet pressure in Pa
 #     pressure_out_Pa=0.77e5,                         # Example outlet pressure in Pa
 #     turbine_map=turbine_params.turbine_map       # Provide the turbine map from TurbineParameters
 # )
@@ -162,9 +190,9 @@ mass_estimator = Mass_Parameters()
 # corrected_mass_flow = turbine_instance.calculate_corrected_mass_flow()
 # print(f"Corrected Mass Flow Rate: {corrected_mass_flow*1000:.4f} g/s")
 #
-# # Calculate the efficiency directly using the public method
-# efficiency, operating_point = turbine_instance.get_efficiency()
-# print(f"Interpolated Efficiency: {efficiency:.2f} at Operating Point - Expansion Ratio: {operating_point[0]:.2f}, Corrected Mass Flow: {operating_point[1]:.2f} g/s")
+# # Retrieve only the efficiency
+# efficiency = turbine_instance.get_efficiency()
+# print(f"Interpolated Efficiency: {efficiency:.2f}")
 #
 #
 # # Calculate the outlet temperature of the turbine
