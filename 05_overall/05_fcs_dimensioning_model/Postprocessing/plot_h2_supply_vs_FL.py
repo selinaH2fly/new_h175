@@ -91,7 +91,7 @@ def plot_h2_supply_vs_FL(plot_params, df1, markers, fl_max, weighting, show_plot
             ax.text(box_x + box_width / 2, box_y_start - i * (box_height + box_spacing) - text_spacing, f'{power} kW', va='top', ha='center', transform=ax.transAxes, fontsize=12)
         
     # Save and show the plot
-    if saving:
+    if saving and ax.collections:
         file_path = create_plot_save_directory(f'H2_supply_vs_flightlevel_{mode}_weighting_{weighting}.png', weighting)
         plt.savefig(file_path, bbox_inches='tight')
     plt.show() if show_plot and ax.collections else plt.close()

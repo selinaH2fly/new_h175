@@ -337,7 +337,7 @@ def plot_system_mass_estimate(plot_params, data, titles, colors, components_dict
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     
     # Save and show the plot
-    if saving:
+    if saving and ax.collections:
         file_path = create_plot_save_directory(f'Weight_estimation_vs_power_{mode}_weighting_{weighting}.png', weighting)
         plt.savefig(file_path, bbox_inches='tight')
 

@@ -66,7 +66,7 @@ def plot_system_efficiency(plot_params, data, titles, colors, fl_set, markers_oL
     plot_params.update({'title': f'System Efficiency vs System Net Power, FL {fl_set}'})
     configure_axes(ax, **plot_params)
     
-    if saving:
+    if saving and ax.collections:
         file_path = create_plot_save_directory(f'System_Efficiency_vs_Power_weighting_{weighting}.png', weighting)
         plt.savefig(file_path, bbox_inches='tight')      
     plt.show() if show_plot and ax.collections else plt.close()

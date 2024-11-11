@@ -78,7 +78,7 @@ def plot_polarization_curves(plot_params, data, titles, fl_set, markers_oL, weig
 
         # Adjust layout and save the plot if necessary
         fig.tight_layout()
-        if saving:
+        if saving and ax.collections:
             file_path = create_plot_save_directory((f'{title}_polarization_curve_weighting_{weighting}.png'), weighting)
             plt.savefig(file_path, bbox_inches='tight')
 

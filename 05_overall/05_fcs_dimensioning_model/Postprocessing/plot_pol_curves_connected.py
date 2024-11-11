@@ -90,7 +90,7 @@ def plot_polarization_curves_bol_eol(plot_params, df1, titles, colors, fl_set, m
     ax.legend(loc='upper right')
 
     # Save and show plot
-    if saving:
+    if saving and ax.collections:
         file_path = create_plot_save_directory((f'bol_eol_polarization_curve_weighting_{weighting}.png'), weighting)
         plt.savefig(file_path, bbox_inches='tight')
     plt.show() if show_plot and ax.collections else plt.close()

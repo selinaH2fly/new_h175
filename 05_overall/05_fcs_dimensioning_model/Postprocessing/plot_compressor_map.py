@@ -125,7 +125,7 @@ def plot_compressor_map(plot_params, data, titles, colors, markers, fl_set, weig
     fig.tight_layout()
 
     # Save the plot as a PNG file if saving is True
-    if saving:
+    if saving and ax.collections:
         file_path = create_plot_save_directory(f'ideal_compressor_map_{mode_name}.png', weighting)
         plt.savefig(file_path, bbox_inches='tight')
     
