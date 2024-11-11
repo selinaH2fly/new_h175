@@ -325,7 +325,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         anode_pressure_drop_Pa = stack.calculate_pressure_drop_anode(anode_pressure_drop_model, optimized_current_A, optimized_stoich_anode, optimized_pressure_anode_in_bara, optimized_temp_coolant_inlet_degC)
         
         # Compute the cathode pressure out        
-        anode_pressure_out_Pa = convert(optimized_pressure_anode_in_bara,'Pa') - anode_pressure_drop_Pa
+        anode_pressure_out_Pa = convert(optimized_pressure_anode_in_bara,"bara",'Pa') - anode_pressure_drop_Pa
 
         # Estimate the BoP pressure drop in the recirculation loop
         #anode_BoP_pressure_drop_Pa = reci_pump.calculate_BoP_pressure_drop()
