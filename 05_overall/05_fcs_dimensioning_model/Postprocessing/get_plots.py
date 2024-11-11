@@ -97,7 +97,7 @@ def analyze_data(_file_path1, saving=True):
     markers= ["o", "v", "s"]
     markers_oL = ["o","P"]
     
-    fl_set = 120 #TODO: Pass that as an argument to the function
+    fl_set = 100 #TODO: Pass that as an argument to the function
     fl_max = max(df1["Flight Level (100x ft)"])
     weighting=0
     show_plot=True
@@ -113,7 +113,7 @@ def analyze_data(_file_path1, saving=True):
     'vmin' : 100, 
     'vmax' : 150
     }
-    plot_h2_vs_mass(plot_params_h2_vs_mass, data, titles, colors, fl_set, show_plot, weighting)
+    plot_h2_vs_mass(plot_params_h2_vs_mass, data, titles, colors, fl_set, weighting, show_plot=show_plot, saving=saving)
     
     ###########PLOT: Polcurves
     plot_params_polarization_curves = {
@@ -224,8 +224,8 @@ def analyze_data(_file_path1, saving=True):
                          "Turbine Power (kW)":      0}
     
     # New grouped, stacked bar chart function
-    plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, markers, weighting, show_plot=show_plot, saving=saving, mode="bol")
-    #plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
+    plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, fl_set, markers, weighting, show_plot=show_plot, saving=saving, mode="bol")
+    #plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, fl_set, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
     
     ###########PLOT: Compressormap
     plot_params_compressor_map = {
@@ -238,7 +238,7 @@ def analyze_data(_file_path1, saving=True):
         'vmax' : 175, 
 
     }
-    plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, weighting, show_plot=show_plot, saving=saving, mode="bol")
+    plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, fl_set, weighting, show_plot=show_plot, saving=saving, mode="bol")
     #plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
         
     ###########PLOT: optimized parameters in DoE envelope
@@ -287,7 +287,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()

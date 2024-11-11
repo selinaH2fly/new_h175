@@ -16,7 +16,7 @@ def scale_convex_hull(hull_points, center_point, scale_factor):
     return scaled_points
 
 # %% PLOT: Compressormap from data
-def plot_compressor_map(plot_params, data, titles, colors, markers, weighting, show_plot, saving=True, mode="bol"):
+def plot_compressor_map(plot_params, data, titles, colors, markers, fl_set, weighting, show_plot, saving=True, mode="bol"):
     """
     Plots the compressor map for multiple datasets in one plot.
 
@@ -35,7 +35,6 @@ def plot_compressor_map(plot_params, data, titles, colors, markers, weighting, s
 
         
     power_set = 160 #kW should be in line with one "Power Constraint" value of the df
-    FL_set = 120
     N = 3 # Specify scaling factor N
     
     scaling_factors = [1 - i/N for i in range(N)]  # Progressive shrinking from 1 to 0
@@ -83,7 +82,7 @@ def plot_compressor_map(plot_params, data, titles, colors, markers, weighting, s
         hull = ConvexHull(points)
         
         # Find the point to collapse towards, e.g. 100 kW
-        center_point = df[(df["Power Constraint (kW)"] == power_set) & (df['Flight Level (100x ft)'] == FL_set)][["Compressor Corrected Air Flow (g/s)", "Compressor Pressure Ratio (-)"]]
+        center_point = df[(df["Power Constraint (kW)"] == power_set) & (df['Flight Level (100x ft)'] == fl_set)][["Compressor Corrected Air Flow (g/s)", "Compressor Pressure Ratio (-)"]]
         
         # If no point is found, skip scaling and plotting the hulls
         if center_point.empty:

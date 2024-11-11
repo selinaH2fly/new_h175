@@ -39,7 +39,7 @@ def find_closest(values, point, tol):
     return values_array[index], converged
 
 # %%PLOT a stacked bar chart of each subsystem component mass grouped by power level.         
-def plot_system_mass_estimate(plot_params, data, titles, colors, components_dict, markers, weighting, show_plot, saving=True, mode="bol"):  
+def plot_system_mass_estimate(plot_params, data, titles, colors, components_dict, fl_set, markers, weighting, show_plot, saving=True, mode="bol"):  
     """
     Plot of system mass vs system power as a stack bar chart for each subsystem.
     
@@ -99,8 +99,12 @@ def plot_system_mass_estimate(plot_params, data, titles, colors, components_dict
     for df, title, color, m_stack_value, marker in zip(data, titles, colors, m_stack_values, markers):
         # Filter the df for eol, bol and flight level
         df = df[(df["eol (t/f)"] == filter_mode) & 
-                (df["Flight Level (100x ft)"] == 120) &
+                (df["Flight Level (100x ft)"] == fl_set) &
                 (df["weighting ([0,1])"] == weighting)]
+        
+        if df.empty:
+            print(f"No data available for {title} at FL {fl_set}. Skipping plot.")
+            return  # Skip plotting if no data exists
         
         # Extract all power points from the filtered DataFrame
         all_points = sorted(df["System Power (kW)"].unique())
