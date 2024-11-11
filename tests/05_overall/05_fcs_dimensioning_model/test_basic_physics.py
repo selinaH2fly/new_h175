@@ -27,6 +27,7 @@ class TestConvert(unittest.TestCase):
         self.assertEqual(round(basic_physics.convert(0.5, 'kg_s', 'l_min', fluid="Air", temperature=303.15, pressure=101325 , relative_humidity=0.7), 2), 26068.27)
         self.assertEqual(round(basic_physics.convert(2, 'kg_s', 'l_min', fluid="Air", temperature=313.15, pressure=100000  , relative_humidity=0.8), 2), 110393.79)
         self.assertEqual(round(basic_physics.convert(0, 'kg_s', 'l_min', fluid="Air", temperature=293.15, pressure=101325   , relative_humidity=0.5), 2), 0)
+        self.assertEqual(round(basic_physics.convert(0.166, 'kg_s','l_min', fluid="Air", temperature=353, pressure=196000   , relative_humidity=0.8), 2), 5555.85)
 
     def test_l_min_to_kg_s(self):
         self.assertEqual(round(basic_physics.convert(50076.21 , 'l_min', 'kg_s', fluid="Air", temperature=293.15, pressure=101325 , relative_humidity=0.5), 2), 1 )
@@ -39,6 +40,8 @@ class TestConvert(unittest.TestCase):
         self.assertEqual(round(basic_physics.convert(0.5, 'kg_s', 'm3_min', fluid="Air", temperature=303.15, pressure=101325 , relative_humidity=0.7), 2), 26.07)
         self.assertEqual(round(basic_physics.convert(2, 'kg_s', 'm3_min', fluid="Air", temperature=313.15, pressure=100000  , relative_humidity=0.8), 2), 110.39)
         self.assertEqual(round(basic_physics.convert(0, 'kg_s', 'm3_min', fluid="Air", temperature=293.15, pressure=101325   , relative_humidity=0.5), 2), 0)
+        self.assertEqual(round(basic_physics.convert(0.166, 'kg_s','m3_min', fluid="Air", temperature=353, pressure=196000   , relative_humidity=0.8), 2), 5.56)
+
 
 
     def test_m3_min_to_kg_s(self):
@@ -46,6 +49,7 @@ class TestConvert(unittest.TestCase):
         self.assertEqual(round(basic_physics.convert(26.07, 'm3_min', 'kg_s', fluid="Air", temperature=303.15, pressure=101325 , relative_humidity=0.7), 2), 0.5)
         self.assertEqual(round(basic_physics.convert(110.39, 'm3_min', 'kg_s', fluid="Air", temperature=313.15, pressure=100000  , relative_humidity=0.8), 2), 2)
         self.assertEqual(round(basic_physics.convert(0, 'm3_min', 'kg_s', fluid="Air", temperature=293.15, pressure=101325   , relative_humidity=0.5), 2), 0)
+
 
 
 if __name__ == '__main__':
