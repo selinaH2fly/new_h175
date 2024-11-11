@@ -73,7 +73,9 @@ def plot_polarization_curves_bol_eol(plot_params, df1, titles, colors, fl_set, m
     # Filter data for BOL and EOL
     bol_data = filter_data(df1, fl_set, weighting, eol=False, cell_counts=cell_counts)
     eol_data = filter_data(df1, fl_set, weighting, eol=True, cell_counts=cell_counts)
-
+    if all(df.empty for df in bol_data.values() and eol_data.values()):
+        print(f"No data available for System Polarization Curve - EoL vs BoL at FL {fl_set} or for weighting {weighting}. Skipping plot.")
+        return  # Skip plotting if no data exists
     # Create the plot
     fig, ax = plt.subplots(figsize=(12, 8))
     plot_data(ax, bol_data, eol_data, titles, colors, highlight_powers, markers_oL)

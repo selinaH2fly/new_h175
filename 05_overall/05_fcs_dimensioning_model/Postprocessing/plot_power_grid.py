@@ -24,6 +24,9 @@ def plot_power_needs(plot_params, data, titles, fl_set, weighting, show_plot, sa
         #Formate the data to the needed formate:
         df = format_data_for_plot(df1, plot_params['components'], fl_set, plot_params['power_range'], weighting, eol_col='eol (t/f)')
         
+        if df.empty:
+            print(f"No data available for Power Consumption of Components {title} at FL {fl_set} or for weighting {weighting}. Skipping plot.")
+            continue  # Skip plotting if no data exists        
         # Set up the figure and axis
         fig, ax = plt.subplots(figsize=(10, 8))
     

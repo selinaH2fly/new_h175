@@ -128,4 +128,4 @@ def plot_compressor_map(plot_params, data, titles, colors, markers, fl_set, weig
         plt.savefig(file_path, bbox_inches='tight')
     
     # Show the plot
-    plt.show() if show_plot else plt.close()
+    plt.show() if show_plot and ax.lines else plt.close()

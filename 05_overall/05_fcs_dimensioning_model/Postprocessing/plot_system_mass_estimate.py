@@ -103,7 +103,7 @@ def plot_system_mass_estimate(plot_params, data, titles, colors, components_dict
                 (df["weighting ([0,1])"] == weighting)]
         
         if df.empty:
-            print(f"No data available for {title} at FL {fl_set}. Skipping plot.")
+            print(f"No data available for Predicted FCM Mass {title} at FL {fl_set} or weighting {weighting}. Skipping plot.")
             return  # Skip plotting if no data exists
         
         # Extract all power points from the filtered DataFrame
@@ -341,4 +341,4 @@ def plot_system_mass_estimate(plot_params, data, titles, colors, components_dict
         file_path = create_plot_save_directory(f'Weight_estimation_vs_power_{mode}_weighting_{weighting}.png', weighting)
         plt.savefig(file_path, bbox_inches='tight')
 
-    plt.show() if show_plot else plt.close()
+    plt.show() if show_plot and ax.lines else plt.close()

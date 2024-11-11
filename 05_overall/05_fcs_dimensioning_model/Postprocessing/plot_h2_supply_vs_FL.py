@@ -41,7 +41,9 @@ def plot_h2_supply_vs_FL(plot_params, df1, markers, fl_max, weighting, show_plot
 
     #Filter the DF for currents in range and the filter omde
     df1 = df1[(df1["current_A (Value)"] <= 700) & (df1["eol (t/f)"] == filter_mode) & (df1["weighting ([0,1])"] == weighting)]
-    
+    if df1.empty:
+        print(f"No data available for System Hydrogen Supply Rate vs FL. Skipping plot.")
+        return  # Skip plotting if no data exists   
     # Loop through each cell count and plot the data
     for cell, icon in zip(cells, markers):
         #filter dataframe after cell count and 125-+, 150+-, and 175+-
@@ -92,7 +94,7 @@ def plot_h2_supply_vs_FL(plot_params, df1, markers, fl_max, weighting, show_plot
     if saving:
         file_path = create_plot_save_directory(f'H2_supply_vs_flightlevel_{mode}_weighting_{weighting}.png', weighting)
         plt.savefig(file_path, bbox_inches='tight')
-    plt.show() if show_plot else plt.close()
+    plt.show() if show_plot and ax.lines else plt.close()
 
 
 
