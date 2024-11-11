@@ -56,11 +56,6 @@ class WaterSeparator:
 
         return density_humid_air
 
-    #
-    #
-    # def calculate_densitycp(self, t, p, rh):
-    #     densitycp = HAP.HAPropsSI('D', 'T', t, 'P', p, 'R', rh)
-    #     return densitycp
 
     def get_pressure_drop(self):
         """
@@ -71,7 +66,6 @@ class WaterSeparator:
         """
         # Convert mass flow from kg/s to m³/min using density
         volume_flow_m3_min = (self.air_mass_flow_kg_s / self.air_density_kg_m3) * 60
-        print(f"m3/min: {volume_flow_m3_min:.2f} ")
 
         # Interpolate pressure drop in hPa
         pressure_drop_hPa = np.interp(
@@ -85,17 +79,18 @@ class WaterSeparator:
         return pressure_drop_Pa
 
 # #TODO: check why coolprop density is so high!
-# # Example usage
+# Example usage
 # separator = WaterSeparator(
 #     air_mass_flow_kg_s=0.085,  # example mass flow in kg/s
-#     temperature_K=348,  # example temperature in K
-#     pressure_Pa=196000,  # example pressure in Pa
+#     temperature_in_K=348,  # example temperature in K
+#     pressure_in_Pa=196000,  # example pressure in Pa
 #     relative_humidity=0.9  # example relative humidity (90%)
 # )
 # pressure_drop = separator.get_pressure_drop()
 # print(f"Pressure Drop: {pressure_drop:.2f} Pa")
 # density = separator.calculate_density()
 # print(f"Density of humid air: {density:.3f} kg/m³")
-
-
+# check_density = separator.calculate_densitycp( separator.temperature_in_K, separator.pressure_in_Pa, separator.relative_humidity)
+#
+# print(f"Density of humid air: {check_density:.3f} kg/m³")
 
