@@ -227,7 +227,7 @@ class HumidifierParameters:
         self.dry_air_rh_in = 0.3
         self.dry_air_temperature_out_K = 346.9
         self.dry_air_pressure_out_Pa = 230000
-        self.dry_air_rh_out = 0.75
+        self.dry_air_rh_out = 0.50
         self.wet_air_temperature_in_K = 353.2
         self.wet_air_pressure_in_Pa = 210000
         self.wet_air_rh_in = 0.99
