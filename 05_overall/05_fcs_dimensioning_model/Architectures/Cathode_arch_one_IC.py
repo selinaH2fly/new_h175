@@ -144,23 +144,24 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     # Re-instantiate the intercooler, air filter and humidifier with final compressor outlet conditions after convergence
     intercooler_air_liquid = Intercooler(
         efficiency=_params_intercooler.efficiency,
+        effectiveness=_params_intercooler.effectiveness,
         primary_fluid="Air", coolant_fluid="INCOMP::MEG-50%",
         primary_p_in_Pa=compressor.pressure_out_Pa,
         primary_T_in_K=compressor.temperature_out_K,
+        primary_T_out_K=inputs.temperatures_K["TTC4"],
         primary_mdot_in_kg_s=compressor.air_mass_flow_kg_s,
         coolant_mdot_in_kg_s=_params_intercooler.coolant_mdot_in_kg_s,
         coolant_T_in_K=inputs.temperatures_K["T_cool"]
     )
-    intercooler_air_liquid.primary_temperature_out_K = intercooler_air_liquid.calculate_primary_T_out()
-    intercooler_air_liquid.deltaT = intercooler_air_liquid.primary_T_in_K - intercooler_air_liquid.primary_temperature_out_K
-    intercooler_air_liquid.coolant_temperature_out_K = intercooler_air_liquid.calculate_coolant_T_out()
+    intercooler_air_liquid.deltaT = intercooler_air_liquid.primary_T_in_K - intercooler_air_liquid.primary_T_out_K
+    intercooler_air_liquid.coolant_temperature_in_K = intercooler_air_liquid.calculate_coolant_T_in()
     intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop()
     intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid.primary_p_in_Pa  - intercooler_air_liquid.get_interpolated_pressure_drop()
     intercooler_air_liquid.primary_Qdot_W = intercooler_air_liquid.calculate_heat_flux()
     # Instantiate the air filter
     air_filter = FuelCellAirFilter(
         air_mass_flow_kg_s=intercooler_air_liquid.primary_mdot_in_kg_s,
-        temperature_in_K=intercooler_air_liquid.primary_temperature_out_K,
+        temperature_in_K=intercooler_air_liquid.primary_T_out_K,
         pressure_in_Pa=intercooler_air_liquid.primary_p_out_Pa,
         relative_humidity=_params_humidifier.dry_air_rh_in
     )
@@ -170,9 +171,9 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     humidifier = Humidifier(
         dry_air_mass_flow_kg_s=intercooler_air_liquid.primary_mdot_in_kg_s,
         o2_mass_flow_rate=depleted_o2,
-        dry_air_temperature_in_K=intercooler_air_liquid.primary_temperature_out_K,
+        dry_air_temperature_in_K=intercooler_air_liquid.primary_T_out_K,
         dry_air_rh_in=_params_humidifier.dry_air_rh_in,
-        dry_air_temperature_out_K=intercooler_air_liquid.primary_temperature_out_K + 3,
+        dry_air_temperature_out_K=intercooler_air_liquid.primary_T_out_K + 3,
         dry_air_pressure_out_Pa=inputs.pressures_Pa["PTC7"],
         wet_air_temperature_in_K=inputs.temperatures_K["TTC9"],
         wet_air_pressure_in_Pa=inputs.pressures_Pa["PTC9"],
@@ -258,7 +259,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
 
     print("\nIntercooler Results:")
     print("-" * 20)
-    print(f"Primary Outlet Temperature: {intercooler_air_liquid.primary_temperature_out_K:.2f} K ({intercooler_air_liquid.primary_temperature_out_K -273:.2f} °C)")
+    print(f"Coolant Inlet Temperature: {intercooler_air_liquid.coolant_temperature_in_K:.2f} K ({intercooler_air_liquid.coolant_temperature_in_K -273:.2f} °C)")
     print(f"Temperature Difference Across In Intercooler: {intercooler_air_liquid.deltaT:.2f} K")
     print(f"Pressure Drop: {intercooler_air_liquid.pressure_drop:.2f} Pa")
     print(f"Primary side Heat Transfer: {intercooler_air_liquid.primary_Qdot_W/1000:.2f} kW")
@@ -320,7 +321,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
 
         file.write("Intercooler Results:\n")
         file.write("-" * 20 + "\n")
-        file.write(f"Primary Outlet Temperature: {intercooler_air_liquid.primary_temperature_out_K:.2f} K\n")
+        file.write(f"Coolant Inlet Temperature: {intercooler_air_liquid.coolant_temperature_in_K:.2f} K ({intercooler_air_liquid.coolant_temperature_in_K - 273:.2f} °C)\n")
         file.write(f"Temperature Difference Across Intercooler: {intercooler_air_liquid.deltaT:.2f} K\n")
         file.write(f"Pressure Drop: {intercooler_air_liquid.pressure_drop:.2f} Pa\n")
         file.write(f"Primary side Heat Transfer: {intercooler_air_liquid.primary_Qdot_W / 1000:.2f} kW\n\n")
