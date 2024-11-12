@@ -8,12 +8,14 @@ class HeatExchanger:
     This class will later be used as a superclass for multiple heat exchanger types.
     """
     
-    def __init__(self, efficiency = 1.0, 
+    def __init__(self, efficiency = 1.0, effectiveness = 0.85,
                  primary_fluid = "Air", primary_mdot_in_kg_s = 0, primary_T_in_K = 293.15, primary_T_out_K = 293.15, primary_p_in_Pa = 101325,
                  coolant_fluid = "Water", coolant_mdot_in_kg_s = 0, coolant_T_in_K = 0, coolant_T_out_K = 0, coolant_p_in_Pa = 101325,
                  ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2','INCOMP::MEG-50%']):
         
-        self.efficiency = efficiency #TODO use it or kill it 
+        self.efficiency = efficiency #TODO use it or kill it
+        self.effectiveness= effectiveness #TODO use it or kill it
+
         # primary fluid or working fluid
         self.primary_fluid = primary_fluid
         self.primary_mdot_in_kg_s = primary_mdot_in_kg_s
@@ -71,6 +73,16 @@ class HeatExchanger:
         
         return Qdot_W
 
+    def calculate_coolant_T_in(self):
+        """
+        Calculate the coolant temperature (Tcool) based on the inlet temperature (Tin),
+        outlet temperature (Tout), and heat exchanger effectiveness.
+
+        Returns:
+            float: Calculated coolant temperature (Tcool) in K.
+        """
+        coolant_T_in_K = self.primary_T_in_K - (self.primary_T_in_K - self.primary_T_out_K) / self.effectiveness
+        return coolant_T_in_K
 
     def calculate_primary_T_out(self) -> float:
         """
