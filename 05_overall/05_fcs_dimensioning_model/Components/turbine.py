@@ -7,7 +7,7 @@ from parameters import Mass_Parameters
 
 class Turbine:
 
-    def __init__(self, mass_estimator: Mass_Parameters, isentropic_efficiency=0.85,
+    def __init__(self, mass_estimator: Mass_Parameters, isentropic_efficiency=0.65,
                  air_mass_flow_kg_s=1, temperature_in_K=293.15, pressure_in_Pa=1.013e5, pressure_out_Pa=1.013e5,
                  nominal_BoP_pressure_drop_Pa=0.15*1e5, nominal_air_flow_kg_s=0.130, reference_ambient_conditions=(1.01325 * 1e5, 298.15),
                  turbine_map=None):
@@ -71,13 +71,14 @@ class Turbine:
 
     def get_efficiency(self) -> float:
         """
-        Public method to calculate and return the efficiency based on the turbine map.
 
         Returns:
-        - efficiency: The interpolated efficiency at the current operating point.
+        - efficiency: The efficiency at the current operating point.
         """
-        efficiency = self._interpolate_efficiency()  # Only retrieves the efficiency
-        return efficiency
+        if self.turbine_map is not None:
+            return self._interpolate_efficiency()
+        else:
+            return self.isentropic_efficiency
 
     def _interpolate_efficiency(self) -> float:
         """
@@ -131,17 +132,15 @@ class Turbine:
         Returns:
         - temperature_out_K: T in K at the turbine outlet
         """
-        # Compute the specific heat ratio of air
-        specific_heat_ratio = CP.PropsSI('C', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Air') / \
-                              CP.PropsSI('O', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Air')
+        specific_heat_ratio = CP.PropsSI('Cpmolar', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Air') / \
+                              CP.PropsSI('Cvmolar', 'T', self.temperature_in_K, 'P', self.pressure_in_Pa, 'Air')
 
-        efficiency = self._interpolate_efficiency()
+        efficiency = self._interpolate_efficiency() if self.turbine_map is not None else self.isentropic_efficiency
 
-        # Calculate outlet temperature using efficiency
+        # Temperature calculation using efficiency directly
         temperature_out_K = self.temperature_in_K * (
-                ((self.pressure_out_Pa / self.pressure_in_Pa) ** (
-                            (specific_heat_ratio - 1) / specific_heat_ratio) - 1) * efficiency + 1
-        )
+                (self.pressure_out_Pa / self.pressure_in_Pa) ** ((specific_heat_ratio - 1) / specific_heat_ratio)
+        ) ** efficiency
 
         return temperature_out_K
 
@@ -161,27 +160,27 @@ class Turbine:
             "mean": turbine_mass_mean_kg,
             "sd": turbine_mass_sd_kg
         }
+
+from cathode_model_run import Mass_Parameters, TurbineParameters
 #
-# from cathode_model_run import Mass_Parameters, TurbineParameters
-# #
-# # Instantiate TurbineParameters to access turbine map
-# turbine_params = TurbineParameters()
-#
-# # Instantiate Mass_Parameters to provide mass data
-# mass_estimator = Mass_Parameters()
-#
-# # Create an instance of the Turbine class with the turbine map from TurbineParameters
-# turbine_instance = Turbine(
-#     mass_estimator=mass_estimator,
-#     isentropic_efficiency=turbine_params.isentropic_efficiency,
-#     air_mass_flow_kg_s = 0.176,                      # Example input mass flow rate in kg/s
-#     temperature_in_K=350.15,                     # Example inlet temperature in Kelvin
-#     pressure_in_Pa=2e5,                          # Example inlet pressure in Pa
-#     pressure_out_Pa=0.77e5,                         # Example outlet pressure in Pa
-#     turbine_map=turbine_params.turbine_map       # Provide the turbine map from TurbineParameters
-# )
-#
-#
+# Instantiate TurbineParameters to access turbine map
+turbine_params = TurbineParameters()
+
+# Instantiate Mass_Parameters to provide mass data
+mass_estimator = Mass_Parameters()
+
+# Create an instance of the Turbine class with the turbine map from TurbineParameters
+turbine_instance = Turbine(
+    mass_estimator=mass_estimator,
+    isentropic_efficiency=turbine_params.isentropic_efficiency,
+    air_mass_flow_kg_s = 0.159,                      # Example input mass flow rate in kg/s
+    temperature_in_K=77+273,                     # Example inlet temperature in Kelvin
+    pressure_in_Pa=2.52e5,                          # Example inlet pressure in Pa
+    pressure_out_Pa=0.77e5,                         # Example outlet pressure in Pa
+    turbine_map=None       # Provide the turbine map from TurbineParameters
+)
+
+
 # # Calculate the power output of the turbine
 # turbine_power = turbine_instance.calculate_power()
 # print(f"Turbine Power Output: {turbine_power:.2f} W")
@@ -192,7 +191,7 @@ class Turbine:
 #
 # # Retrieve only the efficiency
 # efficiency = turbine_instance.get_efficiency()
-# print(f"Interpolated Efficiency: {efficiency:.2f}")
+# print(f"Turbine Efficiency: {efficiency:.2f}")
 #
 #
 # # Calculate the outlet temperature of the turbine
