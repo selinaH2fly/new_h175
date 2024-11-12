@@ -19,7 +19,7 @@ class Input:
         # Pressure initialization in bar (bara)
         self.pressures_bara = {
             "PTC1": 0.63,  # Ambient pressure for FL120
-          #  "PTC2": 2.6,  # Pressure after compressor
+            "PTC2": 3.26,  # Pressure after compressor
            # "PTC3": 2.5,  # Pressure after intercooler, air-air, warm side
             "PTC4": 2.4,  # Pressure after intercooler, air-liq
           #  "PTC5": 2.4,  # Pressure after air filter
@@ -40,7 +40,7 @@ class Input:
             "TTC1": 6.3,     # Ambient temperature
             #"TTC2": 80,    # Temperature after compressor
            # "TTC3": 80,     # Temperature after intercooler, air-air
-           # "TTC4": 80,     # Temperature after intercooler, air-liq
+            "TTC4": 75,     # Temperature after intercooler, air-liq
            # "TTC7": 80,   # Temperature after humidifier, to be calculated
            # "TTC5": 80,  # Temperature before humidifier, to be calculated
           #  "TTC6": 80,  # Temperature before valve, to be calculated
@@ -48,7 +48,7 @@ class Input:
             "TTC9": 82,   # Temperature after stack
             "TTC10": 77,  # Temperature after humidifier,wet
           #  "TTC11": 77,  # Temperature before intercooler, air-air, cold side
-          #  "TTC13": 77,  # Temperature after water separator
+            "TTC13": 77,  # Temperature after water separator
            # "TTC12": 77,  # Temperature after intercooler, air-air, cold side
          #   "TTC14": 77,  # Temperature after turbine
             "T_cool": 60    # Temperature of coolant input to IC air-liq
@@ -194,27 +194,35 @@ class TurbineParameters:
         }
 class IntercoolerParameters:
     def __init__(self):
-        self.efficiency = 0.49
+        self.efficiency = 0.65
+        self.effectiveness = 0.85
         self.primary_fluid = "Air"
         self.coolant_fluid = "INCOMP::MEG-50%"  # 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
         self.ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2','INCOMP::MEG-50%']
         self.coolant_mdot_in_kg_s = 0.2
-        # Pressure drop map (in Pa) for dry and wet sides based on dry air flow rate (Kg/s)
+        # Pressure drop map (in Pa) for dry air flow rate (Kg/s)
         self.pressure_drop_map = {
-            0.04447: 500.0,
-            0.094842: 4100.0,
-            0.14729: 8700.0,
-            0.157834: 10800.0,
-            0.202524: 13700.0
+            0.04447: 50.0,
+            0.094842: 410.0,
+            0.14729: 870.0,
+            0.157834: 1080.0,
+            0.202524: 1370.0
 
         }
+
+class AirFilterParameters:
+    def __init__(self):
+
+        # Pressure loss to mass flow map, thousand lpm
+        self.pressure_loss_map_pa = [135.85,175.4,220.76,273.58,315.09,358,409,454,501,526.4]
+        self.mass_flow_map_lpm = [4.16,5,6,7,8,9,10,11,12,12.6]
 
 class HumidifierParameters:
 
     def __init__(self):
-        self.dry_air_mass_flow_kg_s = 0.175
+        self.dry_air_mass_flow_kg_s = 0.167
         self.wet_air_mass_flow_kg_s = 0.155
-        self.dry_air_temperature_in_K = 353.3
+        self.dry_air_temperature_in_K = 399
         self.dry_air_pressure_in_Pa = 246000
         self.dry_air_rh_in = 0.3
         self.dry_air_temperature_out_K = 346.9
@@ -247,6 +255,9 @@ class HumidifierParameters:
 
 class WaterSeparatorParameters:
     def __init__(self):
+        self.dry_air_mass_flow_kg_s = 0.167
+        self.dry_air_pressure_in_Pa = 314878
+        self.dry_air_pressure_out_Pa = 300000
 
         # Pressure loss to mass flow map (in kg/s)
         self.pressure_loss_map_hpa = [0.0, 0.0, 2.04, 5.0, 9.6, 15, 22.6, 31.078, 40, 51, 64.8]
