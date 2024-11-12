@@ -38,7 +38,7 @@ def compute_air_mass_flow(stoichiometry, current_A, cellcount=275):
 
     return air_flow_kg_s
 
-def compute_reacted_o2_mass_flow(current_A, cellcount):
+def compute_reacted_o2_mass_flow_kg_s(current_A, cellcount):
     """
     Calculate the reacted O2 mass flow rate in a fuel cell stack.
 
@@ -56,9 +56,9 @@ def compute_reacted_o2_mass_flow(current_A, cellcount):
     mass_fraction = 0.23
 
     # Calculate reacted O2 mass flow rate
-    o2_mass_flow_rate = (current_A * cellcount * M_O2) / (4 * F * mass_fraction)
+    o2_mass_flow_rate_kg_s  = (current_A * cellcount * M_O2) / (4 * F) * mass_fraction
 
-    return o2_mass_flow_rate
+    return o2_mass_flow_rate_kg_s
 
 # %% Unit conversion function:
 
