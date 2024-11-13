@@ -194,21 +194,52 @@ class TurbineParameters:
         }
 class IntercoolerParameters:
     def __init__(self):
-        self.efficiency = 0.65
+        self.efficiency = 0.75
         self.effectiveness = 0.85
         self.primary_fluid = "Air"
         self.coolant_fluid = "INCOMP::MEG-50%"  # 50% Ethylene Glycol (MEG) and 50% Water, i.e., Glysantin
         self.ALLOWED_FLUIDS = ['Water', 'Air', 'MEG', 'H2','INCOMP::MEG-50%']
         self.coolant_mdot_in_kg_s = 0.2
-        # Pressure drop map (in Pa) for dry air flow rate (Kg/s)
-        self.pressure_drop_map = {
-            0.04447: 50.0,
-            0.094842: 410.0,
-            0.14729: 870.0,
-            0.157834: 1080.0,
-            0.202524: 1370.0
-
+        # Updated Pressure drop map (in bar) with corresponding volume flow (kg/m³)
+        self.pressure_drop_map_air_liquid = {
+            0.03551969: 0.00279,
+            0.066769915: 0.04119,
+            0.089799932: 0.08791,
+            0.095543296: 0.083,
+            0.10305117: 0.12608
         }
+        self.pressure_drop_map_air_air_hot = {
+            0.041659325: 0.00991,
+            0.053012013: 0.01465,
+            0.064215778: 0.02009,
+            0.074101916: 0.02917,
+            0.083939194: 0.04208,
+            0.091159748: 0.05924,
+            0.028641837: 0.00696,
+            0.032777021: 0.00871,
+            0.035163921: 0.00885,
+            0.036896176: 0.01161,
+            0.03787678: 0.01859,
+            0.059927627: 0.02945,
+            0.064054288: 0.03431
+        }
+
+        self.pressure_drop_map_air_air_cold = {
+            0.04181253: 0.05427,
+            0.054286785: 0.09876,
+            0.066875828: 0.15962,
+            0.077856365: 0.23959,
+            0.088644407: 0.3367,
+            0.096341349: 0.45465,
+            0.033690483: 0.03779,
+            0.042462683: 0.05615,
+            0.050636896: 0.0817,
+            0.058757795: 0.11423,
+            0.066798742: 0.16267,
+            0.078638507: 0.24336,
+            0.089420784: 0.34208
+        }
+
 
 class AirFilterParameters:
     def __init__(self):
