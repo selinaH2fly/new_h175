@@ -67,7 +67,7 @@ class Valve:
         mechanical_angle = np.interp(opening_percentage_rounded, self.valve_parameters.pwm,
                                      self.valve_parameters.mechanical_angle)
 
-        return opening_percentage_rounded, mechanical_angle
+        return opening_percentage_rounded
 
 # if __name__ == "__main__":
 #     # Define parameters
