@@ -182,8 +182,8 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         efficiency=_params_intercooler.efficiency,
         effectiveness=_params_intercooler.effectiveness,
         primary_fluid="Air", coolant_fluid="INCOMP::MEG-50%",
-        primary_p_in_Pa=compressor.pressure_out_Pa,
-        primary_T_in_K=compressor.temperature_out_K,
+        primary_p_in_Pa=intercooler_air_air.primary_p_out_Pa,
+        primary_T_in_K=intercooler_air_air.primary_temperature_out_K,
         primary_T_out_K=inputs.temperatures_K["TTC4"],
         primary_mdot_in_kg_s=compressor.air_mass_flow_kg_s,
         coolant_mdot_in_kg_s=_params_intercooler.coolant_mdot_in_kg_s
@@ -193,6 +193,8 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     intercooler_air_liquid.coolant_temperature_in_K = intercooler_air_liquid.calculate_coolant_T_in()
     intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop(
         intercooler_air_liquid.primary_T_in_K, intercooler_air_liquid.primary_p_in_Pa)
+    print(f"Intercooler Air-Liquid Primary (Warm) Pressure Drop: {intercooler_air_liquid.pressure_drop :.2f} Pa")
+
     intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid.primary_p_in_Pa - intercooler_air_liquid.pressure_drop
     intercooler_air_liquid.primary_Qdot_W = intercooler_air_liquid.calculate_heat_flux(fluid_type="primary")
 
@@ -354,12 +356,13 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         relative_humidity=humidifier.calculate_relative_humidity_outlet_wet(humidifier.efficiency)
     )
     water_separator.pressure_drop = water_separator.get_pressure_drop()
+
     water_separator.pressure_out = water_separator.pressure_in_Pa - water_separator.pressure_drop
 
     # Instantiate the turbine with parameters based on humidifier output and input
     turbine = Turbine(
         mass_estimator=_mass_estimator,
-        temperature_in_K=inputs.temperatures_K["TTC13"],
+        temperature_in_K=water_separator.temperature_in_K,
         pressure_in_Pa=water_separator.pressure_out,
         pressure_out_Pa=inputs.pressures_Pa["PTC1"],
         air_mass_flow_kg_s=humidifier.wetmassout["total_mass_flow_wet_out"],
@@ -399,17 +402,23 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         "Intercooler Air-Liquid Primary(Warm) Heat Transfer": f"{intercooler_air_liquid.primary_Qdot_W/ 1000:.2f} kW",
         "Intercooler Air-Liquid Secondary(Cold) Inlet Temperature": f"{intercooler_air_liquid.coolant_temperature_in_K - 273.15:.2f} °C",
 
-        "Air Filter Pressure Drop": f"{air_filter.pressure_drop / 1e5:.2f} bara",
+        "Air Filter Pressure Drop": f"{air_filter.pressure_drop / 1e5:.5f} bara",
         "Air Filter Outlet Pressure": f"{air_filter.pressure_out / 1e5:.2f} bara",
+
         "Humidifier Dry Air Inlet Pressure": f"{humidifier.dry_air_pressure_in_Pa / 1e5:.2f} bara",
         "Humidifier Wet Air Outlet Pressure": f"{humidifier.wet_air_pressure_out_Pa / 1e5:.2f} bara",
         "Humidifier Total Dry Outlet Mass Flow": f"{humidifier.dry_air_mass_flow_kg_s * 1000:.2f} g/s",
         "Humidifier Water Transfer": f"{humidifier.m_dot_water_trans * 1000:.2f} g/s",
         "Humidifier Efficiency": f"{humidifier.efficiency * 100:.2f} %",
         "Humidifier Total Wet Outlet Mass Flow": f"{humidifier.wetmassout['total_mass_flow_wet_out'] * 1000:.2f} g/s",
+
         "Valve Bypass Flow": f"{bypass_mass_flow_kg_s * 1000:.2f} g/s",
-        "Water Separator Pressure Drop": f"{water_separator.pressure_drop / 1e5:.2f} bara",
+        "Valve Position": f"{valve_position:.2f} %",
+
+        "Water Separator Pressure Drop": f"{water_separator.pressure_drop / 1e5:.3f} bara",
         "Water Separator Outlet Pressure": f"{water_separator.pressure_out / 1e5:.2f} bara",
+
+        "Turbine Inlet Temperature": f"{turbine.temperature_in_K - 273.15:.2f} °C",
         "Turbine Outlet Temperature": f"{turbine.temperature_out_K - 273.15:.2f} °C",
         "Turbine Efficiency": f"{turbine.isentropic_efficiency * 100:.2f} %",
         "Turbine Power": f"{turbine.power_W / 1000:.2f} kW",

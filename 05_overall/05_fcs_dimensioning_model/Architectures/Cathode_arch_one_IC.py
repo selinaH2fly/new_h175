@@ -89,10 +89,10 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         )
 
         # Calculate intercooler outlet temperature, heat flux, and pressure drop
-        intercooler_air_liquid.primary_temperature_out_K = intercooler_air_liquid.calculate_primary_T_out()
+        intercooler_air_liquid.primary_temperature_out_K = inputs.temperatures_K["TTC4"]
         intercooler_air_liquid.coolant_temperature_out_K = intercooler_air_liquid.calculate_coolant_T_out()
-        intercooler_air_liquid.heat_flux_W = intercooler_air_liquid.calculate_heat_flux("primary")
-        intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop(intercooler_air_liquid.primary_T_in_K,intercooler_air_liquid.primary_p_in_Pa)
+
+        intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop(intercooler_air_liquid.mean_T_in_K,intercooler_air_liquid.mean_p_in_Pa)
         intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid.primary_p_in_Pa - intercooler_air_liquid.pressure_drop
 
 
@@ -161,6 +161,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         intercooler_air_liquid.primary_T_in_K, intercooler_air_liquid.primary_p_in_Pa)
     intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid.primary_p_in_Pa - intercooler_air_liquid.pressure_drop
     intercooler_air_liquid.primary_Qdot_W = intercooler_air_liquid.calculate_heat_flux()
+    print(f"Intercooler Air-Liquid Primary (Warm) Pressure Drop: {intercooler_air_liquid.pressure_drop :.2f} Pa")
 
     # Instantiate the air filter
     air_filter = FuelCellAirFilter(
@@ -329,16 +330,23 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
 
     # Dictionary to store the results with converted units
     results = {
+        "Compressor Inlet Temperature": f"{compressor.temperature_in_K - 273.15:.2f} °C",
         "Compressor Outlet Temperature": f"{compressor.temperature_out_K - 273.15:.2f} °C",
+        "Compressor Inlet Pressure": f"{compressor.pressure_in_Pa/ 1e5:.2f} bara",
         "Compressor Outlet Pressure": f"{compressor.pressure_out_Pa / 1e5:.2f} bara",
         "Compressor Power": f"{compressor.power_W / 1000:.2f} kW",
         "Compressor Air Mass Flow Rate": f"{compressor.air_mass_flow_kg_s * 1000:.2f} g/s",
-        "Intercooler Coolant Inlet Temperature": f"{intercooler_air_liquid.coolant_temperature_in_K - 273.15:.2f} °C",
-        "Intercooler Temperature Difference": f"{intercooler_air_liquid.deltaT:.2f} K",  # No conversion needed
-        "Intercooler Pressure Drop": f"{intercooler_air_liquid.pressure_drop / 1e5:.2f} bara",
-        "Intercooler Heat Transfer": f"{intercooler_air_liquid.primary_Qdot_W / 1000:.2f} kW",
-        "Air Filter Pressure Drop": f"{air_filter.pressure_drop / 1e5:.2f} bara",
+
+
+        "Intercooler Air-Liquid Primary(Warm) Temperature Difference": f"{intercooler_air_liquid.deltaT:.2f} K",
+        "Intercooler Air-Liquid Primary(Warm) Pressure Drop": f"{intercooler_air_liquid.pressure_drop / 1e5:.2f} bara",
+        "Intercooler Air-Liquid Primary(Warm) Outlet Pressure": f"{intercooler_air_liquid.primary_p_out_Pa / 1e5:.2f} bara",
+        "Intercooler Air-Liquid Primary(Warm) Heat Transfer": f"{intercooler_air_liquid.primary_Qdot_W/ 1000:.2f} kW",
+        "Intercooler Air-Liquid Secondary(Cold) Inlet Temperature": f"{intercooler_air_liquid.coolant_temperature_in_K - 273.15:.2f} °C",
+
+        "Air Filter Pressure Drop": f"{air_filter.pressure_drop / 1e5:.4f} bara",
         "Air Filter Outlet Pressure": f"{air_filter.pressure_out / 1e5:.2f} bara",
+
         "Humidifier Dry Air Inlet Pressure": f"{humidifier.dry_air_pressure_in_Pa / 1e5:.2f} bara",
         "Humidifier Wet Air Outlet Pressure": f"{humidifier.wet_air_pressure_out_Pa / 1e5:.2f} bara",
         "Humidifier Total Dry Outlet Mass Flow": f"{humidifier.dry_air_mass_flow_kg_s * 1000:.2f} g/s",
@@ -346,8 +354,12 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         "Humidifier Efficiency": f"{humidifier.efficiency*100:.2f} %",
         "Humidifier Total Wet Outlet Mass Flow": f"{humidifier.wetmassout['total_mass_flow_wet_out'] * 1000:.2f} g/s",
         "Valve Bypass Flow": f"{bypass_mass_flow_kg_s * 1000:.2f} g/s",
+        "Valve Position": f"{valve_position:.2f} %",
+
         "Water Separator Pressure Drop": f"{water_separator.pressure_drop / 1e5:.2f} bara",
         "Water Separator Outlet Pressure": f"{water_separator.pressure_out / 1e5:.2f} bara",
+
+        "Turbine Inlet Temperature": f"{turbine.temperature_in_K - 273.15:.2f} °C",
         "Turbine Outlet Temperature": f"{turbine.temperature_out_K - 273.15:.2f} °C",
         "Turbine Efficiency": f"{turbine.isentropic_efficiency * 100:.2f} %",
         "Turbine Power": f"{turbine.power_W / 1000:.2f} kW",
