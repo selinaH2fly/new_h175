@@ -356,7 +356,7 @@ class Pipe:
         self.eq5 = "%s = cp.PropsSI('D', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.rho, self.T_in, self.p_in)
         self.eq6 = "%s = cp.PropsSI('V', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.visco, self.T_in, self.p_in)
         #self.eq2 = "%s = - 0.3"%self.delta_p
-        self.eq2 = "%s = 0.3164 * (%s / (3.1415926536 * (%s/2) ** 2)) ** (7/4) * (%s/%s) ** (1/4) * %s * %s * %s ** (-5/4) / 2"%(self.delta_p, self.Vdot_in, self.diameter, self.visco, self.rho, self.length, self.rho, self.diameter)
+        self.eq2 = "%s = - 0.3164 * (%s / (3.1415926536 * (%s/2) ** 2)) ** (7/4) * (%s/%s) ** (1/4) * %s * %s * %s ** (-5/4) / 2 * 10 ** (-5)"%(self.delta_p, self.Vdot_in, self.diameter, self.visco, self.rho, self.length, self.rho, self.diameter)
         self.eq3 = "%s = %s"%(self.T_in, self.T_out)
         self.eq4 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
         # self.eq5 = "%s = 3.1415926536 * (%s/2) ** 2 * %s * %s"%(self.mass, self.diameter, self.rho, self.length)
@@ -383,7 +383,7 @@ class Pipe:
         self.var4 = [self.p_out, 1.0, 0.0, np.inf, "bar"]
         self.var5 = [self.T_out, 273.15, 0.0, np.inf, "K"]
         self.var6 = [self.Vdot_out, 1.0, 0.0, np.inf, "l/s"]
-        self.var7 = [self.delta_p, 0.0, 0.0, np.inf, "bar"]
+        self.var7 = [self.delta_p, - 1.0, - np.inf, 0.0, "bar"]
         self.var8 = [self.diameter, 0.5, 0.0, 10, "m"]
         self.var9 = [self.length, 0.5, 0.0, 100, "m"]
         self.var10 = [self.roughness, 0.0002, 0.0, 100, "m"]

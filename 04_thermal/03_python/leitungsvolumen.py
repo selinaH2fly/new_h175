@@ -4,7 +4,7 @@ import pandas as pd
 
 temp = 60                   # 60 degrees coolant temperature
 # v_dot = 30 / 60 / 1000
-v_dot = 100 /60/1000      # coolant volume flow at stack / m^3/s
+v_dot = 250 /60/1000      # coolant volume flow at stack / m^3/s
 
 l = 5       # lenght of the tubes / m
 d = 0.032   #  diameter (32mm) at stack / m
@@ -18,6 +18,7 @@ eta_pump = 0.4                  # Total pump efficiency
 
 ### viscosity ###
 #vis = 4 * 10 ** (-6)
+dyn_vis = 0.002
 vis = 1.37 * 10 ** (-6)     # viscosity / m^2/s
 
 
@@ -33,7 +34,7 @@ print("re = %s"%re)
 
 #dp_schlauch = 0.3164 * (u * d / vis) ** (-1/4) * l * rho * u ** 2 / (2 * d)
 #dp_schlauch = 0.3164 * u ** (7/4) * vis ** (1/4) * l * rho * d ** (-5/4) / 2
-dp_schlauch = 0.3164 * (v_dot / (numpy.pi * (d/2) ** 2)) ** (7/4) * vis ** (1/4) * l * rho * d ** (-5/4) / 2
+dp_schlauch = 0.3164 * (v_dot / (numpy.pi * (d/2) ** 2)) ** (7/4) * (dyn_vis/rho) ** (1/4) * l * rho * d ** (-5/4) / 2 * 10 ** (-5)
 #dp_schlauch = k * 1000 * l * rho * u ** 2 / (2 * d)
 #dp_schlauch = lam * l * rho * u ** 2 / (2 * d)
 #dp_schlauch = ((lam * l * rho ) / (2) / 100) /d* (u ** 2)  # dp in mbar
