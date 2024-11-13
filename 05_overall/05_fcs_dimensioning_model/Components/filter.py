@@ -5,7 +5,7 @@ from cathode_model_run import PhysicalParameters, AirFilterParameters
 
 
 class FuelCellAirFilter:
-    def __init__(self, air_mass_flow_kg_s, temperature_in_K, pressure_in_Pa, relative_humidity):
+    def __init__(self, air_mass_flow_kg_s, temperature_in_K, temperature_out_K,pressure_in_Pa,pressure_out_Pa, relative_humidity):
         """
         Initialize the air filter with input air flow conditions.
 
@@ -16,7 +16,10 @@ class FuelCellAirFilter:
         """
         self.air_mass_flow_kg_s = air_mass_flow_kg_s
         self.temperature_in_K = temperature_in_K
+        self.temperature_out_K = temperature_out_K
+
         self.pressure_in_Pa = pressure_in_Pa
+        self.pressure_out_Pa = pressure_out_Pa
         self.relative_humidity = relative_humidity
         self.parameters = AirFilterParameters()  # Load parameters from cathode_model_run
 
@@ -29,14 +32,13 @@ class FuelCellAirFilter:
         self.M_air = params_physics.M_air
         self.R = params_physics.R
 
-        self.air_density_kg_m3 = self.calculate_density()
-
-    def calculate_density(self):
+    def calculate_density(self, pressure, temperature):
         """
         Calculate the density of humid air given temperature, pressure, and relative humidity.
 
-        Returns:
-        - density_humid_air (float): Density of humid air in kg/m³.
+        :param pressure: Mean pressure in Pascals
+        :param temperature: Mean temperature in Kelvin
+        :return: Density of humid air in kg/m³
         """
         # Constants
         R_air = 287.06  # J/(kg·K), specific gas constant for dry air
@@ -44,27 +46,35 @@ class FuelCellAirFilter:
 
         # Calculate saturation vapor pressure (using Antoine equation approximation for water vapor)
         A, B, C = 8.07131, 1730.63, 233.426  # Antoine constants for water (temperature in Celsius)
-        temperature_C = self.temperature_in_K - 273.15  # Convert temperature to Celsius
+        temperature_C = temperature - 273.15  # Convert temperature to Celsius
         P_sat_Pa = 10 ** (A - (B / (temperature_C + C))) * 133.322  # Convert mmHg to Pa
 
         # Partial pressures of dry air and water vapor
         P_v = self.relative_humidity * P_sat_Pa  # Partial pressure of water vapor
-        P_d = self.pressure_in_Pa - P_v  # Partial pressure of dry air
+        P_d = pressure - P_v  # Partial pressure of dry air
 
         # Calculate density of humid air
-        density_humid_air = (P_d / (R_air * self.temperature_in_K)) + (P_v / (R_vapor * self.temperature_in_K))
+        density_humid_air = (P_d / (R_air * temperature)) + (P_v / (R_vapor * temperature))
 
         return density_humid_air
 
     def get_pressure_drop(self):
         """
         Convert mass flow to volumetric flow rate in thousands of liters per minute,
-        and interpolate the pressure drop from the provided map (in Pascals).
+        and interpolate the pressure drop from the provided map (in Pascals), using mean pressure.
 
         :return: Pressure drop in Pa
         """
-        # Convert mass flow from kg/s to m³/min using density, then to thousand l/min
-        volume_flow_thousand_l_min = (self.air_mass_flow_kg_s / self.air_density_kg_m3) * 60
+        # Calculate the mean pressure and mean temperature
+        mean_pressure = (self.pressure_in_Pa + self.pressure_out_Pa) / 2
+        mean_temperature = (self.temperature_in_K + self.temperature_out_K) / 2
+
+        # Calculate the density based on the mean pressure and mean temperature
+        air_density_kg_m3 = self.calculate_density(mean_pressure, mean_temperature)
+
+        # Convert mass flow from kg/s to m³/min using updated density, then to thousand l/min
+        volume_flow_thousand_l_min = (self.air_mass_flow_kg_s / air_density_kg_m3) * 60
+
         # Interpolate pressure drop in Pa
         pressure_drop_Pa = np.interp(
             volume_flow_thousand_l_min,
@@ -73,7 +83,6 @@ class FuelCellAirFilter:
         )
 
         return pressure_drop_Pa
-
 
 # # Example usage of FuelCellAirFilter class
 #
@@ -92,8 +101,8 @@ class FuelCellAirFilter:
 # )
 #
 # # Calculate the pressure drop across the air filter
-# pressure_drop = air_filter.get_pressure_drop()
-# print(f"Calculated Pressure Drop: {pressure_drop:.2f} Pa")
+# primary_pressure_drop = air_filter.get_pressure_drop()
+# print(f"Calculated Pressure Drop: {primary_pressure_drop:.2f} Pa")
 #
 # # Calculate the density of humid air using two methods
 # density = air_filter.calculate_density()
