@@ -108,9 +108,11 @@ class HeatExchanger:
 
     def calculate_coolant_T_out_with_efficiency(self) -> float:
 
-        # Calculate the outlet temperature of the cooling fluid
-        coolant_T_out_K = self.coolant_T_in_K + (self.primary_mdot_in_kg_s * (self.primary_T_in_K - self.primary_T_out_K)
-                            ) / (self.efficiency * self.coolant_mdot_in_kg_s)
+        coolant_T_out_K = self.coolant_T_in_K + (
+                self.efficiency * self.primary_mdot_in_kg_s * (
+                    self.primary_T_in_K - self.primary_T_out_K) / self.coolant_mdot_in_kg_s
+        )
+
 
         return coolant_T_out_K
 
