@@ -56,7 +56,6 @@ class WaterSeparator:
 
         return density_humid_air
 
-
     def get_pressure_drop(self):
         """
         Convert mass flow to volumetric flow rate in m³/min, interpolate the pressure drop
@@ -64,8 +63,12 @@ class WaterSeparator:
 
         :return: Pressure drop in Pa
         """
-        # Convert mass flow from kg/s to m³/min using density
-        volume_flow_m3_min = (self.air_mass_flow_kg_s / self.air_density_kg_m3) * 60
+        # Calculate air density using the ideal gas law: ρ = P / (R * T)
+        R_dry_air = 287.05  # J/(kg·K), specific gas constant for dry air
+        air_density_kg_m3 =  self.pressure_in_Pa/ (R_dry_air * self.temperature_in_K )
+
+        # Convert mass flow from kg/s to m³/min using calculated density
+        volume_flow_m3_min = (self.air_mass_flow_kg_s / air_density_kg_m3) * 60
 
         # Interpolate pressure drop in hPa
         pressure_drop_hPa = np.interp(
@@ -86,8 +89,8 @@ class WaterSeparator:
 #     pressure_in_Pa=196000,  # example pressure in Pa
 #     relative_humidity=0.9  # example relative humidity (90%)
 # )
-# pressure_drop = separator.get_pressure_drop()
-# print(f"Pressure Drop: {pressure_drop:.2f} Pa")
+# primary_pressure_drop = separator.get_pressure_drop()
+# print(f"Pressure Drop: {primary_pressure_drop:.2f} Pa")
 # density = separator.calculate_density()
 # print(f"Density of humid air: {density:.3f} kg/m³")
 # check_density = separator.calculate_densitycp( separator.temperature_in_K, separator.pressure_in_Pa, separator.relative_humidity)
