@@ -313,6 +313,86 @@ class NodeRenamer(ast.NodeTransformer):
         return node
 
 
+class Pipe:
+    """
+    Set up a component with pipe characterisitcs:
+    - pressure drop
+    - thermal energy flux conservation
+    - mass
+
+    Args:
+    - i_in: Integer for identifier of input.
+    - i_out: Integer for identifier of output.
+    - comp_name: String for name of component.
+    """
+
+    def __init__(self, i_in, i_out, comp_name):
+        self.p_in = "p_%i"%(i_in)
+        self.T_in = "T_%i"%(i_in)
+        self.Vdot_in = "Vdot_%i"%(i_in)
+        self.p_out = "p_%i"%(i_out)
+        self.T_out = "T_%i"%(i_out)
+        self.Vdot_out = "Vdot_%i"%(i_out)
+        self.delta_p = "delta_p_%s"%(comp_name)
+        self.diameter = "diameter_%s"%(comp_name)
+        self.length = "length_%s"%(comp_name)
+        self.roughness = "roughness_%s"%(comp_name)
+        # self.mass = "mass_%s"%(comp_name)
+        self.visco = "visco_%i"%(i_in)
+        self.rho = "rho_%i"%(i_in)
+
+    def set_eq(self):
+        """
+        Set up equations for component.
+
+        Returns:
+        - eq1: Equation for pressure characteristics.
+        - eq4: Blasius Equation for pressure drop in pipe
+        - eq3: Equation for thermal energy flux characteristics.
+        - eq4: Equation for mass flow characteristics.
+        """
+        
+        self.eq1 = "%s = %s - %s"%(self.p_in, self.p_out, self.delta_p)
+        self.eq5 = "%s = cp.PropsSI('D', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.rho, self.T_in, self.p_in)
+        self.eq6 = "%s = cp.PropsSI('V', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.visco, self.T_in, self.p_in)
+        #self.eq2 = "%s = - 0.3"%self.delta_p
+        self.eq2 = "%s = 0.3164 * (%s / (3.1415926536 * (%s/2) ** 2)) ** (7/4) * (%s/%s) ** (1/4) * %s * %s * %s ** (-5/4) / 2"%(self.delta_p, self.Vdot_in, self.diameter, self.visco, self.rho, self.length, self.rho, self.diameter)
+        self.eq3 = "%s = %s"%(self.T_in, self.T_out)
+        self.eq4 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
+        # self.eq5 = "%s = 3.1415926536 * (%s/2) ** 2 * %s * %s"%(self.mass, self.diameter, self.rho, self.length)
+        return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6]
+    
+
+    def set_var(self):
+        """
+        Set up variables for component.
+        
+        Returns:
+        - var1: Name string, initialization value, minimum, maximum and unit string for input pressure.
+        - var2: Name string, initialization value, minimum, maximum and unit string for input temperature.
+        - var3: Name string, initialization value, minimum, maximum and unit string for input volume flow.
+        - var4: Name string, initialization value, minimum, maximum and unit string for output pressure.
+        - var5: Name string, initialization value, minimum, maximum and unit string for output temperature.
+        - var6: Name string, initialization value, minimum, maximum and unit string for output volume flow.
+        - var7: Name string, initialization value, minimum, maximum and unit string for pressure change over component.
+        """
+        
+        self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
+        self.var2 = [self.T_in, 273.15, 0.0, np.inf, "K"]
+        self.var3 = [self.Vdot_in, 1.0, 0.0, np.inf, "l/s"]
+        self.var4 = [self.p_out, 1.0, 0.0, np.inf, "bar"]
+        self.var5 = [self.T_out, 273.15, 0.0, np.inf, "K"]
+        self.var6 = [self.Vdot_out, 1.0, 0.0, np.inf, "l/s"]
+        self.var7 = [self.delta_p, 0.0, 0.0, np.inf, "bar"]
+        self.var8 = [self.diameter, 0.5, 0.0, 10, "m"]
+        self.var9 = [self.length, 0.5, 0.0, 100, "m"]
+        self.var10 = [self.roughness, 0.0002, 0.0, 100, "m"]
+        # self.var11 = [self.mass, 10, 0.0, np.inf, "kg"]
+        self.var12 = [self.visco, 0.002, 0.0, np.inf, "m^2/s"]
+        self.var11 = [self.rho, 1000, 0.0, np.inf, "kg/m^3"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10, self.var11, self.var12]#, self.var13]    
+
+
 class Pump:
     """
     Set up a component with pump characteristics:

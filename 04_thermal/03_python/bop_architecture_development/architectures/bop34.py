@@ -119,18 +119,18 @@ def initialize(input_dict, result_dict, bc_dict):
             result_dict[name][0] = evap.Vdot_in     # = "Vdot_1"
 
     if "Vdot_1" in result_dict.keys():
-        result_dict["Vdot_1"][0] = lvdcdc.Vdot_in          # depends on architecture!
+        result_dict["Vdot_1"][0] = compressor.Vdot_in          # depends on architecture!
         result_dict["Vdot_1"][2] = "Flow over Intercooler in [l/s]"
         result_dict["vdot_intercooler"] = result_dict["Vdot_1"]
         del result_dict["Vdot_1"]
     if "Vdot_2" in result_dict.keys():
-        result_dict["Vdot_2"][0] = compressor.Vdot_in      # depends on architecture!
+        result_dict["Vdot_2"][0] = lvdcdc.Vdot_in      # depends on architecture!
         result_dict["Vdot_2"][2] = "Flow over LV DCDC in [l/s]"
         result_dict["vdot_lvdcdc"] = result_dict["Vdot_2"]
         del result_dict["Vdot_2"]
     if "Vdot_3" in result_dict.keys():      # depends on architecture
         result_dict["Vdot_3"][0] = inverter.Vdot_in       # depends on architecture!
-        result_dict["Vdot_3"][2] = "Flow over HPDU in [l/s]"
+        result_dict["Vdot_3"][2] = "Flow over inverter in [l/s]"
         result_dict["vdot_hpdu"] = result_dict["Vdot_3"]
         del result_dict["Vdot_3"]
     if "Vdot_4" in result_dict.keys():      # depends on architecture

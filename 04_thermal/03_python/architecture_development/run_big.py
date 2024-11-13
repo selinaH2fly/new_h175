@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Do you want to vary one boundary condition? If not no plots will be made, but results will be safed in excel.
-vary_bc = True
+vary_bc = False
 
 # How do you want to plot?
 # Do you want to compare results of different architectures in one plot (only has effect if vary_bc is set True)
@@ -13,7 +13,7 @@ compare_res = True
 plot_temp_pr_vd = False
 
 # Which Architectures do you want to evaluate? ["Arch01", "Arch03a", "Arch03b", "Arch04", "Arch05", "Arch06", "Arch08", "ArchShy4"]
-arch_list = ["Arch01", "Arch04", "Arch06"]    #"Arch01", "Arch04", 
+arch_list = ["Arch01"]    # , "Arch04", "Arch06"
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
@@ -32,14 +32,15 @@ else:
 bc_dict = {"pump_p_in" : 1,                     # pressure before pump, lowest pressure level
            "stack_t_in" : 273.15 + 68.0,        # temperature at stack inlet
            "stack_t_out" : 273.15 + 80.0,       # temperature at stack outlet
-           "sys_t_in" : 273.15 + 50.0,          # System entry temperature, temperature after external radiatior # 60
-           "bop_q" : 13000,                     # bop heat 
+           "sys_t_in" : 273.15 + 60.0,          # System entry temperature, temperature after external radiatior # 60
+           "bop_q" : 21000,                     # bop heat 
            "stack_q" : 200000,                  # stack heat
            "bop_vdot" : 0.4,                     # flow over bop components (whole block) 30L/min
            "bop_delta_p" : 41                    # choose the bop number: 10, 21,22,23,24,25,26,27,31,32,33,41 or 42
 }
 
-# Which variables should be safed in excel and be plotted
+# Which variables should be safed in excel and be plotted 
+# result_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Results], "Text for plotting"]}
 result_dict = {"pump_vdot" : ["", [], 'flow over pump1 [l/S]'],
                 "pump_delta_p" : ["", [],'pump pressure difference [bar]'],
                 "radiator_vdot" : ["", [], 'flow over radiator [l/S]'],
@@ -48,7 +49,7 @@ result_dict = {"pump_vdot" : ["", [], 'flow over pump1 [l/S]'],
                 "pump2_vdot" : ["", [], "flow over pump2 [l/s]"],
                 "pump2_delta_p" : ["", [], "pump2 pressure difference [bar]"],
                 "stack_delta_p" : ["", [], "pressure loss over stack [bar]"],
-                "pump_power" : ["", [], "optimal pump power [W]"],               
+                "pump_power" : ["", [], "pump power [W]"],               
                 #"radiator_q" : ["", [], "radiator heat"],
                 #"radiator_cp_in" : ["", [], "cp_in"],
                 #"radiator_cp_out" : ["", [], "cp_out"],
@@ -105,13 +106,13 @@ for arch in arch_list:      # each architecture is evaluated
 
     if arch == "Arch01":        # extra code to have customized bop and big architecture relations
         bc_dict["bop_delta_p"] = 24
-        bc_dict["bop_vdot"] = 0.2     
+        bc_dict["bop_vdot"] = 0.22     
     elif arch == "Arch04":
         bc_dict["bop_delta_p"] = 31
-        bc_dict["bop_vdot"] = 0.34      # intercooler wird mit 0.2l/s durschströmt
+        bc_dict["bop_vdot"] = 0.36      # intercooler wird mit 0.2l/s durschströmt
     elif arch == "Arch06":
         bc_dict["bop_delta_p"] = 24
-        bc_dict["bop_vdot"] = 0.1     
+        bc_dict["bop_vdot"] = 0.22     
     bc_dict["bop_delta_p"] = func_bop_delta_p(bc_dict["bop_delta_p"])
 
     key_init = "%s.initialize(%s, %s, %s)" %(arch, input_dict, result_dict, bc_dict)

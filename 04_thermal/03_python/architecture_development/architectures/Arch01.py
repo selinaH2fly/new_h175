@@ -15,7 +15,7 @@ def initialize(input_dict, result_dict, bc_dict):
         | 2               3           4 |
         |                               v
     splitter1 --> tcv1 --> stack1 --> mixer1 --> pump1 --> splitter2 --.
-        ^      5   ^    6          7          9        10      |       |
+        ^      5   ^    6          7          9 12       10       |       |
         |          |                                           |       |
         |          '-------------------------------------------'       |
         |                               8                              |
@@ -38,15 +38,24 @@ def initialize(input_dict, result_dict, bc_dict):
     circ.add_comp(stack1)
     pump1 = ThermSim.Pump(9, 10, "pump1")
     circ.add_comp(pump1)
+    
     splitter2 = ThermSim.ConnectorPassive1to2(10, 11, 8, "splitter2")
     circ.add_comp(splitter2)
-    radiator1 = ThermSim.Heatsink(11, 1, "radiator1")
+
+    pipe1 = ThermSim.Pipe(11, 12, "pipe1")
+    circ.add_comp(pipe1)
+    
+    radiator1 = ThermSim.Heatsink(12, 1, "radiator1")
     circ.add_comp(radiator1)
+    
 
 
     """
     Provide input on boundary conditions
     """
+    circ.add_bc("%s = 0.032"%pipe1.diameter)
+    circ.add_bc("%s = 5"%pipe1.length)
+    circ.add_bc("%s = 0.0016"%pipe1.roughness)
     # y = 7,8139E-01x2 + 1,3690E-01x
 
 

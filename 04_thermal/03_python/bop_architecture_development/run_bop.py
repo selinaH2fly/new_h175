@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Do you want to vary one boundary condition? If not no plots will be made, but results will be safed in excel.
-vary_bc = True
+vary_bc = False
 
 # How do you want to plot?
 # Do you want to compare results of different architectures in one plot (has effect if vary_bc is set True)
@@ -12,14 +12,14 @@ compare_res = False
 plot_temp_pr_vd = True
 
 # Which Architectures do you want to evaluate? ["bop10", "bop21","bop22", "bop23", "bop24","bop25", "bop26", "bop27","bop31", "bop33", "bop41","bop42"]
-arch_list = ["bop31"]
+arch_list = ["bop00"]
 
 
 if vary_bc is True: # Adjust Input_dict only if you want to vary a boundary condition
     # input_dict = {"Variable_Name": ["Variable_Name in Architecture", [List of Values], "Text for plotting"]}
 
-    #input_dict = {"Vdot_in" : ["Vdot_1", [6/60, 8/60, 10/60], "BoP Eingangsvolumenstrom l/s"]}
-    input_dict = {"p_in": ["p_1", [1.12, 1.15, 1.17, 1.2], "Input Pressure [bar]"]} #1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6
+    input_dict = {"Vdot_in" : ["Vdot_1", [8/60, 10/60, 12/60], "BoP Eingangsvolumenstrom l/s"]}
+    #input_dict = {"p_in": ["p_1", [1.1, 1.15, 1.2, 1.25, 1.3], "Input Pressure [bar]"]} #1.3, 1.35, 1.4, 1.45, 1.5, 1.55, 1.6
     #input_dict = {"throttle_delta_p" : ["", [0.1, 0.15, 0.2, 0.25, 0.3], "Thottle pressure drop [bar]"]}
 else:
     input_dict = None
@@ -28,14 +28,14 @@ else:
 critical_operation = True
 if critical_operation is True:
     bc_dict = {"T_in" : 273.15 + 60.0,
-                #"Vdot_in" : 0.5,   # either vdot or p_in
-                "p_in" : 1.3,
+                "Vdot_in" : 0.5,   # either vdot or p_in
+                #"p_in" : 1.3,
                 "p_end" : 1,
                 "Qdot_hpdu" : 1000,
                 "Qdot_lvdcdc" : 300,
                 "Qdot_hvdcdc" : 1600,
                 "Qdot_inverter" : 1250,
-                "Qdot_intercooler" : 21000,
+                "Qdot_intercooler" : 29000,
                 "Qdot_compressor" : 1000,
                 "Qdot_evap" : -13500}
 else: 
@@ -52,10 +52,10 @@ else:
                 "Qdot_evap" : -13500}
     
 result_dict = {"Vdot_in" :              ['', [], 'BoP Input flow [l/s]'], 
-                "Vdot_1" :              ['', [], ''], 
-                "Vdot_2" :              ['', [],''],
-                "Vdot_3" :              ['', [],''],
-                "Vdot_4" :              ['', [],''],
+                #"Vdot_1" :              ['', [], ''], 
+                #"Vdot_2" :              ['', [],''],
+                #"Vdot_3" :              ['', [],''],
+                #"Vdot_4" :              ['', [],''],
                 "t_in_lvdcdc":          ["", [],'LV DCDC T_in [K]'],
                 "t_in_hvdcdc" :         ["", [], 'HV DCDC T_in [K]'],
                 "t_in_inverter" :       ["", [], 'Inverter T_in [K]'],
@@ -63,7 +63,7 @@ result_dict = {"Vdot_in" :              ['', [], 'BoP Input flow [l/s]'],
                 "t_in_compressor" :     ["", [], 'Compressor T_in [K]'],
                 "t_in_intercooler" :    ["", [], "Intercooler T_in [K]"],
                 "t_out_intercooler" :   ["", [], "Intercooler T_out [K]"],
-                "t_out_Bop" :           ["", [],'BoP T_out [K]'],
+                #"t_out_Bop" :           ["", [],'BoP T_out [K]'],
                 "p_in" :                ["", [], 'bop pressure drop [bar]']}
 
 ##########   calculation ###########################################################################################
@@ -116,7 +116,7 @@ if vary_bc is True and compare_res is False and plot_temp_pr_vd is True:        
                         plt.plot(input_dict[input_name][1], all_result_dict[result_name][1], label=all_result_dict[result_name][2])
             plt.ylabel('Temperature in [K]')
             plt.xlabel(input_dict[input_name][2])
-            plt.legend(loc = 'lower right')
+            plt.legend(loc = 'lower left')
             plt.grid()
             plt.title(arch)
             plt.show()

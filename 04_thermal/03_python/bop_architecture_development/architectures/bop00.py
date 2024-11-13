@@ -16,7 +16,7 @@ def initialize(input_dict, result_dict, bc_dict):
                            |                                      |
                            |                                      |      10             
     ----> evap -->   tcv1 -:                                   Mixer1 ---->    
-    1          2           |                                      |
+    1          2   12      |                                      |
                            |                                      |
                            '--> LV DCDC --> HPDU --> Compressor --'       
                             3           4         5               6
@@ -25,8 +25,11 @@ def initialize(input_dict, result_dict, bc_dict):
     circ = ThermSim.Circuit()
     evap = ThermSim.Heatsink(1, 2, "evap")
     circ.add_comp(evap)
-    tcv1 = ThermSim.ConnectorActive1to2(2, 3, 7, 'tcv1')
+    tcv1 = ThermSim.ConnectorActive1to2(12, 3, 7, 'tcv1')
     circ.add_comp(tcv1)
+
+    pipe1 = ThermSim.Pipe(2, 12, "pipe1")
+    circ.add_comp(pipe1)
 
     lvdcdc = ThermSim.Heatsource(3, 4, "lvdcdc")
     circ.add_comp(lvdcdc)
@@ -40,6 +43,7 @@ def initialize(input_dict, result_dict, bc_dict):
     inverter = ThermSim.Heatsource(8, 9, "inverter")
     circ.add_comp(inverter)
 
+
     mixer1 = ThermSim.ConnectorPassive2to1(6, 9, 10, "mixer1")
     circ.add_comp(mixer1)
 
@@ -48,6 +52,10 @@ def initialize(input_dict, result_dict, bc_dict):
     """
     Provide input on boundary conditions, values are specified in run.py, compare.py and analyse.py
     """
+    circ.add_bc("%s = 0.032"%pipe1.diameter)
+    circ.add_bc("%s = 5"%pipe1.length)
+    circ.add_bc("%s = 0.0016"%pipe1.roughness)
+
     circ.add_bc("delta_p_1_tcv1 = - 0.0")
     circ.add_bc("delta_p_2_tcv1 = - 0.0")
     circ.add_bc("%s = %f" %(mixer1.p_out, bc_dict["p_end"]))    # depends on architecture
