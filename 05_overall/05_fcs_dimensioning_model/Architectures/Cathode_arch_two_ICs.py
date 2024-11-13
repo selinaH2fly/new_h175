@@ -70,6 +70,11 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     iteration = 0
     converged = False
 
+    # Initial guess for intercooler outlet pressure
+    intercooler_air_liquid_primary_p_out_Pa = inputs.pressures_Pa["PTC4"]
+    intercooler_air_air_primary_p_out_Pa =  inputs.pressures_Pa["PTC3"]
+    air_filter_pressure_out_Pa = inputs.pressures_Pa["PTC4"]
+
     while not converged and iteration < max_iterations:
         iteration += 1
 
@@ -88,8 +93,17 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         )
 
         intercooler_air_air.primary_temperature_out_K = intercooler_air_air.calculate_primary_T_out()
+
+        intercooler_air_air.primary_p_out_Pa = intercooler_air_air_primary_p_out_Pa
+
+
+        intercooler_air_air.mean_p_Pa = (intercooler_air_air.primary_p_in_Pa + intercooler_air_air.primary_p_out_Pa) / 2
+        intercooler_air_air.mean_T_K = (intercooler_air_air.primary_T_in_K + intercooler_air_air.primary_T_out_K) / 2
+
+        intercooler_air_air.primary_pressure_drop = intercooler_air_air.get_interpolated_pressure_drop(
+            intercooler_air_air.mean_T_K, intercooler_air_air.mean_p_Pa, side="hot")
+
         intercooler_air_air.primary_pressure_drop = intercooler_air_air.get_interpolated_pressure_drop(intercooler_air_air.primary_T_in_K, intercooler_air_air.primary_p_in_Pa, side="hot")
-        intercooler_air_air.primary_p_out_Pa = intercooler_air_air.primary_p_in_Pa - intercooler_air_air.primary_pressure_drop
 
         # Instantiate and update the air-liquid intercooler with the conditions from the air-air intercooler output
         intercooler_air_liquid = Intercooler(
@@ -103,21 +117,26 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
             coolant_T_in_K=inputs.temperatures_K.get("coolant_in_T")  # Add the coolant inlet temperature
         )
 
-        # Set the primary outlet temperature for air-liquid intercooler
-        intercooler_air_liquid.primary_T_out_K = inputs.temperatures_K["TTC4"]
+        # Use the current estimate of pout to calculate mean pressure and temperature
+        intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid_primary_p_out_Pa
+        intercooler_air_liquid.mean_p_in_Pa = (intercooler_air_liquid.primary_p_in_Pa + intercooler_air_liquid.primary_p_out_Pa) / 2
+        intercooler_air_liquid.mean_T_in_K = (intercooler_air_liquid.primary_T_in_K + intercooler_air_liquid.primary_T_out_K) / 2
 
-        # Calculate the pressure drop for air-liquid intercooler
+        # Calculate intercooler pressure drop
         intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop(
-            intercooler_air_liquid.primary_T_in_K, intercooler_air_liquid.primary_p_in_Pa
+            intercooler_air_liquid.mean_T_in_K, intercooler_air_liquid.mean_p_in_Pa
         )
-        intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid.primary_p_in_Pa - intercooler_air_liquid.pressure_drop
+
         # Instantiate the air filter
         air_filter = FuelCellAirFilter(
             air_mass_flow_kg_s=intercooler_air_liquid.primary_mdot_in_kg_s,
             temperature_in_K=intercooler_air_liquid.primary_T_out_K,
-            pressure_in_Pa=intercooler_air_liquid.primary_p_out_Pa,
-            relative_humidity=_params_humidifier.dry_air_rh_in
+            pressure_in_Pa=intercooler_air_liquid_primary_p_out_Pa,  # Set inlet pressure here
+            temperature_out_K=intercooler_air_liquid.primary_T_out_K,
+            relative_humidity=_params_humidifier.dry_air_rh_in,
+            pressure_out_Pa=air_filter_pressure_out_Pa  # Initialize with current value
         )
+
         air_filter.pressure_drop = air_filter.get_pressure_drop()
         air_filter.pressure_out = air_filter.pressure_in_Pa - air_filter.pressure_drop
 
@@ -144,7 +163,17 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         humidifier.efficiency = humidifier.get_efficiency()
 
         # Calculate new compressor outlet pressure based on humidifier’s dry air inlet pressure
-        new_compressor_pressure_out_Pa = humidifier.dry_air_pressure_out_Pa + humidifier.interpolate_dry_pressure_drop() + air_filter.pressure_drop + intercooler_air_liquid.pressure_drop
+        new_compressor_pressure_out_Pa = (
+                humidifier.dry_air_pressure_out_Pa
+                + humidifier.interpolate_dry_pressure_drop()
+                + air_filter.pressure_drop
+                + intercooler_air_liquid.pressure_drop
+                + intercooler_air_air.primary_pressure_drop
+        )
+
+        # Update intercooler outlet pressure and air filter outlet pressure
+        intercooler_air_liquid_primary_p_out_Pa = humidifier.dry_air_pressure_in_Pa + air_filter.pressure_drop
+        intercooler_air_air_primary_p_out_Pa = intercooler_air_liquid_primary_p_out_Pa+intercooler_air_liquid.pressure_drop
 
         # Check if values have converged
         if abs(compressor.pressure_out_Pa - new_compressor_pressure_out_Pa) < tolerance:
@@ -170,12 +199,20 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         coolant_T_in_K = inputs.temperatures_K["TTC10"]
     )
 
+
     intercooler_air_air.primary_temperature_out_K = intercooler_air_air.calculate_primary_T_out()
     intercooler_air_air.primary_deltaT =  intercooler_air_air.primary_T_in_K - intercooler_air_air.primary_temperature_out_K
 
+    # Use the final stored outlet pressure from the iteration
+    intercooler_air_air.primary_p_out_Pa = intercooler_air_air_primary_p_out_Pa
+    intercooler_air_air.mean_p_Pa = (intercooler_air_air.primary_p_in_Pa + intercooler_air_air.primary_p_out_Pa) / 2
+    intercooler_air_air.mean_T_K = (intercooler_air_air.primary_T_in_K + intercooler_air_air.primary_T_out_K) / 2
+
     intercooler_air_air.primary_pressure_drop = intercooler_air_air.get_interpolated_pressure_drop(
-        intercooler_air_air.primary_T_in_K, intercooler_air_air.primary_p_in_Pa, side="hot")
+        intercooler_air_air.mean_T_K, intercooler_air_air.mean_p_Pa, side="hot")
+
     intercooler_air_air.primary_p_out_Pa = intercooler_air_air.primary_p_in_Pa - intercooler_air_air.primary_pressure_drop
+
     intercooler_air_air.primary_Qdot_W = intercooler_air_air.calculate_heat_flux(fluid_type="primary")
 
     intercooler_air_liquid = Intercooler(
@@ -189,24 +226,34 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         coolant_mdot_in_kg_s=_params_intercooler.coolant_mdot_in_kg_s
     )
 
-    intercooler_air_liquid.deltaT = intercooler_air_liquid.primary_T_in_K - inputs.temperatures_K["TTC4"]
-    intercooler_air_liquid.coolant_temperature_in_K = intercooler_air_liquid.calculate_coolant_T_in()
-    intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop(
-        intercooler_air_liquid.primary_T_in_K, intercooler_air_liquid.primary_p_in_Pa)
-    print(f"Intercooler Air-Liquid Primary (Warm) Pressure Drop: {intercooler_air_liquid.pressure_drop :.2f} Pa")
 
-    intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid.primary_p_in_Pa - intercooler_air_liquid.pressure_drop
+    # Use the final stored outlet pressure from the iteration
+    intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid_primary_p_out_Pa
+    intercooler_air_liquid.mean_p_in_Pa = (intercooler_air_liquid.primary_p_in_Pa + intercooler_air_liquid.primary_p_out_Pa) / 2
+    intercooler_air_liquid.mean_T_in_K = (intercooler_air_liquid.primary_T_in_K + intercooler_air_liquid.primary_T_out_K) / 2
+
+    # Calculate the pressure drop
+    intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop(intercooler_air_liquid.mean_T_in_K,
+                                            intercooler_air_liquid.mean_p_in_Pa)
+
+    intercooler_air_liquid.deltaT = intercooler_air_liquid.primary_T_in_K - inputs.temperatures_K["TTC4"]
+
+    intercooler_air_liquid.coolant_temperature_in_K = intercooler_air_liquid.calculate_coolant_T_in()
+
     intercooler_air_liquid.primary_Qdot_W = intercooler_air_liquid.calculate_heat_flux(fluid_type="primary")
 
-    # Instantiate the air filter
+    # Instantiate the air filter with an initial guess for pressure_out_Pa
     air_filter = FuelCellAirFilter(
         air_mass_flow_kg_s=intercooler_air_liquid.primary_mdot_in_kg_s,
         temperature_in_K=intercooler_air_liquid.primary_T_out_K,
+        temperature_out_K=intercooler_air_liquid.primary_T_out_K,
         pressure_in_Pa=intercooler_air_liquid.primary_p_out_Pa,
+        pressure_out_Pa=inputs.pressures_Pa["PTC4"] , # Provide an initial value for pressure_out_Pa
         relative_humidity=_params_humidifier.dry_air_rh_in
     )
+
+    # Calculate pressure drop based on initial or updated conditions
     air_filter.pressure_drop = air_filter.get_pressure_drop()
-    air_filter.pressure_out = air_filter.pressure_in_Pa - air_filter.pressure_drop
 
     humidifier = Humidifier(
         dry_air_mass_flow_kg_s=intercooler_air_liquid.primary_mdot_in_kg_s,
@@ -340,6 +387,8 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     intercooler_air_air.coolant_mdot_in_kg_s = humidifier.wetmassout['total_mass_flow_wet_out']
     intercooler_air_air.coolant_p_in_Pa = humidifier.wet_air_pressure_out_Pa
     intercooler_air_air.coolant_T_out_K = intercooler_air_air.calculate_coolant_T_out_with_efficiency()
+    intercooler_air_air.coolant_mean_T_K = (intercooler_air_air.coolant_T_out_K + intercooler_air_air.coolant_T_in_K) / 2
+
 
     intercooler_air_air.coolant_pressure_drop = intercooler_air_air.get_interpolated_pressure_drop(
         intercooler_air_air.coolant_T_in_K, intercooler_air_air.coolant_p_in_Pa, side="cold")
@@ -362,16 +411,19 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     # Instantiate the turbine with parameters based on humidifier output and input
     turbine = Turbine(
         mass_estimator=_mass_estimator,
-        temperature_in_K=water_separator.temperature_in_K,
+        isentropic_efficiency=_params_turbine.isentropic_efficiency,
+        temperature_in_K=inputs.temperatures_K["TTC13"],
         pressure_in_Pa=water_separator.pressure_out,
         pressure_out_Pa=inputs.pressures_Pa["PTC1"],
         air_mass_flow_kg_s=humidifier.wetmassout["total_mass_flow_wet_out"],
-        turbine_map=_params_turbine.turbine_map
-    )
+        turbine_map=None)
 
     # Calculate turbine output temperature, efficiency, and power
     turbine.temperature_out_K = turbine.calculate_T_out()
-    turbine.isentropic_efficiency = turbine.get_efficiency()
+    turbine.power_W = turbine.calculate_power()
+
+    # Calculate turbine output temperature, efficiency, and power
+    turbine.temperature_out_K = turbine.calculate_T_out()
     turbine.power_W = turbine.calculate_power()
 
     # Dictionary to store the results with converted units
@@ -403,7 +455,6 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         "Intercooler Air-Liquid Secondary(Cold) Inlet Temperature": f"{intercooler_air_liquid.coolant_temperature_in_K - 273.15:.2f} °C",
 
         "Air Filter Pressure Drop": f"{air_filter.pressure_drop / 1e5:.5f} bara",
-        "Air Filter Outlet Pressure": f"{air_filter.pressure_out / 1e5:.2f} bara",
 
         "Humidifier Dry Air Inlet Pressure": f"{humidifier.dry_air_pressure_in_Pa / 1e5:.2f} bara",
         "Humidifier Wet Air Outlet Pressure": f"{humidifier.wet_air_pressure_out_Pa / 1e5:.2f} bara",

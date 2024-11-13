@@ -20,8 +20,8 @@ class Input:
         self.pressures_bara = {
             "PTC1": 0.63,  # Ambient pressure for FL120
             "PTC2": 3.26,  # Pressure after compressor
-           # "PTC3": 2.5,  # Pressure after intercooler, air-air, warm side
-            "PTC4": 2.4,  # Pressure after intercooler, air-liq
+            "PTC3": 3.13,  # Pressure after intercooler, air-air, warm side
+            "PTC4": 3.15,  # Pressure after intercooler, air-liq
           #  "PTC5": 2.4,  # Pressure after air filter
           #  "PTC6": 2.3,  # Pressure before valve
             "PTC7": 3,  # Pressure after humidifier, dry
@@ -157,7 +157,7 @@ class TurbineParameters:
 
     def __init__(self):
 
-        self.isentropic_efficiency = 0.55
+        self.isentropic_efficiency = 0.65
         self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
 
         # Assumption: ~0.15 bar BoP pressure drop upstream the turbine at 130 g/s air flow rate
