@@ -8,6 +8,7 @@ and turbines, calculating key outputs such as temperature, pressure, humidity, a
 
 # Import custom classes and functions
 import cathode_model_run
+import pandas as pd
 from Components.compressor import Compressor
 from Components.heat_exchanger import Intercooler
 from Components.filter import FuelCellAirFilter
@@ -91,8 +92,8 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         intercooler_air_liquid.primary_temperature_out_K = intercooler_air_liquid.calculate_primary_T_out()
         intercooler_air_liquid.coolant_temperature_out_K = intercooler_air_liquid.calculate_coolant_T_out()
         intercooler_air_liquid.heat_flux_W = intercooler_air_liquid.calculate_heat_flux("primary")
-        intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop()
-        intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid.primary_p_in_Pa - intercooler_air_liquid.get_interpolated_pressure_drop()
+        intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop(intercooler_air_liquid.primary_T_in_K,intercooler_air_liquid.primary_p_in_Pa)
+        intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid.primary_p_in_Pa - intercooler_air_liquid.pressure_drop
 
 
         # Instantiate the air filter
@@ -141,6 +142,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
 
     #Start calculating with updated parameters after iteration
     compressor.power_W = compressor.calculate_power()
+
     # Re-instantiate the intercooler, air filter and humidifier with final compressor outlet conditions after convergence
     intercooler_air_liquid = Intercooler(
         efficiency=_params_intercooler.efficiency,
@@ -155,9 +157,11 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     )
     intercooler_air_liquid.deltaT = intercooler_air_liquid.primary_T_in_K - intercooler_air_liquid.primary_T_out_K
     intercooler_air_liquid.coolant_temperature_in_K = intercooler_air_liquid.calculate_coolant_T_in()
-    intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop()
-    intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid.primary_p_in_Pa  - intercooler_air_liquid.get_interpolated_pressure_drop()
+    intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop(
+        intercooler_air_liquid.primary_T_in_K, intercooler_air_liquid.primary_p_in_Pa)
+    intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid.primary_p_in_Pa - intercooler_air_liquid.pressure_drop
     intercooler_air_liquid.primary_Qdot_W = intercooler_air_liquid.calculate_heat_flux()
+
     # Instantiate the air filter
     air_filter = FuelCellAirFilter(
         air_mass_flow_kg_s=intercooler_air_liquid.primary_mdot_in_kg_s,
@@ -190,34 +194,111 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     humidifier.drymassin = humidifier.calculate_dry_inlet_mass_flows()
     humidifier.wetmassin = humidifier.calculate_wet_inlet_mass_flows()
 
-    # Calculate water transfer rate and outlet mass flows in the humidifier
-    humidifier.m_dot_water_trans = humidifier.calculate_water_transfer_rate()
-    humidifier.drymassout = humidifier.calculate_dry_outlet_mass_flows()
-    humidifier.wetmassout = humidifier.calculate_wet_outlet_mass_flows()
-    total_mass_flow_wet_out_kg_s = humidifier.wetmassout["total_mass_flow_wet_out"]
-
+    humidifier.initial_efficiency  = humidifier.get_efficiency()
+    humidifier.target_RH = 0.5
     ##TODO change target rh to a variable
     # Calculate target vapor transfer to achieve desired RH at Point 8
     target_vapor_transfer_kg_s = humidifier.calculate_target_vapor_transfer(inputs.temperatures_K["TTC8"],0.50)
 
-    # Use the `calculate_vapor_transfer` method to determine the required dry air mass flow
-    humidifier_mass_flow_kg_s, efficiency = humidifier.calculate_vapor_transfer(target_vapor_transfer_kg_s)
+    def iterate_for_mixed_RH():
+        current_efficiency = 0.35  # Initial efficiency
+        tolerance = 0.01  # Convergence tolerance for RH
+        max_iterations = 50  # Limit to avoid infinite loops
+
+        RH_mix = 0  # Default value for RH_mix
+        efficiency_from_map = 0  # Default value for efficiency_from_map
+        m_dot_vap_dry_out = 0  # Default value for vapor dry out
+        updated_vapor_dry_out_kg_s = 0  # Default updated vapor dry out mass flow
+        RH_vapor_dry_out = 0  # Default RH for vapor dry out
+        Valve_vapor_out_kg_s = 0  # Default valve vapor mass flow
+        Valve_air_flow_kg_s = 0  # Default valve air flow mass flow
+        Valve_total_flow_kg_s = 0  # Default valve total flow mass flow
+
+        for iteration in range(max_iterations):
+            # Step 1: Calculate vapor dry out based on current efficiency
+            m_dot_vap_dry_out = current_efficiency * humidifier.wetmassin[
+                'm_dot_vap_wet_in']  # Efficiency = vapor dry out / vapor wet in
+
+            target_vapor_kg_s = target_vapor_transfer_kg_s
+
+            # Step 2: Calculate Valve vapor mass flow using mass balance
+            Valve_vapor_out_kg_s = max(0, target_vapor_kg_s - m_dot_vap_dry_out)  # Prevent negative valve vapor flow
+
+            # Step 3: Calculate Valve air mass flow (using RH, T, P, vapor mass flow)
+            Valve_partial_pressure_vapor_Pa = humidifier.calculate_partial_pressure(
+                humidifier.dry_air_temperature_out_K, humidifier.dry_air_rh_in)
+            Valve_Y_out = (0.622 * Valve_partial_pressure_vapor_Pa) / (
+                    humidifier.dry_air_pressure_out_Pa - Valve_partial_pressure_vapor_Pa)  # Specific humidity for Flow 2
+            Valve_air_flow_kg_s = Valve_vapor_out_kg_s / Valve_Y_out  # Air mass flow for Flow 2
+
+            # Step 4: Calculate total flow for Flow 2 (air + vapor)
+            Valve_total_flow_kg_s = Valve_air_flow_kg_s + Valve_vapor_out_kg_s
+
+            # Step 5: Update dry air mass flow for Dry In (given total mass flow for Dry In)
+            humidifier.dry_air_mass_flow_kg_s = intercooler_air_liquid.primary_mdot_in_kg_s - Valve_total_flow_kg_s
+
+            dryin_partial_pressure_vapor_Pa = humidifier.calculate_partial_pressure(
+                humidifier.dry_air_temperature_in_K, humidifier.dry_air_rh_in)
+            dryin_Y_out = (0.622 * dryin_partial_pressure_vapor_Pa) / (
+                    humidifier.dry_air_pressure_in_Pa - dryin_partial_pressure_vapor_Pa)
+
+            m_dot_vapor_dry_in = dryin_Y_out * humidifier.dry_air_mass_flow_kg_s
+
+            m_dot_air_dry_in = humidifier.dry_air_mass_flow_kg_s - m_dot_vapor_dry_in
+
+            # Step 7: Get updated efficiency from the map based on air flow
+            efficiency_from_map = humidifier.get_efficiency() / 100  # Efficiency based on air flow
+            updated_vapor_dry_out_kg_s = efficiency_from_map * humidifier.wetmassin['m_dot_vap_wet_in']
+
+            # Step 8: Calculate RH for vapor dry out
+            Y_vapor_dry_out = updated_vapor_dry_out_kg_s / m_dot_air_dry_in  # Specific humidity
+
+            # Step 9: Calculate partial vapor pressure (P_vapor) for vapor dry out
+            P_vapor_dry_out = (Y_vapor_dry_out * humidifier.dry_air_pressure_out_Pa) / (
+                    0.622 + Y_vapor_dry_out)  # in Pa
+
+            # Step 10: Calculate RH for vapor dry out
+            P_sat = humidifier.calculate_saturation_pressure(humidifier.dry_air_temperature_out_K)
+            RH_vapor_dry_out = (P_vapor_dry_out / P_sat) * 100  # RH for vapor dry out
+
+            # Step 11: Update RH for the mix (mass balance of vapor and air)
+            total_vapor_kg_s = m_dot_vap_dry_out + Valve_vapor_out_kg_s
+            total_air_kg_s = m_dot_air_dry_in + Valve_air_flow_kg_s
+            Y_mix = total_vapor_kg_s / total_air_kg_s
+            P_vapor_mix = (Y_mix * humidifier.dry_air_pressure_out_Pa) / (0.622 + Y_mix)
+            RH_mix = (P_vapor_mix / P_sat) * 100  # RH for the mix
+
+            # Check if the mix RH is close enough to the target (convergence condition)
+            if abs(RH_mix - humidifier.target_RH) < tolerance:
+                print(f"Converged to target RH {humidifier.target_RH}% after {iteration + 1} iterations.")
+                break
+
+            # Update the efficiency for the next iteration
+            current_efficiency = 0.5 * current_efficiency + 0.5 * efficiency_from_map
+
+        # Return the calculated values, including updated humidifier parameters
+        return RH_mix, efficiency_from_map, Valve_total_flow_kg_s, humidifier.dry_air_mass_flow_kg_s, RH_vapor_dry_out
+
+    # Call the iterate_for_mixed_RH function to get the updated humidifier parameters and RH
+    RH_mix, efficiency_from_map, Valve_vapor_out_kg_s, humidifier.dry_air_mass_flow_kg_s, RH_vapor_dry_out = iterate_for_mixed_RH()
+    humidifier.efficiency = efficiency_from_map
+    humidifier.dry_air_mass_flow_kg_s = humidifier.dry_air_mass_flow_kg_s  # Use updated dry air mass flow
+    humidifier.m_dot_water_trans = humidifier.calculate_water_transfer_rate(humidifier.efficiency)
+    humidifier.wetmassout = humidifier.calculate_wet_outlet_mass_flows(humidifier.efficiency)
 
     # Calculate bypass flow
-    bypass_mass_flow_kg_s = intercooler_air_liquid.primary_mdot_in_kg_s - humidifier_mass_flow_kg_s
-
-    humidifier.RH_wet_out = 100 * humidifier.calculate_relative_humidity_outlet_wet()
+    bypass_mass_flow_kg_s = intercooler_air_liquid.primary_mdot_in_kg_s - humidifier.dry_air_mass_flow_kg_s
 
     humidifier.total_mass_flow_wet_out_kg_s = humidifier.wetmassout["total_mass_flow_wet_out"]
 
     valve = Valve(
-        total_air_mass_flow_kg_s=intercooler_air_liquid.primary_mdot_in_kg_s,
+        total_air_mass_flow_kg_s=bypass_mass_flow_kg_s,
         pressure_input_pa=humidifier.dry_air_pressure_in_Pa,
         pressure_output_pa=inputs.pressures_Pa["PTC8"]
     )
 
     # Find the valve opening percentage for the desired bypass flow
-    valve_position = valve.find_valve_position_for_target_flow(bypass_mass_flow_kg_s*1000)
+    valve_position = valve.get_valve_opening_from_map()
 
     # Instantiate the water separator with the humidifier's wet outlet conditions
     # Instantiate the water separator
@@ -225,7 +306,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         air_mass_flow_kg_s=humidifier.total_mass_flow_wet_out_kg_s,
         temperature_in_K=humidifier.wet_air_temperature_out_K,
         pressure_in_Pa=humidifier.wet_air_pressure_out_Pa,
-        relative_humidity=humidifier.calculate_relative_humidity_outlet_wet()
+        relative_humidity=humidifier.calculate_relative_humidity_outlet_wet(humidifier.efficiency)
     )
     water_separator.pressure_drop = water_separator.get_pressure_drop()
     water_separator.pressure_out = water_separator.pressure_in_Pa - water_separator.pressure_drop
@@ -234,7 +315,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     turbine = Turbine(
         mass_estimator=_mass_estimator,
         temperature_in_K=inputs.temperatures_K["TTC13"],
-        pressure_in_Pa=humidifier.wet_air_pressure_out_Pa,
+        pressure_in_Pa=water_separator.pressure_out,
         pressure_out_Pa=inputs.pressures_Pa["PTC1"],
         air_mass_flow_kg_s=humidifier.wetmassout["total_mass_flow_wet_out"],
         turbine_map=_params_turbine.turbine_map
@@ -245,124 +326,44 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     turbine.isentropic_efficiency = turbine.get_efficiency()
     turbine.power_W = turbine.calculate_power()
 
-    # Output results summary
-    print("=" * 50)
-    print(f"Simulation Results for Flight Level: {flight_level}")
-    print("=" * 50)
 
-    print("\nCompressor Results:")
-    print("-" * 20)
-    print(f"Outlet Temperature: {compressor.temperature_out_K:.2f} K ({compressor.temperature_out_K - 273:.2f} °C)")
-    print(f"Outlet Pressure: {compressor.pressure_out_Pa / 1e5:.4f} bara")
-    print(f"Power: {compressor.power_W/ 1000:.2f} kW")
-    print(f"Air Mass Flow Rate: {compressor.air_mass_flow_kg_s:.4f} kg/s")
+    # Dictionary to store the results with converted units
+    results = {
+        "Compressor Outlet Temperature": f"{compressor.temperature_out_K - 273.15:.2f} °C",
+        "Compressor Outlet Pressure": f"{compressor.pressure_out_Pa / 1e5:.2f} bara",
+        "Compressor Power": f"{compressor.power_W / 1000:.2f} kW",
+        "Compressor Air Mass Flow Rate": f"{compressor.air_mass_flow_kg_s * 1000:.2f} g/s",
+        "Intercooler Coolant Inlet Temperature": f"{intercooler_air_liquid.coolant_temperature_in_K - 273.15:.2f} °C",
+        "Intercooler Temperature Difference": f"{intercooler_air_liquid.deltaT:.2f} K",  # No conversion needed
+        "Intercooler Pressure Drop": f"{intercooler_air_liquid.pressure_drop / 1e5:.2f} bara",
+        "Intercooler Heat Transfer": f"{intercooler_air_liquid.primary_Qdot_W / 1000:.2f} kW",
+        "Air Filter Pressure Drop": f"{air_filter.pressure_drop / 1e5:.2f} bara",
+        "Air Filter Outlet Pressure": f"{air_filter.pressure_out / 1e5:.2f} bara",
+        "Humidifier Dry Air Inlet Pressure": f"{humidifier.dry_air_pressure_in_Pa / 1e5:.2f} bara",
+        "Humidifier Wet Air Outlet Pressure": f"{humidifier.wet_air_pressure_out_Pa / 1e5:.2f} bara",
+        "Humidifier Total Dry Outlet Mass Flow": f"{humidifier.dry_air_mass_flow_kg_s * 1000:.2f} g/s",
+        "Humidifier Water Transfer": f"{humidifier.m_dot_water_trans * 1000:.2f} g/s",
+        "Humidifier Efficiency": f"{humidifier.efficiency*100:.2f} %",
+        "Humidifier Total Wet Outlet Mass Flow": f"{humidifier.wetmassout['total_mass_flow_wet_out'] * 1000:.2f} g/s",
+        "Valve Bypass Flow": f"{bypass_mass_flow_kg_s * 1000:.2f} g/s",
+        "Water Separator Pressure Drop": f"{water_separator.pressure_drop / 1e5:.2f} bara",
+        "Water Separator Outlet Pressure": f"{water_separator.pressure_out / 1e5:.2f} bara",
+        "Turbine Outlet Temperature": f"{turbine.temperature_out_K - 273.15:.2f} °C",
+        "Turbine Efficiency": f"{turbine.isentropic_efficiency * 100:.2f} %",
+        "Turbine Power": f"{turbine.power_W / 1000:.2f} kW",
+        "Net Power": f"{(compressor.power_W - turbine.power_W) / 1000:.2f} kW",
+    }
 
-    print("\nIntercooler Results:")
-    print("-" * 20)
-    print(f"Coolant Inlet Temperature: {intercooler_air_liquid.coolant_temperature_in_K:.2f} K ({intercooler_air_liquid.coolant_temperature_in_K -273:.2f} °C)")
-    print(f"Temperature Difference Across In Intercooler: {intercooler_air_liquid.deltaT:.2f} K")
-    print(f"Pressure Drop: {intercooler_air_liquid.pressure_drop:.2f} Pa")
-    print(f"Primary side Heat Transfer: {intercooler_air_liquid.primary_Qdot_W/1000:.2f} kW")
-
-    print("\nAir Filter Results:")
-    print("-" * 20)
-    print(f"Pressure Drop: {air_filter.pressure_drop:.2f} Pa")
-    print(f"Outlet Pressure: {air_filter.pressure_out:.2f} Pa")
-
-    print("\nHumidifier Results:")
-    print("-" * 20)
-    print(f"Dry Air Inlet Pressure: {humidifier.dry_air_pressure_in_Pa:.2f} Pa")
-    print(f"Wet Air Outlet Pressure: {humidifier.wet_air_pressure_out_Pa:.2f} Pa")
-    print(f"Target Vapor Transfer at Point 8 to maintain RH of 50% at cathode inlet: {target_vapor_transfer_kg_s:.6f} kg/s")
-    # print(f"Converged Humidifier Mass Flow (through humidifier): {humidifier_mass_flow_kg_s:.4f} kg/s")
-    #print(f"Bypass Mass Flow (through valve HBV-C-320): {bypass_mass_flow_kg_s:.4f} kg/s")
-    print(f"Interpolated Efficiency: {efficiency:.2f}%")
-    print(
-        f"Total Wet Outlet Mass Flow: {humidifier.wetmassout['total_mass_flow_wet_out'] * 1000:.2f} g/s")  # Converted to g/s for clarity
-    # print(f"Relative Humidity at Dry Outlet: {humidifier.RH_dry_out:.2f} %")
-    # print(f"Relative Humidity at Wet Outlet: {humidifier.RH_wet_out:.2f} %")
-
-    print("\nBypass Valve 320 Results:")
-    print("-" * 20)
-    if valve_position is not None:
-        print(f"Valve opening percentage to achieve {bypass_mass_flow_kg_s:.4f} g/s bypass flow: {valve_position}%")
-    else:
-        print("No suitable valve opening percentage found to achieve the target bypass flow.")
-
-    print("\nWater Separator Results:")
-    print("-" * 20)
-    print(f"Pressure Drop: {water_separator.pressure_drop:.2f} Pa")
-    print(f"Outlet Pressure: {water_separator.pressure_out:.2f} Pa")
-
-    print("\nTurbine Results:")
-    print("-" * 20)
-    print(f"Outlet Temperature: {turbine.temperature_out_K:.2f} K ({turbine.temperature_out_K-273:.2f} °C)")
-    print(f"Efficiency: {100*turbine.isentropic_efficiency:.2f} %")
-    print(f"Power: {turbine.power_W / 1000:.2f} kW")
-
-    print(f"Net Power: {(compressor.power_W - turbine.power_W) / 1000:.2f} kW")
-
-    # Define the file path where you want to save the output
-    output_file_path = "simulation_results.txt"
-
-    # Open the file in write mode
-    with open(output_file_path, "w") as file:
-        # Output results summary
-        file.write("=" * 50 + "\n")
-        file.write(f"Simulation Results for Flight Level: {flight_level}\n")
-        file.write("=" * 50 + "\n\n")
-
-        file.write("Compressor Results:\n")
-        file.write("-" * 20 + "\n")
-        file.write(f"Outlet Temperature: {compressor.temperature_out_K:.2f} K\n")
-        file.write(f"Outlet Pressure: {compressor.pressure_out_Pa / 1e5:.4f} bara\n")
-        file.write(f"Power: {compressor.power_W / 1000:.2f} kW\n")
-        file.write(f"Air Mass Flow Rate: {compressor.air_mass_flow_kg_s:.4f} kg/s\n\n")
-
-        file.write("Intercooler Results:\n")
-        file.write("-" * 20 + "\n")
-        file.write(f"Coolant Inlet Temperature: {intercooler_air_liquid.coolant_temperature_in_K:.2f} K ({intercooler_air_liquid.coolant_temperature_in_K - 273:.2f} °C)\n")
-        file.write(f"Temperature Difference Across Intercooler: {intercooler_air_liquid.deltaT:.2f} K\n")
-        file.write(f"Pressure Drop: {intercooler_air_liquid.pressure_drop:.2f} Pa\n")
-        file.write(f"Primary side Heat Transfer: {intercooler_air_liquid.primary_Qdot_W / 1000:.2f} kW\n\n")
-
-        file.write("Air Filter Results:\n")
-        file.write("-" * 20 + "\n")
-        file.write(f"Pressure Drop: {air_filter.pressure_drop:.2f} Pa\n")
-        file.write(f"Outlet Pressure: {air_filter.pressure_out:.2f} Pa\n\n")
-
-        file.write("Humidifier Results:\n")
-        file.write("-" * 20 + "\n")
-        file.write(f"Dry Air Inlet Pressure: {humidifier.dry_air_pressure_in_Pa:.2f} Pa\n")
-        file.write(f"Wet Air Outlet Pressure: {humidifier.wet_air_pressure_out_Pa:.2f} Pa\n")
-        # file.write(f"Target Vapor Transfer at Point 8: {target_vapor_transfer_kg_s:.6f} kg/s\n")
-        file.write(f"Converged Humidifier Mass Flow (through humidifier): {humidifier_mass_flow_kg_s:.4f} kg/s\n")
-        file.write(f"Interpolated Efficiency: {efficiency:.2f}%\n")
-        file.write(f"Total Wet Outlet Mass Flow: {humidifier.wetmassout['total_mass_flow_wet_out'] * 1000:.2f} g/s\n")
-
-        file.write("Bypass Valve 320 Results:\n")
-        file.write("-" * 20 + "\n")
-        if valve_position is not None:
-            file.write(
-                f"Valve opening percentage to achieve {bypass_mass_flow_kg_s:.4f} g/s bypass flow: {valve_position}%\n")
-        else:
-            file.write("No suitable valve opening percentage found to achieve the target bypass flow.\n\n")
-
-        file.write("Water Separator Results:\n")
-        file.write("-" * 20 + "\n")
-        file.write(f"Pressure Drop: {water_separator.pressure_drop:.2f} Pa\n")
-        file.write(f"Outlet Pressure: {water_separator.pressure_out:.2f} Pa\n\n")
-
-        file.write("Turbine Results:\n")
-        file.write("-" * 20 + "\n")
-        file.write(f"Efficiency: {100 * turbine.isentropic_efficiency:.2f} %\n")
-        file.write(f"Power: {turbine.power_W / 1000:.2f} kW\n")
-        file.write(f"Net Power: {(compressor.power_W - turbine.power_W) / 1000:.2f} kW\n")
-
-    print(f"Simulation results have been saved to {output_file_path}")
+    # Return the results dictionary
+    return results
 
 
-# Uncomment the following to run the simulation when the script is executed
+# Code to run the simulation and save results to Excel in column format
 if __name__ == "__main__":
-    # Run simulation for a given flight level (e.g., 120 for 12,000 feet)
-    simulate_cathode_architecture(flight_level=120)
+    # Run the simulation
+    results = simulate_cathode_architecture(flight_level=120)
+
+    # Convert results to a DataFrame with two columns (one for labels and one for values with units)
+    df = pd.DataFrame(list(results.items()), columns=["Parameter", "Value"])
+    df.to_excel("simulation_results_oneIC.xlsx", index=False)
+    print("Simulation results have been saved to 'simulation_results.xlsx'")
