@@ -89,8 +89,8 @@ class HeatExchanger:
         Calculate the increase in primary fuid temperature depending on the primary/coolant input temperatures.
         This equation was provided by Chris Burger.
         """
-        
-        primary_T_out_K = self.primary_T_in_K - self.efficiency * (self.primary_T_in_K - self.coolant_T_in_K)
+        primary_T_out_K = self.primary_T_in_K - self.effectiveness * (self.primary_T_in_K - self.coolant_T_in_K)
+
         self.primary_T_out_K = primary_T_out_K
         return primary_T_out_K
         
@@ -105,23 +105,31 @@ class HeatExchanger:
         
         return coolant_T_out_K
 
+    def calculate_coolant_T_out_with_efficiency(self) -> float:
+
+        # Calculate the outlet temperature of the cooling fluid
+        coolant_T_out_K = self.coolant_T_in_K + (self.primary_mdot_in_kg_s * (self.primary_T_in_K - self.primary_T_out_K)
+                            ) / (self.efficiency * self.coolant_mdot_in_kg_s)
+
+        return coolant_T_out_K
+
 
 class Intercooler(HeatExchanger):
     def __init__(self, intercooler_type="air_liquid", **kwargs):
         super().__init__(**kwargs)
 
-        # Load the intercooler pressure drop map based on the type
+        self.intercooler_type = intercooler_type
         intercooler_params = cmr.IntercoolerParameters()
 
-        if intercooler_type == "air_liquid":
+        # Only load the required pressure drop map based on intercooler_type
+        if self.intercooler_type == "air_liquid":
             self.pressure_drop_map = intercooler_params.pressure_drop_map_air_liquid
-        elif intercooler_type == "air_air":
+        elif self.intercooler_type == "air_air":
             self.pressure_drop_map_hot = intercooler_params.pressure_drop_map_air_air_hot
             self.pressure_drop_map_cold = intercooler_params.pressure_drop_map_air_air_cold
         else:
             raise ValueError("Invalid intercooler type. Choose 'air_liquid' or 'air_air'.")
 
-        self.intercooler_type = intercooler_type
 
     def calculate_density(self, temperature_K, pressure_Pa):
         """
@@ -275,55 +283,20 @@ class Evaporator(HeatExchanger):
         
         return Qdot_W
     #We know: T_Tank, T_out, massflow , primary
-#
-# # Create an instance of Intercooler with a specific primary mass flow rate
+
+# # Create an instance of Intercooler with specific parameters
 # intercooler_air_air = Intercooler(
-#     intercooler_type="air_air",     # Specify the intercooler type
-#     efficiency=0.49,
+#     intercooler_type="air_air",
+#     efficiency=0.75,
+#     effectiveness=0.65,
 #     primary_fluid="Air",
-#     coolant_fluid="Air",           # Specify air as the coolant fluid for air-air intercooler
-#     primary_mdot_in_kg_s=0.166,    # Example mass flow rate for primary fluid in kg/s
-#     primary_T_in_K=225.28 + 273,   # Example primary fluid inlet temperature in K
-#     primary_p_in_Pa=316000,        # Example primary fluid inlet pressure in Pa
-#     coolant_mdot_in_kg_s=0.2,      # Example mass flow rate for secondary air in kg/s
-#     coolant_T_in_K=293.15          # Example secondary air inlet temperature in K
+#     coolant_fluid="Air",
+#     primary_mdot_in_kg_s=0.166,
+#     primary_T_in_K=225.28 + 273,
+#     primary_p_in_Pa=316000,
+#     coolant_mdot_in_kg_s=0.2,
+#     coolant_T_in_K=293.15
 # )
 #
-# # Calculate the interpolated pressure drop for the hot side of air-air intercooler
-# pressure_drop_hot = intercooler_air_air.get_interpolated_pressure_drop(
-#     intercooler_air_air.primary_T_in_K,
-#     intercooler_air_air.primary_p_in_Pa,
-#     side="hot"
-# )
-#
-# # Calculate the interpolated pressure drop for the cold side of air-air intercooler
-# pressure_drop_cold = intercooler_air_air.get_interpolated_pressure_drop(
-#     intercooler_air_air.primary_T_in_K,
-#     intercooler_air_air.primary_p_in_Pa,
-#     side="cold"
-# )
-#
-# # Print the results
-# print(f"Interpolated Pressure Drop (Hot Side): {pressure_drop_hot:.2f} Pa")
-# print(f"Interpolated Pressure Drop (Cold Side): {pressure_drop_cold:.2f} Pa")
-# # Create an instance of Intercooler for air-liquid
-# intercooler_air_liquid = Intercooler(
-#     intercooler_type="air_liquid",  # Specify the intercooler type
-#     efficiency=0.49,
-#     primary_fluid="Air",
-#     coolant_fluid="Water",
-#     primary_mdot_in_kg_s=0.166,    # Example mass flow rate for primary fluid in kg/s
-#     primary_T_in_K=225.28 + 273,   # Example primary fluid inlet temperature in K
-#     primary_p_in_Pa=316000,        # Example primary fluid inlet pressure in Pa
-#     coolant_mdot_in_kg_s=0.2,      # Example mass flow rate for coolant in kg/s
-#     coolant_T_in_K=293.15          # Example coolant inlet temperature in K
-# )
-#
-# # Calculate the interpolated pressure drop for the air-liquid intercooler
-# pressure_drop_air_liquid = intercooler_air_liquid.get_interpolated_pressure_drop(
-#     intercooler_air_liquid.primary_T_in_K,
-#     intercooler_air_liquid.primary_p_in_Pa
-# )
-#
-# # Print the result
-# print(f"Interpolated Pressure Drop (Air-Liquid): {pressure_drop_air_liquid:.2f} Pa")
+
+
