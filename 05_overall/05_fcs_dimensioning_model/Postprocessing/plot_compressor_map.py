@@ -16,7 +16,7 @@ def scale_convex_hull(hull_points, center_point, scale_factor):
     return scaled_points
 
 # %% PLOT: Compressormap from data
-def plot_compressor_map(plot_params, data, titles, colors, markers, weighting, show_plot, saving=True, mode="bol"):
+def plot_compressor_map(plot_params, data, titles, colors, markers, fl_set, weighting, show_plot, saving=True, mode="bol"):
     """
     Plots the compressor map for multiple datasets in one plot.
 
@@ -35,7 +35,6 @@ def plot_compressor_map(plot_params, data, titles, colors, markers, weighting, s
 
         
     power_set = 160 #kW should be in line with one "Power Constraint" value of the df
-    FL_set = 120
     N = 3 # Specify scaling factor N
     
     scaling_factors = [1 - i/N for i in range(N)]  # Progressive shrinking from 1 to 0
@@ -63,7 +62,9 @@ def plot_compressor_map(plot_params, data, titles, colors, markers, weighting, s
         df = df[(df["eol (t/f)"] == filter_mode) & 
                 (df['current_A (Value)'] <= 700) &
                 (df['weighting ([0,1])'] == weighting)] # filter out eol points, FL and points above 700 A 
-        
+        if df.empty:
+            print(f"No data available for ideal Compressor Map {title} for current_A <= 700 or weighting {weighting}. Skipping plot.")
+            continue  # Skip plotting if no data exists
         # Scatter plot with color based on 'System Power (kW)'
         scatter = ax.scatter(df["Compressor Corrected Air Flow (g/s)"]
                              , df["Compressor Pressure Ratio (-)"], 
@@ -83,7 +84,7 @@ def plot_compressor_map(plot_params, data, titles, colors, markers, weighting, s
         hull = ConvexHull(points)
         
         # Find the point to collapse towards, e.g. 100 kW
-        center_point = df[(df["Power Constraint (kW)"] == power_set) & (df['Flight Level (100x ft)'] == FL_set)][["Compressor Corrected Air Flow (g/s)", "Compressor Pressure Ratio (-)"]]
+        center_point = df[(df["Power Constraint (kW)"] == power_set) & (df['Flight Level (100x ft)'] == fl_set)][["Compressor Corrected Air Flow (g/s)", "Compressor Pressure Ratio (-)"]]
         
         # If no point is found, skip scaling and plotting the hulls
         if center_point.empty:
@@ -124,9 +125,9 @@ def plot_compressor_map(plot_params, data, titles, colors, markers, weighting, s
     fig.tight_layout()
 
     # Save the plot as a PNG file if saving is True
-    if saving:
+    if saving and ax.collections:
         file_path = create_plot_save_directory(f'ideal_compressor_map_{mode_name}.png', weighting)
         plt.savefig(file_path, bbox_inches='tight')
     
     # Show the plot
-    plt.show() if show_plot else plt.close()
+    plt.show() if show_plot and ax.collections else plt.close()

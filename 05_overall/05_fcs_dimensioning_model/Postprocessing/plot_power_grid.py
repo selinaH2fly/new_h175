@@ -24,6 +24,9 @@ def plot_power_needs(plot_params, data, titles, fl_set, weighting, show_plot, sa
         #Formate the data to the needed formate:
         df = format_data_for_plot(df1, plot_params['components'], fl_set, plot_params['power_range'], weighting, eol_col='eol (t/f)')
         
+        if df.empty:
+            print(f"No data available for Component Powers {title} at FL {fl_set} or for weighting {weighting}. Skipping plot.")
+            continue  # Skip plotting if no data exists        
         # Set up the figure and axis
         fig, ax = plt.subplots(figsize=(10, 8))
     
@@ -60,8 +63,8 @@ def plot_power_needs(plot_params, data, titles, fl_set, weighting, show_plot, sa
         ax.set_title(title, pad=30, loc='center')
     
         # Save and show the plot
-        if saving:
+        if saving and ax.collections:
             file_path = create_plot_save_directory((f'Component_Powers_{title}_weighting_{weighting}.png'), weighting)
             plt.savefig(file_path, bbox_inches='tight')
  
-        plt.show() if show_plot else plt.close()
+        plt.show() if show_plot and ax.texts else plt.close()

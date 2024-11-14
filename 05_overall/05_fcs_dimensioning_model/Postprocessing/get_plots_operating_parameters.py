@@ -44,6 +44,9 @@ def plot_optimized_parameters(plot_params, data, data_doe, titles, fl_set, marke
     for df, title in zip(data, titles):
 
         df = filter_data_by_f1_and_weight(df, fl_set, weighting)
+        if df.empty:
+            print(f"No data available for Optimized Operating Parameters {var} {title} at FL {fl_set} or for weighting {weighting}. Skipping plot.")
+            continue  # Skip plotting if no data exists
         fig, ax = plt.subplots(figsize=(12, 8))
         
         # Create a colormap and normalize for the color gradient
@@ -105,9 +108,9 @@ def plot_optimized_parameters(plot_params, data, data_doe, titles, fl_set, marke
     
         
         # Save the plot as a PNG file if saving is True
-        if saving:
+        if saving and ax.collections:
             directory = 'Optimized_Operating_Parameters'
             file_path = create_plot_save_directory(f'{var}_{title}_weighting_{weighting}.png', weighting, directory)
             plt.savefig(file_path, bbox_inches='tight')
             
-        plt.show() if show_plot else plt.close()
+        plt.show() if show_plot and ax.collections else plt.close()
