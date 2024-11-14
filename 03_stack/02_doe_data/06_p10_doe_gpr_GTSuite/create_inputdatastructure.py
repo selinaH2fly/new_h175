@@ -131,7 +131,7 @@ combined_data = combined_data.dropna()
 # convert all columns to numeric (without this line, calculation fails)
 combined_data = combined_data.apply(pd.to_numeric, errors='coerce')
 # add new columns and execute calculations
-combined_data['m_dot_cool_in_set']  = 72.8 + combined_data['I_Stack_A'] * combined_data['c_cool_I_l_min_A'] 
+combined_data['m_dot_cool_in_set_g_s']  = 72.8 + combined_data['I_Stack_A'] * combined_data['c_cool_I_l_min_A'] 
 combined_data['p_an_out_set_bar']   = combined_data['p_cat_out_set_bar'] * combined_data['factor_dp_a2c_1']
 combined_data['T_cat_in_C']         = combined_data['T_cat_in_K']   - 273.15
 combined_data['T_an_in_C']          = combined_data['T_an_in_K']    - 273.15
