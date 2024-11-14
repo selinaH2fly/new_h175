@@ -75,7 +75,7 @@ class Compressor:
 
         # Determine the operating point if a real-world compressor map is provided
         if self.compressor_map is not None:
-            efficiency, _ = self._interpolate_efficiency()
+            efficiency, compressor_map_point = self._interpolate_efficiency()
             compressor_shaft_power_W = compressor_isentropic_power_W / efficiency
         else:
             compressor_shaft_power_W = compressor_isentropic_power_W / self.isentropic_efficiency
@@ -83,7 +83,7 @@ class Compressor:
         # Compute the electric power
         compressor_electric_power_W = compressor_shaft_power_W / self.electric_efficiency
 
-        return compressor_electric_power_W
+        return compressor_electric_power_W, compressor_map_point
 
     def _interpolate_efficiency(self) -> float:
         """
@@ -103,7 +103,7 @@ class Compressor:
         # Interpolate the efficiency at the target pressure ratio and mass flow
         efficiency = griddata(np.array([map_mass_flow_g_s, map_pressure_ratio]).T, map_efficiency,
                                 (corrected_mass_flow_g_s, pressure_ratio), method='linear', rescale=True, fill_value=1e-3)
-
+            
         return efficiency.item(), [pressure_ratio, corrected_mass_flow_g_s]
 
     def plot_compressor_map(self):
@@ -218,7 +218,7 @@ class Compressor:
             - "sd": Compressor mass in kg based on the standard deviation of mass_by_power_kg_kW.
 
         """
-        compressor_el_power_W = self.calculate_power()
+        compressor_el_power_W, _ = self.calculate_power()
         compressor_mass_mean_kg = self.mass_by_power_kg_kW["mean"] * compressor_el_power_W / 1000
         compressor_mass_sd_kg = self.mass_by_power_kg_kW["sd"] * compressor_el_power_W / 1000
         
@@ -233,5 +233,5 @@ mass_estimator = Mass_Parameters()
 C1 = Compressor(mass_estimator, isentropic_efficiency=0.75, electric_efficiency=0.95, air_mass_flow_kg_s=1.2,
                 temperature_in_K=293.15, pressure_in_Pa=1.013e5, pressure_out_Pa=2.013e5)
 
-power_el = C1.calculate_power()
-mass = C1.calculate_mass()
+#power_el,_ = C1.calculate_power()
+#mass = C1.calculate_mass()

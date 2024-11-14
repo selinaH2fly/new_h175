@@ -28,6 +28,47 @@ from basic_physics import compute_air_mass_flow, icao_atmosphere, convert
 from mass_estimation import sum_fixed_mass, sum_power_dependent_mass, sum_cellcount_dependent_mass
 from shapely.geometry import Point
 
+def alphashape_function(DoE_data, alpha):
+    points = np.array(DoE_data, dtype=float)
+    alpha_shape = alphashape.alphashape(points, alpha)
+    
+    
+    #is_inside = alpha_shape.contains(optimized_point)
+    # Separate points that are inside the alpha shape
+    inside_points = [point for point in points if alpha_shape.contains(Point(point))]  # Unpack each point
+    outside_points = [point for point in points if not alpha_shape.contains(Point(point))]  # Unpack each point
+    # Convert lists to numpy arrays for easy plotting
+    inside_points = np.array(inside_points)
+    outside_points = np.array(outside_points)
+    # Plot the alpha shape boundary and points
+
+    # # Plot points inside the alpha shape in blue
+    # plt.scatter(inside_points[:, 0], inside_points[:, 1], color='blue', label='Inside Points')
+
+    # # Plot points outside the alpha shape in red
+    # plt.scatter(outside_points[:, 0], outside_points[:, 1], color='red', label='Outside Points')
+
+    # # Plot the alpha shape boundary
+    # if alpha_shape.geom_type == 'Polygon':
+    #     x, y = alpha_shape.exterior.xy
+    #     plt.plot(x, y, color='green', linewidth=2, label='Alpha Shape Boundary')
+    #     #plt.plot(random_point[0],random_point[1], "ko")
+    # elif alpha_shape.geom_type == 'MultiPolygon':
+    #     for polygon in alpha_shape:
+    #         x, y = polygon.exterior.xy
+    #         plt.plot(x, y, color='green', linewidth=2)
+    # #plt.xlim(0, 750)
+    # plt.ylim(0,max(outside_points[:, 1]))
+    # plt.xlabel("X-coordinate")
+    # plt.ylabel("Y-coordinate")
+
+    # plt.title("Alpha Shape with Inside and Outside Points")
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
+    
+    return alpha_shape
+
 def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model, anode_pressure_drop_model, flight_level_100ft, cellcount=275,
                                  power_constraint_kW=None, consider_turbine=True, compressor_map=None, end_of_life=False,
                                  multiobjective_weighting=0, constraint=True):
@@ -81,49 +122,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
 
     # define alpha shape function
-    def alphashape_function(DoE_data, alpha):
-        points = np.array(DoE_data, dtype=float)
-        alpha_shape = alphashape.alphashape(points, alpha)
-        
-        
-        #is_inside = alpha_shape.contains(optimized_point)
-        # Separate points that are inside the alpha shape
-        inside_points = [point for point in points if alpha_shape.contains(Point(point))]  # Unpack each point
-        outside_points = [point for point in points if not alpha_shape.contains(Point(point))]  # Unpack each point
-        # Separate points that are inside or outside the alpha shape
-
-
-        # Convert lists to numpy arrays for easy plotting
-        inside_points = np.array(inside_points)
-        outside_points = np.array(outside_points)
-        # Plot the alpha shape boundary and points
-
-        # Plot points inside the alpha shape in blue
-        # plt.scatter(inside_points[:, 0], inside_points[:, 1], color='blue', label='Inside Points')
-
-        # # Plot points outside the alpha shape in red
-        # plt.scatter(outside_points[:, 0], outside_points[:, 1], color='red', label='Outside Points')
-
-        # # Plot the alpha shape boundary
-        # if alpha_shape.geom_type == 'Polygon':
-        #     x, y = alpha_shape.exterior.xy
-        #     plt.plot(x, y, color='green', linewidth=2, label='Alpha Shape Boundary')
-        #     #plt.plot(random_point[0],random_point[1], "ko")
-        # elif alpha_shape.geom_type == 'MultiPolygon':
-        #     for polygon in alpha_shape:
-        #         x, y = polygon.exterior.xy
-        #         plt.plot(x, y, color='green', linewidth=2)
-        # plt.xlim(0, 750)
-        # plt.ylim(0,max(outside_points[:, 1]))
-        # plt.xlabel("X-coordinate")
-        # plt.ylabel("Y-coordinate")
-
-        # plt.title("Alpha Shape with Inside and Outside Points")
-        # plt.legend()
-        # plt.grid(True)
-        # plt.show()
-        
-        return alpha_shape
 
         ## Alpha Value Info
     # cathode_rh = 0.01
@@ -162,6 +160,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
                                    compressor_map=compressor_map, nominal_air_flow_kg_s=_params_compressor.nominal_air_flow_kg_s,
                                    reference_ambient_conditions=(_params_compressor.reference_pressure_Pa, _params_compressor.reference_temperature_K))
     
+
     turbine         =   Turbine(mass_estimator=_params_mass, isentropic_efficiency=_params_turbine.isentropic_efficiency,
                                 temperature_out_K=temperature_ambient_K, pressure_out_Pa=pressure_ambient_Pa,
                                 nominal_BoP_pressure_drop_Pa=_params_turbine.nominal_BoP_pressure_drop_Pa,
@@ -267,7 +266,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         compressor.pressure_out_Pa = convert(optimized_pressure_cathode_in_bara, "bara", "Pa") + compressor.calculate_BoP_pressure_drop() # compressor_out == cathode_in + BoP_pressure_drop (compressor out -> cathode in)
         compressor.temperature_out_K = compressor.calculate_T_out()
         # Calculate compressor power
-        compressor_power_W = compressor.calculate_power()
+        compressor_power_W, compressor_map_point = compressor.calculate_power()
 
         # TODO: Move the turbine computations to a separate function
         if consider_turbine:
@@ -531,8 +530,24 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
 
         return 1 if is_inside else -1
 
+    #print("hier ist meine compressor map",compressor.compressor_map["corrected_massflow_g_s"])
+    compressor_map_df = pd.DataFrame(compressor.compressor_map)
+    compressor_map_df = compressor_map_df[['corrected_massflow_g_s','pressure_ratio']]
+    print(compressor_map_df)
+    alphashape_compressor_map = alphashape_function(compressor_map_df, 0.001)
+
+    def nlc_Compressor_Map(x):
+        x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
+        compressor.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=x_scaled[2], current_A=x_scaled[0], cellcount=cellcount)
+        compressor.pressure_out_Pa = convert(x_scaled[3], "bara", "Pa") + compressor.calculate_BoP_pressure_drop() # compressor_out == cathode_in + BoP_pressure_drop (compressor out -> cathode in)
+        compressor.temperature_out_K = compressor.calculate_T_out()
+        _, compressor_map_point = compressor.calculate_power()
+        is_inside = alphashape_compressor_map.contains(Point(compressor_map_point))
+        return 1 if is_inside else -1
+
     # Check for DoE constraint setting and define the nonlinear constraints
     nlc_power = NonlinearConstraint(nonlinear_constraint_Power, 0, 1000)
+    nlc_compressor = NonlinearConstraint(nlc_Compressor_Map,0,np.inf)
     nlc_temp = NonlinearConstraint(nonlinear_constraint_Temp, 1e-3, np.inf)
     nlc_anode = NonlinearConstraint(nonlinear_constraint_Anode_Pressure,0,np.inf)
     nlc_DoE_rh = NonlinearConstraint(nlc_DoE_cathode_rh,0, np.inf)
@@ -540,8 +555,13 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     nlc_DoE_stack_pressure = NonlinearConstraint(nlc_DoE_pressure_stack,0, np.inf)
     nlc_DoE_coolantPump = NonlinearConstraint(nlc_DoE_coolant,0, np.inf)
     nlc_DoE_an_stoich = NonlinearConstraint(nlc_DoE_anode_stoich,0, np.inf)
-    if constraint:            
+    
+    if constraint==True and compressor_map is not None:            
+        nlc = [nlc_power, nlc_DoE_rh, nlc_DoE_cath_stoich, nlc_DoE_stack_pressure, nlc_DoE_coolantPump, nlc_DoE_an_stoich, nlc_compressor]
+    elif constraint:
         nlc = [nlc_power, nlc_DoE_rh, nlc_DoE_cath_stoich, nlc_DoE_stack_pressure, nlc_DoE_coolantPump, nlc_DoE_an_stoich]
+    elif compressor_map is not None:
+        nlc = [nlc_power, nlc_temp, nlc_anode, nlc_compressor]
     else:
         nlc = [nlc_power, nlc_temp, nlc_anode]
 

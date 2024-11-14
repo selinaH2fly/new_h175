@@ -1,6 +1,8 @@
 ''' This file contains the parameter definitions for the input variable optimization.'''
 
 import numpy as np
+import pandas as pd
+import os
 from collections import namedtuple # Used to create a datacontainer for evaluate_models(x) return
 
 class VariableContainer:
@@ -100,7 +102,9 @@ class Assumptions:
 class Compressor_Parameters:
 
     def __init__(self):
-
+        path = os.getcwd()
+        print(path)
+        compressor_map_joby = pd.read_csv('../Components/20211113_Verdichterkennfeld_Joby.csv')
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
         self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
@@ -151,6 +155,14 @@ class Compressor_Parameters:
             "reference_pressure_Pa": 1.01325 * 1e5,
             "reference_temperature_K": 25 + 273.15
         }
+        self.compressor_map_Joby = {
+            "corrected_massflow_g_s":np.array(compressor_map_joby["Massenstrom"]*1000) ,
+            "pressure_ratio":np.array( compressor_map_joby["Druckverhaeltnis"]),
+            "efficiency": np.array(compressor_map_joby["Efficiency"]), 
+            "reference_pressure_Pa": 39875,
+            "reference_temperature_K": -16 + 273.15
+        }
+
 
 class Turbine_Parameters:
 
