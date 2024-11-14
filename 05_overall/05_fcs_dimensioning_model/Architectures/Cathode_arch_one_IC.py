@@ -48,7 +48,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
 
     # Calculate dry air mass flow based on input parameters
     dry_air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=stoich_cathode, current_A=current_A, cellcount=cellcount)
-
+    print(dry_air_mass_flow_kg_s)
     # Calculate the oxygen mass flow rate consumed in the stack
     depleted_o2 = compute_reacted_o2_mass_flow_kg_s(current_A=current_A, cellcount=cellcount)
 
@@ -225,10 +225,10 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     humidifier.wetmassin = humidifier.calculate_wet_inlet_mass_flows()
 
     humidifier.initial_efficiency  = humidifier.get_efficiency()
-    humidifier.target_RH = 0.5
+    humidifier.target_RH =inputs.target_RH
     ##TODO change target rh to a variable
     # Calculate target vapor transfer to achieve desired RH at Point 8
-    target_vapor_transfer_kg_s = humidifier.calculate_target_vapor_transfer(inputs.temperatures_K["TTC8"],0.55)
+    target_vapor_transfer_kg_s = humidifier.calculate_target_vapor_transfer(inputs.temperatures_K["TTC8"],humidifier.target_RH)
 
     def iterate_for_mixed_RH():
         current_efficiency = 0.35  # Initial efficiency
@@ -345,7 +345,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     turbine = Turbine(
         mass_estimator=_mass_estimator,
         isentropic_efficiency=_params_turbine.isentropic_efficiency,
-        temperature_in_K=inputs.temperatures_K["TTC13"],
+        temperature_in_K=inputs.temperatures_K["TTC10"],
         pressure_in_Pa=water_separator.pressure_out,
         pressure_out_Pa=inputs.pressures_Pa["PTC14"],
         air_mass_flow_kg_s=humidifier.wetmassout["total_mass_flow_wet_out"],
