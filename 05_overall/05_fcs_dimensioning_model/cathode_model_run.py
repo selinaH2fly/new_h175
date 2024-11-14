@@ -22,15 +22,11 @@ class Input:
             "PTC2": 3.26,  # Pressure after compressor
             "PTC3": 3.13,  # Pressure after intercooler, air-air, warm side
             "PTC4": 3.15,  # Pressure after intercooler, air-liq
-          #  "PTC5": 2.4,  # Pressure after air filter
-          #  "PTC6": 2.3,  # Pressure before valve
+
             "PTC7": 3,  # Pressure after humidifier, dry
             "PTC8": 3,  # Pressure before stack
             "PTC9": 2.7,  # Pressure after stack
-           # "PTC10": 2.1, # Pressure after humidifier,wet
-           # "PTC11": 1.8, # Pressure before intercooler, air-air, cold side
-            #"PTC13": 1.8, # Pressure after water separator
-           # "PTC12": 1.7, # Pressure after intercooler, air-air, cold side
+
             "PTC14": 0.64  # Pressure after turbine
 
         }
@@ -38,19 +34,11 @@ class Input:
         # Temperature initialization in degrees Celsius
         self.temperatures_degC = {
             "TTC1": 6.3,     # Ambient temperature
-            #"TTC2": 80,    # Temperature after compressor
-           # "TTC3": 80,     # Temperature after intercooler, air-air
-            "TTC4": 75,     # Temperature after intercooler, air-liq
-           # "TTC7": 80,   # Temperature after humidifier, to be calculated
-           # "TTC5": 80,  # Temperature before humidifier, to be calculated
-          #  "TTC6": 80,  # Temperature before valve, to be calculated
-            "TTC8": 78,  # Temperature before stack
+            "TTC4": 72,     # Temperature after intercooler, air-liq
+            "TTC8": 75,  # Temperature before stack
             "TTC9": 82,   # Temperature after stack
             "TTC10": 77,  # Temperature after humidifier,wet
-          #  "TTC11": 77,  # Temperature before intercooler, air-air, cold side
             "TTC13": 77,  # Temperature after water separator
-           # "TTC12": 77,  # Temperature after intercooler, air-air, cold side
-         #   "TTC14": 77,  # Temperature after turbine
             "T_cool": 60    # Temperature of coolant input to IC air-liq
         }
 

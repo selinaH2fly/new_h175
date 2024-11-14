@@ -19,7 +19,7 @@ from Components.turbine import Turbine
 from basic_physics import compute_air_mass_flow, compute_reacted_o2_mass_flow_kg_s, icao_atmosphere
 
 # Function to simulate the architecture
-def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cathode=1.7, current_A=600, cellcount=455):
+def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cathode=1.6, current_A=600, cellcount=455):
     """
     Arguments:
     - flight_level (int): Altitude in flight levels.
@@ -51,7 +51,6 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
 
     # Calculate the oxygen mass flow rate consumed in the stack
     depleted_o2 = compute_reacted_o2_mass_flow_kg_s(current_A=current_A, cellcount=cellcount)
-
     # Instantiate the compressor with initial conditions and parameters
     compressor = Compressor(
         mass_estimator=_mass_estimator,
@@ -281,7 +280,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     humidifier.target_RH = 0.5
     ##TODO change target rh to a variable
     # Calculate target vapor transfer to achieve desired RH at Point 8
-    target_vapor_transfer_kg_s = humidifier.calculate_target_vapor_transfer(inputs.temperatures_K["TTC8"], 0.50)
+    target_vapor_transfer_kg_s = humidifier.calculate_target_vapor_transfer(inputs.temperatures_K["TTC8"], 0.55)
 
     def iterate_for_mixed_RH():
         current_efficiency = 0.35  # Initial efficiency
@@ -412,15 +411,18 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     turbine = Turbine(
         mass_estimator=_mass_estimator,
         isentropic_efficiency=_params_turbine.isentropic_efficiency,
-        temperature_in_K=inputs.temperatures_K["TTC13"],
+        temperature_in_K=intercooler_air_air.coolant_T_out_K,
         pressure_in_Pa=water_separator.pressure_out,
-        pressure_out_Pa=inputs.pressures_Pa["PTC1"],
+        pressure_out_Pa=inputs.pressures_Pa["PTC14"],
         air_mass_flow_kg_s=humidifier.wetmassout["total_mass_flow_wet_out"],
         turbine_map=None)
 
     # Calculate turbine output temperature, efficiency, and power
     turbine.temperature_out_K = turbine.calculate_T_out()
     turbine.power_W = turbine.calculate_power()
+
+
+
 
     # Calculate turbine output temperature, efficiency, and power
     turbine.temperature_out_K = turbine.calculate_T_out()
@@ -437,19 +439,19 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
 
         "Intercooler Air-Air Primary(Warm) Outlet Temperature": f"{intercooler_air_air.primary_temperature_out_K - 273.15:.2f} °C",
         "Intercooler Air-Air Primary(Warm) Temperature Difference": f"{intercooler_air_air.primary_deltaT:.2f} K",  # No conversion needed
-        "Intercooler Air-Air Primary(Warm) Pressure Drop": f"{intercooler_air_air.primary_pressure_drop / 1e5:.2f} bara",
+        "Intercooler Air-Air Primary(Warm) Pressure Drop": f"{intercooler_air_air.primary_pressure_drop / 1e5:.4f} bara",
         "Intercooler Air-Air Primary(Warm) Outlet Pressure": f"{intercooler_air_air.primary_p_out_Pa/ 1e5:.2f} bara",
         "Intercooler Air-Air Primary(Warm) Heat Transfer": f"{intercooler_air_air.primary_Qdot_W / 1000:.2f} kW",
 
         "Intercooler Air-Air Secondary(Cold) Inlet Temperature": f"{intercooler_air_air.coolant_T_in_K - 273.15:.2f} °C",
         "Intercooler Air-Air Secondary(Cold) Outlet Temperature": f"{intercooler_air_air.coolant_T_out_K- 273.15:.2f} °C",
         "Intercooler Air-Air Secondary(Cold) Temperature Difference": f"{ intercooler_air_air.coolant_deltaT:.2f} K",  # No conversion needed
-        "Intercooler Air-Air Secondary(Cold)  Pressure Drop": f"{intercooler_air_air.coolant_pressure_drop / 1e5:.2f} bara",
+        "Intercooler Air-Air Secondary(Cold)  Pressure Drop": f"{intercooler_air_air.coolant_pressure_drop / 1e5:.4f} bara",
         "Intercooler Air-Air Secondary(Cold)  Outlet Pressure": f"{intercooler_air_air.coolant_p_out_Pa / 1e5:.2f} bara",
         "Intercooler Air-Air Secondary(Cold)  Heat Transfer": f"{intercooler_air_air.coolant_Qdot_W/ 1000:.2f} kW",
 
         "Intercooler Air-Liquid Primary(Warm) Temperature Difference": f"{intercooler_air_liquid.deltaT:.2f} K",
-        "Intercooler Air-Liquid Primary(Warm) Pressure Drop": f"{intercooler_air_liquid.pressure_drop / 1e5:.2f} bara",
+        "Intercooler Air-Liquid Primary(Warm) Pressure Drop": f"{intercooler_air_liquid.pressure_drop / 1e5:.4f} bara",
         "Intercooler Air-Liquid Primary(Warm) Outlet Pressure": f"{intercooler_air_liquid.primary_p_out_Pa / 1e5:.2f} bara",
         "Intercooler Air-Liquid Primary(Warm) Heat Transfer": f"{intercooler_air_liquid.primary_Qdot_W/ 1000:.2f} kW",
         "Intercooler Air-Liquid Secondary(Cold) Inlet Temperature": f"{intercooler_air_liquid.coolant_temperature_in_K - 273.15:.2f} °C",
@@ -466,7 +468,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         "Valve Bypass Flow": f"{bypass_mass_flow_kg_s * 1000:.2f} g/s",
         "Valve Position": f"{valve_position:.2f} %",
 
-        "Water Separator Pressure Drop": f"{water_separator.pressure_drop / 1e5:.3f} bara",
+        "Water Separator Pressure Drop": f"{water_separator.pressure_drop / 1e5:.4f} bara",
         "Water Separator Outlet Pressure": f"{water_separator.pressure_out / 1e5:.2f} bara",
 
         "Turbine Inlet Temperature": f"{turbine.temperature_in_K - 273.15:.2f} °C",

@@ -158,7 +158,7 @@ class Turbine:
             "mean": turbine_mass_mean_kg,
             "sd": turbine_mass_sd_kg
         }
-
+#
 # # Example instantiation
 # from cathode_model_run import Mass_Parameters, TurbineParameters
 #
@@ -169,10 +169,10 @@ class Turbine:
 # turbine_instance = Turbine(
 #     mass_estimator=mass_estimator,
 #     isentropic_efficiency=0.65,       # Define a fixed efficiency
-#     air_mass_flow_kg_s=0.159,         # Example input mass flow rate in kg/s
-#     temperature_in_K=77 + 273,        # Example inlet temperature in Kelvin
-#     pressure_in_Pa=2.52e5,            # Example inlet pressure in Pa
-#     pressure_out_Pa=0.77e5,           # Example outlet pressure in Pa
+#     air_mass_flow_kg_s=0.1215,         # Example input mass flow rate in kg/s
+#     temperature_in_K=444,        # Example inlet temperature in Kelvin
+#     pressure_in_Pa=2.48e5,            # Example inlet pressure in Pa
+#     pressure_out_Pa=0.63e5,           # Example outlet pressure in Pa
 #     turbine_map=None                  # No turbine map
 # )
 #
