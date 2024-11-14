@@ -19,7 +19,7 @@ from Components.turbine import Turbine
 from basic_physics import compute_air_mass_flow, compute_reacted_o2_mass_flow_kg_s, icao_atmosphere
 
 # Function to simulate the architecture
-def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cathode=1.6, current_A=600, cellcount=455):
+def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cathode=1.6, current_A=450, cellcount=455):
     """
     Arguments:
     - flight_level (int): Altitude in flight levels.
@@ -60,7 +60,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
         air_mass_flow_kg_s=dry_air_mass_flow_kg_s,
         temperature_in_K=inputs.temperatures_K["TTC1"],
         pressure_in_Pa=inputs.pressures_Pa["PTC1"],
-        pressure_out_Pa=inputs.pressures_Pa["PTC1"] + 10000,  # Initial guess for pressure rise
+        pressure_out_Pa=inputs.pressures_Pa["PTC2"] ,  # Initial guess for pressure rise
         compressor_map=compressor_map,
     )
 
@@ -96,15 +96,20 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
 
         # Use the current estimate of pout to calculate mean pressure and temperature
         intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid_primary_p_out_Pa
+
         intercooler_air_liquid.mean_p_in_Pa = (
-                                                      intercooler_air_liquid.primary_p_in_Pa + intercooler_air_liquid.primary_p_out_Pa) / 2
+                                                      intercooler_air_liquid.primary_p_in_Pa + intercooler_air_liquid.primary_p_out_Pa
+                                              ) / 2
         intercooler_air_liquid.mean_T_in_K = (
-                                                     intercooler_air_liquid.primary_T_in_K + intercooler_air_liquid.primary_T_out_K) / 2
+                                                     intercooler_air_liquid.primary_T_in_K + intercooler_air_liquid.primary_T_out_K
+                                             ) / 2
 
         # Calculate intercooler pressure drop
         intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop(
             intercooler_air_liquid.mean_T_in_K, intercooler_air_liquid.mean_p_in_Pa
         )
+        if intercooler_air_liquid.pressure_drop < 0:
+            intercooler_air_liquid.pressure_drop = 0
 
         # Step 3: Set up the air filter with the latest calculated pressure out
         air_filter = FuelCellAirFilter(
@@ -118,6 +123,8 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
 
         # Calculate and update the air filter pressure drop
         air_filter.pressure_drop = air_filter.get_pressure_drop()
+        if air_filter.pressure_drop < 0:
+            air_filter.pressure_drop = 0
         air_filter_pressure_out_Pa = air_filter.pressure_in_Pa - air_filter.pressure_drop
 
         # Step 4: Instantiate and calculate humidifier properties
@@ -177,12 +184,16 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
 
     # Use the final stored outlet pressure from the iteration
     intercooler_air_liquid.primary_p_out_Pa = intercooler_air_liquid_primary_p_out_Pa
+
+
     intercooler_air_liquid.mean_p_in_Pa = (intercooler_air_liquid.primary_p_in_Pa + intercooler_air_liquid.primary_p_out_Pa) / 2
     intercooler_air_liquid.mean_T_in_K = (intercooler_air_liquid.primary_T_in_K + intercooler_air_liquid.primary_T_out_K) / 2
 
     # Calculate the pressure drop
     intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop(intercooler_air_liquid.mean_T_in_K,
                                             intercooler_air_liquid.mean_p_in_Pa)
+    if intercooler_air_liquid.pressure_drop < 0:
+        intercooler_air_liquid.pressure_drop = 0
 
     intercooler_air_liquid.deltaT = intercooler_air_liquid.primary_T_in_K - intercooler_air_liquid.primary_T_out_K
 
@@ -201,7 +212,8 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
 
     # Calculate pressure drop based on initial or updated conditions
     air_filter.pressure_drop = air_filter.get_pressure_drop()
-
+    if air_filter.pressure_drop < 0:
+        air_filter.pressure_drop = 0
     humidifier = Humidifier(
         dry_air_mass_flow_kg_s=intercooler_air_liquid.primary_mdot_in_kg_s,
         o2_mass_flow_rate=depleted_o2,
@@ -229,6 +241,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     ##TODO change target rh to a variable
     # Calculate target vapor transfer to achieve desired RH at Point 8
     target_vapor_transfer_kg_s = humidifier.calculate_target_vapor_transfer(inputs.temperatures_K["TTC8"],humidifier.target_RH)
+    print("Target Vapor Transfer (kg/s):", target_vapor_transfer_kg_s)
 
     def iterate_for_mixed_RH():
         current_efficiency = 0.35  # Initial efficiency
@@ -248,11 +261,14 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
             # Step 1: Calculate vapor dry out based on current efficiency
             m_dot_vap_dry_out = current_efficiency * humidifier.wetmassin[
                 'm_dot_vap_wet_in']  # Efficiency = vapor dry out / vapor wet in
+            print("m_dot_vap_dry_out:", m_dot_vap_dry_out)
 
-            target_vapor_kg_s = target_vapor_transfer_kg_s
+            target_vapor_kg_s = humidifier.calculate_target_vapor_transfer(inputs.temperatures_K["TTC8"],inputs.target_RH)
+            print("target_vapor_kg_s:", target_vapor_kg_s)
 
             # Step 2: Calculate Valve vapor mass flow using mass balance
             Valve_vapor_out_kg_s = max(0, target_vapor_kg_s - m_dot_vap_dry_out)  # Prevent negative valve vapor flow
+            print("Valve_vapor_out_kg_s:", Valve_vapor_out_kg_s)
 
             # Step 3: Calculate Valve air mass flow (using RH, T, P, vapor mass flow)
             Valve_partial_pressure_vapor_Pa = humidifier.calculate_partial_pressure(
@@ -306,6 +322,7 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
             # Update the efficiency for the next iteration
             current_efficiency = 0.5 * current_efficiency + 0.5 * efficiency_from_map
 
+
         # Return the calculated values, including updated humidifier parameters
         return RH_mix, efficiency_from_map, Valve_total_flow_kg_s, humidifier.dry_air_mass_flow_kg_s, RH_vapor_dry_out
 
@@ -317,9 +334,11 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
     humidifier.wetmassout = humidifier.calculate_wet_outlet_mass_flows(humidifier.efficiency)
 
     # Calculate bypass flow
-    bypass_mass_flow_kg_s = intercooler_air_liquid.primary_mdot_in_kg_s - humidifier.dry_air_mass_flow_kg_s
-
+    humidifier.total_mass_flow_dry_in_kg_s = humidifier.drymassin["total_mass_flow_dry_out"]
+    print("humidifier.total_mass_flow_dry_in_kg_s:", humidifier.total_mass_flow_dry_in_kg_s)
     humidifier.total_mass_flow_wet_out_kg_s = humidifier.wetmassout["total_mass_flow_wet_out"]
+    bypass_mass_flow_kg_s = intercooler_air_liquid.primary_mdot_in_kg_s - humidifier.total_mass_flow_dry_in_kg_s
+
 
     valve = Valve(
         total_air_mass_flow_kg_s=bypass_mass_flow_kg_s,
@@ -353,7 +372,9 @@ def simulate_cathode_architecture(flight_level, compressor_map=None, stoich_cath
 
     # Calculate turbine output temperature, efficiency, and power
     turbine.temperature_out_K = turbine.calculate_T_out()
-    turbine.power_W = turbine.calculate_power()
+
+
+    turbine.power_W = turbine.calculate_power(turbine.temperature_out_K)
 
 
     # Dictionary to store the results with converted units
@@ -404,5 +425,5 @@ if __name__ == "__main__":
 
     # Convert results to a DataFrame with two columns (one for labels and one for values with units)
     df = pd.DataFrame(list(results.items()), columns=["Parameter", "Value"])
-    df.to_excel("simulation_results_oneIC.xlsx", index=False)
+    df.to_excel("simulation_results_oneIC_450.xlsx", index=False)
     print("Simulation results have been saved to 'simulation_results.xlsx'")
