@@ -30,7 +30,7 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
     weightings = params_general['weightings']  # Only plot weightings 0 and 1
     titles = params_general['titles']
 
-    markers = params_general['markers']  # Circle for weighting 0, Diamond for weighting 1
+    markers = ['o', 'D'] # Circle for weighting 0, Diamond for weighting 1
 
     colors = params_general['colors']
 
@@ -45,12 +45,14 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
 
 
     eol = False  # Assuming eol remains constant in all cases
-    for fl, weighting in itertools.product(fl, weightings):
+    for fl in fl:
+    #for fl in fl:
+    
         fig, axs = plt.subplots(1, num_plots, figsize=(6 * num_plots, 6))  # Dynamically adjust figure size
         if num_plots == 1:
             axs = [axs]  # Convert to list if only one subplot is present
-        for ax, df, title, color, marker in zip(axs, data, titles, colors, markers):   
-            print(f"fl: {fl}, weighting: {weighting}, title {title}, color {color}")
+        for ax, df, title, color in zip(axs, data, titles, colors):   
+            print(f"fl: {fl},  title {title}, color {color}")
 
             df_filtered = df[(df['Flight Level (100x ft)'] == fl) & (df['eol (t/f)'] == eol)]
             
@@ -65,21 +67,22 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
             all_points_y = []
             all_power = []  # Collect 'System Power (kW)' for coloring
 
-            df_weighted = df_filtered[df_filtered["weighting ([0,1])"] == weighting]
-            
-            if df_weighted.empty:
-                print(f"No data available for weighting {weighting} in {title}.")
-                continue
+        
+            for weighting, marker in zip(weightings, markers):
+                df_weighted = df_filtered[df_filtered["weighting ([0,1])"] == weighting]
+                
+                if df_weighted.empty:
+                    print(f"No data available for weighting {weighting} in {title}.")
+                    continue
 
-            # Scatter plot with color based on 'System Power (kW)'
-            scatter = ax.scatter(df_weighted['System Mass (kg)'], 
-                                df_weighted['Hydrogen Supply Rate (g/s)'], 
-                                s=100, edgecolor='k', 
-                                c=df_weighted['System Power (kW)'],  # Color based on power
-                                cmap='viridis', norm=norm, 
-                                marker=marker, label=f'Weighting {weighting}',
-                                zorder=2)
-
+                # Scatter plot with color based on 'System Power (kW)'
+                scatter = ax.scatter(df_weighted['System Mass (kg)'], 
+                                    df_weighted['Hydrogen Supply Rate (g/s)'], 
+                                    s=100, edgecolor='k', 
+                                    c=df_weighted['System Power (kW)'],  # Color based on power
+                                    cmap='viridis', norm=norm, 
+                                    marker=marker, label=f'Weighting {weighting}',
+                                    zorder=2)
             # Collect points for convex hull
             all_points_x.extend(df_weighted['System Mass (kg)'].values)
             all_points_y.extend(df_weighted['Hydrogen Supply Rate (g/s)'].values)
@@ -96,7 +99,7 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
             connect_power_levels(ax, df_filtered)
 
             # Set title, labels, and legend
-            plot_params.update({'title': f'{title} Cells, FL {fl}, Weighting {weighting}'})
+            plot_params.update({'title': f'{title} Cells, FL {fl}'})
             configure_axes(ax, **plot_params)
 
             ax.legend([f"Optimized: {plot_params['label'][0]}", f"Optimized: {plot_params['label'][1]}"], loc='lower right')

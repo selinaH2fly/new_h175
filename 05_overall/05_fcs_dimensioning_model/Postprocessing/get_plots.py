@@ -131,7 +131,7 @@ def analyze_data(_file_path1, saving=True):
     plot_params_h2_vs_mass = {
     'title': '', 
     'x_label': 'System Mass [kg]', 
-    'x_lim': [100,130], 
+    'x_lim': [100,200], 
     'y_label': 'Hydrogen Supply Rate [g/s]',
     'y_lim': None,  
     'label' : ["H2 supply", "system mass"], 
