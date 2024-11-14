@@ -67,6 +67,8 @@ def get_unique_values(df, column_name):
     return df[column_name].unique()
 
 
+def check_empty_df(df): 
+    return df.empty
 
 
 def analyze_data(_file_path1, saving=True):
@@ -95,23 +97,35 @@ def analyze_data(_file_path1, saving=True):
     #df1 =df1[df1["converged (t/f)"] == True]
     df1 = sort_prefilter_df(df1, current_upper_bound)
 
+    if check_empty_df(df1): 
+        print("df is empty after prefilter, skip plotting")
+        return
+
     # get flight level, weighting, cellcounts from csv
     fl_set = get_unique_values(df1, 'Flight Level (100x ft)')
-    weighting = get_unique_values(df1, 'weighting ([0,1])')
+    weighting = get_unique_values(df1, 'weighting ([0,1])').astype(int)
     cellcounts = get_unique_values(df1, 'Specified Cell Count')
-    
+
+
     # Split the data
     data = split_data_based_on_cell_count(df1)
-    titles = [f'{cells} Cells' for cells in cellcounts]
 
-    colors = [ "tab:blue", "tab:orange",  "tab:red"]
-    markers= ["o", "v", "s"]
-    markers_oL = ["o","P"]
-    
-    fl_set = 100 #TODO: Pass that as an argument to the function
+    titles = [f'{cells} Cells' for cells in cellcounts]
     fl_max = max(df1["Flight Level (100x ft)"])
-    weighting=0
-    show_plot=True
+    
+    ########Plot general:   
+    params_general = {
+    'data': data,
+    'fl': fl_set, 
+    'fl_max' : fl_max,
+    'weightings': weighting,
+    'cellcounts': cellcounts, 
+    'titles' : titles,
+    'colors': [ "tab:blue", "tab:orange",  "tab:red"], 
+    'markers': ["o", "v", "s"],
+    'markers_oL':  ["o","P"],  
+    'show_plot' : True, 
+    }
 
     ########Plot test:   
     plot_params_h2_vs_mass = {
@@ -124,7 +138,7 @@ def analyze_data(_file_path1, saving=True):
     'vmin' : 100, 
     'vmax' : 150
     }
-    plot_h2_vs_mass(plot_params_h2_vs_mass, data, titles, colors, fl_set, weighting, show_plot=show_plot, saving=saving)
+    plot_h2_vs_mass(plot_params_h2_vs_mass, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ###########PLOT: Polcurves
     plot_params_polarization_curves = {
@@ -137,7 +151,7 @@ def analyze_data(_file_path1, saving=True):
     'vmin' : 120, 
     'vmax' : 150
     }
-    plot_polarization_curves(plot_params_polarization_curves, data, titles, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+    #plot_polarization_curves(plot_params_polarization_curves, data, titles, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
     
     ############PLOT: Polcurves eol vs bol connected
     plot_params_polarization_curves_bol_eol = {
@@ -147,7 +161,7 @@ def analyze_data(_file_path1, saving=True):
     'y_label': 'Cell Voltage [V]',
     'y_lim': [0, 1.25],  
     }
-    plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, df1, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+    #plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, df1, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
     
     ############PLOT: System Power Grid Plot
 
@@ -167,7 +181,7 @@ def analyze_data(_file_path1, saving=True):
                   "Coolant Pump Power (kW)",	
                   "Stack Power (kW)"]
     }      
-    plot_power_needs(plot_params_power_needs, data, titles, fl_set, weighting, show_plot=show_plot, saving=saving)
+    #plot_power_needs(plot_params_power_needs, data, titles, fl_set, weighting, show_plot=show_plot, saving=saving)
     
     ############PLOT: System Power Grid Plot Heat Flux
 
@@ -184,7 +198,7 @@ def analyze_data(_file_path1, saving=True):
                   "Evaporator Heat Flux (kW)",	
                   "Radiator Heat Flux (kW)"]
     }
-    plot_power_needs_heatflux(plot_params_power_needs_heatflux, data, titles, fl_set, weighting, show_plot=show_plot, saving=saving)    
+    #plot_power_needs_heatflux(plot_params_power_needs_heatflux, data, titles, fl_set, weighting, show_plot=show_plot, saving=saving)    
    
 
     ###########PLOT: H2 supply
@@ -195,7 +209,7 @@ def analyze_data(_file_path1, saving=True):
     'y_label': 'Hydrogen Supply Rate [g/s]',
     'y_lim': None,  
     }
-    plot_h2_supply_vs_systempower(plot_params_supply_vs_systempower, data, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+    #plot_h2_supply_vs_systempower(plot_params_supply_vs_systempower, data, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
     
     ###########PLOT: System eff vs Net Power: Flade Plot, 
     plot_params_system_efficiency = {
@@ -205,7 +219,7 @@ def analyze_data(_file_path1, saving=True):
     'y_label': 'System Efficiency [-]',
     'y_lim': None,  
     }
-    plot_system_efficiency(plot_params_system_efficiency, data, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+    #plot_system_efficiency(plot_params_system_efficiency, data, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
     
     #############PLOT: H2 supply vs Flightlevel:
     
@@ -218,8 +232,8 @@ def analyze_data(_file_path1, saving=True):
         'vmin' : 125, 
         'vmax' : 175, 
     }
-    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, cellcounts, show_plot=show_plot, saving=saving, mode="bol")
-    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, cellcounts, show_plot=show_plot, saving=saving, mode="eol")
+    #plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, cellcounts, show_plot=show_plot, saving=saving, mode="bol")
+    #plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, cellcounts, show_plot=show_plot, saving=saving, mode="eol")
 
     ############Plot Weight estimate
     #Weight/Power Factor
@@ -250,7 +264,7 @@ def analyze_data(_file_path1, saving=True):
         'vmax' : 175, 
 
     }
-    plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, fl_set, weighting, show_plot=show_plot, saving=saving, mode="bol")
+    #plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, fl_set, weighting, show_plot=show_plot, saving=saving, mode="bol")
     #plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
         
     ###########PLOT: optimized parameters in DoE envelope
@@ -287,7 +301,7 @@ def analyze_data(_file_path1, saving=True):
     for i, (plot_optimized_params['opt_parameters'], plot_optimized_params['yranges']) in enumerate(zip(plot_optimized_params['opt_parameters'],plot_optimized_params['yranges'])):
         #We will plot current df.iloc[0] with the last column df.iloc[-1], therefore we pass columns 0:n
         doe_data_column = Optimized_DoE_data_variables.iloc[:,0:i+2] 
-        plot_optimized_parameters(plot_optimized_params, data, doe_data_column, titles, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+        #plot_optimized_parameters(plot_optimized_params, data, doe_data_column, titles, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
 
     # go back to the parent directory
     os.chdir("../")
