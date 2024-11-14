@@ -38,8 +38,9 @@ def plot_compressor_map(plot_params, data, titles, colors, markers, fl_set, weig
     N = 3 # Specify scaling factor N
     
     scaling_factors = [1 - i/N for i in range(N)]  # Progressive shrinking from 1 to 0
+    non_empty_data = [df for df in data if not df.empty]
                 
-    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(17, 8))
+    fig, axs = plt.subplots(nrows=1, ncols=len(non_empty_data), figsize=(17, 8))
     axs = axs.flatten()  # Flatten the 2D array of axes to easily iterate through
     
     # Create a colormap and normalize for the color gradient

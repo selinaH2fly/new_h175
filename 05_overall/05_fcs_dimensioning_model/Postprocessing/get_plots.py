@@ -60,13 +60,20 @@ def sort_prefilter_df(df, current_upper_bound):
 
 # Split the data based on 'Specified Cell Count'
 def split_data_based_on_cell_count(df): 
-    return (df[df['Specified Cell Count'] == count] for count in [400, 455, 500])
+    return  [group for _, group in df.groupby('Specified Cell Count')]
+
+
+def get_unique_values(df, column_name): 
+    return df[column_name].unique()
+
+
 
 
 def analyze_data(_file_path1, saving=True):
     
     # Load the CSV file into a DataFrame
     df1 = pd.read_csv(_file_path1)
+    #df1 = df1.loc[df1['Specified Cell Count'] != 455]
 
     # Change the working directory to the directory containing the .csv file
     file_dir = os.path.dirname(_file_path1)
@@ -88,11 +95,15 @@ def analyze_data(_file_path1, saving=True):
     #df1 =df1[df1["converged (t/f)"] == True]
     df1 = sort_prefilter_df(df1, current_upper_bound)
 
+    # get flight level, weighting, cellcounts from csv
+    fl_set = get_unique_values(df1, 'Flight Level (100x ft)')
+    weighting = get_unique_values(df1, 'weighting ([0,1])')
+    cellcounts = get_unique_values(df1, 'Specified Cell Count')
     
     # Split the data
-    df_400, df_455, df_500 = split_data_based_on_cell_count(df1)
-    data   = [     df_400,       df_455,     df_500]
-    titles = ['400 Cells',  '455 Cells','500 Cells']
+    data = split_data_based_on_cell_count(df1)
+    titles = [f'{cells} Cells' for cells in cellcounts]
+
     colors = [ "tab:blue", "tab:orange",  "tab:red"]
     markers= ["o", "v", "s"]
     markers_oL = ["o","P"]
@@ -207,8 +218,8 @@ def analyze_data(_file_path1, saving=True):
         'vmin' : 125, 
         'vmax' : 175, 
     }
-    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, show_plot=show_plot, saving=saving, mode="bol")
-    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, show_plot=show_plot, saving=saving, mode="eol")
+    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, cellcounts, show_plot=show_plot, saving=saving, mode="bol")
+    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, cellcounts, show_plot=show_plot, saving=saving, mode="eol")
 
     ############Plot Weight estimate
     #Weight/Power Factor
@@ -224,7 +235,8 @@ def analyze_data(_file_path1, saving=True):
                          "Turbine Power (kW)":      0}
     
     # New grouped, stacked bar chart function
-    plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, fl_set, markers, weighting, show_plot=show_plot, saving=saving, mode="bol")
+    ## NOCHMAL ANSCHAUEN
+    #plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, fl_set, markers, weighting, show_plot=show_plot, saving=saving, mode="bol")
     #plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, fl_set, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
     
     ###########PLOT: Compressormap
@@ -287,7 +299,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_25-150kW_400-500_100-100ft.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()

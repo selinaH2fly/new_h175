@@ -5,7 +5,7 @@ from parameters import Physical_Parameters
 import CoolProp.CoolProp as CP
 import CoolProp.HumidAirProp as HAP
 from scipy.constants import physical_constants
-import psychro.lib as lib
+import psychrolib as lib
 
 
 

@@ -9,7 +9,7 @@ from get_plot_settings import *
 
 
 # %% PLOT: H2 supply over flight level all in one
-def plot_h2_supply_vs_FL(plot_params, df1, markers, fl_max, weighting, show_plot, saving=True, mode="eol"):
+def plot_h2_supply_vs_FL(plot_params, df1, markers, fl_max, weighting, cells, show_plot, saving=True, mode="eol"):
     """
     Plot of system power vs (system power/hydrogen sonsumption) with polynomial fit.
     
@@ -19,9 +19,8 @@ def plot_h2_supply_vs_FL(plot_params, df1, markers, fl_max, weighting, show_plot
     - saving: Boolean, if True, saves the plots as PNG files.
     - mode: string "eol" or "bol", setting a filter to see eol or bol data.
     """
-    # List of cell counts and corresponding icons
-    cells = [400, 455, 500]
-    markers = ["o", "v", "s"]
+
+
 
     # Define power levels to highlight
     highlight_powers = [125, 150, 175]
