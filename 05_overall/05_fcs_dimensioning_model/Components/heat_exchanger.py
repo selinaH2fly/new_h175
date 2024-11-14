@@ -287,34 +287,34 @@ class Evaporator(HeatExchanger):
         return Qdot_W
     #We know: T_Tank, T_out, massflow , primary
 #
-# # Create an instance of Intercooler for air-liquid
-# intercooler_air_liquid = Intercooler(
-#     intercooler_type="air_liquid",
-#     effectiveness=0.85,
-#     primary_fluid="Air",
-#     coolant_fluid="INCOMP::MEG-50%",
-#     primary_mdot_in_kg_s=0.166,
-#     primary_T_in_K=(499+348/2),
-#     primary_p_in_Pa=318775,
-#     primary_p_out_Pa=315014.08
-#
-# )
-#
-# print(f"Intercooler Air-Liquid Primary (Warm) Pressure out: {intercooler_air_liquid.primary_p_out_Pa :.2f} Pa")
-# print(f"Intercooler Air-Liquid Primary (Warm) Pressure in: {intercooler_air_liquid.primary_p_in_Pa :.2f} Pa")
-# intercooler_air_liquid.mean_p_in_Pa = (
-#                                                   intercooler_air_liquid.primary_p_in_Pa + intercooler_air_liquid.primary_p_out_Pa) / 2
-# print(f"Intercooler mean Pressure out: {intercooler_air_liquid.mean_p_in_Pa :.2f} Pa")
-# intercooler_air_liquid.mean_T_in_K = (
-#                                                  intercooler_air_liquid.primary_T_in_K + intercooler_air_liquid.primary_T_out_K) / 2
-# print(f"Iintercooler_air_liquid.primary_T_in_K: {intercooler_air_liquid.primary_T_in_K :.2f} Pa")
-# print(f"ntercooler_air_liquid.primary_T_out_K: {intercooler_air_liquid.primary_T_out_K :.2f} Pa")
-# print(f"Iintercooler_meanT: {intercooler_air_liquid.mean_T_in_K :.2f} Pa")
-#
+# Create an instance of Intercooler for air-liquid
+intercooler_air_liquid = Intercooler(
+    intercooler_type="air_liquid",
+    effectiveness=0.85,
+    primary_fluid="Air",
+    coolant_fluid="INCOMP::MEG-50%",
+    primary_mdot_in_kg_s=0.078,
+    primary_T_in_K=(499+348/2),
+    primary_p_in_Pa=318775,
+    primary_p_out_Pa=315014.08
+
+)
+# #
+# # print(f"Intercooler Air-Liquid Primary (Warm) Pressure out: {intercooler_air_liquid.primary_p_out_Pa :.2f} Pa")
+# # print(f"Intercooler Air-Liquid Primary (Warm) Pressure in: {intercooler_air_liquid.primary_p_in_Pa :.2f} Pa")
+# # intercooler_air_liquid.mean_p_in_Pa = (
+# #                                                   intercooler_air_liquid.primary_p_in_Pa + intercooler_air_liquid.primary_p_out_Pa) / 2
+# # print(f"Intercooler mean Pressure out: {intercooler_air_liquid.mean_p_in_Pa :.2f} Pa")
+# # intercooler_air_liquid.mean_T_in_K = (
+# #                                                  intercooler_air_liquid.primary_T_in_K + intercooler_air_liquid.primary_T_out_K) / 2
+# # print(f"Iintercooler_air_liquid.primary_T_in_K: {intercooler_air_liquid.primary_T_in_K :.2f} Pa")
+# # # print(f"ntercooler_air_liquid.primary_T_out_K: {intercooler_air_liquid.primary_T_out_K :.2f} Pa")
+# # # print(f"Iintercooler_meanT: {intercooler_air_liquid.mean_T_in_K :.2f} Pa")
+# # #
 # # Calculate the pressure drop
 # intercooler_air_liquid.pressure_drop = intercooler_air_liquid.get_interpolated_pressure_drop(
-#     intercooler_air_liquid.mean_T_in_K,
-#     intercooler_air_liquid.mean_p_in_Pa)
+#     413,
+#     285615)
 #
 # print(f"Intercooler Air-Liquid Primary (Warm) Pressure Drop: {intercooler_air_liquid.pressure_drop :.2f} Pa")
 

@@ -19,30 +19,30 @@ class Input:
         # Pressure initialization in bar (bara)
         self.pressures_bara = {
             "PTC1": 0.63,  # Ambient pressure for FL120
-            "PTC7": 3,  # Pressure after humidifier, dry
-            "PTC8": 3,  # Pressure before stack
-            "PTC9": 2.7,  # Pressure before stack
+            "PTC7": 2.8,  # Pressure after humidifier, dry
+            "PTC8": 2.8,  # Pressure before stack
+            "PTC9": 2.6,  # Pressure before stack
             "PTC14": 0.64,  # Pressure before stack
 
         }
-        self.pressures_bara["PTC5"] = self.pressures_bara["PTC8"] + 0.22  # Pressure after filter
+        self.pressures_bara["PTC5"] = self.pressures_bara["PTC8"] + 0.01  # Pressure after filter
         self.pressures_bara["PTC4"] = self.pressures_bara["PTC5"] + 0.00004  # Pressure after intercooler, air-liq
-        self.pressures_bara["PTC3"] = self.pressures_bara["PTC4"] + 0.126  # Pressure after intercooler, air-air
-        self.pressures_bara["PTC2"] = self.pressures_bara["PTC3"] + 0.059  # Pressure after compressor
+        self.pressures_bara["PTC3"] = self.pressures_bara["PTC4"] + 0.0335  # Pressure after intercooler, air-air
+        self.pressures_bara["PTC2"] = self.pressures_bara["PTC3"] + 0.0375 # Pressure after compressor
 
         # Temperature initialization in degrees Celsius
         self.temperatures_degC = {
             "TTC1": 6.3,     # Ambient temperature
             "TTC8": 75,  # Temperature before stack
-            "TTC9": 82,   # Temperature after stack
+            "TTC9": 65,   # Temperature after stack
             "T_cool": 60    # Temperature of coolant input to IC air-liq
         }
-        self.temperatures_degC["TTC10"] = self.temperatures_degC["TTC9"] - 5
-        self.temperatures_degC["TTC4"] = self.temperatures_degC["TTC8"] - 3
+        self.temperatures_degC["TTC10"] = self.temperatures_degC["TTC9"] - 3
+        self.temperatures_degC["TTC4"] = self.temperatures_degC["TTC8"] - 2
 
 
 
-        self.target_RH = 0.55  # Set your default or calculated value here
+        self.target_RH = 0.65  # Set your default or calculated value here
 
         # Convert pressures and temperatures
         self.pressures_Pa = {key: self.convert_pressure(value) for key, value in self.pressures_bara.items()}

@@ -355,7 +355,7 @@ class MoistExchanger:
         specific_humidity_Y = 0.622 * p_vapor_target_Pa / (self.dry_air_pressure_out_Pa  - p_vapor_target_Pa)
 
         total_mass_flow_kg_s = m_dot_air_dry_in / (1 - specific_humidity_Y)
-        vapor_mass_flow_kg_s = specific_humidity_Y * total_mass_flow_kg_s
+        vapor_mass_flow_kg_s = specific_humidity_Y * m_dot_air_dry_in
 
         return vapor_mass_flow_kg_s
 
@@ -457,27 +457,32 @@ class Humidifier(MoistExchanger):
         super().__init__(**kwargs)
 
 
-# # Initialize a Humidifier instance with default values
-# humidifier = Humidifier(
-#     dry_air_mass_flow_kg_s=0.166,
-#     o2_mass_flow_rate=0.0052,
-#     dry_air_temperature_in_K=75+273,
-#     dry_air_pressure_in_Pa=314878.23,
-#     dry_air_rh_in=0.3,
-#     dry_air_temperature_out_K=78+273,
-#     dry_air_pressure_out_Pa=300000,
-#     wet_air_temperature_in_K=82+273,
-#     wet_air_pressure_in_Pa=270000,
-#     wet_air_rh_in=0.99,
-#     wet_air_temperature_out_K = 87+273,
-#     wet_air_pressure_out_Pa=253112.66
-# )
+# Initialize a Humidifier instance with default values
+humidifier = Humidifier(
+    dry_air_mass_flow_kg_s=0.101,
+    o2_mass_flow_rate=0.0052,
+    dry_air_temperature_in_K=75+273,
+    dry_air_pressure_in_Pa=314878.23,
+    dry_air_rh_in=0.3,
+    dry_air_temperature_out_K=78+273,
+    dry_air_pressure_out_Pa=300000,
+    wet_air_temperature_in_K=82+273,
+    wet_air_pressure_in_Pa=270000,
+    wet_air_rh_in=0.99,
+    wet_air_temperature_out_K = 77+273,
+)
 #
 # # Proceed with final calculations based on the last state of `compressor`
 # humidifier.dry_mass_flow_slpm = humidifier.convert_kg_s_to_slpm(humidifier.dry_air_mass_flow_kg_s)
 # humidifier.wet_air_pressure_out_Pa = humidifier.wet_air_pressure_in_Pa - humidifier.interpolate_wet_pressure_drop()
-# humidifier.dry_air_pressure_in_Pa = humidifier.dry_air_pressure_out_Pa + humidifier.interpolate_dry_pressure_drop()
 #
+# humidifier.dry_air_pressure_drop=  humidifier.interpolate_dry_pressure_drop()
+# print(humidifier.wet_air_pressure_out_Pa)
+
+
+
+
+
 # # Calculate efficiency of water transfer in the humidifier
 # humidifier.efficiency = humidifier.get_efficiency()
 #

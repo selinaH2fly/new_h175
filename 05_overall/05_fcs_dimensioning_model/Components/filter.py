@@ -87,10 +87,10 @@ class FuelCellAirFilter:
 # # Example usage of FuelCellAirFilter class
 #
 # # Define example input parameters
-# example_air_mass_flow_kg_s = 0.166       # Air mass flow in kg/s
+# example_air_mass_flow_kg_s = 0.0224       # Air mass flow in kg/s
 # example_temperature_in_K = 273+80          # Air temperature in Kelvin
-# example_pressure_in_Pa = 196000          # Air pressure in Pascals
-# example_relative_humidity = 0.8          # Relative humidity (0.9 represents 90%)
+# example_pressure_in_Pa = 13256          # Air pressure in Pascals
+# example_relative_humidity = 0.3         # Relative humidity (0.9 represents 90%)
 #
 # # Initialize the FuelCellAirFilter instance
 # air_filter = FuelCellAirFilter(
@@ -108,5 +108,5 @@ class FuelCellAirFilter:
 # density = air_filter.calculate_density()
 # check_density = air_filter.calculate_density()
 #
-# # Display the results
+# # # Display the results
 # print(f"Density of humid air (calculated): {density:.3f} kg/m³")
