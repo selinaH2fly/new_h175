@@ -56,7 +56,7 @@ def compute_reacted_o2_mass_flow_kg_s(current_A, cellcount):
     mass_fraction = 0.23
 
     # Calculate reacted O2 mass flow rate
-    o2_mass_flow_rate_kg_s  = (current_A * cellcount * M_O2) / (4 * F) * mass_fraction
+    o2_mass_flow_rate_kg_s  = (current_A * cellcount * M_O2) / (4 * F)
 
     return o2_mass_flow_rate_kg_s
 
