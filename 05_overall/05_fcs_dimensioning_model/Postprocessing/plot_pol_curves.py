@@ -24,11 +24,9 @@ def plot_polarization_curves(plot_params, params_general, show_plot, saving=True
     fl_set = params_general['fl']
     weightings = params_general['weightings'] 
     titles = params_general['titles']
-
     markers = params_general['markers_oL']
-    colors = params_general['colors']
+
     for weighting, fl in itertools.product(weightings,fl_set): 
-        print(f"weighting: {weighting}, fl: {fl}")
         for df, title in zip(data, titles):
             # Filter data for the specified flight level
             df = filter_data_by_f1_and_weight(df, fl, weighting)
@@ -47,25 +45,17 @@ def plot_polarization_curves(plot_params, params_general, show_plot, saving=True
             df_bol, df_eol = seperate_bol_eol(df)
 
             # Plot BoL points (use circles by default)
-                        # Plot BoL points (use circles by default)
-            """ for marker, label in zip(markers, plot_params['label']): 
-                ax.scatter(df_bol['current_A (Value)'], 
-                                        df_bol['Cell Voltage (V)'], 
-                                        c=df_bol['System Power (kW)'], 
-                                        cmap='viridis', norm=norm, 
-                                        edgecolor='k', s=100, marker=marker, label=label) """
-            scatter_bol = ax.scatter(df_bol['current_A (Value)'], 
-                                    df_bol['Cell Voltage (V)'], 
-                                    c=df_bol['System Power (kW)'], 
-                                    cmap='viridis', norm=norm, 
-                                    edgecolor='k', s=100, marker=markers[0], label=plot_params['label'][0])
-
-            # Plot EoL points (use squares for distinction)
-            scatter_eol = ax.scatter(df_eol['current_A (Value)'], 
-                                    df_eol['Cell Voltage (V)'], 
-                                    c=df_eol['System Power (kW)'], 
-                                    cmap='viridis', norm=norm, 
-                                    edgecolor='k', s=100, marker=markers[1], label=plot_params['label'][1])
+            scatters = []
+            for i, df in enumerate([df_bol, df_eol]):
+                scatter = ax.scatter(
+                    df['current_A (Value)'], 
+                    df['Cell Voltage (V)'], 
+                    c=df['System Power (kW)'], 
+                    cmap='viridis', norm=norm, 
+                    edgecolor='k', s=100, 
+                    marker=markers[i], label=plot_params['label'][i]
+                )
+                scatters.append(scatter)
 
             # Add colorbar for the gradient
             add_colorbar(cmap, ax)
