@@ -25,7 +25,7 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
     """
 
     data = params_general['data']
-    fl = params_general['fl']
+    fl_set = params_general['fl']
     cellcounts = params_general['cellcounts']
     weightings = params_general['weightings']  # Only plot weightings 0 and 1
     titles = params_general['titles']
@@ -36,24 +36,21 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
 
 
     num_plots = len(data)  # Determine the number of required subplots
+    for fl in fl_set:
+        if num_plots == 0:
+            print("No non-empty datasets available for plotting.")
+            return
 
-    # Handle case where all DataFrames are empty
-    if not num_plots:
-        print("No non-empty datasets available for plotting.")
-        return
-
-
-
-    eol = False  # Assuming eol remains constant in all cases
-    for fl in fl:
-    #for fl in fl:
-    
         fig, axs = plt.subplots(1, num_plots, figsize=(6 * num_plots, 6))  # Dynamically adjust figure size
+
+        # Ensure axs is always iterable
         if num_plots == 1:
             axs = [axs]  # Convert to list if only one subplot is present
-        for ax, df, title, color in zip(axs, data, titles, colors):   
-            print(f"fl: {fl},  title {title}, color {color}")
 
+        eol = False  # Assuming eol remains constant in all cases
+
+
+        for ax, df, title, color in zip(axs, data, titles, colors):
             df_filtered = df[(df['Flight Level (100x ft)'] == fl) & (df['eol (t/f)'] == eol)]
             
             # Set up colormap for 'System Power (kW)'
@@ -68,6 +65,7 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
             all_power = []  # Collect 'System Power (kW)' for coloring
 
         
+            
             for weighting, marker in zip(weightings, markers):
                 df_weighted = df_filtered[df_filtered["weighting ([0,1])"] == weighting]
                 
@@ -83,10 +81,11 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
                                     cmap='viridis', norm=norm, 
                                     marker=marker, label=f'Weighting {weighting}',
                                     zorder=2)
-            # Collect points for convex hull
-            all_points_x.extend(df_weighted['System Mass (kg)'].values)
-            all_points_y.extend(df_weighted['Hydrogen Supply Rate (g/s)'].values)
-            all_power.extend(df_weighted['System Power (kW)'].values)
+
+                # Collect points for convex hull
+                all_points_x.extend(df_weighted['System Mass (kg)'].values)
+                all_points_y.extend(df_weighted['Hydrogen Supply Rate (g/s)'].values)
+                all_power.extend(df_weighted['System Power (kW)'].values)
 
             # Convert the collected points to numpy arrays for convex hull calculation
             all_points_x = np.array(all_points_x)
@@ -115,7 +114,6 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
             plt.savefig(file_path, bbox_inches='tight', dpi=300)
             
         plt.show() if show_plot and ax.collections else plt.close()
-
 
 
          
