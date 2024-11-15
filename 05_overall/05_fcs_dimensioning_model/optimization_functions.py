@@ -531,23 +531,16 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         return 1 if is_inside else -1
 
     #print("hier ist meine compressor map",compressor.compressor_map["corrected_massflow_g_s"])
-    compressor_map_df = pd.DataFrame(compressor.compressor_map)
-    compressor_map_df = compressor_map_df[['corrected_massflow_g_s','pressure_ratio']]
-    print(compressor_map_df)
-    alphashape_compressor_map = alphashape_function(compressor_map_df, 0.001)
+    # compressor_map_df = pd.DataFrame(compressor.compressor_map)
+    # compressor_map_df = compressor_map_df[['corrected_massflow_g_s','pressure_ratio']]
+    # print(compressor_map_df)
+    # #alpha_Iris = 0.001
+    # #alpha VSEC15 = 0.01
+    # alphashape_compressor_map = alphashape_function(compressor_map_df, 0.001)
 
-    def nlc_Compressor_Map(x):
-        x_scaled = np.array([x[index]*np.array(cell_voltage_model.input_data_std[index]) + np.array(cell_voltage_model.input_data_mean[index]) for index in range(len(x))])
-        compressor.air_mass_flow_kg_s = compute_air_mass_flow(stoichiometry=x_scaled[2], current_A=x_scaled[0], cellcount=cellcount)
-        compressor.pressure_out_Pa = convert(x_scaled[3], "bara", "Pa") + compressor.calculate_BoP_pressure_drop() # compressor_out == cathode_in + BoP_pressure_drop (compressor out -> cathode in)
-        compressor.temperature_out_K = compressor.calculate_T_out()
-        _, compressor_map_point = compressor.calculate_power()
-        is_inside = alphashape_compressor_map.contains(Point(compressor_map_point))
-        return 1 if is_inside else -1
 
     # Check for DoE constraint setting and define the nonlinear constraints
     nlc_power = NonlinearConstraint(nonlinear_constraint_Power, 0, 1000)
-    nlc_compressor = NonlinearConstraint(nlc_Compressor_Map,0,np.inf)
     nlc_temp = NonlinearConstraint(nonlinear_constraint_Temp, 1e-3, np.inf)
     nlc_anode = NonlinearConstraint(nonlinear_constraint_Anode_Pressure,0,np.inf)
     nlc_DoE_rh = NonlinearConstraint(nlc_DoE_cathode_rh,0, np.inf)
@@ -556,12 +549,8 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     nlc_DoE_coolantPump = NonlinearConstraint(nlc_DoE_coolant,0, np.inf)
     nlc_DoE_an_stoich = NonlinearConstraint(nlc_DoE_anode_stoich,0, np.inf)
     
-    if constraint==True and compressor_map is not None:            
-        nlc = [nlc_power, nlc_DoE_rh, nlc_DoE_cath_stoich, nlc_DoE_stack_pressure, nlc_DoE_coolantPump, nlc_DoE_an_stoich, nlc_compressor]
-    elif constraint:
+    if constraint:            
         nlc = [nlc_power, nlc_DoE_rh, nlc_DoE_cath_stoich, nlc_DoE_stack_pressure, nlc_DoE_coolantPump, nlc_DoE_an_stoich]
-    elif compressor_map is not None:
-        nlc = [nlc_power, nlc_temp, nlc_anode, nlc_compressor]
     else:
         nlc = [nlc_power, nlc_temp, nlc_anode]
 

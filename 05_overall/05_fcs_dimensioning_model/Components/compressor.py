@@ -99,13 +99,12 @@ class Compressor:
         map_pressure_ratio = self.compressor_map['pressure_ratio'].flatten()
         map_mass_flow_g_s= self.compressor_map['corrected_massflow_g_s'].flatten()
         map_efficiency = self.compressor_map['efficiency'].flatten()
-
         # Interpolate the efficiency at the target pressure ratio and mass flow
         efficiency = griddata(np.array([map_mass_flow_g_s, map_pressure_ratio]).T, map_efficiency,
                                 (corrected_mass_flow_g_s, pressure_ratio), method='linear', rescale=True, fill_value=1e-3)
-            
-        return efficiency.item(), [pressure_ratio, corrected_mass_flow_g_s]
 
+        
+        return efficiency.item(), [pressure_ratio, corrected_mass_flow_g_s]
     def plot_compressor_map(self):
         """
         Plots the compressor map with efficiency contours and highlights the specified operating point
@@ -205,7 +204,6 @@ class Compressor:
 
         corrected_mass_flow_kg_s = self.air_mass_flow_kg_s * (self.reference_pressure_Pa / self.pressure_in_Pa) \
             * (self.temperature_in_K / self.reference_temperature_K)**0.5
-
         return corrected_mass_flow_kg_s
 
     def calculate_mass(self)->dict:

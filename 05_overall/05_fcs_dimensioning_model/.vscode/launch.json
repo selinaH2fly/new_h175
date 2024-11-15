@@ -5,22 +5,5 @@
     "version": "0.2.0",
     "configurations": [
         
-        {
-            "name": "Python Debugger: End-of-Life",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "args": ["--power", "150", "--cellcount", "455", "--flightlevel", "120", "--turbine", "True", "--map", "None", "--eol", "True"],    
-        }
-
-        {
-            "name": "Python Debugger: Compressor Map",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "args": ["--power", "150", "--cellcount", "455", "--flightlevel", "120", "--turbine", "True", "--map", "VSEC15", "--eol", "False"],    
-        }
     ]
 }
