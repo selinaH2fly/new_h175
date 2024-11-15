@@ -162,7 +162,7 @@ def analyze_data(_file_path1, saving=True):
     'label' : [ 'BoL', 'EoL'], 
     'y_lim': [0, 1.25],  
     }
-    plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, params_general, show_plot=params_general['show_plot'], saving=saving)
+    #plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: System Power Grid Plot
 
@@ -182,7 +182,7 @@ def analyze_data(_file_path1, saving=True):
                   "Coolant Pump Power (kW)",	
                   "Stack Power (kW)"]
     }      
-    #plot_power_needs(plot_params_power_needs, data, titles, fl_set, weighting, show_plot=params_general['show_plot'], saving=saving)
+    plot_power_needs(plot_params_power_needs, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: System Power Grid Plot Heat Flux
 
