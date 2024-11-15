@@ -159,9 +159,10 @@ def analyze_data(_file_path1, saving=True):
     'x_label': 'Current [A]', 
     'x_lim': [0, 800], 
     'y_label': 'Cell Voltage [V]',
+    'label' : [ 'BoL', 'EoL'], 
     'y_lim': [0, 1.25],  
     }
-    plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, params_general, df1, show_plot=params_general['show_plot'], saving=saving)
+    plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: System Power Grid Plot
 
@@ -313,8 +314,8 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    #parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_25-150kW_400-500_100-100ft.csv")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_25-150kW_400-500_100-100ft.csv")
+    #parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
