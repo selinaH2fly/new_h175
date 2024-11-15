@@ -61,7 +61,7 @@ def plot_power_needs_heatflux(plot_params, data, titles, fl_set, weighting, show
         ax.set_title(title, pad=30, loc='center')
     
         # Save and show the plot
-        if saving and ax.collections:
+        if saving and ax.texts:
             file_path = create_plot_save_directory(f'Component_Heat_Flux_{title}_weighting_{weighting}.png', weighting)
             plt.savefig(file_path, bbox_inches='tight')
         plt.show() if show_plot and ax.texts else plt.close()

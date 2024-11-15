@@ -63,7 +63,7 @@ def plot_power_needs(plot_params, data, titles, fl_set, weighting, show_plot, sa
         ax.set_title(title, pad=30, loc='center')
     
         # Save and show the plot
-        if saving and ax.collections:
+        if saving and ax.texts:
             file_path = create_plot_save_directory((f'Component_Powers_{title}_weighting_{weighting}.png'), weighting)
             plt.savefig(file_path, bbox_inches='tight')
  
