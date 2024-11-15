@@ -151,7 +151,7 @@ def analyze_data(_file_path1, saving=True):
     'vmin' : 120, 
     'vmax' : 150
     }
-    plot_polarization_curves(plot_params_polarization_curves, params_general, show_plot=params_general['show_plot'], saving=saving)
+    #plot_polarization_curves(plot_params_polarization_curves, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: Polcurves eol vs bol connected
     plot_params_polarization_curves_bol_eol = {
@@ -161,7 +161,7 @@ def analyze_data(_file_path1, saving=True):
     'y_label': 'Cell Voltage [V]',
     'y_lim': [0, 1.25],  
     }
-    #plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, df1, titles, colors, fl_set, markers_oL, weighting, show_plot=params_general['show_plot'], saving=saving)
+    plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: System Power Grid Plot
 
