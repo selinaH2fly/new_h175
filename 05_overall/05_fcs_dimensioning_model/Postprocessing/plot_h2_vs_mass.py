@@ -26,18 +26,15 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
 
     data = params_general['data']
     fl_set = params_general['fl']
-    cellcounts = params_general['cellcounts']
-    weightings = params_general['weightings']  # Only plot weightings 0 and 1
+    weightings = params_general['weightings'] 
     titles = params_general['titles']
 
-    markers = ['o', 'D'] # Circle for weighting 0, Diamond for weighting 1
-
+    markers = params_general['markers_oL']
     colors = params_general['colors']
-
-
     num_plots = len(data)  # Determine the number of required subplots
+
     for fl in fl_set:
-        if num_plots == 0:
+        if not num_plots:
             print("No non-empty datasets available for plotting.")
             return
 
@@ -57,7 +54,7 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
             norm, cmap = create_colormap(plot_params['vmin'], plot_params['vmax'], cmap='viridis')
 
             if df_filtered.empty:
-                print(f"No data available for H2_Supply_Comparison {title} at FL {fl}. Skipping subplot.")
+                print(f"No data available for H2_Supply_Comparison {title} at FL {fl} and {'eol' if eol else 'bol'}. Skipping subplot.")
                 continue  # Skip plotting if no data exists
 
             all_points_x = []

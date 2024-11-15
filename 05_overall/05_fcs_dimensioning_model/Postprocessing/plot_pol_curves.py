@@ -19,7 +19,14 @@ def plot_polarization_curves(plot_params, data, titles, fl_set, markers_oL, weig
     - titles: List of strings, corresponding to the titles for each dataset.
     - saving: Boolean, if True, saves the plots as PNG files.
     """
+    """ data = params_general['data']
+    fl_set = params_general['fl']
+    weightings = params_general['weightings'] 
+    titles = params_general['titles']
 
+    markers = params_general['markers_oL']
+    colors = params_general['colors']
+    """
     for df, title in zip(data, titles):
         # Filter data for the specified flight level
         df = filter_data_by_f1_and_weight(df, fl_set, weighting)

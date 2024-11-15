@@ -151,7 +151,7 @@ def analyze_data(_file_path1, saving=True):
     'vmin' : 120, 
     'vmax' : 150
     }
-    #plot_polarization_curves(plot_params_polarization_curves, data, titles, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+    plot_polarization_curves(plot_params_polarization_curves, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: Polcurves eol vs bol connected
     plot_params_polarization_curves_bol_eol = {
@@ -161,7 +161,7 @@ def analyze_data(_file_path1, saving=True):
     'y_label': 'Cell Voltage [V]',
     'y_lim': [0, 1.25],  
     }
-    #plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, df1, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+    #plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, df1, titles, colors, fl_set, markers_oL, weighting, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: System Power Grid Plot
 
@@ -181,7 +181,7 @@ def analyze_data(_file_path1, saving=True):
                   "Coolant Pump Power (kW)",	
                   "Stack Power (kW)"]
     }      
-    #plot_power_needs(plot_params_power_needs, data, titles, fl_set, weighting, show_plot=show_plot, saving=saving)
+    #plot_power_needs(plot_params_power_needs, data, titles, fl_set, weighting, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: System Power Grid Plot Heat Flux
 
@@ -198,7 +198,7 @@ def analyze_data(_file_path1, saving=True):
                   "Evaporator Heat Flux (kW)",	
                   "Radiator Heat Flux (kW)"]
     }
-    #plot_power_needs_heatflux(plot_params_power_needs_heatflux, data, titles, fl_set, weighting, show_plot=show_plot, saving=saving)    
+    #plot_power_needs_heatflux(plot_params_power_needs_heatflux, data, titles, fl_set, weighting, show_plot=params_general['show_plot'], saving=saving)    
    
 
     ###########PLOT: H2 supply
@@ -209,7 +209,7 @@ def analyze_data(_file_path1, saving=True):
     'y_label': 'Hydrogen Supply Rate [g/s]',
     'y_lim': None,  
     }
-    #plot_h2_supply_vs_systempower(plot_params_supply_vs_systempower, data, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+    #plot_h2_supply_vs_systempower(plot_params_supply_vs_systempower, data, titles, colors, fl_set, markers_oL, weighting, show_plot=params_general['show_plot'], saving=saving)
     
     ###########PLOT: System eff vs Net Power: Flade Plot, 
     plot_params_system_efficiency = {
@@ -219,7 +219,7 @@ def analyze_data(_file_path1, saving=True):
     'y_label': 'System Efficiency [-]',
     'y_lim': None,  
     }
-    #plot_system_efficiency(plot_params_system_efficiency, data, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+    #plot_system_efficiency(plot_params_system_efficiency, data, titles, colors, fl_set, markers_oL, weighting, show_plot=params_general['show_plot'], saving=saving)
     
     #############PLOT: H2 supply vs Flightlevel:
     
@@ -232,7 +232,7 @@ def analyze_data(_file_path1, saving=True):
         'vmin' : 125, 
         'vmax' : 175, 
     }
-    #plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, cellcounts, show_plot=show_plot, saving=saving, mode="bol")
+    #plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, cellcounts, show_plot=params_general['show_plot'], saving=saving, mode="bol")
     #plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, cellcounts, show_plot=show_plot, saving=saving, mode="eol")
 
     ############Plot Weight estimate
@@ -250,7 +250,7 @@ def analyze_data(_file_path1, saving=True):
     
     # New grouped, stacked bar chart function
     ## NOCHMAL ANSCHAUEN
-    #plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, fl_set, markers, weighting, show_plot=show_plot, saving=saving, mode="bol")
+    #plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, fl_set, markers, weighting, show_plot=params_general['show_plot'], saving=saving, mode="bol")
     #plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, fl_set, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
     
     ###########PLOT: Compressormap
@@ -264,7 +264,7 @@ def analyze_data(_file_path1, saving=True):
         'vmax' : 175, 
 
     }
-    #plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, fl_set, weighting, show_plot=show_plot, saving=saving, mode="bol")
+    #plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, fl_set, weighting, show_plot=params_general['show_plot'], saving=saving, mode="bol")
     #plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
         
     ###########PLOT: optimized parameters in DoE envelope
@@ -301,7 +301,7 @@ def analyze_data(_file_path1, saving=True):
     for i, (plot_optimized_params['opt_parameters'], plot_optimized_params['yranges']) in enumerate(zip(plot_optimized_params['opt_parameters'],plot_optimized_params['yranges'])):
         #We will plot current df.iloc[0] with the last column df.iloc[-1], therefore we pass columns 0:n
         doe_data_column = Optimized_DoE_data_variables.iloc[:,0:i+2] 
-        #plot_optimized_parameters(plot_optimized_params, data, doe_data_column, titles, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+        #plot_optimized_parameters(plot_optimized_params, data, doe_data_column, titles, fl_set, markers_oL, weighting, show_plot=params_general['show_plot'], saving=saving)
 
     # go back to the parent directory
     os.chdir("../")
