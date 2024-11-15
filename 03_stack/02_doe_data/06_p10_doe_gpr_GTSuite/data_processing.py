@@ -60,6 +60,42 @@ def load_high_temp_doe_data():
 
     return df, units
 
+
+# Load DoE data simulated in GT-Suite
+def load_BBM_PowerCell_DoE():
+    # Get path to data file
+    my_dir = os.getcwd()
+    filename = "DoE_data_BBM_PowerCell_GTSuite.csv"
+    path = os.path.join(Path(my_dir).parents[1], '06_p10_doe_gpr_GTSuite', 'data_input_training', filename)
+
+    # Load data file
+    csv = pd.read_csv(path)
+    csv=csv*1
+    
+    # Get the name of the first sheet
+    first_sheet_name = xls.sheet_names[0]
+
+    # Load the second sheet into a DataFrame, skipping the first row
+    df = pd.read_excel(path, sheet_name=first_sheet_name)
+
+    # Extract the units from the scnd row and set the identifiers in the thrd row as the DataFrame column names
+    units = df.iloc[0]
+    df.columns = df.iloc[1]
+    df = df.drop([0, 1]).reset_index(drop=True)
+    df = df.drop(0)
+
+    # Clear failed runs and duplicates from the DataFrame
+    df = df[df['Point successfully run'] == 1]
+    df = df.loc[:, ~df.columns.duplicated()]
+
+    # Drop columns missing values
+    df = df.dropna(axis=1, how='all')
+
+    return df, units
+
+
+
+
 # Preprocess the data
 def preprocess_data(df, target='eta_lhv', cutoff_current=0, params_pyhsics=None, data='high_amp'):
 
