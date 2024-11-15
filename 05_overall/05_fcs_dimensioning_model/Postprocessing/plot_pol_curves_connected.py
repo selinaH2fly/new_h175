@@ -54,8 +54,9 @@ def plot_data(ax, bol_data, eol_data, titles, colors, highlight_powers, markers_
                             [bol_row['Cell Voltage (V)'], eol_row['Cell Voltage (V)']],
                             color=color, alpha=0.5, linestyle='--')
 
+                    
 #%% PLOT: Polcurve bol vs eol connected points
-def plot_polarization_curves_bol_eol(plot_params, params_general, show_plot, saving=True):
+def plot_polarization_curves_bol_eol(plot_params, params_general, df1, show_plot, saving=True):
     """
     Plots the polarization curves for multiple datasets into one plot and connects bol and eol operating points.
     aka. Spaghetti Plot.
@@ -66,47 +67,42 @@ def plot_polarization_curves_bol_eol(plot_params, params_general, show_plot, sav
     - fl_set: Int [0, 150] kft, specific FL at which the plot will be generated.
     - saving: Boolean, if True, saves the plots as PNG files.
     """
-    data = params_general['data']
     fl_set = params_general['fl']
     weightings = params_general['weightings'] 
     titles = params_general['titles']
     markers = params_general['markers_oL']
+    colors = params_general['colors']
 
-    for weighting, fl in itertools.product(weightings,fl_set): 
-        for df, title in zip(data, titles):
-            # Filter data for the specified flight level
-            df = filter_data_by_f1_and_weight(df, fl, weighting)
-            
-            if df.empty:
-                print(f"No data available for System Polarization Curve {title} at FL {fl} and weighting {weighting}. Skipping plot.")
-                continue  # Skip plotting if no data exists
-            df_bol, df_eol = seperate_bol_eol(df)
     # Highlight power levels
     highlight_powers = [20, 50, 80, 125, 150, 175]
 
 
-    # Filter data for BOL and EOL
-    bol_data = filter_data(df1, fl_set, weighting, eol=False, cell_counts=cell_counts)
-    eol_data = filter_data(df1, fl_set, weighting, eol=True, cell_counts=cell_counts)
-    if all(df.empty for df in bol_data.values() and eol_data.values()):
-        print(f"No data available for Bol Eol Polarization Curve. Skipping plot.")
-        return  # Skip plotting if no data exists
-    # Create the plot
-    fig, ax = plt.subplots(figsize=(12, 8))
-    plot_data(ax, bol_data, eol_data, titles, colors, highlight_powers, markers)
+    for weighting, fl in itertools.product(weightings,fl_set): 
 
-    # Add red shaded area and labels
-    
-    # Set title and axis labels
-    plot_params.update({'title': f'System Polarization Curve - EoL vs BoL, FL {fl_set}'})
-    configure_axes(ax, **plot_params)
+        #fl_set=100
+        # Filter data for BOL and EOL
+        bol_data = filter_data(df1, fl, weighting, eol=False, cell_counts=params_general['cellcounts'])
+        eol_data = filter_data(df1, fl, weighting, eol=True, cell_counts=params_general['cellcounts'])
+        #print(bol_data)
+                
+        #print(eol_data)
+        if all(df.empty for df in bol_data.values() and eol_data.values()):
+            print(f"No data available for Bol Eol Polarization Curve. Skipping plot.")
+            return  # Skip plotting if no data exists
+        # Create the plot
+        fig, ax = plt.subplots(figsize=(12, 8))
+        plot_data(ax, bol_data, eol_data, titles, colors, highlight_powers, markers)
+        
+        # Set title and axis labels
+        plot_params.update({'title': f'System Polarization Curve - EoL vs BoL, FL {fl}, weighting {weighting}'})
+        configure_axes(ax, **plot_params)
 
-    ax.axvspan(700, 1000, color='red', alpha=0.2)
-    ax.legend(loc='upper right')
+        ax.axvspan(700, 1000, color='red', alpha=0.2)
+        ax.legend(loc='upper right')
 
-    # Save and show plot
-    if saving and ax.collections:
-        file_path = create_plot_save_directory((f'bol_eol_polarization_curve_weighting_{weighting}.png'), weighting)
-        plt.savefig(file_path, bbox_inches='tight')
-    plt.show() if show_plot and ax.collections else plt.close()
+        # Save and show plot
+        if saving and ax.collections:
+            file_path = create_plot_save_directory((f'bol_eol_polarization_curve_fl_{fl}_weighting_{weighting}.png'), weighting)
+            plt.savefig(file_path, bbox_inches='tight')
+        plt.show() if show_plot and ax.collections else plt.close()
 
