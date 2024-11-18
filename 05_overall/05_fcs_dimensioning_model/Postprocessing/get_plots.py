@@ -199,7 +199,7 @@ def analyze_data(_file_path1, saving=True):
                   "Evaporator Heat Flux (kW)",	
                   "Radiator Heat Flux (kW)"]
     }
-    plot_power_needs_heatflux(plot_params_power_needs_heatflux, params_general, show_plot=params_general['show_plot'], saving=saving)    
+    #plot_power_needs_heatflux(plot_params_power_needs_heatflux, params_general, show_plot=params_general['show_plot'], saving=saving)    
    
 
     ###########PLOT: H2 supply
@@ -210,7 +210,7 @@ def analyze_data(_file_path1, saving=True):
     'y_label': 'Hydrogen Supply Rate [g/s]',
     'y_lim': None,  
     }
-    #plot_h2_supply_vs_systempower(plot_params_supply_vs_systempower, data, titles, colors, fl_set, markers_oL, weighting, show_plot=params_general['show_plot'], saving=saving)
+    #plot_h2_supply_vs_systempower(plot_params_supply_vs_systempower, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ###########PLOT: System eff vs Net Power: Flade Plot, 
     plot_params_system_efficiency = {
@@ -314,8 +314,8 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    #parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_25-150kW_400-500_100-100ft.csv")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_25-150kW_400-500_100-100ft.csv")
+    #parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
