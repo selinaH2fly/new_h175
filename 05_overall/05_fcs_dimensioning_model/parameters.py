@@ -106,6 +106,7 @@ class Compressor_Parameters:
         print(path)
         compressor_map_Iris = pd.read_csv('../Components/20211113_Verdichterkennfeld_Iris.csv')
         compressor_map_VSEC15 = pd.read_csv('../Components/20211115_Verdichterkennfeld_VSEC15.csv')
+        compressor_map_Scalable = pd.read_csv('../Components/20211115_Verdichterkennfeld_Scalable.csv')
         self.isentropic_efficiency = 0.75
         self.electric_efficiency = 0.95
         self.mass_by_power_kg_kW = {"mean": 1.0, "sd": 0.1}
@@ -170,7 +171,13 @@ class Compressor_Parameters:
             "reference_pressure_Pa": 39875,
             "reference_temperature_K": -16 + 273.15
         }
-
+        self.compressor_map_Scalable = {
+            "corrected_massflow_g_s":np.array(compressor_map_Scalable["corrected_massflow_g_s"]) ,
+            "pressure_ratio":np.array( compressor_map_Scalable["pressure_ratio"]),
+            "efficiency": np.array(compressor_map_Scalable["efficiency"]), 
+            "reference_pressure_Pa":  1.01325 * 1e5,
+            "reference_temperature_K": 25 + 273.15
+        }
 
 class Turbine_Parameters:
 
