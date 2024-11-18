@@ -75,7 +75,7 @@ class Compressor:
 
         # Determine the operating point if a real-world compressor map is provided
         if self.compressor_map is not None:
-            efficiency, compressor_map_point = self._interpolate_efficiency()
+            efficiency, _ = self._interpolate_efficiency()
             compressor_shaft_power_W = compressor_isentropic_power_W / efficiency
         else:
             compressor_shaft_power_W = compressor_isentropic_power_W / self.isentropic_efficiency
@@ -83,7 +83,7 @@ class Compressor:
         # Compute the electric power
         compressor_electric_power_W = compressor_shaft_power_W / self.electric_efficiency
 
-        return compressor_electric_power_W, compressor_map_point
+        return compressor_electric_power_W
 
     def _interpolate_efficiency(self) -> float:
         """
@@ -216,7 +216,7 @@ class Compressor:
             - "sd": Compressor mass in kg based on the standard deviation of mass_by_power_kg_kW.
 
         """
-        compressor_el_power_W, _ = self.calculate_power()
+        compressor_el_power_W = self.calculate_power()
         compressor_mass_mean_kg = self.mass_by_power_kg_kW["mean"] * compressor_el_power_W / 1000
         compressor_mass_sd_kg = self.mass_by_power_kg_kW["sd"] * compressor_el_power_W / 1000
         

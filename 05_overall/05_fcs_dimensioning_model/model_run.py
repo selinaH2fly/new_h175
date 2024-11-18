@@ -114,7 +114,7 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--cellcount", type=int, default=455, help="Stack cell number for optimizing subject to power constraint")
     parser.add_argument("-f", "--flightlevel", type=int, default=100, help="Flight level in 100x feets")
     parser.add_argument("-t", "--turbine", type=str, choices=["True", "False"], default="True", help="Specifies whether recuperation shall be taken into account (default: True).")
-    parser.add_argument("--map", type=str, choices=["None", "VSEC15","Iris"], default="VSEC15", help="Specifies the compressor map to be used (default: None).")
+    parser.add_argument("--map", type=str, choices=["None", "VSEC15","Iris","Scalable"], default="Scalable", help="Specifies the compressor map to be used (default: None).")
     parser.add_argument("--eol", type=str, choices=["True", "False"], default="False", help="Specifies whether cell voltage is derated by a factor of 0.85 to account for end of life (default: False).")
     parser.add_argument("--constraint", type=str, choices=["True","False"], default="True", help="Activates the DoE envelope constraint condition for the optimizer. (default: True)")
     parser.add_argument("-w", "--weighting", type=float, default=1.0, help="Weighting factor for multiobjective-optimization; 0 -> optimization for efficiency (default), 1 -> optimization for (power-specific) mass.")

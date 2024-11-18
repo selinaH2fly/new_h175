@@ -266,7 +266,7 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         compressor.pressure_out_Pa = convert(optimized_pressure_cathode_in_bara, "bara", "Pa") + compressor.calculate_BoP_pressure_drop() # compressor_out == cathode_in + BoP_pressure_drop (compressor out -> cathode in)
         compressor.temperature_out_K = compressor.calculate_T_out()
         # Calculate compressor power
-        compressor_power_W, compressor_map_point = compressor.calculate_power()
+        compressor_power_W = compressor.calculate_power()
 
         # TODO: Move the turbine computations to a separate function
         if consider_turbine:
