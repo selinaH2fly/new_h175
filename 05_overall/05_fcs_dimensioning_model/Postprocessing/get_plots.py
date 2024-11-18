@@ -251,7 +251,7 @@ def analyze_data(_file_path1, saving=True):
     
     # New grouped, stacked bar chart function
     ## NOCHMAL ANSCHAUEN
-    plot_system_mass_estimate(plot_params_system_mass_estimate, params_general, componentsP_dict, show_plot=params_general['show_plot'], saving=saving, mode="bol")
+    #plot_system_mass_estimate(plot_params_system_mass_estimate, params_general, componentsP_dict, show_plot=params_general['show_plot'], saving=saving, mode="bol")
     #plot_system_mass_estimate(plot_params_system_mass_estimate, params_general, componentsP_dict, show_plot=params_general['show_plot'], saving=saving, mode="eol")
 
     ###########PLOT: Compressormap
@@ -302,7 +302,7 @@ def analyze_data(_file_path1, saving=True):
     for i, (plot_optimized_params['opt_parameters'], plot_optimized_params['yranges']) in enumerate(zip(plot_optimized_params['opt_parameters'],plot_optimized_params['yranges'])):
         #We will plot current df.iloc[0] with the last column df.iloc[-1], therefore we pass columns 0:n
         doe_data_column = Optimized_DoE_data_variables.iloc[:,0:i+2] 
-        #plot_optimized_parameters(plot_optimized_params, data, doe_data_column, titles, fl_set, markers_oL, weighting, show_plot=params_general['show_plot'], saving=saving)
+        plot_optimized_parameters(plot_optimized_params, params_general, doe_data_column, show_plot=params_general['show_plot'], saving=saving)
 
     # go back to the parent directory
     os.chdir("../")
