@@ -107,7 +107,7 @@ def plot_h2_supply_vs_systempower(plot_params, params_general, show_plot, saving
 
         
         if saving and ax.collections:
-            file_path = create_plot_save_directory(f'H2_Supply_weighting_{weighting}.png', weighting)
+            file_path = create_plot_save_directory(f'H2_Supply__FL_{fl}_weighting_{weighting}.png', weighting)
             plt.savefig(file_path, bbox_inches='tight')        
         plt.show() if show_plot and ax.collections else plt.close()
 
