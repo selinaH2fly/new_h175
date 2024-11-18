@@ -70,8 +70,7 @@ def plot_h2_supply_vs_FL(plot_params,params_general, show_plot, saving=True, mod
 
             # Set title and axis labels
             plot_params.update({'title': f'System Hydrogen Supply Rate vs FL for Different Cell Counts ({mode_name}), Weighting {weighting}'})
-            plot_params.update({'x_lim':[-1, fl_max + 1]})
-            plot_params.update({'y_lim': [1, 5]})
+
             configure_axes(ax, **plot_params)
 
 
