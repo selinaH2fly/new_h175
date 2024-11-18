@@ -11,18 +11,18 @@ import pandas as pd
 
 
 
-def filter_data_by_f1_and_weight(df, fl_set, weighting):
+def filter_data_by_fl_and_weight(df, fl_set, weighting):
     df = df[(df['Flight Level (100x ft)'] == fl_set) & (df['weighting ([0,1])'] == weighting)]
     return df
 
 
 
 
-def create_plot_save_directory(filename, weighting, directory=""):
+def create_plot_save_directory(filename, weighting="None",fl="None", directory=""):
     if directory != "": 
-        folder_name = f'{directory}/weighting_{weighting}'
+        folder_name = f'{directory}/fl_{fl}/weighting_{weighting}'
     else: 
-        folder_name = f'weighting_{weighting}'
+        folder_name = f'fl_{fl}/weighting_{weighting}'
     folder_path = os.path.join(os.getcwd(), folder_name)
     file_path = os.path.join(folder_path, filename)
     os.makedirs(folder_path, exist_ok=True)
@@ -83,7 +83,19 @@ def plot_scatter(ax, x, y, color_data=None, label=None, marker='o', edgecolor='k
 def getMode(mode): 
     return (True, "EoL") if mode == "eol" else (False, "BoL")
 
-
+"""     
+def get_values_generalParam_dict(dict): 
+    data = dict['data']
+    fl_set = dict['fl']
+    fl_max = dict['fl_max']
+    weightings = dict['weightings']
+    cellcounts = dict['cellcounts']
+    titles = dict['titles'] 
+    colors = dict['colors']
+    markers = dict['markers_oL']
+    titles = dict['titles']   
+    return [*dict.values()]
+"""     
 #######Systempower and System Effizienz
 # Create the polynomial function
 def poly(x, coeffs):

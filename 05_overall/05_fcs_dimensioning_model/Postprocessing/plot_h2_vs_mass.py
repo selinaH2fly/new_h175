@@ -32,6 +32,9 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
     markers = params_general['markers_oL']
     colors = params_general['colors']
     num_plots = len(data)  # Determine the number of required subplots
+    #values = get_values_generalParam_dict(params_general)
+
+    #data, fl_set, weightings, titles, colors, markers =  values[0], values[1], values[3], values[5], values[6], values[7]
 
     for fl in fl_set:
         if not num_plots:
@@ -107,7 +110,7 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
         plt.tight_layout(pad=2.0)
         
         if saving and ax.collections :
-            file_path = create_plot_save_directory(f'H2_Supply_Comparison_FL{fl}_weighting_{weighting}.png', weighting)
+            file_path = create_plot_save_directory(f'H2_Supply_Comparison_FL{fl}.png', fl=fl)
             plt.savefig(file_path, bbox_inches='tight', dpi=300)
             
         plt.show() if show_plot and ax.collections else plt.close()

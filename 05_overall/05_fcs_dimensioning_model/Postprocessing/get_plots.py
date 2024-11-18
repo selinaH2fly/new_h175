@@ -124,7 +124,7 @@ def analyze_data(_file_path1, saving=True):
     'colors': [ "tab:blue", "tab:orange",  "tab:red"], 
     'markers': ["o", "v", "s"],
     'markers_oL':  ["o","P"],  
-    'show_plot' : True, 
+    'show_plot' : False, 
     }
 
     ########Plot test:   
@@ -138,7 +138,7 @@ def analyze_data(_file_path1, saving=True):
     'vmin' : 100, 
     'vmax' : 150
     }
-    #plot_h2_vs_mass(plot_params_h2_vs_mass, params_general, show_plot=params_general['show_plot'], saving=saving)
+    plot_h2_vs_mass(plot_params_h2_vs_mass, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ###########PLOT: Polcurves
     plot_params_polarization_curves = {
@@ -151,7 +151,7 @@ def analyze_data(_file_path1, saving=True):
     'vmin' : 120, 
     'vmax' : 150
     }
-    #plot_polarization_curves(plot_params_polarization_curves, params_general, show_plot=params_general['show_plot'], saving=saving)
+    plot_polarization_curves(plot_params_polarization_curves, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: Polcurves eol vs bol connected
     plot_params_polarization_curves_bol_eol = {
@@ -162,7 +162,7 @@ def analyze_data(_file_path1, saving=True):
     'label' : [ 'BoL', 'EoL'], 
     'y_lim': [0, 1.25],  
     }
-    #plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, params_general, show_plot=params_general['show_plot'], saving=saving)
+    plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: System Power Grid Plot
 
@@ -182,7 +182,7 @@ def analyze_data(_file_path1, saving=True):
                   "Coolant Pump Power (kW)",	
                   "Stack Power (kW)"]
     }      
-    #plot_power_needs(plot_params_power_needs, params_general, show_plot=params_general['show_plot'], saving=saving)
+    plot_power_needs(plot_params_power_needs, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: System Power Grid Plot Heat Flux
 
@@ -199,7 +199,7 @@ def analyze_data(_file_path1, saving=True):
                   "Evaporator Heat Flux (kW)",	
                   "Radiator Heat Flux (kW)"]
     }
-    #plot_power_needs_heatflux(plot_params_power_needs_heatflux, params_general, show_plot=params_general['show_plot'], saving=saving)    
+    plot_power_needs_heatflux(plot_params_power_needs_heatflux, params_general, show_plot=params_general['show_plot'], saving=saving)    
    
 
     ###########PLOT: H2 supply
@@ -210,7 +210,7 @@ def analyze_data(_file_path1, saving=True):
     'y_label': 'Hydrogen Supply Rate [g/s]',
     'y_lim': None,  
     }
-    #plot_h2_supply_vs_systempower(plot_params_supply_vs_systempower, params_general, show_plot=params_general['show_plot'], saving=saving)
+    plot_h2_supply_vs_systempower(plot_params_supply_vs_systempower, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ###########PLOT: System eff vs Net Power: Flade Plot, 
     plot_params_system_efficiency = {
@@ -220,7 +220,7 @@ def analyze_data(_file_path1, saving=True):
     'y_label': 'System Efficiency [-]',
     'y_lim': None,  
     }
-    #plot_system_efficiency(plot_params_system_efficiency, params_general, show_plot=params_general['show_plot'], saving=saving)
+    plot_system_efficiency(plot_params_system_efficiency, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     #############PLOT: H2 supply vs Flightlevel:
     
@@ -233,7 +233,7 @@ def analyze_data(_file_path1, saving=True):
         'vmin' : 125, 
         'vmax' : 175, 
     }
-    #plot_h2_supply_vs_FL(plot_params_supply_vs_FL, params_general, show_plot=params_general['show_plot'], saving=saving, mode="bol")
+    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, params_general, show_plot=params_general['show_plot'], saving=saving, mode="bol")
     #plot_h2_supply_vs_FL(plot_params_supply_vs_FL, params_general, show_plot=params_general['show_plot'], saving=saving, mode="eol")
 
     ############Plot Weight estimate
@@ -251,7 +251,7 @@ def analyze_data(_file_path1, saving=True):
     
     # New grouped, stacked bar chart function
     ## NOCHMAL ANSCHAUEN
-    #plot_system_mass_estimate(plot_params_system_mass_estimate, params_general, componentsP_dict, show_plot=params_general['show_plot'], saving=saving, mode="bol")
+    plot_system_mass_estimate(plot_params_system_mass_estimate, params_general, componentsP_dict, show_plot=params_general['show_plot'], saving=saving, mode="bol")
     #plot_system_mass_estimate(plot_params_system_mass_estimate, params_general, componentsP_dict, show_plot=params_general['show_plot'], saving=saving, mode="eol")
 
     ###########PLOT: Compressormap
@@ -265,7 +265,7 @@ def analyze_data(_file_path1, saving=True):
         'vmax' : 175, 
 
     }
-    #plot_compressor_map(plot_params_compressor_map, params_general, show_plot=params_general['show_plot'], saving=saving, mode="bol")
+    plot_compressor_map(plot_params_compressor_map, params_general, show_plot=params_general['show_plot'], saving=saving, mode="bol")
     #plot_compressor_map(plot_params_compressor_map, params_general, show_plot=params_general['show_plot'], saving=saving, mode="eol")
         
     ###########PLOT: optimized parameters in DoE envelope
@@ -314,8 +314,8 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_25-150kW_400-500_100-100ft.csv")
-    #parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
+    #parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_25-150kW_400-500_100-100ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()

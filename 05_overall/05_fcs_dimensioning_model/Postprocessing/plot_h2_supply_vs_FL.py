@@ -98,7 +98,7 @@ def plot_h2_supply_vs_FL(plot_params,params_general, show_plot, saving=True, mod
             
         # Save and show the plot
         if saving and ax.collections:
-            file_path = create_plot_save_directory(f'H2_supply_vs_flightlevel_{mode}_weighting_{weighting}.png', weighting)
+            file_path = create_plot_save_directory(f'H2_supply_vs_flightlevel_{mode}_weighting_{weighting}.png', weighting=weighting)
             plt.savefig(file_path, bbox_inches='tight')
         plt.show() if show_plot and ax.collections else plt.close()
 

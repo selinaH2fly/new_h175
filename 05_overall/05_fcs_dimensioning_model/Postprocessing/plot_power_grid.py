@@ -70,7 +70,7 @@ def plot_power_needs(plot_params, params_general, show_plot, saving=True ):
         
             # Save and show the plot
             if saving and ax.texts:
-                file_path = create_plot_save_directory((f'Component_Powers_{title}_fl_{fl}_weighting_{weighting}.png'), weighting)
+                file_path = create_plot_save_directory((f'Component_Powers_{title}_fl_{fl}_weighting_{weighting}.png'),  weighting, fl)
                 plt.savefig(file_path, bbox_inches='tight')
     
             plt.show() if show_plot and ax.texts else plt.close()

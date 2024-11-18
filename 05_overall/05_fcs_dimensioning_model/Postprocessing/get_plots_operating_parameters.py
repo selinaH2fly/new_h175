@@ -31,10 +31,10 @@ def plot_optimized_parameters(plot_params, params_general, data_doe, show_plot, 
     - var: which optimized variable will be ploted. 
     - saving: Boolean, if True, saves the plots as PNG files.
     """
+
     data = params_general['data']
     fl_set = params_general['fl']
     weightings = params_general['weightings'] 
-    colors = params_general['colors']
     markers = params_general['markers_oL']
     titles = params_general['titles']
     parameter_list = ["current_A (Value)",
@@ -51,7 +51,7 @@ def plot_optimized_parameters(plot_params, params_general, data_doe, show_plot, 
 
         for df, title in zip(data, titles):
 
-            df = filter_data_by_f1_and_weight(df, fl, weighting)
+            df = filter_data_by_fl_and_weight(df, fl, weighting)
             if df.empty:
                 print(f"No data available for Optimized Operating Parameters {var} {title} at FL {fl} or for weighting {weighting}. Skipping plot.")
                 continue  # Skip plotting if no data exists
@@ -118,7 +118,7 @@ def plot_optimized_parameters(plot_params, params_general, data_doe, show_plot, 
             # Save the plot as a PNG file if saving is True
             if saving and ax.collections:
                 directory = 'Optimized_Operating_Parameters'
-                file_path = create_plot_save_directory(f'{var}_{title}_weighting_{weighting}.png', weighting, directory)
+                file_path = create_plot_save_directory(f'{var}_{title}_FL_{fl}_weighting_{weighting}.png', weighting, fl,  directory)
                 plt.savefig(file_path, bbox_inches='tight')
                 
             plt.show() if show_plot and ax.collections else plt.close()

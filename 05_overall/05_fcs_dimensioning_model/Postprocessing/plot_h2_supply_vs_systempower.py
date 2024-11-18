@@ -59,7 +59,7 @@ def plot_h2_supply_vs_systempower(plot_params, params_general, show_plot, saving
         fig, ax = plt.subplots(figsize=(12, 8))
         fig.tight_layout()
         for df, title, color in zip(data, titles, colors):
-            df = filter_data_by_f1_and_weight(df, fl, weighting)
+            df = filter_data_by_fl_and_weight(df, fl, weighting)
             if df.empty:
                 print(f"No data available for H2 Supply {title} at FL {fl} or for weighting {weighting}. Skipping plot.")
                 continue  # Skip plotting if no data exists   
@@ -107,7 +107,7 @@ def plot_h2_supply_vs_systempower(plot_params, params_general, show_plot, saving
 
         
         if saving and ax.collections:
-            file_path = create_plot_save_directory(f'H2_Supply__FL_{fl}_weighting_{weighting}.png', weighting)
+            file_path = create_plot_save_directory(f'H2_Supply__FL_{fl}_weighting_{weighting}.png', weighting, fl)
             plt.savefig(file_path, bbox_inches='tight')        
         plt.show() if show_plot and ax.collections else plt.close()
 

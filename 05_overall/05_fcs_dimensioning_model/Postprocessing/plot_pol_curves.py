@@ -29,7 +29,7 @@ def plot_polarization_curves(plot_params, params_general, show_plot, saving=True
     for weighting, fl in itertools.product(weightings,fl_set): 
         for df, title in zip(data, titles):
             # Filter data for the specified flight level
-            df = filter_data_by_f1_and_weight(df, fl, weighting)
+            df = filter_data_by_fl_and_weight(df, fl, weighting)
             
             if df.empty:
                 print(f"No data available for System Polarization Curve {title} at FL {fl} and weighting {weighting}. Skipping plot.")
@@ -86,7 +86,7 @@ def plot_polarization_curves(plot_params, params_general, show_plot, saving=True
             # Adjust layout and save the plot if necessary
             fig.tight_layout()
             if saving and ax.collections:
-                file_path = create_plot_save_directory((f'{title}_polarization_curve_fl_{fl}_weighting_{weighting}.png'), weighting)
+                file_path = create_plot_save_directory((f'{title}_polarization_curve_fl_{fl}_weighting_{weighting}.png'), weighting, fl)
                 plt.savefig(file_path, bbox_inches='tight')
 
             # Show the plot
