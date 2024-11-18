@@ -251,9 +251,9 @@ def analyze_data(_file_path1, saving=True):
     
     # New grouped, stacked bar chart function
     ## NOCHMAL ANSCHAUEN
-    #plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, fl_set, markers, weighting, show_plot=params_general['show_plot'], saving=saving, mode="bol")
-    #plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, fl_set, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
-    
+    plot_system_mass_estimate(plot_params_system_mass_estimate, params_general, componentsP_dict, show_plot=params_general['show_plot'], saving=saving, mode="bol")
+    #plot_system_mass_estimate(plot_params_system_mass_estimate, params_general, componentsP_dict, show_plot=params_general['show_plot'], saving=saving, mode="eol")
+
     ###########PLOT: Compressormap
     plot_params_compressor_map = {
         'title': '', 
@@ -265,7 +265,7 @@ def analyze_data(_file_path1, saving=True):
         'vmax' : 175, 
 
     }
-    plot_compressor_map(plot_params_compressor_map, params_general, show_plot=params_general['show_plot'], saving=saving, mode="bol")
+    #plot_compressor_map(plot_params_compressor_map, params_general, show_plot=params_general['show_plot'], saving=saving, mode="bol")
     #plot_compressor_map(plot_params_compressor_map, params_general, show_plot=params_general['show_plot'], saving=saving, mode="eol")
         
     ###########PLOT: optimized parameters in DoE envelope
