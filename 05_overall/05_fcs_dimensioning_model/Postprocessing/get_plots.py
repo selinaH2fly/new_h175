@@ -220,7 +220,7 @@ def analyze_data(_file_path1, saving=True):
     'y_label': 'System Efficiency [-]',
     'y_lim': None,  
     }
-    plot_system_efficiency(plot_params_system_efficiency, params_general, show_plot=params_general['show_plot'], saving=saving)
+    #plot_system_efficiency(plot_params_system_efficiency, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     #############PLOT: H2 supply vs Flightlevel:
     
@@ -233,8 +233,8 @@ def analyze_data(_file_path1, saving=True):
         'vmin' : 125, 
         'vmax' : 175, 
     }
-    #plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, cellcounts, show_plot=params_general['show_plot'], saving=saving, mode="bol")
-    #plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, cellcounts, show_plot=show_plot, saving=saving, mode="eol")
+    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, params_general, show_plot=params_general['show_plot'], saving=saving, mode="bol")
+    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, params_general, show_plot=params_general['show_plot'], saving=saving, mode="eol")
 
     ############Plot Weight estimate
     #Weight/Power Factor
