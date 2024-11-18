@@ -9,7 +9,7 @@ from get_plot_settings import *
 
 
 # %% PLOT: H2 supply over flight level all in one
-def plot_h2_supply_vs_FL(plot_params, df1,params_general, show_plot, saving=True, mode="eol"):
+def plot_h2_supply_vs_FL(plot_params,params_general, show_plot, saving=True, mode="eol"):
     """
     Plot of system power vs (system power/hydrogen sonsumption) with polynomial fit.
     
@@ -25,8 +25,9 @@ def plot_h2_supply_vs_FL(plot_params, df1,params_general, show_plot, saving=True
     cells = params_general['cellcounts']
     colors = params_general['colors']
     markers = params_general['markers']
+    titles = params_general['titles']
 
-    #weightings=[0, 1]
+
     # Define power levels to highlight
     highlight_powers = [125, 150, 175]
     for weighting in weightings:
@@ -42,24 +43,25 @@ def plot_h2_supply_vs_FL(plot_params, df1,params_general, show_plot, saving=True
         colors = [cmap(mcolors.Normalize(plot_params['vmin'], plot_params['vmax'])(power)) for power in highlight_powers]
             
         filter_mode, mode_name = getMode(mode)
-
-        #Filter the DF for currents in range and the filter omde
-        df = df1[(df1["current_A (Value)"] <= 700) & (df1["eol (t/f)"] == filter_mode) & (df1["weighting ([0,1])"] == weighting)]
-
-        if df.empty:
-            print(f"No data available for H2 Supply vs FL for current_A <= 700 or weighting {weighting}. Skipping plot.")
-            return  # Skip plotting if no data exists   
         # Loop through each cell count and plot the data
-        for cell, icon in zip(cells, markers):
+        for df, icon, title in zip(data, markers, titles):
+            if df.empty:
+                print(f"No data available for H2 Supply vs FL for current_A <= 700, for {mode_name} and weighting {weighting} . Skipping plot.")
+                return 
+            #Filter the DF for currents in range and the filter omde
+            df_filtered =   df[(df["current_A (Value)"] <= 700) & (df["eol (t/f)"] == filter_mode) & (df["weighting ([0,1])"] == weighting)]
+
+            if df_filtered.empty:
+                print(f"No data available for H2 Supply vs FL for current_A <= 700, for {mode_name} and weighting {weighting} . Skipping plot.")
+                return 
             #filter dataframe after cell count and 125-+, 150+-, and 175+-
-            df_filtered = df[(df['Specified Cell Count'] == cell) 
-                            &(df['Power Constraint (kW)'].between(highlight_powers[0] - 1e-3, highlight_powers[0] + 1e-3) |
-                                df['Power Constraint (kW)'].between(highlight_powers[1] - 1e-3, highlight_powers[1] + 1e-3) |
-                                df['Power Constraint (kW)'].between(highlight_powers[2] - 1e-3, highlight_powers[2] + 1e-3))]
+            df_filtered1 = df_filtered[(df_filtered['Power Constraint (kW)'].between(highlight_powers[0] - 1e-3, highlight_powers[0] + 1e-3) |
+                                df_filtered['Power Constraint (kW)'].between(highlight_powers[1] - 1e-3, highlight_powers[1] + 1e-3) |
+                                df_filtered['Power Constraint (kW)'].between(highlight_powers[2] - 1e-3, highlight_powers[2] + 1e-3))]
 
             # Scatter plot with color based on 'System Power (kW)'
-            ax.scatter(df_filtered['Flight Level (100x ft)'], df_filtered['Hydrogen Supply Rate (g/s)'], 
-                                c=df_filtered['System Power (kW)'], cmap='viridis',norm=norm, edgecolor='k', s=100, marker=icon, label=f'{cell} Cells')
+            ax.scatter(df_filtered1['Flight Level (100x ft)'], df_filtered1['Hydrogen Supply Rate (g/s)'], 
+                                c=df_filtered1['System Power (kW)'], cmap='viridis',norm=norm, edgecolor='k', s=100, marker=icon, label=f'{title}')
 
             # Create custom legend handles
             handles = [plt.Line2D([0], [0], marker=marker, color='w', markerfacecolor='k', markersize=10, linestyle='') for marker in markers]

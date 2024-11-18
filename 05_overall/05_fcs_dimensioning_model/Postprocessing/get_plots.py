@@ -227,14 +227,14 @@ def analyze_data(_file_path1, saving=True):
     plot_params_supply_vs_FL = {
         'title': '', 
         'x_label': 'Flight Level [100x ft]', 
-        'x_lim': None, 
+        'x_lim': [-1, fl_max + 1], 
         'y_label': 'Hydrogen Supply Rate [g/s]',
-        'y_lim': None,  
+        'y_lim': [1, 5],  
         'vmin' : 125, 
         'vmax' : 175, 
     }
-    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, params_general, show_plot=params_general['show_plot'], saving=saving, mode="bol")
-    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, params_general, show_plot=params_general['show_plot'], saving=saving, mode="eol")
+    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, params_general, show_plot=params_general['show_plot'], saving=saving, mode="bol")
+    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, params_general, show_plot=params_general['show_plot'], saving=saving, mode="eol")
 
     ############Plot Weight estimate
     #Weight/Power Factor
@@ -314,8 +314,8 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    #parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_25-150kW_400-500_100-100ft.csv")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_25-150kW_400-500_100-100ft.csv")
+    #parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
