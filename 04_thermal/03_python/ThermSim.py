@@ -337,7 +337,7 @@ class Pipe:
         self.diameter = "diameter_%s"%(comp_name)
         self.length = "length_%s"%(comp_name)
         self.roughness = "roughness_%s"%(comp_name)
-        # self.mass = "mass_%s"%(comp_name)
+        self.mass = "mass_%s"%(comp_name)
         self.visco = "visco_%i"%(i_in)
         self.rho = "rho_%i"%(i_in)
 
@@ -347,20 +347,22 @@ class Pipe:
 
         Returns:
         - eq1: Equation for pressure characteristics.
+        - eq2: Fetching the density from the CoolProp Library
+        - eq3: Fetching the viscosity from the CoolProp Library
         - eq4: Blasius Equation for pressure drop in pipe
-        - eq3: Equation for thermal energy flux characteristics.
-        - eq4: Equation for mass flow characteristics.
+        - eq3: Equation for thermal energy flux conservation.
+        - eq5: Equation for Volumeflow conservation
+        - eq6: Massestimation
         """
         
         self.eq1 = "%s = %s - %s"%(self.p_in, self.p_out, self.delta_p)
-        self.eq5 = "%s = cp.PropsSI('D', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.rho, self.T_in, self.p_in)
-        self.eq6 = "%s = cp.PropsSI('V', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.visco, self.T_in, self.p_in)
-        #self.eq2 = "%s = - 0.3"%self.delta_p
-        self.eq2 = "%s = - 0.3164 * (%s / (3.1415926536 * (%s/2) ** 2)) ** (7/4) * (%s/%s) ** (1/4) * %s * %s * %s ** (-5/4) / 2 * 10 ** (-5)"%(self.delta_p, self.Vdot_in, self.diameter, self.visco, self.rho, self.length, self.rho, self.diameter)
-        self.eq3 = "%s = %s"%(self.T_in, self.T_out)
-        self.eq4 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
-        # self.eq5 = "%s = 3.1415926536 * (%s/2) ** 2 * %s * %s"%(self.mass, self.diameter, self.rho, self.length)
-        return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6]
+        self.eq2 = "%s = cp.PropsSI('D', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.rho, self.T_in, self.p_in)
+        self.eq3 = "%s = cp.PropsSI('V', 'T', %s, 'P', %s * 1.0E+05, 'INCOMP::MEG-50%%')"%(self.visco, self.T_in, self.p_in)
+        self.eq4 = "%s = - 0.3164 * 2 ** (5/2) * 3.1415926536 ** (-7/4) * %s ** (7/4) * %s ** (-19/4) * %s ** (1/4) * %s ** (3/4) * %s * 1000 ** (-7/4) * 10 ** (-5)"%(self.delta_p, self.Vdot_in, self.diameter, self.visco, self.rho, self.length)
+        self.eq5 = "%s = %s"%(self.T_in, self.T_out)
+        self.eq6 = "%s = %s"%(self.Vdot_in, self.Vdot_out)
+        self.eq7 = "%s = 3.1415926536 * (%s/2) ** 2 * %s * %s + 3.1415926536 * (((%s + 0.01)/2) ** 2 - (%s/2) ** 2) * %s * 1134"%(self.mass, self.diameter, self.rho, self.length, self.diameter, self.diameter, self.length)
+        return[self.eq1, self.eq2, self.eq3, self.eq4, self.eq5, self.eq6, self.eq7]
     
 
     def set_var(self):
@@ -374,7 +376,13 @@ class Pipe:
         - var4: Name string, initialization value, minimum, maximum and unit string for output pressure.
         - var5: Name string, initialization value, minimum, maximum and unit string for output temperature.
         - var6: Name string, initialization value, minimum, maximum and unit string for output volume flow.
-        - var7: Name string, initialization value, minimum, maximum and unit string for pressure change over component.
+        - var7: Name string, initialization value, minimum, maximum and unit string for pressure difference.
+        - var8: Name string, initialization value, minimum, maximum and unit string for diameter
+        - var9: Name string, initialization value, minimum, maximum and unit string for length
+        - var10: Name string, initialization value, minimum, maximum and unit string for roughness
+        - var11: Name string, initialization value, minimum, maximum and unit string for mass
+        - var12: Name string, initialization value, minimum, maximum and unit string for visco
+        - var13: Name string, initialization value, minimum, maximum and unit string for density
         """
         
         self.var1 = [self.p_in, 1.0, 0.0, np.inf, "bar"]
@@ -387,10 +395,10 @@ class Pipe:
         self.var8 = [self.diameter, 0.5, 0.0, 10, "m"]
         self.var9 = [self.length, 0.5, 0.0, 100, "m"]
         self.var10 = [self.roughness, 0.0002, 0.0, 100, "m"]
-        # self.var11 = [self.mass, 10, 0.0, np.inf, "kg"]
+        self.var11 = [self.mass, 1, 0.0, np.inf, "kg"]
         self.var12 = [self.visco, 0.002, 0.0, np.inf, "m^2/s"]
-        self.var11 = [self.rho, 1000, 0.0, np.inf, "kg/m^3"]
-        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10, self.var11, self.var12]#, self.var13]    
+        self.var13 = [self.rho, 1000, 0.0, np.inf, "kg/m^3"]
+        return[self.var1, self.var2, self.var3, self.var4, self.var5, self.var6, self.var7, self.var8, self.var9, self.var10, self.var11, self.var12, self.var13]    
 
 
 class Pump:
