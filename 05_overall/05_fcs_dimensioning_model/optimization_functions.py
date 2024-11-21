@@ -10,7 +10,7 @@ from scipy.spatial import ConvexHull, Delaunay
 import CoolProp.CoolProp as CP
 from scipy.constants import physical_constants
 import alphashape
-
+import os
 
 # Import custom classes and functions
 import parameters
@@ -409,15 +409,15 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         
         power_dependent_mass = sum([compressor_mass_kg, #Compressor + Turbine
                                 rezi_pump_mass_kg, 
-                                coolant_pump_mass_kg#,
-                                #radiator_mass_kg #if only "Module" masses are wanted: set to 0
+                                coolant_pump_mass_kg,
+                                radiator_mass_kg #if only "Module" masses are wanted: set to 0
                                 ])
         
         #Other dependend masses:
         cellcount_dependent_mass = stack.calculate_mass()
         H2_dependend_mass = tank_mass_wet_kg #if only "Module" masses are wanted: set to 0
         
-        system_mass_kg = fixed_mass + power_dependent_mass + cellcount_dependent_mass #+ H2_dependend_mass
+        system_mass_kg = fixed_mass + power_dependent_mass + cellcount_dependent_mass + H2_dependend_mass
         
         # %% Return
         ResultModels.update(optimized_input=optimized_input,
@@ -529,14 +529,6 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
         is_inside = alphashape_stoich_anode.contains(Point(x_scaled[[0,6]]))
 
         return 1 if is_inside else -1
-
-    #print("hier ist meine compressor map",compressor.compressor_map["corrected_massflow_g_s"])
-    # compressor_map_df = pd.DataFrame(compressor.compressor_map)
-    # compressor_map_df = compressor_map_df[['corrected_massflow_g_s','pressure_ratio']]
-    # print(compressor_map_df)
-    # #alpha_Iris = 0.001
-    # #alpha VSEC15 = 0.01
-    # alphashape_compressor_map = alphashape_function(compressor_map_df, 0.001)
 
 
     # Check for DoE constraint setting and define the nonlinear constraints
@@ -692,14 +684,20 @@ def optimize_inputs_evolutionary(cell_voltage_model, cathode_pressure_drop_model
     if optimization_converged:
         if constraint and all(x > 0 for x in DoE_constraint) and 0<=nonlinear_constraint_Power(result.x)<=1000:
             optimization_converged="True"
+            print("solution converged")
         elif constraint and (nonlinear_constraint_Power(result.x)<0 or nonlinear_constraint_Power(result.x)>1000 or any(x < 0 for x in DoE_constraint)):
             optimization_converged= "False"
+            print("DoE constraint not converged")
         elif nonlinear_constraint_Power(result.x)<0 or nonlinear_constraint_Power(result.x)>1000 or nonlinear_constraint_Anode_Pressure(result.x)<0.05 or nonlinear_constraint_Temp(result.x)<0:
             optimization_converged= "False"
+            print("DoEconstraint not converged")
         else:
             optimization_converged="True"
+            print("solution converged")
     else:
-        optimization_converged="False"   
+        optimization_converged="False"
+        print("solution not converged")
+   
 
 
     # Evaluate the models with the optimal input

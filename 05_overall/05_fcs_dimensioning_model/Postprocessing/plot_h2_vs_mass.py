@@ -96,7 +96,7 @@ def plot_h2_vs_mass(plot_params, data, titles, colors, fl_set, weighting, show_p
         connect_power_levels(ax, df_filtered)
 
         # Set title, labels, and legend
-        plot_params.update({'title': f'{title} Cells, FL {fl_set}'})
+        plot_params.update({'title': f'{title}, FL {fl_set}'})
         configure_axes(ax, **plot_params)
 
         ax.legend([f"Optimized: {plot_params['label'][0]}", f"Optimized: {plot_params['label'][1]}"], loc='lower right')
