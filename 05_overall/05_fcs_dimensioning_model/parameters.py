@@ -33,7 +33,8 @@ class VariableContainer:
         'compressor_cor_mass_flow_g_s',
         'compressor_pressure_ratio',
         'system_power_W',
-        "cell_voltage_V"
+        "cell_voltage_V", 
+        "system_efficiency"
     ])
 
     def __init__(self):
