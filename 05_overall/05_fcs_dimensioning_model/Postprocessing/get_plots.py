@@ -1,4 +1,5 @@
 # %% Imports:
+import numpy as np
 import pandas as pd
 import os
 import sys
@@ -60,13 +61,29 @@ def sort_prefilter_df(df, current_upper_bound):
 
 # Split the data based on 'Specified Cell Count'
 def split_data_based_on_cell_count(df): 
-    return (df[df['Specified Cell Count'] == count] for count in [400, 455, 500])
+    return  [group for _, group in df.groupby('Specified Cell Count')]
+
+
+def get_unique_values(df, column_name): 
+    return df[column_name].unique()
+
+def get_min_max_values_axes(axes, df, scale_min=0.9, scale_max=1.1): 
+    min_max_list=  [
+        (np.round(df[axis].min() * scale_min), np.round(df[axis].max() * scale_max)) 
+        for axis in axes
+    ]
+    return min_max_list[0] if len(axes) == 1 else min_max_list
+
+
+def check_empty_df(df): 
+    return df.empty
 
 
 def analyze_data(_file_path1, saving=True):
     
     # Load the CSV file into a DataFrame
     df1 = pd.read_csv(_file_path1)
+    #df1 = df1.loc[df1['Specified Cell Count'] != 455]
 
     # Change the working directory to the directory containing the .csv file
     file_dir = os.path.dirname(_file_path1)
@@ -88,58 +105,74 @@ def analyze_data(_file_path1, saving=True):
     #df1 =df1[df1["converged (t/f)"] == True]
     df1 = sort_prefilter_df(df1, current_upper_bound)
 
-    
+    if check_empty_df(df1): 
+        print("df is empty after prefilter, skip plotting")
+        return
+
+    # get flight level, weighting, cellcounts from csv
+    fl_set = get_unique_values(df1, 'Flight Level (100x ft)')
+    weighting = get_unique_values(df1, 'weighting ([0,1])').astype(int)
+    cellcounts = get_unique_values(df1, 'Specified Cell Count')
+
+
     # Split the data
-    df_400, df_455, df_500 = split_data_based_on_cell_count(df1)
-    data   = [     df_400,       df_455,     df_500]
-    titles = ['400 Cells',  '455 Cells','500 Cells']
-    colors = [ "tab:blue", "tab:orange",  "tab:red"]
-    markers= ["o", "v", "s"]
-    markers_oL = ["o","P"]
-    
-    fl_set = 100 #TODO: Pass that as an argument to the function
+    data = split_data_based_on_cell_count(df1)
+
+    titles = [f'{cells} Cells' for cells in cellcounts]
     fl_max = max(df1["Flight Level (100x ft)"])
-    weighting=0
-    show_plot=True
+    
+    ########Plot general:   
+    params_general = {
+    'data': data,
+    'fl': fl_set, 
+    'fl_max' : fl_max,
+    'weightings': weighting,
+    'cellcounts': cellcounts, 
+    'titles' : titles,
+    'colors': [ "tab:blue", "tab:orange",  "tab:red"], 
+    'markers': ["o", "v", "s"],
+    'markers_oL':  ["o","P"],  
+    'show_plot' : False, 
+    }
 
     ########Plot test:   
     plot_params_h2_vs_mass = {
     'title': '', 
     'x_label': 'System Mass [kg]', 
-    'x_lim': [100,130], 
+    'x_lim': get_min_max_values_axes(['System Mass (kg)'], df1), 
     'y_label': 'Hydrogen Supply Rate [g/s]',
-    'y_lim': None,  
+    'y_lim': get_min_max_values_axes(['Hydrogen Supply Rate (g/s)'], df1), 
     'label' : ["H2 supply", "system mass"], 
     'vmin' : 100, 
     'vmax' : 150
     }
-    plot_h2_vs_mass(plot_params_h2_vs_mass, data, titles, colors, fl_set, weighting, show_plot=show_plot, saving=saving)
+    plot_h2_vs_mass(plot_params_h2_vs_mass, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ###########PLOT: Polcurves
     plot_params_polarization_curves = {
     'title': '', 
     'x_label': 'Current [A]', 
-    'x_lim': [300, 800], 
+    'x_lim': get_min_max_values_axes(['current_A (Value)'], df1),
     'y_label': 'Cell Voltage [V]',
-    'y_lim': [0, 1.25],  
+    'y_lim': get_min_max_values_axes(['Cell Voltage (V)'], df1),  
     'label' : [ 'BoL', 'EoL'], 
     'vmin' : 120, 
     'vmax' : 150
     }
-    plot_polarization_curves(plot_params_polarization_curves, data, titles, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+    plot_polarization_curves(plot_params_polarization_curves, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: Polcurves eol vs bol connected
     plot_params_polarization_curves_bol_eol = {
     'title': '', 
     'x_label': 'Current [A]', 
-    'x_lim': [0, 800], 
+    'x_lim': get_min_max_values_axes(['current_A (Value)'], df1), 
     'y_label': 'Cell Voltage [V]',
-    'y_lim': [0, 1.25],  
+    'y_lim': get_min_max_values_axes(['Cell Voltage (V)'], df1),  
+    'label' : [ 'BoL', 'EoL'], 
     }
-    plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, df1, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+    plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: System Power Grid Plot
-
     plot_params_power_needs = {
     'title': '', 
     'vmin' : 0.1, 
@@ -156,10 +189,9 @@ def analyze_data(_file_path1, saving=True):
                   "Coolant Pump Power (kW)",	
                   "Stack Power (kW)"]
     }      
-    plot_power_needs(plot_params_power_needs, data, titles, fl_set, weighting, show_plot=show_plot, saving=saving)
+    plot_power_needs(plot_params_power_needs, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: System Power Grid Plot Heat Flux
-
     plot_params_power_needs_heatflux = {
     'title': '', 
     'vmin' : 0.1, 
@@ -173,73 +205,72 @@ def analyze_data(_file_path1, saving=True):
                   "Evaporator Heat Flux (kW)",	
                   "Radiator Heat Flux (kW)"]
     }
-    plot_power_needs_heatflux(plot_params_power_needs_heatflux, data, titles, fl_set, weighting, show_plot=show_plot, saving=saving)    
+    plot_power_needs_heatflux(plot_params_power_needs_heatflux, params_general, show_plot=params_general['show_plot'], saving=saving)    
    
 
     ###########PLOT: H2 supply
     plot_params_supply_vs_systempower = {
     'title': '', 
     'x_label': 'System Power [kW]', 
-    'x_lim': None, 
+    'x_lim': get_min_max_values_axes(['System Power (kW)'], df1),
     'y_label': 'Hydrogen Supply Rate [g/s]',
-    'y_lim': None,  
+    'y_lim': get_min_max_values_axes(['Hydrogen Supply Rate (g/s)'], df1),  
     }
-    plot_h2_supply_vs_systempower(plot_params_supply_vs_systempower, data, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
-    
+    plot_h2_supply_vs_systempower(plot_params_supply_vs_systempower, params_general, show_plot=params_general['show_plot'], saving=saving)
+
     ###########PLOT: System eff vs Net Power: Flade Plot, 
     plot_params_system_efficiency = {
     'title': '', 
     'x_label': 'System Power [kW]', 
-    'x_lim': None, 
+    'x_lim': get_min_max_values_axes(['System Power (kW)'], df1), 
     'y_label': 'System Efficiency [-]',
     'y_lim': None,  
     }
-    plot_system_efficiency(plot_params_system_efficiency, data, titles, colors, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+    plot_system_efficiency(plot_params_system_efficiency, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     #############PLOT: H2 supply vs Flightlevel:
-    
     plot_params_supply_vs_FL = {
         'title': '', 
         'x_label': 'Flight Level [100x ft]', 
-        'x_lim': None, 
+        'x_lim': get_min_max_values_axes(['Flight Level (100x ft)'], df1), 
         'y_label': 'Hydrogen Supply Rate [g/s]',
-        'y_lim': None,  
+        'y_lim': get_min_max_values_axes(['Hydrogen Supply Rate (g/s)'], df1), 
         'vmin' : 125, 
         'vmax' : 175, 
     }
-    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, show_plot=show_plot, saving=saving, mode="bol")
-    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, df1, markers, fl_max, weighting, show_plot=show_plot, saving=saving, mode="eol")
+    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, params_general, show_plot=params_general['show_plot'], saving=saving, mode="bol")
+    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, params_general, show_plot=params_general['show_plot'], saving=saving, mode="eol")
 
     ############Plot Weight estimate
     #Weight/Power Factor
     plot_params_system_mass_estimate = {
         'title': '', 
         'x_label': 'Net Power [kW]', 
-        'x_lim': None, 
+        'x_lim': None,
         'y_label': 'Mass [kg]',
-        'y_lim': None,  
-
+        'y_lim': get_min_max_values_axes(['System Mass (kg)'], df1),  
     }
     componentsP_dict =  {"Compressor Power (kW)":   0.63,
                          "Turbine Power (kW)":      0}
     
     # New grouped, stacked bar chart function
-    plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, fl_set, markers, weighting, show_plot=show_plot, saving=saving, mode="bol")
-    #plot_system_mass_estimate(plot_params_system_mass_estimate, data, titles, colors, componentsP_dict, fl_set, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
-    
+    ## NOCHMAL ANSCHAUEN
+    #plot_system_mass_estimate(plot_params_system_mass_estimate, params_general, componentsP_dict, show_plot=params_general['show_plot'], saving=saving, mode="bol")
+    #plot_system_mass_estimate(plot_params_system_mass_estimate, params_general, componentsP_dict, show_plot=params_general['show_plot'], saving=saving, mode="eol")
+
     ###########PLOT: Compressormap
     plot_params_compressor_map = {
         'title': '', 
         'x_label': 'Corrected Air Flow [g/s]', 
-        'x_lim': [0, 300], 
+        'x_lim': get_min_max_values_axes(['Compressor Corrected Air Flow (g/s)'], df1),  
         'y_label': 'Compressor Pressure Ratio [-]',
-        'y_lim': [1, 6],  
+        'y_lim': get_min_max_values_axes(['Compressor Pressure Ratio (-)'], df1),  
         'vmin' : 20, 
         'vmax' : 175, 
 
     }
-    plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, fl_set, weighting, show_plot=show_plot, saving=saving, mode="bol")
-    #plot_compressor_map(plot_params_compressor_map, data, titles, colors, markers, weighting, show_plot=show_plot, saving=saving, mode="eol")
+    plot_compressor_map(plot_params_compressor_map, params_general, show_plot=params_general['show_plot'], saving=saving, mode="bol")
+    #plot_compressor_map(plot_params_compressor_map, params_general, show_plot=params_general['show_plot'], saving=saving, mode="eol")
         
     ###########PLOT: optimized parameters in DoE envelope
     os.makedirs("DoE_Envelope_Evaluation", exist_ok=True)
@@ -256,26 +287,37 @@ def analyze_data(_file_path1, saving=True):
     plot_optimized_params = {
         'title': '', 
         'x_label': 'Current [A]', 
-        'x_lim': [0, 800], 
+        'x_lim': get_min_max_values_axes(['current_A'], Optimized_DoE_data_variables, scale_min=0.3),
         'y_label': '',
         'y_lim': None,  
         'opt_parameters' : ['cathode_rh_in_perc (Value)',
                       'stoich_cathode (Value)',
                       'pressure_cathode_in_bara (Value)',
                       'temp_coolant_inlet_degC (Value)',
-                      'temp_coolant_outlet_degC (Value)'], 
-        'yranges' : [[0,140],[1,6],[1,3.4],[50,100],[50,100]], 
+                      'temp_coolant_outlet_degC (Value)',
+                      'stoich_anode (Value)', 
+                      'pressure_anode_in_bara (Value)'], 
+        'yranges' : None, 
         'vmin' : 20, 
-        'vmax' : 175, 
+        'vmax' : 150, 
  
     }
 
 
-    
+
+    yranges = get_min_max_values_axes(['cathode_rh_in_perc',
+                      'stoich_cathode',
+                      'pressure_cathode_in_bara',
+                      'temp_coolant_inlet_degC',
+                      'temp_coolant_outlet_degC',
+                      'stoich_anode', 
+                      'pressure_anode_in_bara'], Optimized_DoE_data_variables, scale_max=1.5)
+    plot_optimized_params.update({'yranges':  yranges})
+
     for i, (plot_optimized_params['opt_parameters'], plot_optimized_params['yranges']) in enumerate(zip(plot_optimized_params['opt_parameters'],plot_optimized_params['yranges'])):
         #We will plot current df.iloc[0] with the last column df.iloc[-1], therefore we pass columns 0:n
         doe_data_column = Optimized_DoE_data_variables.iloc[:,0:i+2] 
-        plot_optimized_parameters(plot_optimized_params, data, doe_data_column, titles, fl_set, markers_oL, weighting, show_plot=show_plot, saving=saving)
+        plot_optimized_parameters(plot_optimized_params, params_general, doe_data_column, show_plot=params_general['show_plot'], saving=saving)
 
     # go back to the parent directory
     os.chdir("../")
@@ -287,7 +329,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_30-150kW_400-500_100-100ft.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()

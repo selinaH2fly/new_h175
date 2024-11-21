@@ -52,8 +52,9 @@ def optimize_input_variables(power_constraint_kW=75.0, specified_cell_count=275,
                         + results.turbine_power_W     \
                         - results.reci_pump_power_W    \
                         - results.coolant_pump_power_W
-    
-    results = results._replace(system_power_W = system_power_W)
+    system_efficiency = system_power_W / results.hydrogen_supply_rate_g_s* 33.33 * 3600*1000
+
+    results = results._replace(system_power_W = system_power_W, system_efficiency=system_efficiency)
 
     # Print the optimal input, target variables, and bounds including feature names and target variable
     print("\nOptimized Input Variables:")

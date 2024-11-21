@@ -1,3 +1,4 @@
+import itertools
 import os
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,7 +10,7 @@ from get_plot_settings import *
 
 
 
-def plot_h2_vs_mass(plot_params, data, titles, colors, fl_set, weighting, show_plot, saving=True):
+def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
     """
     Plot of H2 supply vs system power with convex hull envelope around all points,
     connected dashed lines for the same power levels, and colored scatter points
@@ -23,96 +24,101 @@ def plot_h2_vs_mass(plot_params, data, titles, colors, fl_set, weighting, show_p
     - saving: Boolean, if True, saves the plots as PNG files.
     """
 
+    data = params_general['data']
+    fl_set = params_general['fl']
+    weightings = params_general['weightings'] 
+    titles = params_general['titles']
 
-    weightings = [0, 1]  # Only plot weightings 0 and 1
-    markers = ['o', 'D']  # Circle for weighting 0, Diamond for weighting 1
-    
-    # Filter out empty DataFrames
-    non_empty_data = [df for df in data if not df.empty]
-    non_empty_titles = [title for df, title in zip(data, titles) if not df.empty]
-    non_empty_colors = [color for df, color in zip(data, colors) if not df.empty]
+    markers = params_general['markers_oL']
+    colors = params_general['colors']
+    num_plots = len(data)  # Determine the number of required subplots
+    #values = get_values_generalParam_dict(params_general)
 
-    num_plots = len(non_empty_data)  # Determine the number of required subplots
+    #data, fl_set, weightings, titles, colors, markers =  values[0], values[1], values[3], values[5], values[6], values[7]
 
-    # Handle case where all DataFrames are empty
-    if num_plots == 0:
-        print("No non-empty datasets available for plotting.")
-        return
+    for fl in fl_set:
+        if not num_plots:
+            print("No non-empty datasets available for plotting.")
+            return
 
-    fig, axs = plt.subplots(1, num_plots, figsize=(6 * num_plots, 6))  # Dynamically adjust figure size
+        fig, axs = plt.subplots(1, num_plots, figsize=(6 * num_plots, 6))  # Dynamically adjust figure size
 
-    # Ensure axs is always iterable
-    if num_plots == 1:
-        axs = [axs]  # Convert to list if only one subplot is present
+        # Ensure axs is always iterable
+        if num_plots == 1:
+            axs = [axs]  # Convert to list if only one subplot is present
 
-    eol = False  # Assuming eol remains constant in all cases
+        eol = False  # Assuming eol remains constant in all cases
 
 
-    for ax, df, title, color in zip(axs, non_empty_data, non_empty_titles, non_empty_colors):
-        df_filtered = df[(df['Flight Level (100x ft)'] == fl_set) & (df['eol (t/f)'] == eol)]
-        
-        # Set up colormap for 'System Power (kW)'
-        norm, cmap = create_colormap(plot_params['vmin'], plot_params['vmax'], cmap='viridis')
-
-        if df_filtered.empty:
-            print(f"No data available for H2_Supply_Comparison {title} at FL {fl_set}. Skipping subplot.")
-            continue  # Skip plotting if no data exists
-
-        all_points_x = []
-        all_points_y = []
-        all_power = []  # Collect 'System Power (kW)' for coloring
-
-       
-        
-        for weighting, marker in zip(weightings, markers):
-            df_weighted = df_filtered[df_filtered["weighting ([0,1])"] == weighting]
+        for ax, df, title, color in zip(axs, data, titles, colors):
+            df_filtered = df[(df['Flight Level (100x ft)'] == fl) & (df['eol (t/f)'] == eol)]
             
-            if df_weighted.empty:
-                print(f"No data available for weighting {weighting} in {title}.")
-                continue
+            # Set up colormap for 'System Power (kW)'
+            norm, cmap = create_colormap(plot_params['vmin'], plot_params['vmax'], cmap='viridis')
 
-            # Scatter plot with color based on 'System Power (kW)'
-            scatter = ax.scatter(df_weighted['System Mass (kg)'], 
-                                 df_weighted['Hydrogen Supply Rate (g/s)'], 
-                                 s=100, edgecolor='k', 
-                                 c=df_weighted['System Power (kW)'],  # Color based on power
-                                 cmap='viridis', norm=norm, 
-                                 marker=marker, label=f'Weighting {weighting}',
-                                 zorder=2)
+            if df_filtered.empty:
+                print(f"No data available for H2_Supply_Comparison {title} at FL {fl} and {'eol' if eol else 'bol'}. Skipping subplot.")
+                continue  # Skip plotting if no data exists
 
-            # Collect points for convex hull
-            all_points_x.extend(df_weighted['System Mass (kg)'].values)
-            all_points_y.extend(df_weighted['Hydrogen Supply Rate (g/s)'].values)
-            all_power.extend(df_weighted['System Power (kW)'].values)
+            all_points_x = []
+            all_points_y = []
+            all_power = []  # Collect 'System Power (kW)' for coloring
 
-        # Convert the collected points to numpy arrays for convex hull calculation
-        all_points_x = np.array(all_points_x)
-        all_points_y = np.array(all_points_y)
-
-        # Compute and plot convex hull over all points from both weightings
-        plot_convex_hull(ax, all_points_x, all_points_y, color)
-
-        # Connect points with the same power level using dashed lines
-        connect_power_levels(ax, df_filtered)
-
-        # Set title, labels, and legend
-        plot_params.update({'title': f'{title} Cells, FL {fl_set}'})
-        configure_axes(ax, **plot_params)
-
-        ax.legend([f"Optimized: {plot_params['label'][0]}", f"Optimized: {plot_params['label'][1]}"], loc='lower right')
-
-    # Add colorbar for the gradient
-    add_colorbar(cmap, ax)
-    
-    # Adjust layout after adding all subplots
-    plt.tight_layout(pad=2.0)
-    
-    if saving and ax.collections :
-        file_path = create_plot_save_directory(f'H2_Supply_Comparison_FL{fl_set}_weighting_{weighting}.png', weighting)
-        plt.savefig(file_path, bbox_inches='tight', dpi=300)
         
-    plt.show() if show_plot and ax.collections else plt.close()
+            
+            for weighting, marker in zip(weightings, markers):
+                df_weighted = df_filtered[df_filtered["weighting ([0,1])"] == weighting]
+                
+                if df_weighted.empty:
+                    print(f"No data available for weighting {weighting} in {title}.")
+                    continue
 
+                # Scatter plot with color based on 'System Power (kW)'
+                scatter = ax.scatter(df_weighted['System Mass (kg)'], 
+                                    df_weighted['Hydrogen Supply Rate (g/s)'], 
+                                    s=100, edgecolor='k', 
+                                    c=df_weighted['System Power (kW)'],  # Color based on power
+                                    cmap='viridis', norm=norm, 
+                                    marker=marker, label=f'Weighting {weighting}',
+                                    zorder=2)
+
+                # Collect points for convex hull
+                all_points_x.extend(df_weighted['System Mass (kg)'].values)
+                all_points_y.extend(df_weighted['Hydrogen Supply Rate (g/s)'].values)
+                all_power.extend(df_weighted['System Power (kW)'].values)
+
+            # Convert the collected points to numpy arrays for convex hull calculation
+            all_points_x = np.array(all_points_x)
+            all_points_y = np.array(all_points_y)
+
+            # Compute and plot convex hull over all points from both weightings
+            plot_convex_hull(ax, all_points_x, all_points_y, color)
+
+            # Connect points with the same power level using dashed lines
+            connect_power_levels(ax, df_filtered)
+
+            # Set title, labels, and legend
+            plot_params.update({'title': f'{title} Cells, FL {fl}'})
+            configure_axes(ax, **plot_params)
+
+            ax.legend([f"Optimized: {plot_params['label'][0]}", f"Optimized: {plot_params['label'][1]}"], loc='lower right')
+
+        # Add colorbar for the gradient
+        add_colorbar(cmap, ax)
+        
+        # Adjust layout after adding all subplots
+        plt.tight_layout(pad=2.0)
+        
+        if saving and ax.collections :
+            file_path = create_plot_save_directory(f'H2_Supply_Comparison_FL{fl}.png', fl=fl)
+            plt.savefig(file_path, bbox_inches='tight', dpi=300)
+            
+        plt.show() if show_plot and ax.collections else plt.close()
+
+
+         
+            
+  
 def plot_convex_hull(ax, x, y, color):
     """
     Plots the convex hull around the combined points for weightings 0 and 1

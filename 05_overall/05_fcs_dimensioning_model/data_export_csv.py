@@ -48,7 +48,7 @@ def export_to_csv(results, feature_names, power_constraint_kW, specified_cell_co
                            'Coolant Pump Power (kW)', "Stack Power (kW)", "Compressor Corrected Air Flow (g/s)", "Compressor Pressure Ratio (-)",
                            "Stack Heat Flux (kW)", "Intercooler Heat Flux (kW)","Evaporator Heat Flux (kW)","Radiator Heat Flux (kW)", "System Mass (kg)",
                            "fixed Mass (kg)","power dependent Mass (kg)", "Cell dependent Mass (kg)","H2 dependent Mass (kg)",  
-                           "turbine (t/f)","eol (t/f)", "weighting ([0,1])", "converged (t/f)"])
+                           "turbine (t/f)","eol (t/f)", "weighting ([0,1])", "converged (t/f)", "system_efficiency"])
             writer.writerow(header)
             
         # Prepare data for export, converting relevant fields to the desired units
