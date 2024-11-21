@@ -65,7 +65,7 @@ def plot_power_needs(plot_params, params_general, show_plot, saving=True ):
 
         
             # Set the title centered between the colored boxes
-            title = f"Power Consumption of Components [kW], {title}, FL {fl}, weighting {weighting}"
+            title = f"Power Consumption of Components [kW], {title}, FL {fl}, Weighting {weighting}"
             ax.set_title(title, pad=30, loc='center')
         
             # Save and show the plot

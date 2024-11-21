@@ -92,7 +92,7 @@ def plot_optimized_parameters(plot_params, params_general, data_doe, show_plot, 
             # Add colorbar for the gradient
             add_colorbar(cmap, ax)
             # Add a red shaded area from 700 A to 800 A
-            ax.axvspan(700, 800, color='red', alpha=0.3)
+            ax.axvspan(700,  plot_params['x_lim'][1], color='red', alpha=0.3)
 
             # Set title and labels
             plot_params.update({'title': f'Optimized Operating Parameters: {var}, FL {fl}, Weighting {weighting}, {title}'})

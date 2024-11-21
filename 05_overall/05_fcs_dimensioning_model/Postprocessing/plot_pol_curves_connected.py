@@ -102,10 +102,10 @@ def plot_polarization_curves_bol_eol(plot_params, params_general, show_plot, sav
         plot_data(ax, bol_data, eol_data, titles, colors, highlight_powers, markers, labels)
         
         # Set title and axis labels
-        plot_params.update({'title': f'System Polarization Curve - EoL vs BoL, FL {fl}, weighting {weighting}'})
+        plot_params.update({'title': f'System Polarization Curve - EoL vs BoL, FL {fl}, Weighting {weighting}'})
         configure_axes(ax, **plot_params)
 
-        ax.axvspan(700, 1000, color='red', alpha=0.2)
+        ax.axvspan(700, plot_params['x_lim'][1], color='red', alpha=0.2)
         ax.legend(loc='upper right')
 
         # Save and show plot

@@ -1,4 +1,5 @@
 # %% Imports:
+import numpy as np
 import pandas as pd
 import os
 import sys
@@ -66,6 +67,13 @@ def split_data_based_on_cell_count(df):
 def get_unique_values(df, column_name): 
     return df[column_name].unique()
 
+def get_min_max_values_axes(axes, df, scale_min=0.9, scale_max=1.1): 
+    min_max_list=  [
+        (np.round(df[axis].min() * scale_min), np.round(df[axis].max() * scale_max)) 
+        for axis in axes
+    ]
+    return min_max_list[0] if len(axes) == 1 else min_max_list
+
 
 def check_empty_df(df): 
     return df.empty
@@ -131,9 +139,9 @@ def analyze_data(_file_path1, saving=True):
     plot_params_h2_vs_mass = {
     'title': '', 
     'x_label': 'System Mass [kg]', 
-    'x_lim': [100,130], 
+    'x_lim': get_min_max_values_axes(['System Mass (kg)'], df1), 
     'y_label': 'Hydrogen Supply Rate [g/s]',
-    'y_lim': None,  
+    'y_lim': get_min_max_values_axes(['Hydrogen Supply Rate (g/s)'], df1), 
     'label' : ["H2 supply", "system mass"], 
     'vmin' : 100, 
     'vmax' : 150
@@ -144,9 +152,9 @@ def analyze_data(_file_path1, saving=True):
     plot_params_polarization_curves = {
     'title': '', 
     'x_label': 'Current [A]', 
-    'x_lim': [300, 800], 
+    'x_lim': get_min_max_values_axes(['current_A (Value)'], df1),
     'y_label': 'Cell Voltage [V]',
-    'y_lim': [0, 1.25],  
+    'y_lim': get_min_max_values_axes(['Cell Voltage (V)'], df1),  
     'label' : [ 'BoL', 'EoL'], 
     'vmin' : 120, 
     'vmax' : 150
@@ -157,15 +165,14 @@ def analyze_data(_file_path1, saving=True):
     plot_params_polarization_curves_bol_eol = {
     'title': '', 
     'x_label': 'Current [A]', 
-    'x_lim': [0, 800], 
+    'x_lim': get_min_max_values_axes(['current_A (Value)'], df1), 
     'y_label': 'Cell Voltage [V]',
+    'y_lim': get_min_max_values_axes(['Cell Voltage (V)'], df1),  
     'label' : [ 'BoL', 'EoL'], 
-    'y_lim': [0, 1.25],  
     }
     plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: System Power Grid Plot
-
     plot_params_power_needs = {
     'title': '', 
     'vmin' : 0.1, 
@@ -185,7 +192,6 @@ def analyze_data(_file_path1, saving=True):
     plot_power_needs(plot_params_power_needs, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     ############PLOT: System Power Grid Plot Heat Flux
-
     plot_params_power_needs_heatflux = {
     'title': '', 
     'vmin' : 0.1, 
@@ -206,45 +212,43 @@ def analyze_data(_file_path1, saving=True):
     plot_params_supply_vs_systempower = {
     'title': '', 
     'x_label': 'System Power [kW]', 
-    'x_lim': None, 
+    'x_lim': get_min_max_values_axes(['System Power (kW)'], df1),
     'y_label': 'Hydrogen Supply Rate [g/s]',
-    'y_lim': None,  
+    'y_lim': get_min_max_values_axes(['Hydrogen Supply Rate (g/s)'], df1),  
     }
     plot_h2_supply_vs_systempower(plot_params_supply_vs_systempower, params_general, show_plot=params_general['show_plot'], saving=saving)
-    
+
     ###########PLOT: System eff vs Net Power: Flade Plot, 
     plot_params_system_efficiency = {
     'title': '', 
     'x_label': 'System Power [kW]', 
-    'x_lim': None, 
+    'x_lim': get_min_max_values_axes(['System Power (kW)'], df1), 
     'y_label': 'System Efficiency [-]',
     'y_lim': None,  
     }
     plot_system_efficiency(plot_params_system_efficiency, params_general, show_plot=params_general['show_plot'], saving=saving)
     
     #############PLOT: H2 supply vs Flightlevel:
-    
     plot_params_supply_vs_FL = {
         'title': '', 
         'x_label': 'Flight Level [100x ft]', 
-        'x_lim': [-1, fl_max + 1], 
+        'x_lim': get_min_max_values_axes(['Flight Level (100x ft)'], df1), 
         'y_label': 'Hydrogen Supply Rate [g/s]',
-        'y_lim': [1, 5],  
+        'y_lim': get_min_max_values_axes(['Hydrogen Supply Rate (g/s)'], df1), 
         'vmin' : 125, 
         'vmax' : 175, 
     }
     plot_h2_supply_vs_FL(plot_params_supply_vs_FL, params_general, show_plot=params_general['show_plot'], saving=saving, mode="bol")
-    #plot_h2_supply_vs_FL(plot_params_supply_vs_FL, params_general, show_plot=params_general['show_plot'], saving=saving, mode="eol")
+    plot_h2_supply_vs_FL(plot_params_supply_vs_FL, params_general, show_plot=params_general['show_plot'], saving=saving, mode="eol")
 
     ############Plot Weight estimate
     #Weight/Power Factor
     plot_params_system_mass_estimate = {
         'title': '', 
         'x_label': 'Net Power [kW]', 
-        'x_lim': None, 
+        'x_lim': None,
         'y_label': 'Mass [kg]',
-        'y_lim': None,  
-
+        'y_lim': get_min_max_values_axes(['System Mass (kg)'], df1),  
     }
     componentsP_dict =  {"Compressor Power (kW)":   0.63,
                          "Turbine Power (kW)":      0}
@@ -258,9 +262,9 @@ def analyze_data(_file_path1, saving=True):
     plot_params_compressor_map = {
         'title': '', 
         'x_label': 'Corrected Air Flow [g/s]', 
-        'x_lim': [0, 300], 
+        'x_lim': get_min_max_values_axes(['Compressor Corrected Air Flow (g/s)'], df1),  
         'y_label': 'Compressor Pressure Ratio [-]',
-        'y_lim': [1, 6],  
+        'y_lim': get_min_max_values_axes(['Compressor Pressure Ratio (-)'], df1),  
         'vmin' : 20, 
         'vmax' : 175, 
 
@@ -283,7 +287,7 @@ def analyze_data(_file_path1, saving=True):
     plot_optimized_params = {
         'title': '', 
         'x_label': 'Current [A]', 
-        'x_lim': [0, 800], 
+        'x_lim': get_min_max_values_axes(['current_A (Value)'], df1), 
         'y_label': '',
         'y_lim': None,  
         'opt_parameters' : ['cathode_rh_in_perc (Value)',

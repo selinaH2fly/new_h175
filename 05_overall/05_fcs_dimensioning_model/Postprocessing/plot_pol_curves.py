@@ -62,10 +62,10 @@ def plot_polarization_curves(plot_params, params_general, show_plot, saving=True
 
 
             # Add a shaded region to highlight a specific current range
-            ax.axvspan(700, 800, color='red', alpha=0.3)
+            ax.axvspan(700, plot_params['x_lim'][1], color='red', alpha=0.3)
 
             # Set title and axis labels
-            plot_params.update({'title': f'System Polarization Curve, FL {fl}, weighting {weighting}, {title}'})
+            plot_params.update({'title': f'System Polarization Curve, FL {fl}, Weighting {weighting}, {title}'})
 
             configure_axes(ax, **plot_params)        
             # Create a custom legend (optional)
