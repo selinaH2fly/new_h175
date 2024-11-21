@@ -75,6 +75,10 @@ def plot_optimized_parameters(plot_params, params_general, data_doe, show_plot, 
                                     c=df_bol['System Power (kW)'], 
                                     cmap='viridis', norm=norm, 
                                     edgecolor='k', s=100, marker=markers[0], label='BoL', zorder=1)
+            
+            # add system power values as text 
+            for x, y, value in zip(df_bol['current_A (Value)'], df_bol[plot_params['opt_parameters']], df_bol['System Power (kW)']):
+                ax.text(x, y+4.5, f'{value:.2f}', fontsize=8, ha='center', va='bottom', color = "green")
 
             # Plot EoL points (use squares for distinction)
             scatter_eol = ax.scatter(df_eol['current_A (Value)'], 
@@ -82,7 +86,8 @@ def plot_optimized_parameters(plot_params, params_general, data_doe, show_plot, 
                                     c=df_eol['System Power (kW)'], 
                                     cmap='viridis', norm=norm, 
                                     edgecolor='k', s=100, marker=markers[1], label='EoL', zorder=1)
-            
+            for x, y, value in zip(df_eol['current_A (Value)'], df_eol[plot_params['opt_parameters']], df_eol['System Power (kW)']):
+                ax.text(x, y-5.5, f'{value:.2f}', fontsize=8, ha='center', va='bottom', color = "red")
             # Plot DOE data in the background
             scatter_eol = ax.scatter(data_doe["current_A"], 
                                     data_doe.iloc[:,-1], c="k", edgecolor='k', 

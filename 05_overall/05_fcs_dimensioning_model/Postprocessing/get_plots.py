@@ -255,7 +255,7 @@ def analyze_data(_file_path1, saving=True):
     
     # New grouped, stacked bar chart function
     ## NOCHMAL ANSCHAUEN
-    plot_system_mass_estimate(plot_params_system_mass_estimate, params_general, componentsP_dict, show_plot=params_general['show_plot'], saving=saving, mode="bol")
+    #plot_system_mass_estimate(plot_params_system_mass_estimate, params_general, componentsP_dict, show_plot=params_general['show_plot'], saving=saving, mode="bol")
     #plot_system_mass_estimate(plot_params_system_mass_estimate, params_general, componentsP_dict, show_plot=params_general['show_plot'], saving=saving, mode="eol")
 
     ###########PLOT: Compressormap
@@ -294,17 +294,24 @@ def analyze_data(_file_path1, saving=True):
                       'stoich_cathode (Value)',
                       'pressure_cathode_in_bara (Value)',
                       'temp_coolant_inlet_degC (Value)',
-                      'temp_coolant_outlet_degC (Value)'], 
-        'yranges' : [[0,140],[1,6],[1,3.4],[50,100],[50,100]], 
+                      'temp_coolant_outlet_degC (Value)'],
+                      #'stoich_anode (Value)', 
+                      #'pressure_anode_in_bara (Value)'], 
+        'yranges' : None, 
         'vmin' : 20, 
         'vmax' : 175, 
  
     }
-    
+
+    #yranges = get_min_max_values_axes(['stoich_anode, pressure_anode_in_bara'], Optimized_DoE_data_variables)
+    plot_optimized_params.update({'yranges':  [[0,140],[1,6],[1,3.4],[50,100],[50,100]]})
+    #plot_optimized_params.update({'yranges':  yranges})
+
+    #yranges = [[0,140],[1,6],[1,3.4],[50,100],[50,100]]
     for i, (plot_optimized_params['opt_parameters'], plot_optimized_params['yranges']) in enumerate(zip(plot_optimized_params['opt_parameters'],plot_optimized_params['yranges'])):
         #We will plot current df.iloc[0] with the last column df.iloc[-1], therefore we pass columns 0:n
         doe_data_column = Optimized_DoE_data_variables.iloc[:,0:i+2] 
-        plot_optimized_parameters(plot_optimized_params, params_general, doe_data_column, show_plot=params_general['show_plot'], saving=saving)
+        plot_optimized_parameters(plot_optimized_params, params_general, doe_data_column, show_plot=True, saving=saving)
 
     # go back to the parent directory
     os.chdir("../")
@@ -316,7 +323,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_25-150kW_400-500_100-100ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_30-150kW_400-500_100-100ft.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()

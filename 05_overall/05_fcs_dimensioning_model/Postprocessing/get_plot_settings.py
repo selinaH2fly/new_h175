@@ -39,10 +39,10 @@ def configure_axes(ax, **params):
 
 def create_legend(ax, markers_oL):
         legend_bol = mlines.Line2D([], [], color='none', marker=markers_oL[0], 
-                                      markerfacecolor='none', markeredgecolor='black', 
+                                      markerfacecolor='none', markeredgecolor='green', 
                                       markersize=11, linestyle='None', label='System Power BoL [kW]')
         legend_eol = mlines.Line2D([], [], color='none', marker=markers_oL[1],
-                                      markerfacecolor='none', markeredgecolor='black', 
+                                      markerfacecolor='none', markeredgecolor='red', 
                                       markersize=11, linestyle='None', label='System Power EoL [kW]')
         
         ax.legend(handles=[legend_bol,legend_eol], loc='best')
