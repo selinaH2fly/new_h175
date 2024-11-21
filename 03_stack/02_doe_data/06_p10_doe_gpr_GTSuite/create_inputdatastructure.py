@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 
+number_of_complete_run = 1
+
 # Define the directory containing CSV files
 folder_path = r"C:\Users\tobias.goosmann\Documents\GIT\h175model\03_stack\02_doe_data\06_p10_doe_gpr_GTSuite\simulationresult_GTSuite"
 csv_files = [file for file in os.listdir(folder_path) if file.endswith('.csv')]
@@ -61,7 +63,6 @@ rename_columns = {
     'Average Mass Flow Rate (Outlet); Part Coolant_inlet'               :'m_dot_cool_in_g_s',
     'm_dot_an; Part Anode_lambda'                                       :'m_dot_an_in_calc_g_s',
     'm_dot_cath; Part Cathode_lambda'                                   :'m_dot_cat_in_calc_g_s',
-    'Volumetric Flow Rate coolant set'                                  :'c_cool_I_l_min_A',
     'Relative Humidity (Outlet); Part An_outlet'                        :'RH_an_out_percent', # fluid outlet values
     'Relative Humidity (Outlet); Part Cathode_outlet'                   :'RH_cat_out_percent',
     'Average Pressure (Outlet); Part Coolant_outlet'                    :'p_cool_out_bar',
@@ -131,7 +132,7 @@ combined_data = combined_data.dropna()
 # convert all columns to numeric (without this line, calculation fails)
 combined_data = combined_data.apply(pd.to_numeric, errors='coerce')
 # add new columns and execute calculations
-combined_data['m_dot_cool_in_set_g_s']  = 72.8 + combined_data['I_Stack_A'] * combined_data['c_cool_I_l_min_A'] 
+
 combined_data['p_an_out_set_bar']   = combined_data['p_cat_out_set_bar'] * combined_data['factor_dp_a2c_1']
 combined_data['T_cat_in_C']         = combined_data['T_cat_in_K']   - 273.15
 combined_data['T_an_in_C']          = combined_data['T_an_in_K']    - 273.15
@@ -140,9 +141,24 @@ combined_data['T_cat_out_C']        = combined_data['T_cat_out_K']  - 273.15
 combined_data['T_an_out_C']         = combined_data['T_an_out_K']   - 273.15
 combined_data['T_cool_out_C']       = combined_data['T_cool_out_K'] - 273.15
 
+if number_of_complete_run == 1:
+    rename_columns = {
+        'Volumetric Flow Rate coolant set'                                  :'c_cool_I_l_min_A'
+    }
+    combined_data.rename(columns=rename_columns, inplace= True)    
+    combined_data['m_dot_cool_in_set_g_s']  = 72.8 + combined_data['I_Stack_A'] * combined_data['c_cool_I_l_min_A'] 
+elif number_of_complete_run == 2:
+    rename_columns = {
+        'Volumetric Flow Rate coolant set'                                  :'c_cool_l_min'
+    }
+    combined_data.rename(columns=rename_columns, inplace= True)   
+    combined_data['m_dot_cool_in_set_g_s']  = 72.8 + combined_data['I_Stack_A'] * 0.4447 + combined_data['c_cool_l_min'] 
+else:
+    raise ValueError('Invalid data selection!')
+
 print(combined_data)
 # save combined data to a new CSV
-output_path = r"C:\Users\tobias.goosmann\Documents\GIT\h175model\03_stack\02_doe_data\06_p10_doe_gpr_GTSuite\input_data\combined_data.csv"
+output_path = r"C:\Users\tobias.goosmann\Documents\GIT\h175model\03_stack\02_doe_data\06_p10_doe_gpr_GTSuite\data_input_training\DoE_data_BBM_PowerCell_GTSuite.csv"
 # output_path = r"C:\Users\tobias.goosmann\Documents\Python_tutorials\genbasics"
 combined_data.to_csv(output_path,index=False)
 print(f"Combined data saved to {output_path}")
