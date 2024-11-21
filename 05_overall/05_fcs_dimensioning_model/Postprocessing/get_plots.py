@@ -287,7 +287,7 @@ def analyze_data(_file_path1, saving=True):
     plot_optimized_params = {
         'title': '', 
         'x_label': 'Current [A]', 
-        'x_lim': get_min_max_values_axes(['current_A (Value)'], df1), 
+        'x_lim': get_min_max_values_axes(['current_A'], Optimized_DoE_data_variables, scale_min=0.3),
         'y_label': '',
         'y_lim': None,  
         'opt_parameters' : ['cathode_rh_in_perc (Value)',
@@ -300,8 +300,6 @@ def analyze_data(_file_path1, saving=True):
         'vmax' : 175, 
  
     }
-
-
     
     for i, (plot_optimized_params['opt_parameters'], plot_optimized_params['yranges']) in enumerate(zip(plot_optimized_params['opt_parameters'],plot_optimized_params['yranges'])):
         #We will plot current df.iloc[0] with the last column df.iloc[-1], therefore we pass columns 0:n
@@ -318,8 +316,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    #parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_25-150kW_400-500_100-100ft.csv")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_20-175kW_400-500_0-120ft 1.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_25-150kW_400-500_100-100ft.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
