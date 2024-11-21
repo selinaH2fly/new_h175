@@ -294,20 +294,26 @@ def analyze_data(_file_path1, saving=True):
                       'stoich_cathode (Value)',
                       'pressure_cathode_in_bara (Value)',
                       'temp_coolant_inlet_degC (Value)',
-                      'temp_coolant_outlet_degC (Value)'],
-                      #'stoich_anode (Value)', 
-                      #'pressure_anode_in_bara (Value)'], 
+                      'temp_coolant_outlet_degC (Value)',
+                      'stoich_anode (Value)', 
+                      'pressure_anode_in_bara (Value)'], 
         'yranges' : None, 
         'vmin' : 20, 
-        'vmax' : 175, 
+        'vmax' : 150, 
  
     }
 
-    #yranges = get_min_max_values_axes(['stoich_anode, pressure_anode_in_bara'], Optimized_DoE_data_variables)
-    plot_optimized_params.update({'yranges':  [[0,140],[1,6],[1,3.4],[50,100],[50,100]]})
-    #plot_optimized_params.update({'yranges':  yranges})
 
-    #yranges = [[0,140],[1,6],[1,3.4],[50,100],[50,100]]
+
+    yranges = get_min_max_values_axes(['cathode_rh_in_perc',
+                      'stoich_cathode',
+                      'pressure_cathode_in_bara',
+                      'temp_coolant_inlet_degC',
+                      'temp_coolant_outlet_degC',
+                      'stoich_anode', 
+                      'pressure_anode_in_bara'], Optimized_DoE_data_variables, scale_max=1.5)
+    plot_optimized_params.update({'yranges':  yranges})
+
     for i, (plot_optimized_params['opt_parameters'], plot_optimized_params['yranges']) in enumerate(zip(plot_optimized_params['opt_parameters'],plot_optimized_params['yranges'])):
         #We will plot current df.iloc[0] with the last column df.iloc[-1], therefore we pass columns 0:n
         doe_data_column = Optimized_DoE_data_variables.iloc[:,0:i+2] 
