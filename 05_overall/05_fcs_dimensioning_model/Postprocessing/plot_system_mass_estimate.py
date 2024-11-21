@@ -73,8 +73,8 @@ def plot_system_mass_estimate(plot_params, params_general, componentsP_dict,  sh
 
         
         # The x-axis points to be plotted and searched for
-        points = [125, 140, 150]
-        
+        if 1 <= cell_no.shape[0] <= 3:
+            points = [125 + i * 15 for i in range(cell_no.shape[0])]
         
         # Get stack and coolant mass from components -> stack
         m_stack_values = np.array([Stack(cellcount=cell).calculate_stack_mass() for cell in cell_no])

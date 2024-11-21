@@ -60,7 +60,7 @@ def plot_compressor_map(plot_params, params_general, show_plot, saving=True, mod
     legend_handles  = []
     for weighting, fl in itertools.product(weightings, fl_set):     
         fig, axs = plt.subplots(nrows=1, ncols=len(non_empty_data), figsize=(17, 8))
-        axs = axs.flatten()  # Flatten the 2D array of axes to easily iterate through
+        axs = axs.flatten() if isinstance(axs, np.ndarray) else [axs]
         # Iterate through the data, titles, colors, and markers
         for i, (df, title, color, marker) in enumerate(zip(data, titles, colors, markers)):
             ax = axs[i]  # Select the appropriate subplot
