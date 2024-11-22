@@ -94,7 +94,7 @@ if __name__ == '__main__':
     parameters = list(itertools.product(range_power, range_cellcount, range_fl, range_turbine, range_map, range_eol, range_DoE_constraint, weighting))
     
     # Start parallel execution using ProcessPoolExecutor
-    max_workers = min(26, len(parameters))  # Define the number of processes based on available resources
+    max_workers = min(4, len(parameters))  # Define the number of processes based on available resources
     
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(run_subprocess, param): param for param in parameters}
