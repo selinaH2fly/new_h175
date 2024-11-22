@@ -95,8 +95,8 @@ def plot_polarization_curves_bol_eol(plot_params, params_general, show_plot, sav
         eol_data = filter_data(data, fl, weighting, eol=True, cell_counts=cells)
 
         if all(df.empty for df in bol_data.values() and eol_data.values()):
-            print(f"No data available for Bol Eol Polarization Curve at fl{fl} and weighting {weighting}. Skipping plot.")
-            return  # Skip plotting if no data exists
+            print(f"No data available for Bol Eol Polarization Curve at fl {fl} and weighting {weighting}. Skipping plot.")
+            continue  # Skip plotting if no data exists
         # Create the plot
         fig, ax = plt.subplots(figsize=(12, 8))
         plot_data(ax, bol_data, eol_data, titles, colors, highlight_powers, markers, labels)

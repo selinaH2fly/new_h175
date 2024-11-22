@@ -91,7 +91,9 @@ def plot_compressor_map(plot_params, params_general, show_plot, saving=True, mod
             
             # Prepare data for Convex Hull (x and y coordinates)
             points = np.column_stack((df["Compressor Corrected Air Flow (g/s)"], df["Compressor Pressure Ratio (-)"]))
-            
+            if len(points) <3:
+                print(f"Only {len(points)} Points, at least 3 are needed for a Conex Hull, Skip Convex hull") 
+                continue
             # Compute the convex hull
             hull = ConvexHull(points)
             
