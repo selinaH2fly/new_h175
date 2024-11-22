@@ -60,7 +60,6 @@ def load_high_temp_doe_data():
 
     return df, units
 
-
 # Load DoE data simulated in GT-Suite
 def load_BBM_PowerCell_DoE():
     # Get path to data file
@@ -70,7 +69,6 @@ def load_BBM_PowerCell_DoE():
 
     # Load data file
     csv = pd.read_csv(path)
-    csv=csv*1
     
     # Get the name of the first sheet
     first_sheet_name = xls.sheet_names[0]
@@ -85,16 +83,12 @@ def load_BBM_PowerCell_DoE():
     df = df.drop(0)
 
     # Clear failed runs and duplicates from the DataFrame
-    df = df[df['Point successfully run'] == 1]
     df = df.loc[:, ~df.columns.duplicated()]
 
     # Drop columns missing values
     df = df.dropna(axis=1, how='all')
 
     return df, units
-
-
-
 
 # Preprocess the data
 def preprocess_data(df, target='eta_lhv', cutoff_current=0, params_pyhsics=None, data='high_amp'):
@@ -136,11 +130,27 @@ def preprocess_data(df, target='eta_lhv', cutoff_current=0, params_pyhsics=None,
     return train_input_tensor, train_target_tensor, test_input_tensor, test_target_tensor, (input_data_mean, input_data_std), (target_data_mean, target_data_std), feature_names
 
 # Assign input data dict
-def assign_input_and_target_data(dataframe, target, params_pyhsics, data):
+def assign_input_and_target_data(dataframe, targets, params_pyhsics, data):
 
     # Convert the dataframes to dictionaries
     df_dict = dataframe.to_dict('list')
 
+    # Initialize containers for targets and input data
+    targets_data_dict = {}
+    input_data_dict = None  # This will be common across all targets
+
+    for target in targets:
+        if target in df_dict:
+            target_data = df_dict[target]
+            input_data_dict = overall_input_data_dict(df_dict)
+        else:
+            raise ValueError(f'Target variable {target} not found in the dataframe!')     
+
+
+
+
+    
+          
     # Try to find the target variable in the df_dict
     if target in df_dict:
         target_data = df_dict[target]
@@ -177,7 +187,7 @@ def assign_input_and_target_data(dataframe, target, params_pyhsics, data):
         for feature in feature_names:
             file.write(f'{feature}\n')
 
-    return target_data, input_data_dict, feature_names
+    return targets_data, input_data_dict, feature_names
 
 # Default input data dict
 def default_input_data_dict(df_dict):
@@ -261,4 +271,38 @@ def anode_dp_input_data_dict(df_dict, params_physics):
     input_data_dict['pressure_anode_in_bara'] = [pressure_barg + params_physics.sea_level_ambient_pressure_bar for pressure_barg in df_dict['pressure_anode_inlet']]
     input_data_dict['temp_coolant_inlet_degC'] = df_dict['temp_coolant_inlet'] # assumption: gas temperature \approx "stack" temperature, right after gas enters stack (cf. Powercell assumption for dewpoint computations)
     input_data_dict['H2_concentration'] = df_dict['Anode_H2_Concentration'] 
+    return input_data_dict
+
+def overall_input_data_dict(df_dict, params_physics):
+    input_data_dict = {}
+    
+    # input_data_dict['name in Python'] = df_dict['name in CSV file']
+    input_data_dict['I_Stack_A'] = df_dict['I_Stack_A']
+    input_data_dict['RH_an_in_percent'] = df_dict['RH_an_in_percent']
+    input_data_dict['RH_cat_in_percent'] = df_dict['RH_cat_in_percent']
+    input_data_dict['stoich_an_1'] = df_dict['stoich_an_1']
+    input_data_dict['stoich_cat_1'] = df_dict['stoich_cat_1']
+    input_data_dict['p_cool_in_bar'] = df_dict['p_cool_in_bar']
+    input_data_dict['p_an_in_bar'] = df_dict['p_an_in_bar']
+    input_data_dict['p_cat_in_bar'] = df_dict['p_cat_in_bar']
+    input_data_dict['T_cat_in_K'] = df_dict['T_cat_in_K']
+    input_data_dict['T_an_in_K'] = df_dict['T_an_in_K']
+    input_data_dict['T_cool_in_K'] = df_dict['T_cool_in_K']
+    input_data_dict['xH2_an_in_frac'] = df_dict['xH2_an_in_frac']
+    input_data_dict['xN2_an_in_frac'] = df_dict['xN2_an_in_frac']
+    input_data_dict['xH2Ovap_an_in_frac'] = df_dict['xH2Ovap_an_in_frac']
+    input_data_dict['xH2Oliq_an_in_frac'] = df_dict['xH2Oliq_an_in_frac']
+    input_data_dict['xO2_cat_in_frac'] = df_dict['xO2_cat_in_frac']
+    input_data_dict['xN2_cat_in_frac'] = df_dict['xN2_cat_in_frac']
+    input_data_dict['xH2Ovap_cat_in_frac'] = df_dict['xH2Ovap_cat_in_frac']
+    input_data_dict['xH2Oliq_cat_in_frac'] = df_dict['xH2Oliq_cat_in_frac']
+    input_data_dict['m_dot_an_in_g_s'] = df_dict['m_dot_an_in_g_s']
+    input_data_dict['m_dot_cat_in_g_s'] = df_dict['m_dot_cat_in_g_s']
+    input_data_dict['m_dot_cool_in_g_s'] = df_dict['m_dot_cool_in_g_s']
+    input_data_dict['m_dot_an_in_calc_g_s'] = df_dict['m_dot_an_in_calc_g_s']
+    input_data_dict['m_dot_cat_in_calc_g_s'] = df_dict[ 'm_dot_cat_in_calc_g_s']
+ 
+
+
+
     return input_data_dict

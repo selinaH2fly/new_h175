@@ -25,7 +25,7 @@ from data_processing import load_high_amp_doe_data, load_high_temp_doe_data, pre
 from prediction_performance_evaluation import eval_prediction_performance, plot_prediction_performance, create_prediction_performance_video
 from partial_dependence_analysis import plot_partial_dependence
 
-def train_gpr_model(target='voltage', cutoff_current=0, pretrained_model=None, data='high_amp'):
+def train_gpr_model(target='voltage', cutoff_current=0, pretrained_model=None, data='BBM_PowerCell_GT_Suite'):
     # Load parameters
     _params_training = parameters.Training_Parameters()
     _params_logging = parameters.Logging_Parameters()
@@ -45,6 +45,8 @@ def train_gpr_model(target='voltage', cutoff_current=0, pretrained_model=None, d
         pd_dataframe, _ = load_high_amp_doe_data()
     elif data == 'high_temp':
         pd_dataframe, _ = load_high_temp_doe_data()
+    elif data == 'BBM_PowerCell_GT_Suite':
+        pd_dataframe, _ = load_BBM_PowerCell_DoE()
     else:
         raise ValueError('Invalid data selection!')
             
