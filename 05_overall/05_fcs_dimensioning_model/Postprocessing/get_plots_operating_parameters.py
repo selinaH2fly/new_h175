@@ -76,7 +76,7 @@ def plot_optimized_parameters(plot_params, params_general, data_doe, show_plot, 
                                     cmap='viridis', norm=norm, 
                                     edgecolor='k', s=100, marker=markers[0], label='BoL', zorder=1)
             yrange = ax.get_ylim()[1] - ax.get_ylim()[0]  
-            offset = 0.05 * yrange  
+            offset = 0.07 * yrange  
             # add system power values as text 
             for x, y, value in zip(df_bol['current_A (Value)'], df_bol[plot_params['opt_parameters']], df_bol['System Power (kW)']):
                 ax.text(x, y+offset, f'{value:.2f}', fontsize=10, ha='center', va='bottom', color = "green")
@@ -89,14 +89,14 @@ def plot_optimized_parameters(plot_params, params_general, data_doe, show_plot, 
                         edgecolor='k', s=100, marker=markers[1], label='EoL', zorder=1)
 
             yrange = ax.get_ylim()[1] - ax.get_ylim()[0]  # Höhe der y-Achse
-            offset = 0.08 * yrange  
+            offset = 0.11 * yrange  
 
             for x, y, value in zip(df_eol['current_A (Value)'], df_eol[plot_params['opt_parameters']], df_eol['System Power (kW)']):
                 ax.text(x, y-offset, f'{value:.2f}', fontsize=10, ha='center', va='bottom', color = "red")
             # Plot DOE data in the background
             scatter_eol = ax.scatter(data_doe["current_A"], 
                                     data_doe.iloc[:,-1], c="k", edgecolor='k', 
-                                    s=100, marker="o", label='DOE data', zorder=0, alpha=0.2)
+                                    s=100, marker="o", label='DOE data', zorder=0, alpha=0.05)
             
 
             # Add colorbar for the gradient
