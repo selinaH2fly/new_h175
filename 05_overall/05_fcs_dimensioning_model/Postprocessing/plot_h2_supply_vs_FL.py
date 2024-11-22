@@ -45,20 +45,21 @@ def plot_h2_supply_vs_FL(plot_params,params_general, show_plot, saving=True, mod
         filter_mode, mode_name = getMode(mode)
         # Loop through each cell count and plot the data
         for df, icon, title in zip(data, markers, titles):
-            if df.empty:
-                print(f"No data available for H2 Supply vs FL for current_A <= 700, for {mode_name} and weighting {weighting} . Skipping plot.")
-                return 
+
             #Filter the DF for currents in range and the filter omde
             df_filtered =   df[(df["current_A (Value)"] <= 700) & (df["eol (t/f)"] == filter_mode) & (df["weighting ([0,1])"] == weighting)]
 
             if df_filtered.empty:
-                print(f"No data available for H2 Supply vs FL for current_A <= 700, for {mode_name} and weighting {weighting} . Skipping plot.")
-                return 
+                print(f"No data available for H2 Supply vs FL for current_A <= 700, for {mode_name} and weighting {weighting}. Skipping plot.")
+                continue 
             #filter dataframe after cell count and 125-+, 150+-, and 175+-
             df_filtered1 = df_filtered[(df_filtered['Power Constraint (kW)'].between(highlight_powers[0] - 1e-3, highlight_powers[0] + 1e-3) |
                                 df_filtered['Power Constraint (kW)'].between(highlight_powers[1] - 1e-3, highlight_powers[1] + 1e-3) |
                                 df_filtered['Power Constraint (kW)'].between(highlight_powers[2] - 1e-3, highlight_powers[2] + 1e-3))]
 
+            if df_filtered1.empty:
+                print(f"No data available for H2 Supply vs FL for Power Constraint (kW). Skipping plot.")
+                continue            
             # Scatter plot with color based on 'System Power (kW)'
             ax.scatter(df_filtered1['Flight Level (100x ft)'], df_filtered1['Hydrogen Supply Rate (g/s)'], 
                                 c=df_filtered1['System Power (kW)'], cmap='viridis',norm=norm, edgecolor='k', s=100, marker=icon, label=f'{title}')

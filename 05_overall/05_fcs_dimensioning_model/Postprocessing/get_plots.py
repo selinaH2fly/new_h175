@@ -65,7 +65,7 @@ def split_data_based_on_cell_count(df):
 
 
 def get_unique_values(df, column_name): 
-    return df[column_name].unique()
+    return sorted(df[column_name].unique())
 
 def get_min_max_values_axes(axes, df, scale_min=0.9, scale_max=1.1): 
     min_max_list=  [
@@ -111,7 +111,7 @@ def analyze_data(_file_path1, saving=True):
 
     # get flight level, weighting, cellcounts from csv
     fl_set = get_unique_values(df1, 'Flight Level (100x ft)')
-    weighting = get_unique_values(df1, 'weighting ([0,1])').astype(int)
+    weighting = get_unique_values(df1, 'weighting ([0,1])')
     cellcounts = get_unique_values(df1, 'Specified Cell Count')
 
 
@@ -132,7 +132,7 @@ def analyze_data(_file_path1, saving=True):
     'colors': [ "tab:blue", "tab:orange",  "tab:red"], 
     'markers': ["o", "v", "s"],
     'markers_oL':  ["o","P"],  
-    'show_plot' : False, 
+    'show_plot' : True, 
     }
 
     ########Plot test:   
@@ -154,7 +154,7 @@ def analyze_data(_file_path1, saving=True):
     'x_label': 'Current [A]', 
     'x_lim': get_min_max_values_axes(['current_A (Value)'], df1),
     'y_label': 'Cell Voltage [V]',
-    'y_lim': get_min_max_values_axes(['Cell Voltage (V)'], df1),  
+    'y_lim': get_min_max_values_axes(['Cell Voltage (V)'], df1, scale_min=0.5),  
     'label' : [ 'BoL', 'EoL'], 
     'vmin' : 120, 
     'vmax' : 150
@@ -167,7 +167,7 @@ def analyze_data(_file_path1, saving=True):
     'x_label': 'Current [A]', 
     'x_lim': get_min_max_values_axes(['current_A (Value)'], df1), 
     'y_label': 'Cell Voltage [V]',
-    'y_lim': get_min_max_values_axes(['Cell Voltage (V)'], df1),  
+    'y_lim': get_min_max_values_axes(['Cell Voltage (V)'], df1, scale_min=0.5),  
     'label' : [ 'BoL', 'EoL'], 
     }
     plot_polarization_curves_bol_eol(plot_params_polarization_curves_bol_eol, params_general, show_plot=params_general['show_plot'], saving=saving)
@@ -270,7 +270,7 @@ def analyze_data(_file_path1, saving=True):
 
     }
     plot_compressor_map(plot_params_compressor_map, params_general, show_plot=params_general['show_plot'], saving=saving, mode="bol")
-    #plot_compressor_map(plot_params_compressor_map, params_general, show_plot=params_general['show_plot'], saving=saving, mode="eol")
+    plot_compressor_map(plot_params_compressor_map, params_general, show_plot=params_general['show_plot'], saving=saving, mode="eol")
         
     ###########PLOT: optimized parameters in DoE envelope
     os.makedirs("DoE_Envelope_Evaluation", exist_ok=True)
@@ -329,7 +329,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_30-150kW_400-500_100-100ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_130-145kW_455-455_100-100ft.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()

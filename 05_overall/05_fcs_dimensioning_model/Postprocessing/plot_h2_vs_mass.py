@@ -32,6 +32,7 @@ def plot_h2_vs_mass(plot_params, params_general, show_plot, saving=True):
     markers = params_general['markers_oL']
     colors = params_general['colors']
     num_plots = len(data)  # Determine the number of required subplots
+    weightings = [min(weightings), max(weightings)] if len(weightings) > 2 else weightings
     #values = get_values_generalParam_dict(params_general)
 
     #data, fl_set, weightings, titles, colors, markers =  values[0], values[1], values[3], values[5], values[6], values[7]
