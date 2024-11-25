@@ -303,8 +303,6 @@ def analyze_data(_file_path1, saving=True):
  
     }
 
-
-
     yranges = get_min_max_values_axes(['cathode_rh_in_perc',
                       'stoich_cathode',
                       'pressure_cathode_in_bara',
@@ -329,7 +327,7 @@ def analyze_data(_file_path1, saving=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Main script to call get_plots.py")
-    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_130-145kW_455-455_100-100ft.csv")
+    parser.add_argument("-f", "--filepath", type=str, help="path to csv file", default=r"..\test_data\optimized_parameters_25-150kW_400-500_100-100ft.csv")
 
     parser.add_argument("-s", "--saving", type=str, choices=["True", "False"], default="True", help="Whether to save plots as .png files")
     args = parser.parse_args()
