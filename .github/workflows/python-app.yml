@@ -35,7 +35,7 @@ jobs:
 
       # 3. Conda-Umgebung erstellen und aktivieren
       - name: Create Conda Environment
-        run: conda env create -f conda_env_pyFCS.yml
+        run: conda env create -f /05_overall/05_fcs_dimensioning_model/conda_env_pyFCS.yml
 
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
