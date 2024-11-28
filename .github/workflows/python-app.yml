@@ -36,12 +36,7 @@ jobs:
       # 3. Conda-Umgebung erstellen und aktivieren
       - name: Create Conda Environment
         run: |
-          conda config --set channel_priority flexible
-          conda config --add channels conda-forge
-          conda config --add channels defaults
-          conda config --add channels https://repo.anaconda.com/pkgs/main
-          conda config --add channels https://repo.anaconda.com/pkgs/r
-          conda config --add channels https://repo.anaconda.com/pkgs/msys2
+
           conda info
 
           conda config --show
