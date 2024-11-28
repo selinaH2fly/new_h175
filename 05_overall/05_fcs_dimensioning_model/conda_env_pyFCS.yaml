@@ -3,7 +3,6 @@ channels:
   - anaconda
   - conda-forge
   - defaults
-  - https://repo.anaconda.com/pkgs/main
 
 dependencies:
   - alabaster=1.0.0=pyhd8ed1ab_0
