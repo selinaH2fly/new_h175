@@ -23,6 +23,9 @@ jobs:
     steps:
         - name: Check out code
           uses: actions/checkout@v3
+        - name: Print current working directory
+          run: pwd
+          shell: bash
         - name: Check if CSV exists
           shell: bash
           run: |
