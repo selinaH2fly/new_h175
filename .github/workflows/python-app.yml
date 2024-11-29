@@ -27,7 +27,7 @@ jobs:
         - name: Check if CSV exists
           shell: bash
           run: |
-            if [ ! -f "05_overall/05_fcs_dimensioning_model/test_data/optimized_parameters_25-150kW_400-500_100-100ft.csv" ]; then
+            if [ ! -f "05_overall/05_fcs_dimensioning_model/test_data/optimized_parameters_30-150kW_400-500_100-100ft.csv" ]; then
               echo "CSV file is missing!"
               exit 1
             else
@@ -48,4 +48,4 @@ jobs:
             conda activate conda_env
 
         - name: Run test Python file
-          run: conda run -n conda_env python ./05_overall/05_fcs_dimensioning_model/Postprocessing/get_plots.py --filepath ./05_overall/05_fcs_dimensioning_model/test_data/optimized_parameters_25-150kW_400-500_100-100ft.csv
+          run: conda run -n conda_env python ./05_overall/05_fcs_dimensioning_model/Postprocessing/get_plots.py --filepath ./05_overall/05_fcs_dimensioning_model/test_data/optimized_parameters_30-150kW_400-500_100-100ft.csv
