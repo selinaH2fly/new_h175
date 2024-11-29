@@ -23,11 +23,14 @@ jobs:
     steps:
         - name: Check out code
           uses: actions/checkout@v3
-        - name: Verify CSV exists
+        - name: Check if CSV exists
+          shell: bash
           run: |
-            if [ ! -f "./05_overall/05_fcs_dimensioning_model/Postprocessing/test_data/optimized_parameters_25-150kW_400-500_100-100ft.csv" ]; then
-              echo "CSV not found!"
+            if [ ! -f "./05_overall/05_fcs_dimensioning_model/Postprocessing/test.csv" ]; then
+              echo "CSV file is missing!"
               exit 1
+            else
+              echo "CSV file exists."
             fi
         # 2. Miniconda installieren
         #- name: Set up Miniconda
