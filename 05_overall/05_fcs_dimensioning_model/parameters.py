@@ -63,7 +63,7 @@ class Optimization_Parameters:
         
         # Evolutionary algorithm settings: https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html
         self.tol = 1e-4                 # tolerance for the optimization: np.std(pop) <= atol + tol * np.abs(np.mean(population_energies))
-        self.maxiter = 1000             # maximum number of iterations
+        self.maxiter = 1                # maximum number of iterations
         self.popsize = 30               # population size for the evolutionary algorithm
         self.recombination = 0.9        # recombination rate \in [0, 1];
         self.strategy = 'best1bin'      # default:'best1bin'

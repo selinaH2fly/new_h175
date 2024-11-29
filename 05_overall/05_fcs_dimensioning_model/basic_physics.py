@@ -5,8 +5,8 @@ from parameters import Physical_Parameters
 import CoolProp.CoolProp as CP
 import CoolProp.HumidAirProp as HAP
 from scipy.constants import physical_constants
-import psychrolib as lib
-
+#import psychrolib as lib
+import psychro.lib as lib
 
 
 molar_mass = CP.PropsSI('M', 'Air')
@@ -162,3 +162,7 @@ def convert(value, input_unit , target_unit, fluid="Air", temperature=20, pressu
 # Pressure conversion: bar to Pascals
 #Inlet_Pressure_bar = 1.01325  # Inlet pressure in bar
 #outlet_Pressure_Pa = convert(Inlet_Pressure_bar, "Pa")
+
+#50.08)
+#test = convert(1, 'kg_s', 'm3_min', fluid="Air", temperature=293.15, pressure=101325 , relative_humidity=0.5)
+#print(test)
