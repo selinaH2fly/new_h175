@@ -12,35 +12,14 @@ on:
 permissions:
   contents: read
 
-
-
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: windows-latest
 
     steps:
         - name: Check out code
           uses: actions/checkout@v3
 
-        - name: Check if CSV exists
-          shell: bash
-          run: |
-            if [ ! -f "05_overall/05_fcs_dimensioning_model/test_data/optimized_parameters_30-150kW_400-500_100-100ft.csv" ]; then
-              echo "CSV file is missing!"
-              exit 1
-            else
-              echo "CSV file exists."
-            fi
-
-        - name: Get number of CPU cores
-          uses: SimenB/github-actions-cpu-cores@v2
-          id: cpu-cores
-        - name: run tests
-          run: npx jest --max-workers ${{ steps.cpu-cores.outputs.count }}
-
-          
         - name: Set up Miniconda
           uses: conda-incubator/setup-miniconda@v2
           with:
@@ -51,14 +30,11 @@ jobs:
           run: |
             conda env create --file ./05_overall/05_fcs_dimensioning_model/conda_env.yaml --name conda_env
 
-        - name: Activate and test Conda environment
+        - name: Activate Conda environment
           run: |
             conda activate conda_env
 
-
-        - name: Run test Python file 
-          #run: conda run -n conda_env python ./05_overall/05_fcs_dimensioning_model/Postprocessing/get_plots.py --filepath ./05_overall/05_fcs_dimensioning_model/test_data/optimized_parameters_30-150kW_400-500_100-100ft.csv
-          #run: conda run -n conda_env python ./05_overall/05_fcs_dimensioning_model/Postprocessing/get_plots.py 
+        - name: Run Batch_Run in Testing Mode
           run: conda run -n conda_env python batch_run.py --testing True
           working-directory: ./05_overall/05_fcs_dimensioning_model
 
