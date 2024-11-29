@@ -20,26 +20,24 @@ jobs:
     # The type of runner that the job will run on
     runs-on: windows-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+        - name: Check out code
+          uses: actions/checkout@v3
 
+        - name: Set up Miniconda
+          uses: goanpeca/setup-miniconda@v1
+          with:
+            auto-update-conda: true
+            python-version: 3.11
+            activate-environment: conda_env  # Name des Environments
 
-      - name: Add conda to system path
-        run: |
-          echo $CONDA/bin >> $GITHUB_PATH
-      - name: Install dependencies
-        run: |
-          conda env update --file ./05_overall/05_fcs_dimensioning_model/conda_env.yaml --name conda_env
+        - name: Create Conda environment
+          run: |
+            conda env create --file ./05_overall/05_fcs_dimensioning_model/conda_env.yaml --name conda_env
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project
+        - name: Activate and test Conda environment
+          run: |
+            conda activate conda_env
+            python --version
+            pip list
 
-      - name: Run test Python file
-        run: conda run -n conda_env_pyFCS python get_plots.py
-
-      
