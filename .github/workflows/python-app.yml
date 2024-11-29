@@ -26,7 +26,7 @@ jobs:
         - name: Check if CSV exists
           shell: bash
           run: |
-            if [ ! -f "./05_overall/05_fcs_dimensioning_model/Postprocessing/test.csv" ]; then
+            if [ ! -f "./05_overall/05_fcs_dimensioning_model/Postprocessing/optimized_parameters_25-150kW_400-500_100-100ft.csv" ]; then
               echo "CSV file is missing!"
               exit 1
             else
