@@ -33,6 +33,14 @@ jobs:
             else
               echo "CSV file exists."
             fi
+
+        - name: Get number of CPU cores
+          uses: SimenB/github-actions-cpu-cores@v2
+          id: cpu-cores
+        - name: run tests
+          run: npx jest --max-workers ${{ steps.cpu-cores.outputs.count }}
+
+          
         - name: Set up Miniconda
           uses: conda-incubator/setup-miniconda@v2
           with:
