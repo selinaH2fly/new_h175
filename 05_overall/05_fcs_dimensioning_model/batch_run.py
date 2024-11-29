@@ -53,9 +53,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     if args.testing == "True":
-        range_power = np.array([125, 150, 175])
+        range_power = np.array([125, 175])
         range_cellcount = np.array([455])
-        range_fl = np.array([0])
+        range_fl = np.array([120])
         # Convert turbine and eol to boolean lists
         range_turbine =[True]#, args.turbine.lower() == "false"]
         range_eol = [False]
@@ -64,7 +64,7 @@ if __name__ == '__main__':
         #Handle downstream data and plots
         saving = False
         dir_prefix = "testing__"
-        weighting = [0,1]
+        weighting = [0]
 
     elif args.testing == "False":
       
@@ -74,7 +74,7 @@ if __name__ == '__main__':
         #range_power is ugly deined atm. due to not starting at 0 and want to have inclusive bounds.... maybe there is a better way?
         range_power = np.arange(args.power[0], args.power[1] + 1, _step_p) if (args.power[1] - args.power[0]) % _step_p == 0 else np.append(np.arange(args.power[0], args.power[1], _step_p), args.power[1])
         #range_power = np.array([20, 50, 80, 125, 150, 175])
-        range_cellcount = [400, 455, 500]#np.arange(args.cellcount[0],args.cellcount[1]+_step_c,_step_c)
+        range_cellcount = [455, 500]#np.arange(args.cellcount[0],args.cellcount[1]+_step_c,_step_c)
         range_fl = [100]#np.arange(args.flightlevel[0],args.flightlevel[1]+_step_fl,_step_fl)
         
         # Convert turbine and eol to boolean lists
@@ -102,7 +102,8 @@ if __name__ == '__main__':
         # Show progress bar using tqdm
         for future in tqdm(as_completed(futures), total=len(futures), desc="Optimization Progress"):
             success, param, output = future.result()
-            if success:
+            if success:# Convert turbine and eol to boolean lists
+
                 print(f"Success for parameter {param}: {output}")
             else:
                 print(f"Failed for parameter {param}: {output}")
