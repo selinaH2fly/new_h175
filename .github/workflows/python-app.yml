@@ -21,16 +21,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
-        #- name: Check out code
-        #  uses: actions/checkout@v3
+        - name: Check out code
+          uses: actions/checkout@v3
 
-        - name: Cache Miniconda
-          uses: actions/cache@v3
-          with:
-            path: ~/.conda
-            key: ${{ runner.os }}-conda-${{ hashFiles('conda_env.yaml') }}
-            restore-keys: |
-              ${{ runner.os }}-conda-
         - name: Check if CSV exists
           shell: bash
           run: |
