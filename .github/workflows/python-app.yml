@@ -51,6 +51,6 @@ jobs:
         - name: Run test Python file 
           #run: conda run -n conda_env python ./05_overall/05_fcs_dimensioning_model/Postprocessing/get_plots.py --filepath ./05_overall/05_fcs_dimensioning_model/test_data/optimized_parameters_30-150kW_400-500_100-100ft.csv
           #run: conda run -n conda_env python ./05_overall/05_fcs_dimensioning_model/Postprocessing/get_plots.py 
-          run: conda run -n conda_env python batch_run.py 
+          run: conda run -n conda_env python batch_run.py --testing True
           working-directory: ./05_overall/05_fcs_dimensioning_model
 
