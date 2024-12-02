@@ -35,6 +35,6 @@ jobs:
             conda activate conda_env
 
         - name: Run Batch_Run in Testing Mode
-          run: conda run -n conda_env python batch_run.py --testing True
+          run: conda run -n conda_env python batch_run.py --testing True -p 125 175 -n 455 -f 100
           working-directory: ./05_overall/05_fcs_dimensioning_model
 
