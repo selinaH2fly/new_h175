@@ -132,7 +132,7 @@ def analyze_data(_file_path1, saving=True):
     'colors': [ "tab:blue", "tab:orange",  "tab:red"], 
     'markers': ["o", "v", "s"],
     'markers_oL':  ["o","P"],  
-    'show_plot' : True, 
+    'show_plot' : False, 
     }
 
     ########Plot test:   
